@@ -1138,7 +1138,7 @@
             },
             "expect": {
                 "kind": "syntax_error",
-                "must_include": "RepairTicket"
+                "must_include": "unclosed_class"
             }
         },
         {
