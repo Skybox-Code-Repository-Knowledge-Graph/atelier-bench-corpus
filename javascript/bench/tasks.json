@@ -1129,6 +1129,19 @@
             }
         },
         {
+            "id": "parse-negative-unclosed-class",
+            "surface": "parse-negative",
+            "note": "Intentionally invalid fixture: the class body and its last method are both left open. A parser must report an error here, never a partial tree. DO NOT FIX. Same id as the php, typescript and python lanes.",
+            "from": {
+                "file": "fixtures/broken-syntax/unclosed_class.js",
+                "needle": "close(reason) {"
+            },
+            "expect": {
+                "kind": "syntax_error",
+                "must_include": "RepairTicket"
+            }
+        },
+        {
             "id": "def-container-binding",
             "surface": "definition",
             "note": "Same question as the typescript lane: the default binding constructs StandardInvoiceCalculator; the definition is that class.",
