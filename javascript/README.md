@@ -119,7 +119,7 @@ specifier in the lane, so that class of defect fails a test as well as the gate.
 
 | Artifact | Role |
 | --- | --- |
-| `bench/tasks.json` | 95 needle-based accuracy tasks (`from` → `expect` file/needle pairs). Surfaces: definition 42, resolution 14, references 10, import-precision 5, implementation 5, direction 4, hover 4, call_hierarchy 3, cardinality 2, multi-parent 2, document_symbol 2, parse-negative 2. Every canonical id carried by three or more lanes is carried here. |
+| `bench/tasks.json` | 96 needle-based accuracy tasks (`from` → `expect` file/needle pairs). Surfaces: definition 42, resolution 14, references 10, import-precision 5, implementation 5, direction 4, hover 4, call_hierarchy 3, cardinality 2, multi-parent 2, document_symbol 2, parse-negative 3. Every canonical id carried by three or more lanes is carried here. |
 | `bench/checkjs-allowlist.txt` | The exact `tsc -p jsconfig.json` diagnostics the gate accepts (60 at the pinned versions); regenerate with `--lint --write-allowlist` |
 | `bench/verify-tasks/verify.mjs` | Self-check that every task needle still resolves to exactly one line |
 
