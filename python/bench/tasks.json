@@ -257,13 +257,13 @@
             "surface": "definition",
             "note": "typing.overload: two stub signatures over one implementation; the definition is the implementation, the stubs are known_sites.",
             "from": {
-                "file": "tests/test_structure.py",
-                "needle": "self.assertEqual(atelier_parse_reference(\"AT-2026-000042\"), (\"AT\", 2026, 42))"
+                "file": "atelier_core/concerns/has_reference.py",
+                "needle": "return atelier_format_reference(self.reference_prefix, self.reference_number)"
             },
             "expect": {
                 "exact_count": 2,
                 "file": "atelier_core/support/helpers.py",
-                "needle": "def atelier_parse_reference(reference: str) -> ParsedReference | None:",
+                "needle": "def atelier_format_reference(prefix: str, num: int, year: int = Reference.DEFAULT_YEAR) -> str:",
                 "known_sites": [
                     {
                         "file": "atelier_core/support/helpers.py",
