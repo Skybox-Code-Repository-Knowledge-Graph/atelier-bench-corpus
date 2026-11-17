@@ -321,7 +321,7 @@
                 "symbol": "InvoiceCalculator"
             },
             "expect": {
-                "min_implementations": 2,
+                "exact_count": 2,
                 "implementations": [
                     {
                         "file": "crates/atelier-core/src/services/standard_invoice_calculator.rs",
@@ -2087,8 +2087,24 @@
                 "symbol": "RULES"
             },
             "expect": {
-                "min_references": 2,
+                "exact_count": 6,
                 "known_sites": [
+                    {
+                        "file": "crates/atelier-bench/src/support/rule_summary.rs",
+                        "needle": "use crate::rules::RULES;"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/support/rule_summary.rs",
+                        "needle": "failed: RULES.len() - passed,"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/support/rule_namespace_user.rs",
+                        "needle": "    rules::RULES"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/rules/mod.rs",
+                        "needle": "RULES.iter().map(|rule| rule.as_ref())"
+                    },
                     {
                         "file": "crates/atelier-bench/src/support/rule_summary.rs",
                         "needle": "RULES.iter().filter(|rule| rule.evaluate(data)).count();"
@@ -3051,7 +3067,7 @@
                 "symbol": "Repository"
             },
             "expect": {
-                "min_implementations": 8,
+                "exact_count": 8,
                 "implementations": [
                     {
                         "file": "crates/atelier-bench/src/repositories/customer_repository.rs",
@@ -3091,7 +3107,7 @@
         {
             "id": "refs-string-event-name",
             "surface": "references",
-            "note": "Nothing declares 'repair.completed' at the subscribe site: the literal is the whole link between it and the dispatch that reaches it. Five code sites carry the string; the floor counts the four outside the `from` site, matching the min_references convention of the sibling refs-* tasks.",
+            "note": "Nothing declares 'repair.completed' at the subscribe site: the literal is the whole link between it and the dispatch that reaches it. Five code sites carry the string; the count is the four outside the `from` site, matching the sibling refs-* tasks.",
             "from": {
                 "file": "crates/atelier-core/tests/wave2_events.rs",
                 "needle": "dispatcher.on(\"repair.completed\", notice.clone());",
@@ -3099,7 +3115,7 @@
             },
             "expect": {
                 "kind": "name_only",
-                "min_references": 4,
+                "exact_count": 4,
                 "known_sites": [
                     {
                         "file": "crates/atelier-core/src/events.rs",
