@@ -1,0 +1,22 @@
+{
+    "version": 1,
+    "tool": { "name": "fixture-tool", "version": "0.0.0" },
+    "lane": "fixture",
+    "scope": "repo",
+    "answers": {
+        "s-pass": { "locations": [ { "file": "src/app.txt", "line": 1 } ] },
+        "s-wrong-line": { "locations": [ { "file": "src/app.txt", "line": 1 } ] },
+        "s-ambiguous": { "locations": [ { "file": "src/app.txt", "line": 7 }, { "file": "src/app.txt", "line": 4 } ] },
+        "s-known-site": { "locations": [ { "file": "src/app.txt", "line": 1 }, { "file": "src/app.txt", "line": 3, "end_line": 5 } ] },
+        "s-lane-prefix": { "locations": [ { "file": "src/app.txt", "line": 1 }, { "file": "../php/app/Models/Customer.php", "line": 18 } ] },
+        "s-path": { "locations": [ { "file": "src/app.txt", "line": 2 }, { "file": "src/other.txt", "line": 1 } ] },
+        "s-path-symbol": { "locations": [ { "file": "src/app.txt", "line": 7 }, { "file": "src/app.txt", "line": 5 } ] },
+        "s-pattern": { "locations": [ { "file": "src/app.txt", "line": 4 }, { "file": "src/app.txt", "line": 6 } ] },
+        "s-text": { "locations": [ { "file": "src/app.txt", "line": 1 } ], "text": "resolved, with a forbidden phrase in the label" },
+        "s-not-scored": { "locations": [ { "file": "src/app.txt", "line": 2 } ] },
+        "s-empty": { "locations": [] },
+        "s-unsupported": { "status": "unsupported" },
+        "s-error": { "status": "error", "detail": "timed out after 60s" },
+        "s-invalid": { "locations": [ { "file": "src/app.txt", "line": 0 } ] }
+    }
+}

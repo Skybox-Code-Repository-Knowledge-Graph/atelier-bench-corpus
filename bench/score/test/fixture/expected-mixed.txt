@@ -1,0 +1,29 @@
+s-pass: PASS
+s-wrong-line: FAIL (target not returned: expected src/app.txt:2, got src/app.txt:1)
+s-ambiguous: FAIL (ambiguous: target returned with 1 unexpected location(s), first src/app.txt:4)
+s-known-site: PASS
+s-lane-prefix: FAIL (ambiguous: target returned with 1 unexpected location(s), first ../php/app/Models/Customer.php:18; excluded "php/" returned)
+s-path: FAIL (ambiguous: target returned with 1 unexpected location(s), first src/other.txt:1; excluded "src/other.txt" returned)
+s-path-symbol: FAIL (ambiguous: target returned with 1 unexpected location(s), first src/app.txt:5; excluded "src/app.txt#Right" returned)
+s-pattern: FAIL (ambiguous: target returned with 1 unexpected location(s), first src/app.txt:6; excluded "impl .* for Money" returned)
+s-text: FAIL (excluded "forbidden phrase" returned)
+s-not-scored: PASS [not scored: must_include]
+s-empty: FAIL (no location returned)
+s-unsupported: UNSUPPORTED
+s-error: ERROR (timed out after 60s)
+s-invalid: ERROR (invalid answer: location line is not a positive integer in src/app.txt)
+s-unanswered: UNANSWERED
+s-unscorable-surface: UNSCORABLE (no rule for surface hover)
+s-unscorable-count: UNSCORABLE (target plus exact_count: meaning depends on kind)
+s-unresolved: UNRESOLVED (src/absent.txt: file missing)
+
+surface           pass  fail  unsupported  unanswered  error  unscorable  unresolved  total
+definition           3     5            1           1      2           1           1     14
+resolution           0     2            0           0      0           0           0      2
+import-precision     0     1            0           0      0           0           0      1
+hover                0     0            0           0      0           1           0      1
+all                  3     8            1           1      2           2           1     18
+
+tool: fixture-tool 0.0.0   lane: lane   scope: repo
+scorable by this scorer: 15 of 18 tasks
+passed: 3 of 18 tasks (16.7%), 3 of 11 answered (27.3%)

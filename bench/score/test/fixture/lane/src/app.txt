@@ -1,0 +1,7 @@
+alpha declaration
+beta declaration
+gamma uses alpha
+delta site
+class Right sibling
+impl Display for Money
+epsilon target

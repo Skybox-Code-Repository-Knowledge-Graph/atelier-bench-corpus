@@ -1,0 +1,38 @@
+name: score
+
+# The scorer's own checks (bench/score/). Deliberately a separate workflow from corpus.yml: its job
+# is not one of the seven required checks, so a scorer bug can never block a lane pull request.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: score-${{ github.ref }}
+  cancel-in-progress: true
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  score-selftest:
+    name: score-selftest
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7.0.1
+
+      - name: Node 22
+        uses: actions/setup-node@v7.0.0
+        with:
+          node-version: "22"
+
+      # No lane install: the scorer reads source files and tasks.json only. The php lane's
+      # vendor/ needles are reported UNRESOLVED here, which the tests expect.
+      - name: Resolver conformance, oracle and mutation checks over every lane, report format
+        run: node --test 'bench/score/test/*.test.mjs'

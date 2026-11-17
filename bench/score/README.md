@@ -1,0 +1,135 @@
+# Scorer
+
+Compares one tool's answers for one lane with that lane's `bench/tasks.json`.
+
+The scorer knows nothing about any tool. An **adapter** asks a tool the corpus's questions and
+writes its replies in the answer format below; the scorer reads that file and the answer key and
+reports a verdict per task. Tool names live in adapters and answer files, never in a `tasks.json`.
+
+```
+node bench/score/score.mjs --lane go --answers go.answers.json
+node bench/score/score.mjs --lane go --answers go.answers.json --format json
+node bench/score/oracle.mjs --lane go > go.oracle.json     # a perfect answer file, built from the key
+node --test 'bench/score/test/*.test.mjs'                  # the scorer's own checks
+```
+
+Node built-ins only. `score.mjs` exits 0 whenever scoring completed, whatever the tool scored, and
+2 when an input could not be read. A tool that fails every task is a result, not an error.
+
+## Answer format
+
+One JSON file per tool and lane.
+
+```json
+{
+  "version": 1,
+  "tool": { "name": "example", "version": "1.2.3" },
+  "lane": "go",
+  "scope": "repo",
+  "answers": {
+    "def-free-function": { "locations": [ { "file": "core/money/money.go", "line": 41 } ] },
+    "hover-pad-helper":  { "status": "unsupported" },
+    "def-through-alias": { "status": "error", "detail": "timed out after 60s" }
+  }
+}
+```
+
+| Field | Meaning |
+| --- | --- |
+| `version` | `1` |
+| `tool.name`, `tool.version` | What was scored. Pin the version |
+| `scope` | `repo` when the tool indexed the whole checkout, `lane` when it indexed one lane directory. Default `lane` |
+| `answers` | Keyed by task id. A task with no entry is `UNANSWERED` |
+
+One answer:
+
+| Field | Meaning |
+| --- | --- |
+| `status` | `answered` (default), `unsupported` (the tool has no way to be asked this), or `error` (the tool or the adapter failed; say why in `detail`) |
+| `locations` | What the tool returned: `file`, `line`, optional `end_line`. Paths are relative to the lane directory, as in `tasks.json`. A location in another lane is written `../<lane>/...` |
+| `text` | Any free text the tool returned with the answer, such as a label, a qualified name or a relation. Optional |
+| `names` | Symbol names the tool returned, when the answer is a list of names. Optional |
+
+### What a line means
+
+- **A declaration** is the line that carries the symbol's name. The scorer matches it by exact line.
+  A range never makes it pass, so an answer that returns the enclosing class for a question about
+  a member fails. A tool that reports the start of a decorated or attributed declaration is
+  normalized by its adapter: move to the first line, at or after the reported start, that contains
+  the name the tool reported.
+- **A site** (a use, a call site) is matched by containment. `line` to `end_line` may be the range
+  of the function the tool reported as the caller; it covers the site when the site's line is
+  inside it.
+
+### Scope
+
+Many exclusions in the corpus are lane prefixes such as `php/`: the answer must not land in another
+lane. They can only fire when the tool saw the other lanes, so they are checked for `scope: repo`
+and reported as not exercised for `scope: lane`.
+
+## Verdicts
+
+| Verdict | Meaning |
+| --- | --- |
+| `PASS` | Every scored check passed |
+| `FAIL` | A scored check failed; the reason is printed |
+| `UNSUPPORTED` | The adapter says the tool cannot be asked this |
+| `UNANSWERED` | The answer file has no entry for the task |
+| `ERROR` | The tool or adapter failed, or the answer is malformed |
+| `UNSCORABLE` | No rule in this version of the scorer covers the task |
+| `UNRESOLVED` | An expected file is not in the checkout (the php lane's `vendor/` needles before `composer install`) |
+
+The report ends with two ratios, passed of all tasks and passed of answered tasks, so a tool is
+neither flattered for skipping tasks nor marked wrong on surfaces it does not offer.
+
+## Rules in this version
+
+Semantics come from the rule table in `lib/plan.mjs`, never from the shape of an `expect` block:
+the same key means different things in different tasks. A task is scored only when a rule names
+its surface and keys. Every key a rule does not use is printed per task as `not scored`.
+
+| Rule | Surface | Needs | Pass when |
+| --- | --- | --- | --- |
+| `definition/target` | `definition` | `file`, `needle` | the target declaration is returned |
+| `definition/candidate` | `definition` | `candidate` | the candidate declaration is returned |
+| `resolution/candidate` | `resolution` | `candidate` | the candidate declaration is returned |
+| `import-precision/candidate` | `import-precision` | `candidate` | the candidate declaration is returned |
+
+For all four:
+
+- The answer must contain the target, by exact line.
+- It may also contain the task's `known_sites`. Any other location makes the answer ambiguous,
+  and an ambiguous answer fails.
+- Nothing in `must_not_include` may be returned.
+- A task that carries `exact_count` beside a target is `UNSCORABLE`: the count is an overload
+  count in one task and a parameter count in another.
+- `kind` and `resolution` are labels and are never scored.
+
+Not covered yet, reported `UNSCORABLE`: `references`, `implementation`, `cardinality`,
+`multi-parent`, `direction`, `call_hierarchy`, `hover`, `document_symbol`, `parse-negative`,
+`diagnostics`, and tasks whose only expectation is a count, a `contains` string or a list of
+`known_sites`.
+
+### `must_not_include`
+
+The corpus writes these entries in several forms. Each form has one matching rule.
+
+| Form | Example | Hit when |
+| --- | --- | --- |
+| lane prefix | `php/` | a returned location is under that lane (`scope: repo` only) |
+| pattern | `impl .* for Money` | a returned source line, or `text`, contains the literal parts in order |
+| path and symbol | `app/http#NewServeMux` | a returned location is under the path and its source line contains the symbol |
+| anything else | `models/device.ts`, `BOARD_REFRESH`, `ATELIER_UNIT_SUFFIX = 'u'` | a returned path contains it, a returned source line contains it, `names` has it, or `text` contains it |
+
+## How "scorable" is established
+
+By test, not by claim. `test/oracle.test.mjs` runs over every lane and requires, for every task a
+rule covers, that the oracle answer passes and that each mutation of it fails: no location, the
+line shifted by one, an unexpected extra location, and one hit for every `must_not_include` entry.
+`test/resolve.test.mjs` rebuilds the verifier report for `bench/conformance/` around the scorer's
+resolver and compares it byte for byte with `expected.txt`, so the scorer and the lane verifiers
+agree on what a needle resolves to. `test/fixture.test.mjs` pins the report format against a small
+lane-shaped fixture.
+
+The number of scorable tasks is computed at run time and printed by the tests and by every report.
+It is not written down here, because the lanes change.
