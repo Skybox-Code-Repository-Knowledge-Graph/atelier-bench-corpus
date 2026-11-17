@@ -247,6 +247,23 @@ bindings), the key is not changed to fit it and the task is `UNSCORABLE`
 (`DOCSYM_REFERENCE_DISAGREES` in `lib/plan.mjs`): python and javascript both tasks, typescript
 `docsym-repair-order`. Seven tasks are scored.
 
+### Direction
+
+| Rule | Kinds | Pass when | Class |
+| --- | --- | --- | --- |
+| `direction/self` | `uses_self` | the candidate (the type's own declaration) is returned, and nothing else | exact |
+| `direction/two-sided` | `parent_of`, `child_of`, `used_by` | the candidate is among the locations for the asked direction, and absent from `reverse_locations`, the locations for the opposite direction | recall-only |
+| `direction/list` | `declaration_merge` | the listed declarations are returned, and nothing else | exact |
+
+The lane notes define the kinds: `child_of` asks for a direct parent, `parent_of` for a child, `used_by`
+for a user of a trait, `uses_self` for a type that refers to itself, which a definition lookup
+answers with the type's own declaration. The two-sided key names one member of a set it does not
+list, so the answer is asked both ways: a tool with the edge backwards, or in both directions,
+fails, and an answer without `reverse_locations` fails, since nothing shows its direction. Other
+locations in the asked direction are not judged, which is why the rule is recall-only. `mro` (the
+answer is an order) and `inherent_impl` (the key requires nothing) are `UNSCORABLE` on this surface
+(`SURFACE_KIND_UNSCORABLE`); they are not excluded on other surfaces.
+
 ### Recall rules
 
 | Rule | Surface | Needs | Pass when |
@@ -262,8 +279,8 @@ an `exact` line and a `recall-only` line, and the two are never added up. `min_i
 as `not scored`: tools count callers per call site or per calling function, and the key does not
 say which.
 
-Not covered yet, reported `UNSCORABLE`: `direction`, `parse-negative`, `diagnostics`, and tasks
-whose only expectation is a count.
+Not covered yet, reported `UNSCORABLE`: `parse-negative`, `diagnostics`, and tasks whose only
+expectation is a count.
 
 ### `must_not_include`
 

@@ -85,6 +85,10 @@ for (const lane of LANES) {
             counts.byCheck[plan.check] = (counts.byCheck[plan.check] ?? 0) + 1;
             const label = `${lane}:${task.id}`;
 
+            if (plan.check === "twoSided") {
+                checkTwoSidedRule(task, plan, answer, context, label, counts);
+                continue;
+            }
             if (plan.check === "names") {
                 checkNamesRule(task, plan, answer, context, label);
                 continue;
@@ -161,6 +165,31 @@ for (const lane of LANES) {
  * and with an unnamed container added (`impl X for Y`). One name missing, one extra name, one name
  * returned twice, no names, and a location list without names each fail.
  */
+/**
+ * The two-sided rule (direction): the oracle passes, and so does it with an extra location in the
+ * asked direction (recall: not judged); the candidate missing, moved by a line, also returned in the
+ * opposite direction, or no opposite direction asked each fail, as does each exclusion.
+ */
+function checkTwoSidedRule(task, plan, answer, context, label, counts) {
+    const verdict = (candidate) => scoreTask(task, candidate, context).verdict;
+    const [candidate] = answer.locations;
+    assert.equal(verdict(answer), "PASS", `${label} oracle`);
+    assert.equal(verdict({ ...answer, locations: [...answer.locations, { file: "no/such/file.txt", line: 1 }] }), "PASS", `${label} recall limit: an extra location is not judged`);
+    assert.equal(verdict({ ...answer, locations: [] }), "FAIL", `${label} no location`);
+    assert.equal(verdict({ ...answer, locations: [{ ...candidate, line: candidate.line > 1 ? candidate.line - 1 : candidate.line + 1 }] }), "FAIL", `${label} candidate moved`);
+    assert.equal(verdict({ ...answer, reverse_locations: [candidate] }), "FAIL", `${label} candidate in both directions`);
+    assert.equal(verdict({ locations: answer.locations }), "FAIL", `${label} opposite direction not asked`);
+    for (const entry of plan.exclude) {
+        const tripped = tripExclusion(entry, answer, context.root, context.lane);
+        if (tripped === null) {
+            counts.untrippable.push(`${task.id}: ${entry}`);
+            continue;
+        }
+        counts.exclusions += 1;
+        assert.equal(verdict(tripped), "FAIL", `${label} exclusion ${JSON.stringify(entry)}`);
+    }
+}
+
 function checkNamesRule(task, plan, answer, context, label) {
     const verdict = (candidate) => scoreTask(task, candidate, context).verdict;
     const names = answer.names;

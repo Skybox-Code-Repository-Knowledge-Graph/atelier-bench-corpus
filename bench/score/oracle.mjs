@@ -53,9 +53,13 @@ export function buildOracle(root, tasks, lane = null) {
         if (resolved.some((entry) => !entry.result.ok)) {
             continue;
         }
-        // The key's own lines: a declaration for "target" and "callees", a call site for "callers"
-        // (a one-line range covers itself).
+        // The key's own lines: a declaration for "target", "callees" and "twoSided", a call site for
+        // "callers" (a one-line range covers itself). A two-sided answer asked the opposite direction
+        // too and found nothing there.
         answers[task.id] = { locations: resolved.map((entry) => ({ file: entry.file, line: entry.result.line })) };
+        if (plan.check === "twoSided") {
+            answers[task.id].reverse_locations = [];
+        }
     }
 
     return { version: 1, tool: { name: "oracle", version: "1" }, scope: "repo", answers };
