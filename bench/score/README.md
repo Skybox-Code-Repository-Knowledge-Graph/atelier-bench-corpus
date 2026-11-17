@@ -76,6 +76,19 @@ Many exclusions in the corpus are lane prefixes such as `php/`: the answer must 
 lane. They can only fire when the tool saw the other lanes, so they are checked for `scope: repo`
 and reported as not exercised for `scope: lane`.
 
+## Repeated sites
+
+A complete list of reference sites (issue #168) can hold lines whose text is identical to a sibling
+line in the same file, so no needle keys exactly one of them. Such lines go in `repeated_sites`:
+
+```json
+"repeated_sites": [ { "file": "tests/breadth.test.cjs", "needle": "const data = Dataset.seeded();", "lines": 2 } ]
+```
+
+The needle occurs on exactly `lines` lines of the file, and every one of them is a site. A task
+that carries `repeated_sites` states `exact_count` equal to its `known_sites` plus all repeated
+lines. The lane verifiers ignore this key; `test/sites.test.mjs` checks it.
+
 ## The queried symbol
 
 A task's `from` names a line, and a line can hold several identifiers. `from.symbol` says which one
