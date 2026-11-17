@@ -22,7 +22,7 @@ import { symbolColumns } from "../../score/lib/symbol.mjs";
 export const ASKED_SURFACES = new Set(["definition", "resolution", "import-precision"]);
 
 /** Surfaces asked under "anchored". */
-export const ANCHORED_SURFACES = new Set(["hover", "call_hierarchy"]);
+export const ANCHORED_SURFACES = new Set(["hover", "call_hierarchy", "references"]);
 
 /** Kinds whose answer is a relation of the symbol, not its definition. Not asked under "raw". */
 /**
@@ -296,9 +296,10 @@ async function askRaw(question, call) {
  *      result, as under "raw".
  *
  * Then one `cypher` call per needed fact, by node id: the documentation and the signature for hover;
- * for call_hierarchy the subject's own range (it must cover the `from` line, which every key puts on
- * the subject's declaration) and then the CALLS edges in the asked direction, each with its node's
- * range. The note says which step found the subject.
+ * for call_hierarchy and references the subject's own range (it must cover the `from` line, which
+ * those keys put on the subject's declaration), then its edges: CALLS in the asked direction for
+ * call_hierarchy, each with its node's range; CALLS and USES into it for references, each at its
+ * call-site line when the edge has one. The note says which step found the subject.
  */
 async function askAnchored(question, call) {
     const { symbol, file, line } = question.from;
@@ -324,43 +325,64 @@ async function askAnchored(question, call) {
     }
 
     const how = usedFile ? `anchored in ${file} to` : `${file} declares no ${symbol}; resolved by name to`;
-    let id = null;
+    let ids;
     if (reply.kind === "ambiguous") {
         if (!usedFile) {
             return { ...empty, note: `ambiguous: ${reply.candidates.length} candidates, none declared in ${file}` };
         }
         const inFile = reply.candidates.filter((candidate) => candidate.file === file && candidate.startLine);
-        const starting = inFile.find((candidate) => candidate.startLine === line);
+        // skybox can model one declaration as several nodes (a JSX component and its function):
+        // every node that starts at the from line is the subject, taken in id order so runs agree.
+        const starting = inFile.filter((candidate) => candidate.startLine === line).map((candidate) => candidate.id).sort();
         const covering = inFile
             .filter((candidate) => candidate.startLine <= line && line <= (candidate.endLine ?? candidate.startLine))
             .sort((left, right) => ((left.endLine ?? left.startLine) - left.startLine) - ((right.endLine ?? right.startLine) - right.startLine))[0];
-        id = (starting ?? covering)?.id ?? null;
-        if (id === null) {
+        ids = starting.length > 0 ? starting : covering ? [covering.id] : [];
+        if (ids.length === 0) {
             return { ...empty, note: `ambiguous: ${reply.candidates.length} candidates, none at ${file}:${line}` };
         }
     } else if (reply.kind === "resolved") {
-        id = reply.id;
+        ids = [reply.id];
     } else {
         return { status: "error", detail: `unrecognised context reply: ${reply.text}` };
     }
+    const named = ids.join(" + ");
 
     if (question.surface === "hover") {
-        const description = parseCypherValue(await ask(call, "cypher", { query: `MATCH (n) WHERE n.id = ${cypherString(id)} RETURN n.description` }));
-        const signature = parseCypherValue(await ask(call, "cypher", { query: `MATCH (n) WHERE n.id = ${cypherString(id)} RETURN n.signature` }));
-        return { text: [description, signature].filter(Boolean).join("\n"), note: `${how} ${id}` };
+        const parts = [];
+        for (const id of ids) {
+            parts.push(parseCypherValue(await ask(call, "cypher", { query: `MATCH (n) WHERE n.id = ${cypherString(id)} RETURN n.description` })));
+            parts.push(parseCypherValue(await ask(call, "cypher", { query: `MATCH (n) WHERE n.id = ${cypherString(id)} RETURN n.signature` })));
+        }
+        return { text: parts.filter(Boolean).join("\n"), note: `${how} ${named}` };
     }
 
-    // Every call_hierarchy key is asked from its subject's declaration line, so a node that does not
-    // cover that line is a different declaration with the same name, not the subject.
-    const row = parseCypherRow(await ask(call, "cypher", {
-        query: `MATCH (n) WHERE n.id = ${cypherString(id)} RETURN n.filePath, n.startLine, n.endLine`,
-    }));
-    if (!row || row.file !== file || !row.startLine || line < row.startLine || line > (row.endLine ?? row.startLine)) {
-        return { ...empty, note: `${how} ${id}, which is not at ${file}:${line}` };
+    // Every call_hierarchy and references key is asked from its subject's declaration line, so a
+    // node that does not cover that line is a different declaration with the same name.
+    const rows = [];
+    for (const id of ids) {
+        const row = parseCypherRow(await ask(call, "cypher", {
+            query: `MATCH (n) WHERE n.id = ${cypherString(id)} RETURN n.filePath, n.startLine, n.endLine`,
+        }));
+        if (!row || row.file !== file || !row.startLine || line < row.startLine || line > (row.endLine ?? row.startLine)) {
+            return { ...empty, note: `${how} ${id}, which is not at ${file}:${line}` };
+        }
+        if (question.surface === "references") {
+            // skybox 0.9.0 records a use of a symbol as an edge into its node: CALLS (one per call
+            // site, with the site's line) and USES (go, without a line). A site with a line is that
+            // line; a USES row is the using declaration's range, which is what the tool returned.
+            const edges = parseCypherRows(await ask(call, "cypher", {
+                query: `MATCH (c)-[r:CodeRelation]->(t) WHERE t.id = ${cypherString(id)} AND (r.type = 'CALLS' OR r.type = 'USES') RETURN c.filePath, r.callSiteLine, c.startLine, c.endLine`,
+            }));
+            rows.push(...edges.map(([path, site, start, end]) => (/^\d+$/.test(site ?? "") ? [path, site, ""] : [path, start, end])));
+        } else {
+            const query = question.direction === "callers"
+                ? `MATCH (c)-[r:CodeRelation]->(t) WHERE t.id = ${cypherString(id)} AND r.type = 'CALLS' RETURN c.filePath, c.startLine, c.endLine`
+                : `MATCH (s)-[r:CodeRelation]->(c) WHERE s.id = ${cypherString(id)} AND r.type = 'CALLS' RETURN c.filePath, c.startLine, c.endLine`;
+            rows.push(...parseCypherRows(await ask(call, "cypher", { query })));
+        }
     }
-    const query = question.direction === "callers"
-        ? `MATCH (c)-[r:CodeRelation]->(t) WHERE t.id = ${cypherString(id)} AND r.type = 'CALLS' RETURN c.filePath, c.startLine, c.endLine`
-        : `MATCH (s)-[r:CodeRelation]->(c) WHERE s.id = ${cypherString(id)} AND r.type = 'CALLS' RETURN c.filePath, c.startLine, c.endLine`;
-    const { locations, unlocated } = locationsOfRows(parseCypherRows(await ask(call, "cypher", { query })));
-    return { locations, ...(unlocated > 0 ? { unlocated } : {}), note: `${how} ${id}, ${question.direction}` };
+    const { locations, unlocated } = locationsOfRows(rows);
+    const what = question.surface === "references" ? "CALLS and USES edges" : question.direction;
+    return { locations, ...(unlocated > 0 ? { unlocated } : {}), note: `${how} ${named}, ${what}` };
 }

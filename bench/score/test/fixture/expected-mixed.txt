@@ -22,6 +22,11 @@ s-callees: PASS
 s-callees-missing: FAIL (1 of 2 listed callee(s) not returned, first src/app.txt:2)
 s-callers: PASS [not scored: min_incoming]
 s-callers-missing: FAIL (1 of 2 listed call site(s) not returned, first src/app.txt:7)
+s-refs: PASS
+s-refs-extra: FAIL (1 location(s) that are not sites, first src/app.txt:5)
+s-refs-range: FAIL (2 of 2 site(s) not returned, first src/app.txt:3; a returned range covers a missing site, but a site is matched by its line; 1 location(s) that are not sites, first src/app.txt:2)
+s-refs-floor: UNSCORABLE (min_references: a floor beside a count, the list is not known to be complete)
+s-refs-miscount: UNSCORABLE (the key lists 2 site line(s), 2 distinct, for exact_count 3)
 s-unscorable-count: UNSCORABLE (target plus exact_count: meaning depends on kind)
 s-no-symbol: UNSCORABLE (task states no from.symbol)
 s-unresolved: UNRESOLVED (src/absent.txt: file missing)
@@ -33,10 +38,11 @@ import-precision     0     1            0           0      0           0        
 parse-negative       0     0            0           0      0           1           0      1
 hover                1     1            0           0      0           0           0      2
 call_hierarchy       2     2            0           0      0           0           0      4
-all                  8    11            1           1      2           3           1     27
+references           1     2            0           0      0           2           0      5
+all                  9    13            1           1      2           5           1     32
 
 tool: fixture-tool 0.0.0   lane: fixture   scope: repo
 answers for ids this lane does not have: 1 (s-renamed-id)
-scorable by this scorer: 23 of 27 tasks
-exact        passed 5 of 17 scorable (29.4%), 5 of 13 answered (38.5%)
+scorable by this scorer: 26 of 32 tasks
+exact        passed 6 of 20 scorable (30.0%), 6 of 16 answered (37.5%)
 recall-only  passed 3 of 6 scorable (50.0%), 3 of 6 answered (50.0%)

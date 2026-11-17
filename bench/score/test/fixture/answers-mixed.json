@@ -27,6 +27,11 @@
         "s-callees": { "locations": [ { "file": "src/app.txt", "line": 1 }, { "file": "src/app.txt", "line": 2 }, { "file": "src/app.txt", "line": 7 } ] },
         "s-callees-missing": { "locations": [ { "file": "src/app.txt", "line": 1 } ] },
         "s-callers": { "locations": [ { "file": "src/app.txt", "line": 2, "end_line": 5 } ] },
-        "s-callers-missing": { "locations": [ { "file": "src/app.txt", "line": 2, "end_line": 5 } ] }
+        "s-callers-missing": { "locations": [ { "file": "src/app.txt", "line": 2, "end_line": 5 } ] },
+        "s-refs": { "locations": [ { "file": "src/app.txt", "line": 1 }, { "file": "src/app.txt", "line": 3 }, { "file": "src/app.txt", "line": 4 }, { "file": "src/other.txt", "line": 1 } ] },
+        "s-refs-extra": { "locations": [ { "file": "src/app.txt", "line": 3 }, { "file": "src/app.txt", "line": 4 }, { "file": "src/app.txt", "line": 5 } ] },
+        "s-refs-range": { "locations": [ { "file": "src/app.txt", "line": 2, "end_line": 6 } ] },
+        "s-refs-floor": { "locations": [ { "file": "src/app.txt", "line": 3 } ] },
+        "s-refs-miscount": { "locations": [ { "file": "src/app.txt", "line": 3 }, { "file": "src/app.txt", "line": 4 } ] }
     }
 }

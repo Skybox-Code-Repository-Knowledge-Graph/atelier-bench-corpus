@@ -4,7 +4,7 @@
 // in bench/score/README.md; this module only compares that file with the answer key.
 
 import { posix } from "node:path";
-import { fileLines, resolveNeedle } from "./resolve.mjs";
+import { fileLines, linesContaining, resolveNeedle } from "./resolve.mjs";
 import { LANES, planTask } from "./plan.mjs";
 import { FILE_LEVEL_SURFACES } from "./symbol.mjs";
 
@@ -165,6 +165,41 @@ function resolveAll(root, pairs) {
     return { resolved };
 }
 
+/**
+ * The lines of a "sites" plan: `required` (every known site and every line of each repeated group)
+ * and `neutral` (optional sites and the line the question is asked from, which a tool may include
+ * as the declaration). Returns { required, neutral } or { problem }.
+ */
+export function resolveSites(root, plan) {
+    const known = resolveAll(root, plan.entries);
+    if (known.problem) {
+        return { problem: known.problem };
+    }
+    const required = [...known.resolved];
+    for (const group of plan.repeated) {
+        const lines = linesContaining(root, group.file, group.needle);
+        if (lines === null) {
+            return { problem: `${group.file}: file missing` };
+        }
+        if (lines.length !== group.lines) {
+            return { problem: `${group.file}: repeated needle ${JSON.stringify(group.needle)} is on ${lines.length} line(s), the key says ${group.lines}` };
+        }
+        required.push(...lines.map((line) => ({ file: normalizeFile(group.file), line })));
+    }
+    const optional = resolveAll(root, plan.optional);
+    if (optional.problem) {
+        return { problem: optional.problem };
+    }
+    const neutral = [...optional.resolved];
+    if (plan.from) {
+        const from = resolveNeedle(root, plan.from);
+        if (from.ok) {
+            neutral.push({ file: normalizeFile(plan.from.file), line: from.line });
+        }
+    }
+    return { required, neutral };
+}
+
 /** Check the answer's exclusions; locations the key lists are never excluded hits. */
 function checkExclusions(plan, answer, locations, context, reasons, notes) {
     const subject = {
@@ -203,6 +238,17 @@ export function scoreTask(task, answer, context) {
     const allowed = resolveAll(context.root, plan.allow);
     if (allowed.problem) {
         return { ...base, verdict: "UNRESOLVED", detail: allowed.problem };
+    }
+    let sites = null;
+    if (plan.check === "sites") {
+        sites = resolveSites(context.root, plan);
+        if (sites.problem) {
+            return { ...base, verdict: "UNRESOLVED", detail: sites.problem };
+        }
+        const distinct = new Set(sites.required.map((site) => `${site.file}:${site.line}`)).size;
+        if (distinct !== sites.required.length || distinct !== plan.exactCount) {
+            return { ...base, verdict: "UNSCORABLE", detail: `the key lists ${sites.required.length} site line(s), ${distinct} distinct, for exact_count ${plan.exactCount}` };
+        }
     }
 
     if (answer === undefined) {
@@ -265,6 +311,36 @@ export function scoreTask(task, answer, context) {
         }
         const unlisted = read.locations.filter((location) => !needed.resolved.some((entry) => matches(location, entry)));
         checkExclusions(plan, answer, unlisted, context, reasons, notes);
+        return finish();
+    }
+
+    if (plan.check === "sites") {
+        // Exact: a reference site is a line, so a location is matched by its `line` alone. A range
+        // stands for its first line; one range over a whole file is not an answer of every site.
+        const key = (location) => `${location.file}:${location.line}`;
+        const required = new Set(sites.required.map(key));
+        const neutral = new Set(sites.neutral.map(key));
+        const returned = new Set(read.locations.map(key));
+        const missing = sites.required.filter((site) => !returned.has(key(site)));
+        const extra = [...new Map(read.locations
+            .filter((location) => !required.has(key(location)) && !neutral.has(key(location)))
+            .map((location) => [key(location), location])).values()];
+
+        if (read.locations.length === 0 && required.size > 0) {
+            reasons.push("no location returned");
+        } else if (missing.length > 0) {
+            const covered = missing.some((site) => read.locations.some((location) => coversSite(location, site)))
+                ? "; a returned range covers a missing site, but a site is matched by its line"
+                : "";
+            reasons.push(`${missing.length} of ${required.size} site(s) not returned, first ${missing[0].file}:${missing[0].line}${covered}`);
+        }
+        if (extra.length > 0) {
+            reasons.push(`${extra.length} location(s) that are not sites, first ${extra[0].file}:${extra[0].line}`);
+        }
+        if (unlocated > 0) {
+            reasons.push(`${unlocated} result(s) without a file and line`);
+        }
+        checkExclusions(plan, answer, extra, context, reasons, notes);
         return finish();
     }
 
@@ -340,7 +416,7 @@ export function summarize(results) {
     const ratios = (counts) => ({
         pass: counts.PASS,
         answered: counts.PASS + counts.FAIL,
-        scorable: counts.total - counts.UNRESOLVED,
+        scorable: counts.total - counts.UNRESOLVED - counts.UNSCORABLE,
         asked: counts.PASS + counts.FAIL + counts.UNSUPPORTED + counts.ERROR,
         notAsked: counts.UNANSWERED,
     });

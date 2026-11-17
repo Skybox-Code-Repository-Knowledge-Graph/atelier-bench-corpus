@@ -63,9 +63,11 @@ One answer:
   a member fails. A tool that reports the start of a decorated or attributed declaration is
   normalized by its adapter: move to the first line, at or after the reported start, that contains
   the name the tool reported.
-- **A site** (a use, a call site) is matched by containment. `line` to `end_line` may be the range
-  of the function the tool reported as the caller; it covers the site when the site's line is
-  inside it.
+- **A site** (a use, a call site) that the key allows beside a target, or a call site under
+  `call_hierarchy`, is matched by containment. `line` to `end_line` may be the range of the function
+  the tool reported as the caller; it covers the site when the site's line is inside it. The
+  `references` rule is the exception: there the sites are the whole answer, and each is matched by
+  its line (see References).
 - **A few targets are anchored inside their declaration**, because the declaration line is not
   unique in its file or because the answer is a statement. They are listed by lane and id in
   `TARGET_INSIDE_SYMBOL` in `lib/plan.mjs` and matched by containment, like a site. The list was
@@ -95,7 +97,8 @@ lines. The lane verifiers ignore this key; `test/sites.test.mjs` checks it.
 
 Some lines link to a task's symbol in a way a tool may or may not report, and no `kind` on the task
 says that this link is the one asked about: an export list entry (python `__all__ = ["Money"]`), a
-type-literal key that names an export by structure, a code span in a doc comment. Such lines go in
+type-literal key that names an export by structure, a use of the constant whose value is the event
+name a `name_only` task asks about. Such lines go in
 `optional_sites`:
 
 ```json
@@ -105,8 +108,7 @@ type-literal key that names an export by structure, a code span in a doc comment
 An optional site is neither required nor wrong: a tool that returns it is not marked down, and a
 tool that omits it is not either. It does not count toward `exact_count`. Each needle keys exactly
 one line, which is not also the target, a known site or a repeated site. The lane verifiers ignore
-this key; `test/sites.test.mjs` checks it. No rule scores `references` yet; the rule that does will
-allow these lines.
+this key; `test/sites.test.mjs` checks it. The references rule treats these lines as neutral.
 
 ## The queried symbol
 
@@ -174,6 +176,23 @@ For all four:
   reviewed against the lanes' `notes`. One, `build_generated`, is excluded (`KIND_UNSCORABLE` in
   `lib/plan.mjs`): its key names two places, so a tool that returns either one alone would fail.
 
+### References
+
+| Rule | Surface | Needs | Pass when |
+| --- | --- | --- | --- |
+| `references/sites` | `references` | `known_sites`, `exact_count` | every site is returned, and nothing else |
+
+An exact rule. The sites are every known site and every line of each `repeated_sites` group, and
+`exact_count` must equal their number (`test/sites.test.mjs` holds every lane to it). A site is a
+line, so each returned location is matched by its `line` alone: a range stands for its first line,
+and one range over a function or a file answers none of the sites inside it. Two lines are
+neutral, returned or not: the line the question is asked from (a tool may list the declaration
+among its references) and each optional site. Any other location, or a result without a file and
+line, fails the answer, as does a `must_not_include` hit. A task that still carries a floor
+(`min_references`) is `UNSCORABLE`. The kinds on these tasks (`name_only`, `type_only`) are labels:
+the lists already say which lines count, the string literal lines for `name_only`.
+
+### Recall rules
 ### Recall rules
 
 | Rule | Surface | Needs | Pass when |
@@ -189,9 +208,9 @@ an `exact` line and a `recall-only` line, and the two are never added up. `min_i
 as `not scored`: tools count callers per call site or per calling function, and the key does not
 say which.
 
-Not covered yet, reported `UNSCORABLE`: `references`, `implementation`, `cardinality`,
-`multi-parent`, `direction`, `document_symbol`, `parse-negative`, `diagnostics`, and tasks whose
-only expectation is a count or a list of `known_sites`.
+Not covered yet, reported `UNSCORABLE`: `implementation`, `cardinality`, `multi-parent`,
+`direction`, `document_symbol`, `parse-negative`, `diagnostics`, and tasks whose only expectation
+is a count.
 
 ### `must_not_include`
 

@@ -16,7 +16,7 @@ import { fileURLToPath } from "node:url";
 import { buildOracle } from "../oracle.mjs";
 import { LANES, planTask } from "../lib/plan.mjs";
 import { fileLines, resolveNeedle } from "../lib/resolve.mjs";
-import { classifyExclusion, scoreTask } from "../lib/score.mjs";
+import { classifyExclusion, resolveSites, scoreTask } from "../lib/score.mjs";
 
 const REPO_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..", "..", "..");
 
@@ -85,6 +85,10 @@ for (const lane of LANES) {
             counts.byCheck[plan.check] = (counts.byCheck[plan.check] ?? 0) + 1;
             const label = `${lane}:${task.id}`;
 
+            if (plan.check === "sites") {
+                checkSitesRule(task, plan, answer, context, label, counts);
+                continue;
+            }
             if (plan.check !== "target") {
                 checkRecallRule(task, plan, answer, context, label, counts);
                 continue;
@@ -147,6 +151,80 @@ for (const lane of LANES) {
  * than the key lists (extra text, extra locations, one range over a whole file) passes, which is why
  * these rules are reported in their own column.
  */
+/**
+ * The exact rule "sites" (references): the oracle passes, and so do the oracle plus the declaration
+ * the question is asked from or any optional site. One site dropped, one moved by a line, a line
+ * that is not a site, a result without a line, and one range per file in place of its sites each
+ * fail, and so does one hit for every `must_not_include` entry.
+ */
+function checkSitesRule(task, plan, answer, context, label, counts) {
+    const verdict = (candidate) => scoreTask(task, candidate, context);
+    const outcome = verdict(answer);
+    assert.equal(outcome.verdict, "PASS", `${label} oracle: ${outcome.detail ?? ""}`);
+
+    const sites = resolveSites(context.root, plan);
+    const key = (location) => `${location.file}:${location.line}`;
+    const taken = new Set([...sites.required, ...sites.neutral].map(key));
+    const listed = answer.locations;
+    const freeLine = (file, near) => {
+        const total = (fileLines(context.root, file) ?? []).length;
+        for (let step = 1; step <= total; step += 1) {
+            for (const line of [near - step, near + step]) {
+                if (line >= 1 && line <= total && !taken.has(`${file}:${line}`)) {
+                    return line;
+                }
+            }
+        }
+        return null;
+    };
+
+    for (const neutral of sites.neutral) {
+        assert.equal(verdict({ locations: [...listed, neutral] }).verdict, "PASS", `${label} with neutral ${key(neutral)}`);
+    }
+    assert.equal(verdict({ locations: [...listed], unlocated: 1 }).verdict, "FAIL", `${label} a result without a line`);
+
+    if (listed.length > 0) {
+        assert.equal(verdict({ locations: listed.slice(1) }).verdict, "FAIL", `${label} one site missing`);
+        const moved = freeLine(listed[0].file, listed[0].line);
+        if (moved !== null) {
+            assert.equal(verdict({ locations: [{ ...listed[0], line: moved }, ...listed.slice(1)] }).verdict, "FAIL", `${label} one site moved`);
+        }
+        const files = [...new Set(listed.map((location) => location.file))];
+        if (files.length < listed.length) {
+            const wide = files.map((file) => {
+                const lines = listed.filter((location) => location.file === file).map((location) => location.line);
+                return { file, line: Math.min(...lines), end_line: Math.max(...lines) + 10 };
+            });
+            assert.equal(verdict({ locations: wide }).verdict, "FAIL", `${label} one range per file`);
+        }
+        if (plan.repeated.length > 0) {
+            const group = plan.repeated[0];
+            const lines = new Set((fileLines(context.root, group.file) ?? []).flatMap((text, index) => (text.includes(group.needle) ? [index + 1] : [])));
+            const lastOfGroup = listed.findLastIndex((location) => location.file === group.file && lines.has(location.line));
+            const withoutOne = listed.filter((_, index) => index !== lastOfGroup);
+            assert.equal(verdict({ locations: withoutOne }).verdict, "FAIL", `${label} one line of a repeated group missing`);
+        }
+    }
+    const anchorFile = plan.from?.file ?? listed[0]?.file;
+    if (anchorFile !== undefined) {
+        const line = freeLine(anchorFile, 1);
+        if (line !== null) {
+            assert.equal(verdict({ locations: [...listed, { file: anchorFile, line }] }).verdict, "FAIL", `${label} a line that is not a site`);
+        }
+    }
+
+    for (const entry of plan.exclude) {
+        const tripped = tripExclusion(entry, answer, context.root, context.lane);
+        if (tripped === null) {
+            counts.untrippable.push(`${task.id}: ${entry}`);
+            continue;
+        }
+        counts.exclusions += 1;
+        const result = verdict(tripped);
+        assert.equal(result.verdict, "FAIL", `${label} exclusion ${JSON.stringify(entry)}`);
+    }
+}
+
 function checkRecallRule(task, plan, answer, context, label, counts) {
     const verdict = (candidate) => scoreTask(task, candidate, context);
     assert.equal(verdict(answer).verdict, "PASS", `${label} oracle: ${verdict(answer).detail ?? ""}`);

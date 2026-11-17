@@ -211,6 +211,41 @@
             "expect": { "incoming_includes": [ { "file": "src/app.txt", "needle": "gamma uses alpha" }, { "file": "src/app.txt", "needle": "epsilon target" } ] }
         },
         {
+            "id": "s-refs",
+            "surface": "references",
+            "note": "Every site by its line; the declaration asked from and an optional site may be returned too.",
+            "from": { "file": "src/app.txt", "needle": "alpha declaration", "symbol": "alpha" },
+            "expect": { "exact_count": 2, "known_sites": [ { "file": "src/app.txt", "needle": "gamma uses alpha" }, { "file": "src/app.txt", "needle": "delta site" } ], "optional_sites": [ { "file": "src/other.txt", "needle": "other file line" } ] }
+        },
+        {
+            "id": "s-refs-extra",
+            "surface": "references",
+            "note": "Every site returned, plus a line that is not a site.",
+            "from": { "file": "src/app.txt", "needle": "alpha declaration", "symbol": "alpha" },
+            "expect": { "exact_count": 2, "known_sites": [ { "file": "src/app.txt", "needle": "gamma uses alpha" }, { "file": "src/app.txt", "needle": "delta site" } ] }
+        },
+        {
+            "id": "s-refs-range",
+            "surface": "references",
+            "note": "One range over the sites is not the sites: a site is matched by its line.",
+            "from": { "file": "src/app.txt", "needle": "alpha declaration", "symbol": "alpha" },
+            "expect": { "exact_count": 2, "known_sites": [ { "file": "src/app.txt", "needle": "gamma uses alpha" }, { "file": "src/app.txt", "needle": "delta site" } ] }
+        },
+        {
+            "id": "s-refs-floor",
+            "surface": "references",
+            "note": "A floor beside a count: the list is not known to be complete.",
+            "from": { "file": "src/app.txt", "needle": "alpha declaration", "symbol": "alpha" },
+            "expect": { "exact_count": 1, "min_references": 1, "known_sites": [ { "file": "src/app.txt", "needle": "gamma uses alpha" } ] }
+        },
+        {
+            "id": "s-refs-miscount",
+            "surface": "references",
+            "note": "exact_count disagrees with the listed lines: the key, not the answer, is wrong.",
+            "from": { "file": "src/app.txt", "needle": "alpha declaration", "symbol": "alpha" },
+            "expect": { "exact_count": 3, "known_sites": [ { "file": "src/app.txt", "needle": "gamma uses alpha" }, { "file": "src/app.txt", "needle": "delta site" } ] }
+        },
+        {
             "id": "s-unscorable-count",
             "surface": "definition",
             "note": "A target with exact_count: what the count means depends on kind, so no rule scores it.",
