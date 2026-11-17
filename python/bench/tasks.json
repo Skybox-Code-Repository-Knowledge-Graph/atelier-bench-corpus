@@ -417,7 +417,9 @@
             "note": "Descriptor: assigning self.endpoint runs Endpoint.__set__; the class attribute is a descriptor instance.",
             "from": {
                 "file": "atelier_bench/support/abstract_notifier.py",
-                "needle": "self.endpoint = endpoint"
+                "needle": "self.endpoint = endpoint",
+                "symbol": "endpoint",
+                "occurrence": 1
             },
             "expect": {
                 "kind": "descriptor",
@@ -452,7 +454,8 @@
             "note": "functools.singledispatch: the call resolves to the registered overload for Money, not the generic body.",
             "from": {
                 "file": "tests/test_breadth.py",
-                "needle": "self.assertEqual(format_cell(Money(5)), \"0.05\")"
+                "needle": "self.assertEqual(format_cell(Money(5)), \"0.05\")",
+                "symbol": "format_cell"
             },
             "expect": {
                 "kind": "singledispatch",
@@ -594,7 +597,8 @@
             "note": "PEP 562 module __getattr__: atelier_bench.RULES has no assignment in the package; the module-level function supplies it lazily.",
             "from": {
                 "file": "tests/test_breadth.py",
-                "needle": "self.assertEqual(len(atelier_bench.RULES), 48)"
+                "needle": "self.assertEqual(len(atelier_bench.RULES), 48)",
+                "symbol": "RULES"
             },
             "expect": {
                 "kind": "module_getattr",
