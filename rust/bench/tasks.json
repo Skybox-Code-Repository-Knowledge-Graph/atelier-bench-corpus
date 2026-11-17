@@ -419,19 +419,51 @@
                 "symbol": "transition_to"
             },
             "expect": {
-                "min_references": 8,
+                "exact_count": 11,
                 "known_sites": [
                     {
                         "file": "crates/atelier-core/src/models/repair_order.rs",
                         "needle": "if !self.transition_to(RepairStatus::Completed, changed_by) {"
                     },
                     {
-                        "file": "crates/atelier-bench/src/dataset.rs",
-                        "needle": "orders[1].transition_to(RepairStatus::AwaitingParts"
+                        "file": "crates/atelier-core/tests/lifecycle.rs",
+                        "needle": "order.transition_to(RepairStatus::Diagnosing"
                     },
                     {
                         "file": "crates/atelier-core/tests/lifecycle.rs",
                         "needle": "order.transition_to(RepairStatus::Repairing"
+                    },
+                    {
+                        "file": "crates/atelier-core/tests/lifecycle.rs",
+                        "needle": "order.transition_to(RepairStatus::Collected"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/dataset.rs",
+                        "needle": "orders[0].transition_to(RepairStatus::Diagnosing"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/dataset.rs",
+                        "needle": "orders[0].transition_to(RepairStatus::Repairing"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/dataset.rs",
+                        "needle": "orders[0].transition_to(RepairStatus::Completed"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/dataset.rs",
+                        "needle": "orders[1].transition_to(RepairStatus::Diagnosing"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/dataset.rs",
+                        "needle": "orders[1].transition_to(RepairStatus::AwaitingParts"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/dataset.rs",
+                        "needle": "orders[2].transition_to(RepairStatus::Diagnosing"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/dataset.rs",
+                        "needle": "orders[2].transition_to(RepairStatus::Repairing"
                     }
                 ]
             }
@@ -445,7 +477,7 @@
                 "symbol": "consumed_quantity"
             },
             "expect": {
-                "min_references": 4,
+                "exact_count": 4,
                 "known_sites": [
                     {
                         "file": "crates/atelier-bench/src/reports/inventory_turnover_report.rs",
@@ -457,6 +489,10 @@
                     },
                     {
                         "file": "crates/atelier-bench/src/services/part_usage_service.rs",
+                        "needle": "part.consumed_quantity()"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/services/inventory_turnover_service.rs",
                         "needle": "part.consumed_quantity()"
                     }
                 ]
@@ -519,15 +555,55 @@
                 "symbol": "from_cents"
             },
             "expect": {
-                "min_references": 10,
+                "exact_count": 12,
                 "known_sites": [
+                    {
+                        "file": "crates/atelier-bench/src/reports/payment_default_report.rs",
+                        "needle": "ReportRow::from_cents("
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/reports/monthly_revenue_report.rs",
+                        "needle": "ReportRow::from_cents(\"month to date\""
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/reports/customer_lifetime_report.rs",
+                        "needle": "ReportRow::from_cents(customer.name.clone(), cents)"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/reports/weekly_revenue_report.rs",
+                        "needle": "ReportRow::from_cents(\"week to date\""
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/reports/warranty_cost_report.rs",
+                        "needle": "ReportRow::from_cents("
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/reports/technician_payroll_report.rs",
+                        "needle": "ReportRow::from_cents(technician.name.clone(), share)"
+                    },
                     {
                         "file": "crates/atelier-bench/src/reports/cash_flow_report.rs",
                         "needle": "ReportRow::from_cents(\"paid\", paid)"
                     },
                     {
-                        "file": "crates/atelier-bench/src/reports/weekly_revenue_report.rs",
-                        "needle": "ReportRow::from_cents(\"week to date\""
+                        "file": "crates/atelier-bench/src/reports/cash_flow_report.rs",
+                        "needle": "ReportRow::from_cents(\"outstanding\", outstanding)"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/reports/daily_revenue_report.rs",
+                        "needle": "ReportRow::from_cents("
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/reports/gross_profit_report.rs",
+                        "needle": "ReportRow::from_cents(\"revenue\", revenue)"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/reports/gross_profit_report.rs",
+                        "needle": "ReportRow::from_cents(\"part cost\", cost)"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/reports/gross_profit_report.rs",
+                        "needle": "ReportRow::from_cents(\"gross profit\", revenue - cost),"
                     }
                 ]
             }
@@ -1556,7 +1632,7 @@
                 "symbol": "REPORTS"
             },
             "expect": {
-                "min_references": 4,
+                "exact_count": 4,
                 "known_sites": [
                     {
                         "file": "crates/atelier-bench/tests/breadth.rs",
@@ -1565,6 +1641,14 @@
                     {
                         "file": "crates/atelier-bench/tests/breadth.rs",
                         "needle": "let mut slugs: Vec<&str> = atelier_bench::REPORTS.iter().map(|r| r.slug()).collect();"
+                    },
+                    {
+                        "file": "crates/atelier-bench/tests/breadth.rs",
+                        "needle": "for report in atelier_bench::REPORTS.iter() {"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/lib.rs",
+                        "needle": "    REPORTS"
                     }
                 ]
             }
@@ -1579,15 +1663,55 @@
                 "symbol": "from_cents"
             },
             "expect": {
-                "min_references": 10,
+                "exact_count": 12,
                 "known_sites": [
                     {
-                        "file": "crates/atelier-bench/src/reports/gross_profit_report.rs",
-                        "needle": "ReportRow::from_cents(\"gross profit\", revenue - cost),"
+                        "file": "crates/atelier-bench/src/reports/payment_default_report.rs",
+                        "needle": "ReportRow::from_cents("
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/reports/monthly_revenue_report.rs",
+                        "needle": "ReportRow::from_cents(\"month to date\""
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/reports/customer_lifetime_report.rs",
+                        "needle": "ReportRow::from_cents(customer.name.clone(), cents)"
                     },
                     {
                         "file": "crates/atelier-bench/src/reports/weekly_revenue_report.rs",
-                        "needle": "vec![ReportRow::from_cents(\"week to date\", data.revenue_cents())]"
+                        "needle": "ReportRow::from_cents(\"week to date\""
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/reports/warranty_cost_report.rs",
+                        "needle": "ReportRow::from_cents("
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/reports/technician_payroll_report.rs",
+                        "needle": "ReportRow::from_cents(technician.name.clone(), share)"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/reports/cash_flow_report.rs",
+                        "needle": "ReportRow::from_cents(\"paid\", paid)"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/reports/cash_flow_report.rs",
+                        "needle": "ReportRow::from_cents(\"outstanding\", outstanding)"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/reports/daily_revenue_report.rs",
+                        "needle": "ReportRow::from_cents("
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/reports/gross_profit_report.rs",
+                        "needle": "ReportRow::from_cents(\"revenue\", revenue)"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/reports/gross_profit_report.rs",
+                        "needle": "ReportRow::from_cents(\"part cost\", cost)"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/reports/gross_profit_report.rs",
+                        "needle": "ReportRow::from_cents(\"gross profit\", revenue - cost),"
                     }
                 ]
             }
