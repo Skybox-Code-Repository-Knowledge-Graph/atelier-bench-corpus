@@ -632,7 +632,8 @@
             "note": "The method has no impl block on the receiver type; only the blanket impl provides it.",
             "from": {
                 "file": "crates/atelier-bench/tests/breadth.rs",
-                "needle": "report.format_label("
+                "needle": "report.format_label(",
+                "symbol": "format_label"
             },
             "expect": {
                 "kind": "blanket_impl",
@@ -648,7 +649,8 @@
             "note": "to_json() is provided by a blanket impl keyed on a foreign trait bound (serde::Serialize).",
             "from": {
                 "file": "crates/atelier-bench/tests/breadth.rs",
-                "needle": "rows.to_json()"
+                "needle": "rows.to_json()",
+                "symbol": "to_json"
             },
             "expect": {
                 "kind": "blanket_impl",
@@ -1104,7 +1106,9 @@
             "surface": "definition",
             "from": {
                 "file": "crates/atelier-bench/src/support/pair_map.rs",
-                "needle": "map.insert(\"a\", 1);"
+                "needle": "let mut map: PairMap<&str, i32> = PairMap::new();",
+                "symbol": "PairMap",
+                "occurrence": 1
             },
             "expect": {
                 "file": "crates/atelier-bench/src/support/pair_map.rs",
@@ -1187,7 +1191,8 @@
             "note": "One item gated behind #[cfg(test)], the other behind #[cfg(feature = \"extra-rules\")] (declared, off by default).",
             "from": {
                 "file": "crates/atelier-bench/Cargo.toml",
-                "needle": "extra-rules = []"
+                "needle": "extra-rules = []",
+                "symbol": null
             },
             "expect": {
                 "implementations": [
@@ -1592,7 +1597,8 @@
             "note": "PlainRowFormatter declares format_value and format_label inherently and never names HasFormatting. Rust has no structural conformance, so it is NOT an implementor, and the blanket impl<T: ReportContract> does not reach it either.",
             "from": {
                 "file": "crates/atelier-bench/src/support/plain_row_formatter.rs",
-                "needle": "pub fn format_value(&self, value: f64) -> String {"
+                "needle": "pub struct PlainRowFormatter;",
+                "symbol": "PlainRowFormatter"
             },
             "expect": {
                 "kind": "structural",
@@ -1717,7 +1723,8 @@
             "note": "Rust has no generator syntax: the for loop drives OpenOrders::next, which is the yield point the other lanes write as yield. A definition request from the loop header must reach next, not stop at the method that hands back the iterator.",
             "from": {
                 "file": "crates/atelier-bench/src/dataset.rs",
-                "needle": "for order in self.iter_open_orders() {"
+                "needle": "for order in self.iter_open_orders() {",
+                "symbol": null
             },
             "expect": {
                 "file": "crates/atelier-bench/src/dataset.rs",
