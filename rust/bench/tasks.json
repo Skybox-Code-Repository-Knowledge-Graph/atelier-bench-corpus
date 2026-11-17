@@ -344,15 +344,99 @@
                 "symbol": "ReportContract"
             },
             "expect": {
-                "min_implementations": 24,
+                "exact_count": 24,
                 "implementations": [
+                    {
+                        "file": "crates/atelier-bench/src/reports/cash_flow_report.rs",
+                        "needle": "impl ReportContract for CashFlowReport {"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/reports/churn_risk_report.rs",
+                        "needle": "impl ReportContract for ChurnRiskReport {"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/reports/customer_lifetime_report.rs",
+                        "needle": "impl ReportContract for CustomerLifetimeReport {"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/reports/customer_retention_report.rs",
+                        "needle": "impl ReportContract for CustomerRetentionReport {"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/reports/daily_revenue_report.rs",
+                        "needle": "impl ReportContract for DailyRevenueReport {"
+                    },
                     {
                         "file": "crates/atelier-bench/src/reports/gross_profit_report.rs",
                         "needle": "impl ReportContract for GrossProfitReport {"
                     },
                     {
+                        "file": "crates/atelier-bench/src/reports/inventory_turnover_report.rs",
+                        "needle": "impl ReportContract for InventoryTurnoverReport {"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/reports/monthly_revenue_report.rs",
+                        "needle": "impl ReportContract for MonthlyRevenueReport {"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/reports/net_margin_report.rs",
+                        "needle": "impl ReportContract for NetMarginReport {"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/reports/order_backlog_report.rs",
+                        "needle": "impl ReportContract for OrderBacklogReport {"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/reports/order_throughput_report.rs",
+                        "needle": "impl ReportContract for OrderThroughputReport {"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/reports/order_volume_report.rs",
+                        "needle": "impl ReportContract for OrderVolumeReport {"
+                    },
+                    {
                         "file": "crates/atelier-bench/src/reports/part_shortage_report.rs",
                         "needle": "impl ReportContract for PartShortageReport {"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/reports/part_usage_report.rs",
+                        "needle": "impl ReportContract for PartUsageReport {"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/reports/payment_default_report.rs",
+                        "needle": "impl ReportContract for PaymentDefaultReport {"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/reports/payment_latency_report.rs",
+                        "needle": "impl ReportContract for PaymentLatencyReport {"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/reports/profit_margin_report.rs",
+                        "needle": "impl ReportContract for ProfitMarginReport {"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/reports/technician_efficiency_report.rs",
+                        "needle": "impl ReportContract for TechnicianEfficiencyReport {"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/reports/technician_load_report.rs",
+                        "needle": "impl ReportContract for TechnicianLoadReport {"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/reports/technician_payroll_report.rs",
+                        "needle": "impl ReportContract for TechnicianPayrollReport {"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/reports/warranty_claim_report.rs",
+                        "needle": "impl ReportContract for WarrantyClaimReport {"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/reports/warranty_cost_report.rs",
+                        "needle": "impl ReportContract for WarrantyCostReport {"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/reports/warranty_trend_report.rs",
+                        "needle": "impl ReportContract for WarrantyTrendReport {"
                     },
                     {
                         "file": "crates/atelier-bench/src/reports/weekly_revenue_report.rs",
@@ -371,15 +455,35 @@
                 "symbol": "Repository"
             },
             "expect": {
-                "min_implementations": 8,
+                "exact_count": 8,
                 "implementations": [
+                    {
+                        "file": "crates/atelier-bench/src/repositories/customer_repository.rs",
+                        "needle": "impl Repository for CustomerRepository {"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/repositories/inventory_repository.rs",
+                        "needle": "impl Repository for InventoryRepository {"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/repositories/invoice_repository.rs",
+                        "needle": "impl Repository for InvoiceRepository {"
+                    },
                     {
                         "file": "crates/atelier-bench/src/repositories/order_repository.rs",
                         "needle": "impl Repository for OrderRepository {"
                     },
                     {
-                        "file": "crates/atelier-bench/src/repositories/invoice_repository.rs",
-                        "needle": "impl Repository for InvoiceRepository {"
+                        "file": "crates/atelier-bench/src/repositories/part_repository.rs",
+                        "needle": "impl Repository for PartRepository {"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/repositories/payment_repository.rs",
+                        "needle": "impl Repository for PaymentRepository {"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/repositories/technician_repository.rs",
+                        "needle": "impl Repository for TechnicianRepository {"
                     },
                     {
                         "file": "crates/atelier-bench/src/repositories/warranty_repository.rs",
@@ -397,15 +501,39 @@
                 "symbol": "NotifierContract"
             },
             "expect": {
-                "min_implementations": 8,
+                "exact_count": 8,
                 "implementations": [
+                    {
+                        "file": "crates/atelier-bench/src/notifiers/discord_notifier.rs",
+                        "needle": "impl NotifierContract for DiscordNotifier {"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/notifiers/email_notifier.rs",
+                        "needle": "impl NotifierContract for EmailNotifier {"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/notifiers/pager_notifier.rs",
+                        "needle": "impl NotifierContract for PagerNotifier {"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/notifiers/push_notifier.rs",
+                        "needle": "impl NotifierContract for PushNotifier {"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/notifiers/slack_notifier.rs",
+                        "needle": "impl NotifierContract for SlackNotifier {"
+                    },
                     {
                         "file": "crates/atelier-bench/src/notifiers/sms_notifier.rs",
                         "needle": "impl NotifierContract for SmsNotifier {"
                     },
                     {
-                        "file": "crates/atelier-bench/src/notifiers/slack_notifier.rs",
-                        "needle": "impl NotifierContract for SlackNotifier {"
+                        "file": "crates/atelier-bench/src/notifiers/teams_notifier.rs",
+                        "needle": "impl NotifierContract for TeamsNotifier {"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/notifiers/webhook_notifier.rs",
+                        "needle": "impl NotifierContract for WebhookNotifier {"
                     }
                 ]
             }
@@ -419,19 +547,51 @@
                 "symbol": "transition_to"
             },
             "expect": {
-                "min_references": 8,
+                "exact_count": 11,
                 "known_sites": [
                     {
                         "file": "crates/atelier-core/src/models/repair_order.rs",
                         "needle": "if !self.transition_to(RepairStatus::Completed, changed_by) {"
                     },
                     {
-                        "file": "crates/atelier-bench/src/dataset.rs",
-                        "needle": "orders[1].transition_to(RepairStatus::AwaitingParts"
+                        "file": "crates/atelier-core/tests/lifecycle.rs",
+                        "needle": "order.transition_to(RepairStatus::Diagnosing"
                     },
                     {
                         "file": "crates/atelier-core/tests/lifecycle.rs",
                         "needle": "order.transition_to(RepairStatus::Repairing"
+                    },
+                    {
+                        "file": "crates/atelier-core/tests/lifecycle.rs",
+                        "needle": "order.transition_to(RepairStatus::Collected"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/dataset.rs",
+                        "needle": "orders[0].transition_to(RepairStatus::Diagnosing"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/dataset.rs",
+                        "needle": "orders[0].transition_to(RepairStatus::Repairing"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/dataset.rs",
+                        "needle": "orders[0].transition_to(RepairStatus::Completed"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/dataset.rs",
+                        "needle": "orders[1].transition_to(RepairStatus::Diagnosing"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/dataset.rs",
+                        "needle": "orders[1].transition_to(RepairStatus::AwaitingParts"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/dataset.rs",
+                        "needle": "orders[2].transition_to(RepairStatus::Diagnosing"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/dataset.rs",
+                        "needle": "orders[2].transition_to(RepairStatus::Repairing"
                     }
                 ]
             }
@@ -445,7 +605,7 @@
                 "symbol": "consumed_quantity"
             },
             "expect": {
-                "min_references": 4,
+                "exact_count": 4,
                 "known_sites": [
                     {
                         "file": "crates/atelier-bench/src/reports/inventory_turnover_report.rs",
@@ -457,6 +617,10 @@
                     },
                     {
                         "file": "crates/atelier-bench/src/services/part_usage_service.rs",
+                        "needle": "part.consumed_quantity()"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/services/inventory_turnover_service.rs",
                         "needle": "part.consumed_quantity()"
                     }
                 ]
@@ -471,15 +635,51 @@
                 "symbol": "seeded"
             },
             "expect": {
-                "min_references": 12,
+                "exact_count": 16,
                 "known_sites": [
                     {
                         "file": "crates/atelier-app/src/state.rs",
-                        "needle": "Arc::new(Dataset::seeded())"
+                        "needle": "data: Arc::new(Dataset::seeded()),"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/dataset.rs",
+                        "needle": "let data = Dataset::seeded();"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/rules/cfg_gated.rs",
+                        "needle": "assert!(AlwaysTrueRule.evaluate(&Dataset::seeded()));"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/rules/mod.rs",
+                        "needle": "let data = Dataset::seeded();"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/support/closure_predicate.rs",
+                        "needle": "assert!(predicate.matches(&Dataset::seeded()));"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/support/rule_summary.rs",
+                        "needle": "let summary = RuleSummary::compute(&Dataset::seeded());"
+                    },
+                    {
+                        "file": "crates/atelier-bench/tests/blanket_rules.rs",
+                        "needle": "let data = Dataset::seeded();"
                     },
                     {
                         "file": "crates/atelier-bench/tests/breadth.rs",
-                        "needle": "OrderRepository::new(Dataset::seeded().orders)"
+                        "needle": "let repo = OrderRepository::new(Dataset::seeded().orders);"
+                    }
+                ],
+                "repeated_sites": [
+                    {
+                        "file": "crates/atelier-bench/tests/breadth.rs",
+                        "needle": "let data = Dataset::seeded();",
+                        "lines": 6
+                    },
+                    {
+                        "file": "crates/atelier-bench/tests/wave2_iteration.rs",
+                        "needle": "let data = Dataset::seeded();",
+                        "lines": 2
                     }
                 ]
             }
@@ -493,19 +693,332 @@
                 "symbol": "Money"
             },
             "expect": {
-                "min_references": 20,
+                "exact_count": 81,
                 "known_sites": [
                     {
-                        "file": "crates/atelier-core/src/models/part.rs",
-                        "needle": "pub unit_price: Money,"
+                        "file": "crates/atelier-bench/src/dataset.rs",
+                        "needle": "use atelier_core::money::Money;"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/dataset.rs",
+                        "needle": "Part::new(1, \"SCR-13\", \"Screen 13\\\"\", Money(19_900)).with_stock(4),"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/dataset.rs",
+                        "needle": "Part::new(2, \"BAT-55\", \"Battery 55Wh\", Money(8_900)).with_stock(1),"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/dataset.rs",
+                        "needle": "Part::new(3, \"KBD-EU\", \"Keyboard EU\", Money(6_400)).with_stock(7),"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/dataset.rs",
+                        "needle": "Part::new(4, \"FAN-A1\", \"Cooling fan\", Money(2_200)).with_stock(2),"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/dataset.rs",
+                        "needle": "Invoice::new(1, 1, Money(34_900)),"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/dataset.rs",
+                        "needle": "Invoice::new(2, 2, Money(23_425)),"
+                    },
+                    {
+                        "file": "crates/atelier-core/src/billing/formatter.rs",
+                        "needle": "use crate::money::Money;"
+                    },
+                    {
+                        "file": "crates/atelier-core/src/billing/formatter.rs",
+                        "needle": "pub fn money(&self, amount: Money, currency: &str) -> String {"
+                    },
+                    {
+                        "file": "crates/atelier-core/src/billing/formatter.rs",
+                        "needle": "pub fn line(&self, quantity: u32, description: &str, amount: Money) -> String {"
+                    },
+                    {
+                        "file": "crates/atelier-core/src/contracts/invoice_calculator.rs",
+                        "needle": "use crate::money::Money;"
+                    },
+                    {
+                        "file": "crates/atelier-core/src/contracts/invoice_calculator.rs",
+                        "needle": "fn calculate(&self, order: &RepairOrder) -> Money;"
+                    },
+                    {
+                        "file": "crates/atelier-core/src/lib.rs",
+                        "needle": "pub use crate::money::Money;"
+                    },
+                    {
+                        "file": "crates/atelier-core/src/models/invoice.rs",
+                        "needle": "use crate::money::Money;"
                     },
                     {
                         "file": "crates/atelier-core/src/models/invoice.rs",
                         "needle": "pub total: Money,"
                     },
                     {
-                        "file": "crates/atelier-core/src/contracts/invoice_calculator.rs",
-                        "needle": "fn calculate(&self, order: &RepairOrder) -> Money;"
+                        "file": "crates/atelier-core/src/models/invoice.rs",
+                        "needle": "pub fn new(id: u32, repair_order_id: u32, total: Money) -> Self {"
+                    },
+                    {
+                        "file": "crates/atelier-core/src/models/invoice.rs",
+                        "needle": "pub fn outstanding(&self) -> Money {"
+                    },
+                    {
+                        "file": "crates/atelier-core/src/models/invoice.rs",
+                        "needle": "if self.paid { Money::ZERO } else { self.total }"
+                    },
+                    {
+                        "file": "crates/atelier-core/src/models/part.rs",
+                        "needle": "use crate::money::Money;"
+                    },
+                    {
+                        "file": "crates/atelier-core/src/models/part.rs",
+                        "needle": "pub unit_price: Money,"
+                    },
+                    {
+                        "file": "crates/atelier-core/src/models/part.rs",
+                        "needle": "        unit_price: Money,"
+                    },
+                    {
+                        "file": "crates/atelier-core/src/models/part.rs",
+                        "needle": "pub fn extended_price(&self, quantity: u32) -> Money {"
+                    },
+                    {
+                        "file": "crates/atelier-core/src/models/repair_order.rs",
+                        "needle": "use crate::money::Money;"
+                    },
+                    {
+                        "file": "crates/atelier-core/src/models/repair_order.rs",
+                        "needle": "pub unit_price: Money,"
+                    },
+                    {
+                        "file": "crates/atelier-core/src/models/repair_order.rs",
+                        "needle": "pub fn parts_subtotal(&self) -> Money {"
+                    },
+                    {
+                        "file": "crates/atelier-core/src/models/repair_order.rs",
+                        "needle": "pub fn total(&self, container: &Container) -> Money {"
+                    },
+                    {
+                        "file": "crates/atelier-core/src/money.rs",
+                        "needle": "impl Money {"
+                    },
+                    {
+                        "file": "crates/atelier-core/src/money.rs",
+                        "needle": "pub const ZERO: Money = Money(0);"
+                    },
+                    {
+                        "file": "crates/atelier-core/src/money.rs",
+                        "needle": "Money(cents)"
+                    },
+                    {
+                        "file": "crates/atelier-core/src/money.rs",
+                        "needle": "pub fn with_surcharge_bp(&self, bp: u32) -> Money {"
+                    },
+                    {
+                        "file": "crates/atelier-core/src/money.rs",
+                        "needle": "Money(self.0 + extra)"
+                    },
+                    {
+                        "file": "crates/atelier-core/src/money.rs",
+                        "needle": "impl Add for Money {"
+                    },
+                    {
+                        "file": "crates/atelier-core/src/money.rs",
+                        "needle": "fn add(self, rhs: Money) -> Money {"
+                    },
+                    {
+                        "file": "crates/atelier-core/src/money.rs",
+                        "needle": "Money(self.0 + rhs.0)"
+                    },
+                    {
+                        "file": "crates/atelier-core/src/money.rs",
+                        "needle": "impl AddAssign for Money {"
+                    },
+                    {
+                        "file": "crates/atelier-core/src/money.rs",
+                        "needle": "fn add_assign(&mut self, rhs: Money) {"
+                    },
+                    {
+                        "file": "crates/atelier-core/src/money.rs",
+                        "needle": "impl Sub for Money {"
+                    },
+                    {
+                        "file": "crates/atelier-core/src/money.rs",
+                        "needle": "fn sub(self, rhs: Money) -> Money {"
+                    },
+                    {
+                        "file": "crates/atelier-core/src/money.rs",
+                        "needle": "Money(self.0 - rhs.0)"
+                    },
+                    {
+                        "file": "crates/atelier-core/src/money.rs",
+                        "needle": "impl Mul<i64> for Money {"
+                    },
+                    {
+                        "file": "crates/atelier-core/src/money.rs",
+                        "needle": "fn mul(self, rhs: i64) -> Money {"
+                    },
+                    {
+                        "file": "crates/atelier-core/src/money.rs",
+                        "needle": "Money(self.0 * rhs)"
+                    },
+                    {
+                        "file": "crates/atelier-core/src/money.rs",
+                        "needle": "impl Sum for Money {"
+                    },
+                    {
+                        "file": "crates/atelier-core/src/money.rs",
+                        "needle": "fn sum<I: Iterator<Item = Money>>(iter: I) -> Money {"
+                    },
+                    {
+                        "file": "crates/atelier-core/src/money.rs",
+                        "needle": "iter.fold(Money::ZERO, Money::add)"
+                    },
+                    {
+                        "file": "crates/atelier-core/src/money.rs",
+                        "needle": "impl fmt::Display for Money {"
+                    },
+                    {
+                        "file": "crates/atelier-core/src/money.rs",
+                        "needle": "impl FromStr for Money {"
+                    },
+                    {
+                        "file": "crates/atelier-core/src/money.rs",
+                        "needle": "Ok(Money(whole * 100 + fraction))"
+                    },
+                    {
+                        "file": "crates/atelier-core/src/money.rs",
+                        "needle": "fn cents(self) -> Money;"
+                    },
+                    {
+                        "file": "crates/atelier-core/src/money.rs",
+                        "needle": "fn cents(self) -> Money {"
+                    },
+                    {
+                        "file": "crates/atelier-core/src/money.rs",
+                        "needle": "Money(self)"
+                    },
+                    {
+                        "file": "crates/atelier-core/src/money.rs",
+                        "needle": "assert_eq!(Money(10_000).with_surcharge_bp(2_500), Money(12_500));"
+                    },
+                    {
+                        "file": "crates/atelier-core/src/money.rs",
+                        "needle": "let parsed: Money = \"12.34\".parse().expect(\"parses\");"
+                    },
+                    {
+                        "file": "crates/atelier-core/src/money.rs",
+                        "needle": "assert_eq!(parsed, Money(1_234));"
+                    },
+                    {
+                        "file": "crates/atelier-core/src/money.rs",
+                        "needle": "assert_eq!(1_500_i64.cents(), Money(1_500));"
+                    },
+                    {
+                        "file": "crates/atelier-core/src/services/rush_invoice_calculator.rs",
+                        "needle": "use crate::money::Money;"
+                    },
+                    {
+                        "file": "crates/atelier-core/src/services/rush_invoice_calculator.rs",
+                        "needle": "fn calculate(&self, order: &RepairOrder) -> Money {"
+                    },
+                    {
+                        "file": "crates/atelier-core/src/services/standard_invoice_calculator.rs",
+                        "needle": "use crate::money::Money;"
+                    },
+                    {
+                        "file": "crates/atelier-core/src/services/standard_invoice_calculator.rs",
+                        "needle": "fn labour(&self, order: &RepairOrder) -> Money {"
+                    },
+                    {
+                        "file": "crates/atelier-core/src/services/standard_invoice_calculator.rs",
+                        "needle": "Money(rate * i64::from(order.labor_minutes) / 60)"
+                    },
+                    {
+                        "file": "crates/atelier-core/src/services/standard_invoice_calculator.rs",
+                        "needle": "fn calculate(&self, order: &RepairOrder) -> Money {"
+                    },
+                    {
+                        "file": "crates/atelier-core/src/support/expr.rs",
+                        "needle": "use crate::money::Money;"
+                    },
+                    {
+                        "file": "crates/atelier-core/src/support/expr.rs",
+                        "needle": "/// A tiny arithmetic AST over [`Money`] literals."
+                    },
+                    {
+                        "file": "crates/atelier-core/src/support/expr.rs",
+                        "needle": "Lit(Money),"
+                    },
+                    {
+                        "file": "crates/atelier-core/src/support/expr.rs",
+                        "needle": "/// Fold the tree down to one [`Money`] value."
+                    },
+                    {
+                        "file": "crates/atelier-core/src/support/expr.rs",
+                        "needle": "pub fn eval(&self) -> Money {"
+                    },
+                    {
+                        "file": "crates/atelier-core/src/support/expr.rs",
+                        "needle": "Box::new(Expr::Lit(Money::from_cents(100))),"
+                    },
+                    {
+                        "file": "crates/atelier-core/src/support/expr.rs",
+                        "needle": "Box::new(Expr::Lit(Money::from_cents(200))),"
+                    },
+                    {
+                        "file": "crates/atelier-core/src/support/expr.rs",
+                        "needle": "Box::new(Expr::Lit(Money::from_cents(300))),"
+                    },
+                    {
+                        "file": "crates/atelier-core/src/support/expr.rs",
+                        "needle": "assert_eq!(tree.eval(), Money::from_cents(600));"
+                    },
+                    {
+                        "file": "crates/atelier-core/tests/lifecycle.rs",
+                        "needle": "use atelier_core::money::Money;"
+                    },
+                    {
+                        "file": "crates/atelier-core/tests/lifecycle.rs",
+                        "needle": "let part = Part::new(1, \"SCR-13\", \"Screen 13\\\"\", Money(19_900)).with_stock(4);"
+                    },
+                    {
+                        "file": "crates/atelier-core/tests/lifecycle.rs",
+                        "needle": "assert_eq!(order.parts_subtotal(), Money(19_900));"
+                    },
+                    {
+                        "file": "crates/atelier-core/tests/lifecycle.rs",
+                        "needle": "assert_eq!(order.total(&container), Money(19_900 + 15_000));"
+                    },
+                    {
+                        "file": "crates/atelier-core/tests/lifecycle.rs",
+                        "needle": "assert_eq!(order.total(&container), Money(43_625));"
+                    },
+                    {
+                        "file": "crates/atelier-core/tests/lifecycle.rs",
+                        "needle": "assert_eq!(order.total(&container), Money(34_900));"
+                    },
+                    {
+                        "file": "crates/atelier-core/tests/shadow_pair.rs",
+                        "needle": "use atelier_core::money::Money;"
+                    },
+                    {
+                        "file": "crates/atelier-core/tests/shadow_pair.rs",
+                        "needle": "assert_eq!(money.money(Money(1_234), \"\"), \"12.34 EUR\");"
+                    }
+                ],
+                "repeated_sites": [
+                    {
+                        "file": "crates/atelier-core/src/money.rs",
+                        "needle": "type Output = Money;",
+                        "lines": 3
+                    }
+                ],
+                "optional_sites": [
+                    {
+                        "file": "crates/atelier-core/src/money.rs",
+                        "needle": "parse::<Money>()"
                     }
                 ]
             }
@@ -519,15 +1032,55 @@
                 "symbol": "from_cents"
             },
             "expect": {
-                "min_references": 10,
+                "exact_count": 12,
                 "known_sites": [
+                    {
+                        "file": "crates/atelier-bench/src/reports/payment_default_report.rs",
+                        "needle": "ReportRow::from_cents("
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/reports/monthly_revenue_report.rs",
+                        "needle": "ReportRow::from_cents(\"month to date\""
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/reports/customer_lifetime_report.rs",
+                        "needle": "ReportRow::from_cents(customer.name.clone(), cents)"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/reports/weekly_revenue_report.rs",
+                        "needle": "ReportRow::from_cents(\"week to date\""
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/reports/warranty_cost_report.rs",
+                        "needle": "ReportRow::from_cents("
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/reports/technician_payroll_report.rs",
+                        "needle": "ReportRow::from_cents(technician.name.clone(), share)"
+                    },
                     {
                         "file": "crates/atelier-bench/src/reports/cash_flow_report.rs",
                         "needle": "ReportRow::from_cents(\"paid\", paid)"
                     },
                     {
-                        "file": "crates/atelier-bench/src/reports/weekly_revenue_report.rs",
-                        "needle": "ReportRow::from_cents(\"week to date\""
+                        "file": "crates/atelier-bench/src/reports/cash_flow_report.rs",
+                        "needle": "ReportRow::from_cents(\"outstanding\", outstanding)"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/reports/daily_revenue_report.rs",
+                        "needle": "ReportRow::from_cents("
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/reports/gross_profit_report.rs",
+                        "needle": "ReportRow::from_cents(\"revenue\", revenue)"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/reports/gross_profit_report.rs",
+                        "needle": "ReportRow::from_cents(\"part cost\", cost)"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/reports/gross_profit_report.rs",
+                        "needle": "ReportRow::from_cents(\"gross profit\", revenue - cost),"
                     }
                 ]
             }
@@ -535,22 +1088,30 @@
         {
             "id": "refs-report-contract-registry",
             "surface": "references",
-            "note": "Every registry entry is a construction site of a ReportContract implementor.",
+            "note": "Same sites as refs-report-registry; the earlier floor of 24 counted the Box::new(XReport::new()) constructors, which build implementors and do not reference REPORTS.",
             "from": {
                 "file": "crates/atelier-bench/src/lib.rs",
                 "needle": "pub static REPORTS: Lazy<Vec<Box<dyn ReportContract>>>",
                 "symbol": "REPORTS"
             },
             "expect": {
-                "min_references": 24,
+                "exact_count": 4,
                 "known_sites": [
                     {
-                        "file": "crates/atelier-bench/src/lib.rs",
-                        "needle": "reports::cash_flow_report::CashFlowReport::new()"
+                        "file": "crates/atelier-bench/tests/breadth.rs",
+                        "needle": "assert_eq!(atelier_bench::REPORTS.len(), 24);"
                     },
                     {
-                        "file": "crates/atelier-app/src/http/api.rs",
-                        "needle": "atelier_bench::report(&slug)"
+                        "file": "crates/atelier-bench/tests/breadth.rs",
+                        "needle": "let mut slugs: Vec<&str> = atelier_bench::REPORTS.iter().map(|r| r.slug()).collect();"
+                    },
+                    {
+                        "file": "crates/atelier-bench/tests/breadth.rs",
+                        "needle": "for report in atelier_bench::REPORTS.iter() {"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/lib.rs",
+                        "needle": "    REPORTS"
                     }
                 ]
             }
@@ -730,26 +1291,206 @@
             },
             "expect": {
                 "exact_count": 48,
+                "implementations": [
+                    {
+                        "file": "crates/atelier-bench/src/rules/customer_credit_rule.rs",
+                        "needle": "pub struct CustomerCreditRule;"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/rules/deposit_required_rule.rs",
+                        "needle": "pub struct DepositRequiredRule;"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/rules/device_age_rule.rs",
+                        "needle": "pub struct DeviceAgeRule;"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/rules/discount_ceiling_rule.rs",
+                        "needle": "pub struct DiscountCeilingRule;"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/rules/gross_profit_rule.rs",
+                        "needle": "pub struct GrossProfitRule;"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/rules/idle_technician_rule.rs",
+                        "needle": "pub struct IdleTechnicianRule;"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/rules/invoice_balance_rule.rs",
+                        "needle": "pub struct InvoiceBalanceRule;"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/rules/label_presence_rule.rs",
+                        "needle": "pub struct LabelPresenceRule;"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/rules/maximum_backlog_rule.rs",
+                        "needle": "pub struct MaximumBacklogRule;"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/rules/minimum_stock_rule.rs",
+                        "needle": "pub struct MinimumStockRule;"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/rules/note_required_rule.rs",
+                        "needle": "pub struct NoteRequiredRule;"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/rules/part_availability_rule.rs",
+                        "needle": "pub struct PartAvailabilityRule;"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/rules/part_cost_margin_rule.rs",
+                        "needle": "pub struct PartCostMarginRule;"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/rules/priority_escalation_rule.rs",
+                        "needle": "pub struct PriorityEscalationRule;"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/rules/repair_duration_rule.rs",
+                        "needle": "pub struct RepairDurationRule;"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/rules/revenue_floor_rule.rs",
+                        "needle": "pub struct RevenueFloorRule;"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/rules/rework_limit_rule.rs",
+                        "needle": "pub struct ReworkLimitRule;"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/rules/rush_surcharge_rule.rs",
+                        "needle": "pub struct RushSurchargeRule;"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/rules/schedule_gap_rule.rs",
+                        "needle": "pub struct ScheduleGapRule;"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/rules/signature_required_rule.rs",
+                        "needle": "pub struct SignatureRequiredRule;"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/rules/slot_overbooking_rule.rs",
+                        "needle": "pub struct SlotOverbookingRule;"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/rules/status_sequence_rule.rs",
+                        "needle": "pub struct StatusSequenceRule;"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/rules/technician_capacity_rule.rs",
+                        "needle": "pub struct TechnicianCapacityRule;"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/rules/warranty_window_rule.rs",
+                        "needle": "pub struct WarrantyWindowRule;"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/rules/generated.rs",
+                        "needle": "DuplicateReferenceRule =>"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/rules/generated.rs",
+                        "needle": "ReferencePrefixRule =>"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/rules/generated.rs",
+                        "needle": "CurrencyConsistencyRule =>"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/rules/generated.rs",
+                        "needle": "RoundingRule =>"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/rules/generated.rs",
+                        "needle": "TaxAppliedRule =>"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/rules/generated.rs",
+                        "needle": "ExportFreshnessRule =>"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/rules/generated.rs",
+                        "needle": "NotificationSentRule =>"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/rules/generated.rs",
+                        "needle": "AuditTrailRule =>"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/rules/generated.rs",
+                        "needle": "CacheTtlRule =>"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/rules/generated.rs",
+                        "needle": "ReportCoverageRule =>"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/rules/generated.rs",
+                        "needle": "MetricRangeRule =>"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/rules/generated.rs",
+                        "needle": "DatasetIntegrityRule =>"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/rules/generated.rs",
+                        "needle": "SeedDeterminismRule =>"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/rules/generated.rs",
+                        "needle": "OrderCountRule =>"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/rules/generated.rs",
+                        "needle": "CustomerCountRule =>"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/rules/generated.rs",
+                        "needle": "PartCountRule =>"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/rules/generated.rs",
+                        "needle": "InvoiceCountRule =>"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/rules/generated.rs",
+                        "needle": "OpenOrderRatioRule =>"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/rules/generated.rs",
+                        "needle": "CompletionRateRule =>"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/rules/generated.rs",
+                        "needle": "AverageTicketRule =>"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/rules/generated.rs",
+                        "needle": "PartsPerOrderRule =>"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/rules/generated.rs",
+                        "needle": "RepeatCustomerRule =>"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/rules/generated.rs",
+                        "needle": "DeviceCategoryRule =>"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/rules/generated.rs",
+                        "needle": "InventoryTurnoverRule =>"
+                    }
+                ],
                 "textual_count": 24,
                 "generated_count": 24,
                 "must_not_include": [
                     "impl<T: RuleContract> RuleContract for Vec<T>",
                     "ExperimentalRule",
                     "AlwaysTrueRule"
-                ],
-                "implementations": [
-                    {
-                        "file": "crates/atelier-bench/src/rules/minimum_stock_rule.rs",
-                        "needle": "pub struct MinimumStockRule;"
-                    },
-                    {
-                        "file": "crates/atelier-bench/src/rules/generated.rs",
-                        "needle": "define_rules! {"
-                    },
-                    {
-                        "file": "crates/atelier-bench/src/rules/mod.rs",
-                        "needle": "Box::new(generated::InventoryTurnoverRule),"
-                    }
                 ]
             }
         },
@@ -762,7 +1503,105 @@
                 "symbol": "ReportContract"
             },
             "expect": {
-                "exact_count": 24
+                "exact_count": 24,
+                "implementations": [
+                    {
+                        "file": "crates/atelier-bench/src/reports/cash_flow_report.rs",
+                        "needle": "impl ReportContract for CashFlowReport {"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/reports/churn_risk_report.rs",
+                        "needle": "impl ReportContract for ChurnRiskReport {"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/reports/customer_lifetime_report.rs",
+                        "needle": "impl ReportContract for CustomerLifetimeReport {"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/reports/customer_retention_report.rs",
+                        "needle": "impl ReportContract for CustomerRetentionReport {"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/reports/daily_revenue_report.rs",
+                        "needle": "impl ReportContract for DailyRevenueReport {"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/reports/gross_profit_report.rs",
+                        "needle": "impl ReportContract for GrossProfitReport {"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/reports/inventory_turnover_report.rs",
+                        "needle": "impl ReportContract for InventoryTurnoverReport {"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/reports/monthly_revenue_report.rs",
+                        "needle": "impl ReportContract for MonthlyRevenueReport {"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/reports/net_margin_report.rs",
+                        "needle": "impl ReportContract for NetMarginReport {"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/reports/order_backlog_report.rs",
+                        "needle": "impl ReportContract for OrderBacklogReport {"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/reports/order_throughput_report.rs",
+                        "needle": "impl ReportContract for OrderThroughputReport {"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/reports/order_volume_report.rs",
+                        "needle": "impl ReportContract for OrderVolumeReport {"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/reports/part_shortage_report.rs",
+                        "needle": "impl ReportContract for PartShortageReport {"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/reports/part_usage_report.rs",
+                        "needle": "impl ReportContract for PartUsageReport {"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/reports/payment_default_report.rs",
+                        "needle": "impl ReportContract for PaymentDefaultReport {"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/reports/payment_latency_report.rs",
+                        "needle": "impl ReportContract for PaymentLatencyReport {"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/reports/profit_margin_report.rs",
+                        "needle": "impl ReportContract for ProfitMarginReport {"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/reports/technician_efficiency_report.rs",
+                        "needle": "impl ReportContract for TechnicianEfficiencyReport {"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/reports/technician_load_report.rs",
+                        "needle": "impl ReportContract for TechnicianLoadReport {"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/reports/technician_payroll_report.rs",
+                        "needle": "impl ReportContract for TechnicianPayrollReport {"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/reports/warranty_claim_report.rs",
+                        "needle": "impl ReportContract for WarrantyClaimReport {"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/reports/warranty_cost_report.rs",
+                        "needle": "impl ReportContract for WarrantyCostReport {"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/reports/warranty_trend_report.rs",
+                        "needle": "impl ReportContract for WarrantyTrendReport {"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/reports/weekly_revenue_report.rs",
+                        "needle": "impl ReportContract for WeeklyRevenueReport {"
+                    }
+                ]
             }
         },
         {
@@ -1529,19 +2368,332 @@
                 "symbol": "Money"
             },
             "expect": {
-                "min_references": 20,
+                "exact_count": 81,
                 "known_sites": [
                     {
-                        "file": "crates/atelier-core/src/models/part.rs",
-                        "needle": "pub unit_price: Money,"
+                        "file": "crates/atelier-bench/src/dataset.rs",
+                        "needle": "use atelier_core::money::Money;"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/dataset.rs",
+                        "needle": "Part::new(1, \"SCR-13\", \"Screen 13\\\"\", Money(19_900)).with_stock(4),"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/dataset.rs",
+                        "needle": "Part::new(2, \"BAT-55\", \"Battery 55Wh\", Money(8_900)).with_stock(1),"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/dataset.rs",
+                        "needle": "Part::new(3, \"KBD-EU\", \"Keyboard EU\", Money(6_400)).with_stock(7),"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/dataset.rs",
+                        "needle": "Part::new(4, \"FAN-A1\", \"Cooling fan\", Money(2_200)).with_stock(2),"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/dataset.rs",
+                        "needle": "Invoice::new(1, 1, Money(34_900)),"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/dataset.rs",
+                        "needle": "Invoice::new(2, 2, Money(23_425)),"
+                    },
+                    {
+                        "file": "crates/atelier-core/src/billing/formatter.rs",
+                        "needle": "use crate::money::Money;"
+                    },
+                    {
+                        "file": "crates/atelier-core/src/billing/formatter.rs",
+                        "needle": "pub fn money(&self, amount: Money, currency: &str) -> String {"
+                    },
+                    {
+                        "file": "crates/atelier-core/src/billing/formatter.rs",
+                        "needle": "pub fn line(&self, quantity: u32, description: &str, amount: Money) -> String {"
+                    },
+                    {
+                        "file": "crates/atelier-core/src/contracts/invoice_calculator.rs",
+                        "needle": "use crate::money::Money;"
+                    },
+                    {
+                        "file": "crates/atelier-core/src/contracts/invoice_calculator.rs",
+                        "needle": "fn calculate(&self, order: &RepairOrder) -> Money;"
+                    },
+                    {
+                        "file": "crates/atelier-core/src/lib.rs",
+                        "needle": "pub use crate::money::Money;"
+                    },
+                    {
+                        "file": "crates/atelier-core/src/models/invoice.rs",
+                        "needle": "use crate::money::Money;"
                     },
                     {
                         "file": "crates/atelier-core/src/models/invoice.rs",
                         "needle": "pub total: Money,"
                     },
                     {
-                        "file": "crates/atelier-core/src/contracts/invoice_calculator.rs",
-                        "needle": "fn calculate(&self, order: &RepairOrder) -> Money;"
+                        "file": "crates/atelier-core/src/models/invoice.rs",
+                        "needle": "pub fn new(id: u32, repair_order_id: u32, total: Money) -> Self {"
+                    },
+                    {
+                        "file": "crates/atelier-core/src/models/invoice.rs",
+                        "needle": "pub fn outstanding(&self) -> Money {"
+                    },
+                    {
+                        "file": "crates/atelier-core/src/models/invoice.rs",
+                        "needle": "if self.paid { Money::ZERO } else { self.total }"
+                    },
+                    {
+                        "file": "crates/atelier-core/src/models/part.rs",
+                        "needle": "use crate::money::Money;"
+                    },
+                    {
+                        "file": "crates/atelier-core/src/models/part.rs",
+                        "needle": "pub unit_price: Money,"
+                    },
+                    {
+                        "file": "crates/atelier-core/src/models/part.rs",
+                        "needle": "        unit_price: Money,"
+                    },
+                    {
+                        "file": "crates/atelier-core/src/models/part.rs",
+                        "needle": "pub fn extended_price(&self, quantity: u32) -> Money {"
+                    },
+                    {
+                        "file": "crates/atelier-core/src/models/repair_order.rs",
+                        "needle": "use crate::money::Money;"
+                    },
+                    {
+                        "file": "crates/atelier-core/src/models/repair_order.rs",
+                        "needle": "pub unit_price: Money,"
+                    },
+                    {
+                        "file": "crates/atelier-core/src/models/repair_order.rs",
+                        "needle": "pub fn parts_subtotal(&self) -> Money {"
+                    },
+                    {
+                        "file": "crates/atelier-core/src/models/repair_order.rs",
+                        "needle": "pub fn total(&self, container: &Container) -> Money {"
+                    },
+                    {
+                        "file": "crates/atelier-core/src/money.rs",
+                        "needle": "impl Money {"
+                    },
+                    {
+                        "file": "crates/atelier-core/src/money.rs",
+                        "needle": "pub const ZERO: Money = Money(0);"
+                    },
+                    {
+                        "file": "crates/atelier-core/src/money.rs",
+                        "needle": "Money(cents)"
+                    },
+                    {
+                        "file": "crates/atelier-core/src/money.rs",
+                        "needle": "pub fn with_surcharge_bp(&self, bp: u32) -> Money {"
+                    },
+                    {
+                        "file": "crates/atelier-core/src/money.rs",
+                        "needle": "Money(self.0 + extra)"
+                    },
+                    {
+                        "file": "crates/atelier-core/src/money.rs",
+                        "needle": "impl Add for Money {"
+                    },
+                    {
+                        "file": "crates/atelier-core/src/money.rs",
+                        "needle": "fn add(self, rhs: Money) -> Money {"
+                    },
+                    {
+                        "file": "crates/atelier-core/src/money.rs",
+                        "needle": "Money(self.0 + rhs.0)"
+                    },
+                    {
+                        "file": "crates/atelier-core/src/money.rs",
+                        "needle": "impl AddAssign for Money {"
+                    },
+                    {
+                        "file": "crates/atelier-core/src/money.rs",
+                        "needle": "fn add_assign(&mut self, rhs: Money) {"
+                    },
+                    {
+                        "file": "crates/atelier-core/src/money.rs",
+                        "needle": "impl Sub for Money {"
+                    },
+                    {
+                        "file": "crates/atelier-core/src/money.rs",
+                        "needle": "fn sub(self, rhs: Money) -> Money {"
+                    },
+                    {
+                        "file": "crates/atelier-core/src/money.rs",
+                        "needle": "Money(self.0 - rhs.0)"
+                    },
+                    {
+                        "file": "crates/atelier-core/src/money.rs",
+                        "needle": "impl Mul<i64> for Money {"
+                    },
+                    {
+                        "file": "crates/atelier-core/src/money.rs",
+                        "needle": "fn mul(self, rhs: i64) -> Money {"
+                    },
+                    {
+                        "file": "crates/atelier-core/src/money.rs",
+                        "needle": "Money(self.0 * rhs)"
+                    },
+                    {
+                        "file": "crates/atelier-core/src/money.rs",
+                        "needle": "impl Sum for Money {"
+                    },
+                    {
+                        "file": "crates/atelier-core/src/money.rs",
+                        "needle": "fn sum<I: Iterator<Item = Money>>(iter: I) -> Money {"
+                    },
+                    {
+                        "file": "crates/atelier-core/src/money.rs",
+                        "needle": "iter.fold(Money::ZERO, Money::add)"
+                    },
+                    {
+                        "file": "crates/atelier-core/src/money.rs",
+                        "needle": "impl fmt::Display for Money {"
+                    },
+                    {
+                        "file": "crates/atelier-core/src/money.rs",
+                        "needle": "impl FromStr for Money {"
+                    },
+                    {
+                        "file": "crates/atelier-core/src/money.rs",
+                        "needle": "Ok(Money(whole * 100 + fraction))"
+                    },
+                    {
+                        "file": "crates/atelier-core/src/money.rs",
+                        "needle": "fn cents(self) -> Money;"
+                    },
+                    {
+                        "file": "crates/atelier-core/src/money.rs",
+                        "needle": "fn cents(self) -> Money {"
+                    },
+                    {
+                        "file": "crates/atelier-core/src/money.rs",
+                        "needle": "Money(self)"
+                    },
+                    {
+                        "file": "crates/atelier-core/src/money.rs",
+                        "needle": "assert_eq!(Money(10_000).with_surcharge_bp(2_500), Money(12_500));"
+                    },
+                    {
+                        "file": "crates/atelier-core/src/money.rs",
+                        "needle": "let parsed: Money = \"12.34\".parse().expect(\"parses\");"
+                    },
+                    {
+                        "file": "crates/atelier-core/src/money.rs",
+                        "needle": "assert_eq!(parsed, Money(1_234));"
+                    },
+                    {
+                        "file": "crates/atelier-core/src/money.rs",
+                        "needle": "assert_eq!(1_500_i64.cents(), Money(1_500));"
+                    },
+                    {
+                        "file": "crates/atelier-core/src/services/rush_invoice_calculator.rs",
+                        "needle": "use crate::money::Money;"
+                    },
+                    {
+                        "file": "crates/atelier-core/src/services/rush_invoice_calculator.rs",
+                        "needle": "fn calculate(&self, order: &RepairOrder) -> Money {"
+                    },
+                    {
+                        "file": "crates/atelier-core/src/services/standard_invoice_calculator.rs",
+                        "needle": "use crate::money::Money;"
+                    },
+                    {
+                        "file": "crates/atelier-core/src/services/standard_invoice_calculator.rs",
+                        "needle": "fn labour(&self, order: &RepairOrder) -> Money {"
+                    },
+                    {
+                        "file": "crates/atelier-core/src/services/standard_invoice_calculator.rs",
+                        "needle": "Money(rate * i64::from(order.labor_minutes) / 60)"
+                    },
+                    {
+                        "file": "crates/atelier-core/src/services/standard_invoice_calculator.rs",
+                        "needle": "fn calculate(&self, order: &RepairOrder) -> Money {"
+                    },
+                    {
+                        "file": "crates/atelier-core/src/support/expr.rs",
+                        "needle": "use crate::money::Money;"
+                    },
+                    {
+                        "file": "crates/atelier-core/src/support/expr.rs",
+                        "needle": "/// A tiny arithmetic AST over [`Money`] literals."
+                    },
+                    {
+                        "file": "crates/atelier-core/src/support/expr.rs",
+                        "needle": "Lit(Money),"
+                    },
+                    {
+                        "file": "crates/atelier-core/src/support/expr.rs",
+                        "needle": "/// Fold the tree down to one [`Money`] value."
+                    },
+                    {
+                        "file": "crates/atelier-core/src/support/expr.rs",
+                        "needle": "pub fn eval(&self) -> Money {"
+                    },
+                    {
+                        "file": "crates/atelier-core/src/support/expr.rs",
+                        "needle": "Box::new(Expr::Lit(Money::from_cents(100))),"
+                    },
+                    {
+                        "file": "crates/atelier-core/src/support/expr.rs",
+                        "needle": "Box::new(Expr::Lit(Money::from_cents(200))),"
+                    },
+                    {
+                        "file": "crates/atelier-core/src/support/expr.rs",
+                        "needle": "Box::new(Expr::Lit(Money::from_cents(300))),"
+                    },
+                    {
+                        "file": "crates/atelier-core/src/support/expr.rs",
+                        "needle": "assert_eq!(tree.eval(), Money::from_cents(600));"
+                    },
+                    {
+                        "file": "crates/atelier-core/tests/lifecycle.rs",
+                        "needle": "use atelier_core::money::Money;"
+                    },
+                    {
+                        "file": "crates/atelier-core/tests/lifecycle.rs",
+                        "needle": "let part = Part::new(1, \"SCR-13\", \"Screen 13\\\"\", Money(19_900)).with_stock(4);"
+                    },
+                    {
+                        "file": "crates/atelier-core/tests/lifecycle.rs",
+                        "needle": "assert_eq!(order.parts_subtotal(), Money(19_900));"
+                    },
+                    {
+                        "file": "crates/atelier-core/tests/lifecycle.rs",
+                        "needle": "assert_eq!(order.total(&container), Money(19_900 + 15_000));"
+                    },
+                    {
+                        "file": "crates/atelier-core/tests/lifecycle.rs",
+                        "needle": "assert_eq!(order.total(&container), Money(43_625));"
+                    },
+                    {
+                        "file": "crates/atelier-core/tests/lifecycle.rs",
+                        "needle": "assert_eq!(order.total(&container), Money(34_900));"
+                    },
+                    {
+                        "file": "crates/atelier-core/tests/shadow_pair.rs",
+                        "needle": "use atelier_core::money::Money;"
+                    },
+                    {
+                        "file": "crates/atelier-core/tests/shadow_pair.rs",
+                        "needle": "assert_eq!(money.money(Money(1_234), \"\"), \"12.34 EUR\");"
+                    }
+                ],
+                "repeated_sites": [
+                    {
+                        "file": "crates/atelier-core/src/money.rs",
+                        "needle": "type Output = Money;",
+                        "lines": 3
+                    }
+                ],
+                "optional_sites": [
+                    {
+                        "file": "crates/atelier-core/src/money.rs",
+                        "needle": "parse::<Money>()"
                     }
                 ]
             }
@@ -1549,14 +2701,14 @@
         {
             "id": "refs-report-registry",
             "surface": "references",
-            "note": "The registry itself has 4 read sites; its 24 `Box::new(XReport::new())` entries are construction sites of ReportContract implementors, not references to REPORTS. The rust-local refs-report-contract-registry counts those 24 instead.",
+            "note": "The registry itself has 4 read sites; its 24 `Box::new(XReport::new())` entries are construction sites of ReportContract implementors, not references to REPORTS.",
             "from": {
                 "file": "crates/atelier-bench/src/lib.rs",
                 "needle": "pub static REPORTS: Lazy<Vec<Box<dyn ReportContract>>>",
                 "symbol": "REPORTS"
             },
             "expect": {
-                "min_references": 4,
+                "exact_count": 4,
                 "known_sites": [
                     {
                         "file": "crates/atelier-bench/tests/breadth.rs",
@@ -1565,6 +2717,14 @@
                     {
                         "file": "crates/atelier-bench/tests/breadth.rs",
                         "needle": "let mut slugs: Vec<&str> = atelier_bench::REPORTS.iter().map(|r| r.slug()).collect();"
+                    },
+                    {
+                        "file": "crates/atelier-bench/tests/breadth.rs",
+                        "needle": "for report in atelier_bench::REPORTS.iter() {"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/lib.rs",
+                        "needle": "    REPORTS"
                     }
                 ]
             }
@@ -1579,15 +2739,55 @@
                 "symbol": "from_cents"
             },
             "expect": {
-                "min_references": 10,
+                "exact_count": 12,
                 "known_sites": [
                     {
-                        "file": "crates/atelier-bench/src/reports/gross_profit_report.rs",
-                        "needle": "ReportRow::from_cents(\"gross profit\", revenue - cost),"
+                        "file": "crates/atelier-bench/src/reports/payment_default_report.rs",
+                        "needle": "ReportRow::from_cents("
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/reports/monthly_revenue_report.rs",
+                        "needle": "ReportRow::from_cents(\"month to date\""
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/reports/customer_lifetime_report.rs",
+                        "needle": "ReportRow::from_cents(customer.name.clone(), cents)"
                     },
                     {
                         "file": "crates/atelier-bench/src/reports/weekly_revenue_report.rs",
-                        "needle": "vec![ReportRow::from_cents(\"week to date\", data.revenue_cents())]"
+                        "needle": "ReportRow::from_cents(\"week to date\""
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/reports/warranty_cost_report.rs",
+                        "needle": "ReportRow::from_cents("
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/reports/technician_payroll_report.rs",
+                        "needle": "ReportRow::from_cents(technician.name.clone(), share)"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/reports/cash_flow_report.rs",
+                        "needle": "ReportRow::from_cents(\"paid\", paid)"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/reports/cash_flow_report.rs",
+                        "needle": "ReportRow::from_cents(\"outstanding\", outstanding)"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/reports/daily_revenue_report.rs",
+                        "needle": "ReportRow::from_cents("
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/reports/gross_profit_report.rs",
+                        "needle": "ReportRow::from_cents(\"revenue\", revenue)"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/reports/gross_profit_report.rs",
+                        "needle": "ReportRow::from_cents(\"part cost\", cost)"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/reports/gross_profit_report.rs",
+                        "needle": "ReportRow::from_cents(\"gross profit\", revenue - cost),"
                     }
                 ]
             }
@@ -1622,7 +2822,40 @@
             },
             "expect": {
                 "min_symbols": 23,
-                "must_include": ["transition_to", "complete", "parts_subtotal", "add_part", "is_open", "with_priority"]
+                "must_include": ["transition_to", "complete", "parts_subtotal", "add_part", "is_open", "with_priority"],
+                "symbols": [
+                    "OrderPart",
+                    "part_id",
+                    "sku",
+                    "quantity",
+                    "unit_price",
+                    "StatusChange",
+                    "from",
+                    "to",
+                    "changed_by",
+                    "RepairOrder",
+                    "id",
+                    "customer_id",
+                    "device_id",
+                    "status",
+                    "priority",
+                    "labor_minutes",
+                    "parts",
+                    "log",
+                    "reference_number",
+                    "impl RepairOrder",
+                    "new",
+                    "with_priority",
+                    "with_labor",
+                    "transition_to",
+                    "complete",
+                    "parts_subtotal",
+                    "total",
+                    "add_part",
+                    "is_open",
+                    "impl HasReference for RepairOrder",
+                    "reference_number"
+                ]
             }
         },
         {
@@ -1635,7 +2868,25 @@
             },
             "expect": {
                 "min_symbols": 12,
-                "must_include": ["REPORTS", "METRICS", "report", "metric", "reports", "metrics"]
+                "must_include": ["REPORTS", "METRICS", "report", "metric", "reports", "metrics"],
+                "symbols": [
+                    "concerns",
+                    "contracts",
+                    "dataset",
+                    "exporters",
+                    "metrics",
+                    "notifiers",
+                    "prelude",
+                    "reports",
+                    "repositories",
+                    "rules",
+                    "services",
+                    "support",
+                    "REPORTS",
+                    "METRICS",
+                    "report",
+                    "metric"
+                ]
             }
         },
         {
