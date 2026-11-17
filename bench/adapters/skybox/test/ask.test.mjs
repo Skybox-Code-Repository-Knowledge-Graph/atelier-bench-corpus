@@ -170,4 +170,10 @@ test("a question whose answer is a relation is not asked under the raw protocol"
     const definition = { ...question({ symbol: "label", text: "return f'{super().label()}'" }, "definition"), kind: "mro" };
     const answer = await askSkybox(definition, fake({ context: "Symbol not found in index" }).call);
     assert.deepEqual(answer, { locations: [], text: "Symbol not found in index" });
+
+    // A namespace import is answered by the member read through it, so it is not asked either.
+    const namespace = { ...question({ symbol: "rules", text: "use crate::rules;" }, "import-precision"), kind: "namespace_import" };
+    assert.equal(await askSkybox(namespace, call), undefined);
+    const named = { ...question({ symbol: "Left", text: "use crate::support::pair::Left;" }, "import-precision"), kind: "imports" };
+    assert.equal((await askSkybox(named, fake({ context: "Symbol not found in index" }).call)).locations.length, 0, "a named import is a definition question");
 });

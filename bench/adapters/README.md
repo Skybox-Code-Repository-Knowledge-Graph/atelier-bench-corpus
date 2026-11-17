@@ -64,7 +64,7 @@ An adapter's tests replay recorded tool replies (`bench/adapters/<tool>/test/`).
 
 | Tool | Protocol | Notes |
 | --- | --- | --- |
-| [skybox](skybox/) | `raw`: one `context(name)`, plus one `cypher` lookup by node id for the line of a resolved symbol | Asked: `definition`, `resolution`, `import-precision`. Not asked under `raw`: a symbol that is a segment of an import path, and the `resolution` kinds whose answer is a relation rather than the symbol's definition (`structural`, `init_order`, `mro`, `derive_generated`, `dyn_upcast`, `blanket_impl`). A `null` symbol is `unsupported`: skybox is asked by name |
+| [skybox](skybox/) | `raw`: one `context(name)`, plus one `cypher` lookup by node id for the line of a resolved symbol | Asked: `definition`, `resolution`, `import-precision`. Not asked under `raw`: a symbol that is a segment of a quoted import path; the `resolution` kinds whose answer is a relation rather than the symbol's definition (`structural`, `init_order`, `mro`, `derive_generated`, `dyn_upcast`, `blanket_impl`); and the `import-precision` kinds that bind a namespace or a whole package, whose answer is the member reached through it (`namespace_import`, `namespace_prefix`, `one_member`, `dot_import`, `side_effect_only`, `no_fanout`). A `null` symbol is `unsupported`: skybox is asked by name. php: the three tasks whose targets are under `vendor/` are `UNRESOLVED`, since neither the scorer's checkout nor the adapter's copy has the Composer packages |
 
 To run one locally:
 

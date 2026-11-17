@@ -28,6 +28,14 @@ export const RELATION_QUESTIONS = new Set([
     "resolution:derive_generated",
     "resolution:dyn_upcast",
     "resolution:blanket_impl",
+    // An import that binds a namespace or a whole package: the answer is the member read through
+    // it (or reached by it), not the definition of the module or namespace the symbol names.
+    "import-precision:namespace_import",
+    "import-precision:namespace_prefix",
+    "import-precision:one_member",
+    "import-precision:dot_import",
+    "import-precision:side_effect_only",
+    "import-precision:no_fanout",
 ]);
 
 const NOT_FOUND = /^Symbol not found in index/m;
