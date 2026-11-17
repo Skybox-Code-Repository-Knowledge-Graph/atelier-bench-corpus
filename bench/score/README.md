@@ -242,7 +242,7 @@ decide the verdict. A label with no identifier of its own (whitespace remains, a
 sides. Each lane's own language server was run on its tasks before any tool under test (#208):
 gopls, rust-analyzer, phpactor and typescript-language-server (on `docsym-report-registry`) pass.
 Where the server also lists what the lane's counting rule leaves out (pyright lists parameters and
-locals; typescript-language-server lists object-literal keys, typedef properties and `require`
+locals; typescript-language-server lists object-literal keys, locals, and `require`
 bindings), the key is not changed to fit it and the task is `UNSCORABLE`
 (`DOCSYM_REFERENCE_DISAGREES` in `lib/plan.mjs`): python and javascript both tasks, typescript
 `docsym-repair-order`. Seven tasks are scored.
