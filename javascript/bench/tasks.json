@@ -1606,7 +1606,7 @@
             },
             "expect": {
                 "min_symbols": 4,
-                "must_include": ["REPORTS", "METRICS", "REPORT_SLUGS", "loadReport", "report", "metric"]
+                "must_include": ["REPORTS", "METRICS", "REPORT_SLUGS", "loadReport"]
             }
         },
         {

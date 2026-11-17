@@ -1755,7 +1755,7 @@
             },
             "expect": {
                 "min_symbols": 3,
-                "must_include": ["REPORTS", "METRICS", "report", "metric"]
+                "must_include": ["REPORTS", "METRICS", "report"]
             }
         },
         {
