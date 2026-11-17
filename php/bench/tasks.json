@@ -424,6 +424,11 @@
                     { "file": "app/Bench/Reports/WarrantyCostReport.php", "needle": "class WarrantyCostReport extends AbstractPeriodicReport" },
                     { "file": "app/Bench/Reports/WarrantyTrendReport.php", "needle": "class WarrantyTrendReport extends AbstractPeriodicReport" },
                     { "file": "app/Bench/Reports/WeeklyRevenueReport.php", "needle": "class WeeklyRevenueReport extends AbstractPeriodicReport" }
+                ],
+                "optional_sites": [
+                    { "file": "app/Bench/Support/AbstractReport.php", "needle": "abstract class AbstractReport extends AbstractService implements ReportContract" },
+                    { "file": "app/Bench/Support/AbstractPeriodicReport.php", "needle": "abstract class AbstractPeriodicReport extends AbstractReport implements ScheduleContract" },
+                    { "file": "app/Bench/Contracts/CompositeContract.php", "needle": "interface CompositeContract extends ReportContract, CacheableContract, ScheduleContract" }
                 ]
             }
         },
@@ -887,6 +892,9 @@
                     { "file": "app/Bench/Notifiers/SmsNotifier.php", "needle": "class SmsNotifier extends AbstractNotifier" },
                     { "file": "app/Bench/Notifiers/TeamsNotifier.php", "needle": "class TeamsNotifier extends AbstractNotifier" },
                     { "file": "app/Bench/Notifiers/WebhookNotifier.php", "needle": "class WebhookNotifier extends AbstractNotifier" }
+                ],
+                "optional_sites": [
+                    { "file": "app/Bench/Support/AbstractNotifier.php", "needle": "abstract class AbstractNotifier extends AbstractComponent implements NotifierContract" }
                 ]
             }
         },
@@ -922,6 +930,11 @@
                     { "file": "app/Bench/Reports/WarrantyCostReport.php", "needle": "class WarrantyCostReport extends AbstractPeriodicReport implements CacheableContract, AuditableContract" },
                     { "file": "app/Bench/Reports/WarrantyTrendReport.php", "needle": "class WarrantyTrendReport extends AbstractPeriodicReport implements CacheableContract, AuditableContract" },
                     { "file": "app/Bench/Reports/WeeklyRevenueReport.php", "needle": "class WeeklyRevenueReport extends AbstractPeriodicReport implements CacheableContract, AuditableContract" }
+                ],
+                "optional_sites": [
+                    { "file": "app/Bench/Support/AbstractReport.php", "needle": "abstract class AbstractReport extends AbstractService implements ReportContract" },
+                    { "file": "app/Bench/Support/AbstractPeriodicReport.php", "needle": "abstract class AbstractPeriodicReport extends AbstractReport implements ScheduleContract" },
+                    { "file": "app/Bench/Contracts/CompositeContract.php", "needle": "interface CompositeContract extends ReportContract, CacheableContract, ScheduleContract" }
                 ]
             }
         },
