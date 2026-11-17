@@ -2,7 +2,7 @@
     "version": 1,
     "corpus": "atelier-bench-corpus",
     "lane": "go",
-    "notes": "Known-answer navigation tasks for the go lane. Needle-based, not line-based: bench/verify resolves every needle to a unique line at the current SHA, so the manifest survives edits without stale line numbers. Paths are relative to the lane root (go/), not to the repository root. 'expect' blocks carry the ground truth a harness scores against; counts are minimums where marked. exact_count is exact and counts concrete, non-generic, unconditionally compiled types that satisfy the contract directly or through EMBEDDING (Go's promotion); interfaces, embeddable bases and build-tag-gated types are excluded. Go has no implements keyword: the only textual evidence of satisfaction is a `var _ Contract = (*Type)(nil)` assertion, and the structural rules carry none at all. Lane-specific kind strings are listed in README.md (Ground truth). IDs shared with the other lanes ask the same question in each language.",
+    "notes": "Known-answer navigation tasks for the go lane. Needle-based, not line-based: bench/verify resolves every needle to a unique line at the current SHA, so the manifest survives edits without stale line numbers. Paths are relative to the lane root (go/), not to the repository root. 'expect' blocks carry the ground truth a harness scores against; counts are minimums where marked. exact_count is exact and counts concrete, non-generic, unconditionally compiled types that satisfy the contract directly or through EMBEDDING (Go's promotion); interfaces, embeddable bases and build-tag-gated types are excluded. Go has no implements keyword: the only textual evidence of satisfaction is a `var _ Contract = (*Type)(nil)` assertion, and the structural rules carry none at all. Lane-specific kind strings are listed in README.md (Ground truth). document_symbol tasks count every named symbol the anchored FILE declares at any nesting depth (types, fields, functions, methods); each task's note enumerates that count N and states min_symbols = floor(0.75 * N), the 25% margin absorbing listings that fold container nodes. IDs shared with the other lanes ask the same question in each language.",
     "tasks": [
         {
             "id": "def-free-function",
@@ -677,7 +677,7 @@
             "expect": {
                 "kind": "shadow_alias",
                 "resolution": "atelier.example/lane/core/billing#Formatter",
-                "candidate": {"file": "core/billing/formatter.go", "needle": "func (f *Formatter) Money(amount money.Money) string {"}
+                "candidate": {"file": "core/billing/formatter.go", "needle": "type Formatter struct {"}
             }
         },
         {
@@ -687,7 +687,7 @@
             "expect": {
                 "kind": "shadow_alias",
                 "resolution": "atelier.example/lane/core/reporting#Formatter",
-                "candidate": {"file": "core/reporting/formatter.go", "needle": "func (f *Formatter) StatusLine(status support.RepairStatus, since string) string {"}
+                "candidate": {"file": "core/reporting/formatter.go", "needle": "type Formatter struct {"}
             }
         },
         {
@@ -1056,10 +1056,10 @@
         {
             "id": "docsym-repair-order",
             "surface": "document_symbol",
-            "note": "One file, three type declarations and seven functions; Reference() is NOT among them, it is promoted.",
+            "note": "Symbol listing for the RepairOrder model file. N = 28 named symbols at the base SHA: PartLine + 4 fields, LogEntry + 3 fields, Calculator + 1 method (Calculate), RepairOrder + 9 fields (the embedded HasReference, ID, CustomerID, DeviceID, Status, Priority, LaborMinutes, Parts, Log), the SeedRepairOrder function and 6 methods (TransitionTo, Complete, AddPart, PartsSubtotal, Total, IsOpen). Reference() is NOT among them, it is promoted from the embedded HasReference. min_symbols = floor(0.75 * 28) = 21.",
             "from": {"file": "core/models/repairorder.go", "needle": "type RepairOrder struct {"},
             "expect": {
-                "min_symbols": 10,
+                "min_symbols": 21,
                 "must_include": ["PartLine", "LogEntry", "Calculator", "RepairOrder", "SeedRepairOrder", "TransitionTo", "Complete", "AddPart", "PartsSubtotal", "Total", "IsOpen"]
             }
         },
