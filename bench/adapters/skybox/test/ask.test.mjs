@@ -8,7 +8,7 @@ import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { questionOf } from "../../lib/question.mjs";
-import { askSkybox, isPathSegment, parseContextReply, parseCypherRow, parseCypherValue } from "../ask.mjs";
+import { askSkybox, isPathSegment, nameInIndex, parseContextReply, parseCypherRow, parseCypherValue } from "../ask.mjs";
 
 const REPO_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..", "..", "..", "..");
 
@@ -237,6 +237,18 @@ Method:C:Error:1:other.go, Error, Method, other.go, 40, 43`;
     const missing = await askSkybox(anchored("hover"), fake({ context: "Symbol not found in index" }).call);
     assert.deepEqual(missing, { text: "", note: "Symbol not found in index" }, "not found in the file, then not found anywhere");
     assert.equal(parseCypherValue(TABLE(["n.description"], ["null"])), null);
+});
+
+test("a php sigil is dropped from the name skybox is asked, and only there", async () => {
+    assert.equal(nameInIndex("$statusFilter"), "statusFilter");
+    assert.equal(nameInIndex("statusFilter"), "statusFilter");
+    assert.equal(nameInIndex("$"), "$");
+    const { call, calls } = fake({ context: "Symbol not found in index" });
+    await askSkybox({ id: "t", surface: "definition", kind: null, direction: null, from: { file: "a.php", needle: "x", line: 3, text: "echo $repairOrder->reference;", symbol: "$repairOrder" } }, call);
+    assert.deepEqual(calls[0].args, { name: "repairOrder" });
+    const anchoredCall = fake({ context: "Symbol not found in index" });
+    await askSkybox({ id: "t", surface: "hover", kind: null, direction: null, from: { file: "a.php", needle: "x", line: 3, text: "public string $statusFilter = '';", symbol: "$statusFilter" } }, anchoredCall.call);
+    assert.deepEqual(anchoredCall.calls.map((entry) => entry.args), [{ name: "statusFilter", file_path: "a.php" }, { name: "statusFilter" }]);
 });
 
 test("a cypher value that spans lines is read whole (recorded from skybox 0.9.0, atelier-rust)", () => {

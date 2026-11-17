@@ -171,6 +171,15 @@ export function parseCypherValue(text) {
     return value === "" || value === "null" ? null : value;
 }
 
+/**
+ * The name skybox indexes a symbol under. A php variable or property is written with its `$` sigil
+ * (`from.symbol` is the identifier as written on the line), and skybox names its node without it
+ * (`Property:StatusBoard:statusFilter:...`). Dropping the sigil is skybox's own naming, not a hint.
+ */
+export function nameInIndex(symbol) {
+    return symbol.startsWith("$") && symbol.length > 1 ? symbol.slice(1) : symbol;
+}
+
 function cypherString(value) {
     return `'${value.replaceAll("\\", "\\\\").replaceAll("'", "\\'")}'`;
 }
@@ -244,7 +253,7 @@ async function askRaw(question, call) {
         return undefined;
     }
 
-    const reply = parseContextReply(await ask(call, "context", { name: symbol }));
+    const reply = parseContextReply(await ask(call, "context", { name: nameInIndex(symbol) }));
 
     if (reply.kind === "not-found") {
         return { locations: [], note: "Symbol not found in index" };
@@ -304,10 +313,10 @@ async function askAnchored(question, call) {
     }
     const empty = question.surface === "hover" ? { text: "" } : { locations: [] };
 
-    let reply = parseContextReply(await ask(call, "context", { name: symbol, file_path: file }));
+    let reply = parseContextReply(await ask(call, "context", { name: nameInIndex(symbol), file_path: file }));
     let usedFile = true;
     if (reply.kind === "not-found") {
-        reply = parseContextReply(await ask(call, "context", { name: symbol }));
+        reply = parseContextReply(await ask(call, "context", { name: nameInIndex(symbol) }));
         usedFile = false;
         if (reply.kind === "not-found") {
             return { ...empty, note: "Symbol not found in index" };
