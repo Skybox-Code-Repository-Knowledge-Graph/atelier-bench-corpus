@@ -172,7 +172,7 @@ export const LIST_NOT_TYPES = {
  */
 export const DOCSYM_REFERENCE_DISAGREES = {
     "typescript:docsym-repair-order": "typescript-language-server 6.1.0 also lists object-literal keys and a local, which the counting rule leaves out (#208)",
-    "javascript:docsym-repair-order": "typescript-language-server 6.1.0 also lists JSDoc @typedef properties and a local, which the counting rule leaves out (#208)",
+    "javascript:docsym-repair-order": "typescript-language-server 6.1.0 also lists object-literal keys and a local, which the counting rule leaves out (#208)",
     "javascript:docsym-report-registry": "typescript-language-server 6.1.0 also lists require bindings and module.exports entries, which the counting rule leaves out (#208)",
     "python:docsym-repair-order": "pyright 1.1.414 also lists parameters, instance attributes and locals, which the counting rule leaves out (#208)",
     "python:docsym-report-registry": "pyright 1.1.414 also lists parameters, which the counting rule leaves out (#208)",

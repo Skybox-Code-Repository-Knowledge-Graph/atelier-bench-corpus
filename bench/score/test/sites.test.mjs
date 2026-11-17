@@ -103,6 +103,16 @@ test("a document_symbol key entry becomes neutral only where it is a rust impl b
     }
 });
 
+test("the seven document_symbol tasks their own servers pass stay scorable", async () => {
+    const { planTask } = await import("../lib/plan.mjs");
+    const scored = ["go:docsym-repair-order", "go:docsym-report-registry", "rust:docsym-repair-order", "rust:docsym-report-registry", "php:docsym-repair-order", "php:docsym-report-registry", "typescript:docsym-report-registry"];
+    for (const key of scored) {
+        const [lane, id] = key.split(":");
+        const task = JSON.parse(readFileSync(join(REPO_ROOT, lane, "bench", "tasks.json"), "utf8")).tasks.find((candidate) => candidate.id === id);
+        assert.equal(planTask(task, lane).scorable, true, `${key} should be scorable`);
+    }
+});
+
 test("every document_symbol reference disagreement names a document_symbol task that exists", async () => {
     const { DOCSYM_REFERENCE_DISAGREES, planTask } = await import("../lib/plan.mjs");
     for (const key of Object.keys(DOCSYM_REFERENCE_DISAGREES)) {
