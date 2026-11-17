@@ -320,7 +320,7 @@
                 "symbol": "with_reference"
             },
             "expect": {
-                "min_references": 2,
+                "exact_count": 2,
                 "known_sites": [
                     {
                         "file": "atelier_core/models/repair_order.py",
@@ -800,7 +800,7 @@
             },
             "expect": {
                 "kind": "structural",
-                "min_implementations": 2,
+                "exact_count": 2,
                 "implementations": [
                     {
                         "file": "atelier_core/services/standard_invoice_calculator.py",
@@ -823,7 +823,7 @@
                 "symbol": "ReportContract"
             },
             "expect": {
-                "min_implementations": 24,
+                "exact_count": 24,
                 "implementations": [
                     {
                         "file": "atelier_bench/reports/cash_flow.py",
@@ -935,7 +935,7 @@
             },
             "expect": {
                 "kind": "structural",
-                "min_implementations": 8,
+                "exact_count": 8,
                 "implementations": [
                     {
                         "file": "atelier_bench/repositories/customer_repository.py",
@@ -982,7 +982,7 @@
                 "symbol": "NotifierContract"
             },
             "expect": {
-                "min_implementations": 8,
+                "exact_count": 8,
                 "implementations": [
                     {
                         "file": "atelier_bench/notifiers/discord_notifier.py",
@@ -1591,7 +1591,7 @@
             },
             "expect": {
                 "kind": "name_only",
-                "min_references": 3,
+                "exact_count": 4,
                 "known_sites": [
                     {
                         "file": "atelier_core/events.py",
@@ -1604,6 +1604,10 @@
                     {
                         "file": "tests/test_events.py",
                         "needle": "self.assertEqual(dispatcher.listener_names(), [\"repair.completed\"])"
+                    },
+                    {
+                        "file": "tests/test_events.py",
+                        "needle": "self.assertEqual(channel_for(\"repair.completed\", {\"order_id\": 4}), \"orders.4\")"
                     }
                 ]
             }
@@ -2682,7 +2686,7 @@
             },
             "expect": {
                 "kind": "virtual_subclass",
-                "min_implementations": 4,
+                "exact_count": 4,
                 "implementations": [
                     {
                         "file": "atelier_core/support/intake.py",
@@ -2719,7 +2723,7 @@
                 "symbol": "__call__"
             },
             "expect": {
-                "min_references": 3,
+                "exact_count": 3,
                 "known_sites": [
                     {
                         "file": "atelier_core/support/intake.py",
@@ -2746,7 +2750,7 @@
                 "symbol": "busiest_kind"
             },
             "expect": {
-                "min_references": 3,
+                "exact_count": 3,
                 "known_sites": [
                     {
                         "file": "atelier_core/support/intake.py",
@@ -2759,6 +2763,12 @@
                     {
                         "file": "tests/test_intake.py",
                         "needle": "self.assertIs(self.ledger.busiest_kind, first)"
+                    }
+                ],
+                "optional_sites": [
+                    {
+                        "file": "tests/test_intake.py",
+                        "needle": "self.assertIn(\"busiest_kind\", vars(self.ledger))"
                     }
                 ]
             }
