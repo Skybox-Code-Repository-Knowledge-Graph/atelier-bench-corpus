@@ -464,6 +464,9 @@
                     {"file": "atelier/reports/warranty_claim.go", "needle": "type WarrantyClaimReport struct {"},
                     {"file": "atelier/reports/warranty_cost.go", "needle": "type WarrantyCostReport struct {"},
                     {"file": "atelier/reports/warranty_trend.go", "needle": "type WarrantyTrendReport struct {"}
+                ],
+                "optional_sites": [
+                    {"file": "atelier/contracts/composite.go", "needle": "type CompositeContract interface {"}
                 ]
             }
         },
@@ -519,6 +522,9 @@
                     {"file": "atelier/repositories/order_repository.go", "needle": "type OrderRepository struct {"},
                     {"file": "atelier/repositories/part_repository.go", "needle": "type PartRepository struct {"},
                     {"file": "atelier/repositories/technician_repository.go", "needle": "type TechnicianRepository struct {"}
+                ],
+                "optional_sites": [
+                    {"file": "core/contracts/repository.go", "needle": "type Keyed[T any] interface {"}
                 ]
             }
         },
@@ -1078,7 +1084,10 @@
                     {"file": "atelier/reports/warranty_cost.go", "needle": "type WarrantyCostReport struct {"},
                     {"file": "atelier/reports/warranty_trend.go", "needle": "type WarrantyTrendReport struct {"}
                 ],
-                "must_not_include": ["support.BaseReport", "support.PeriodicReport", "support.CompositeReport"]
+                "must_not_include": ["support.BaseReport", "support.PeriodicReport", "support.CompositeReport"],
+                "optional_sites": [
+                    {"file": "atelier/contracts/composite.go", "needle": "type CompositeContract interface {"}
+                ]
             }
         },
         {
