@@ -1,7 +1,7 @@
 s-pass: PASS
 s-wrong-line: FAIL (target not returned: expected src/app.txt:2, got src/app.txt:1)
 s-ambiguous: FAIL (ambiguous: target returned with 1 unexpected location(s), first src/app.txt:4)
-s-known-site: PASS
+s-known-site: FAIL (ambiguous: target returned with 1 unexpected location(s), first src/app.txt:3)
 s-known-site-excluded-path: PASS
 s-range-over-excluded-text: PASS
 s-lane-prefix: FAIL (ambiguous: target returned with 1 unexpected location(s), first ../php/app/Models/Customer.php:18; excluded "php/" returned)
@@ -36,7 +36,7 @@ s-no-symbol: UNSCORABLE (task states no from.symbol)
 s-unresolved: UNRESOLVED (src/absent.txt: file missing)
 
 surface           pass  fail  unsupported  unanswered  error  unscorable  unresolved  total
-definition           5     5            1           1      2           2           1     17
+definition           4     6            1           1      2           2           1     17
 resolution           0     2            0           0      0           0           0      2
 import-precision     0     1            0           0      0           0           0      1
 parse-negative       0     0            0           0      0           1           0      1
@@ -45,10 +45,9 @@ call_hierarchy       2     2            0           0      0           0        
 references           1     2            0           0      0           2           0      5
 implementation       1     1            0           0      0           1           0      3
 multi-parent         1     0            0           0      0           0           0      1
-all                 11    14            1           1      2           6           1     36
 
 tool: fixture-tool 0.0.0   lane: fixture   scope: repo
 answers for ids this lane does not have: 1 (s-renamed-id)
 scorable by this scorer: 29 of 36 tasks
-exact        passed 8 of 23 scorable (34.8%), 8 of 19 answered (42.1%)
-recall-only  passed 3 of 6 scorable (50.0%), 3 of 6 answered (50.0%)
+exact        passed 7 of 23 scorable (30.4%); 7 of 22 asked (31.8%); 1 not asked
+recall-only  passed 3 of 6 scorable (50.0%); 3 of 6 asked (50.0%); 0 not asked

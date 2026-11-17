@@ -64,7 +64,7 @@ for (const lane of LANES) {
         const tasks = JSON.parse(readFileSync(join(root, "bench", "tasks.json"), "utf8")).tasks;
         const oracle = buildOracle(root, tasks, lane);
         const context = { root, lane, scope: "repo" };
-        const counts = { scorable: 0, unresolved: 0, unscorable: 0, exclusions: 0, insideSymbol: 0, untrippable: [], byCheck: {} };
+        const counts = { scorable: 0, unresolved: 0, unscorable: 0, exclusions: 0, untrippable: [], byCheck: {} };
 
         for (const task of tasks) {
             const plan = planTask(task, lane);
@@ -107,13 +107,19 @@ for (const lane of LANES) {
             const withSites = scoreTask(task, { locations: [target, ...sites] }, context);
             assert.equal(withSites.verdict, "PASS", `${label} target with known sites: ${withSites.detail ?? ""}`);
 
-            // A range that starts above the target and covers it is an enclosing scope. It passes
-            // only for the few targets anchored inside their declaration.
+            // A range that starts above the target and covers it is an enclosing scope, and fails.
             if (target.line > 1) {
                 const enclosing = scoreTask(task, { locations: [{ file: target.file, line: target.line - 1, end_line: target.line + 40 }] }, context);
-                const inside = planTask(task, lane).targetInsideSymbol;
-                assert.equal(enclosing.verdict, inside ? "PASS" : "FAIL", `${label} enclosing range`);
-                counts.insideSymbol += inside ? 1 : 0;
+                assert.equal(enclosing.verdict, "FAIL", `${label} enclosing range`);
+            }
+
+            // A known site is matched by its line: a range that starts above it does not name it.
+            if (sites.length > 0 && sites[0].line > 1) {
+                const aboveSite = { file: sites[0].file, line: sites[0].line - 1, end_line: sites[0].line + 1 };
+                if (!sites.some((site) => site.file === aboveSite.file && site.line === aboveSite.line) && !(aboveSite.file === target.file && aboveSite.line === target.line)) {
+                    const ranged = scoreTask(task, { locations: [target, aboveSite] }, context);
+                    assert.equal(ranged.verdict, "FAIL", `${label} a range over a known site`);
+                }
             }
 
             assert.equal(scoreTask(task, { locations: [] }, context).verdict, "FAIL", `${label} no location`);
@@ -138,7 +144,7 @@ for (const lane of LANES) {
         }
 
         assert.ok(counts.scorable > 0, `${lane}: no task is scorable`);
-        t.diagnostic(`${lane}: ${counts.scorable} scorable (${Object.entries(counts.byCheck).map(([check, n]) => `${check} ${n}`).join(", ")}), ${counts.unresolved} unresolved, ${counts.unscorable} unscorable of ${tasks.length}; ${counts.exclusions} exclusions tripped; ${counts.insideSymbol} target(s) matched by containment`);
+        t.diagnostic(`${lane}: ${counts.scorable} scorable (${Object.entries(counts.byCheck).map(([check, n]) => `${check} ${n}`).join(", ")}), ${counts.unresolved} unresolved, ${counts.unscorable} unscorable of ${tasks.length}; ${counts.exclusions} exclusions tripped`);
         if (counts.untrippable.length > 0) {
             t.diagnostic(`${lane}: exclusions no mutation could trip: ${counts.untrippable.join(" | ")}`);
         }

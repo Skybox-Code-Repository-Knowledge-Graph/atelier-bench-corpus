@@ -344,9 +344,11 @@ export function scoreTask(task, answer, context) {
         return finish();
     }
 
-    const isTarget = plan.targetInsideSymbol ? coversSite : isDeclaration;
+    // The target and each known site are matched by their line. A range stands for its first line:
+    // one that covers a site from above is an enclosing scope, and is an unexpected location.
+    const isTarget = isDeclaration;
     const expected = needed.resolved[0];
-    const isKnownSite = (location) => allowed.resolved.some((site) => coversSite(location, site));
+    const isKnownSite = (location) => allowed.resolved.some((site) => isDeclaration(location, site));
     const unexpected = read.locations.filter((location) => !isTarget(location, expected) && !isKnownSite(location));
 
     if (read.locations.length === 0) {
@@ -433,19 +435,22 @@ export function summarize(results) {
     // One column per rule class and adapter protocol, never added together. A recall rule cannot
     // fail a tool that returns everything, so its passes do not mean what an exact pass means; and
     // answers asked under different protocols measure different things (adapters README).
+    // "asked" counts every question the tool was put, its errors and "unsupported" replies included:
+    // a tool that times out or cannot be asked has not answered, and must not look better for it.
+    // "notAsked" is what the adapter chose not to ask; it counts against "scorable", never for it.
     const ratios = (counts) => ({
         pass: counts.PASS,
-        answered: counts.PASS + counts.FAIL,
         scorable: counts.total - counts.UNRESOLVED - counts.UNSCORABLE,
         asked: counts.PASS + counts.FAIL + counts.UNSUPPORTED + counts.ERROR,
         notAsked: counts.UNANSWERED,
+        errors: counts.ERROR,
+        unsupported: counts.UNSUPPORTED,
     });
     const order = { exact: 0, recall: 1 };
     const columns = [...byColumn.values()]
         .sort((left, right) => order[left.class] - order[right.class] || String(left.protocol ?? "").localeCompare(String(right.protocol ?? "")))
         .map((column) => ({ class: column.class, protocol: column.protocol, ...ratios(column.counts) }));
 
-    const answered = total.PASS + total.FAIL;
     const scorable = total.total - total.UNSCORABLE - total.UNRESOLVED;
-    return { bySurface, total, answered, scorable, columns };
+    return { bySurface, total, scorable, columns };
 }

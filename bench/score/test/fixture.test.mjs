@@ -86,13 +86,17 @@ test("results without a file and line count against the answer, never for it", (
     assert.equal(scoreTask(task("s-pass"), { locations: [target], unlocated: -1 }, context).verdict, "ERROR");
 });
 
-test("a declaration never passes by range, a known site does", () => {
+test("a declaration and a known site are each matched by their line, never by a range over them", () => {
     const context = { root: LANE, lane: "lane", scope: "repo" };
     const enclosing = { locations: [{ file: "src/app.txt", line: 1, end_line: 7 }] };
     assert.equal(scoreTask(task("s-wrong-line"), enclosing, context).verdict, "FAIL");
 
-    const withSite = { locations: [{ file: "src/app.txt", line: 1 }, { file: "src/app.txt", line: 3, end_line: 5 }] };
-    assert.equal(scoreTask(task("s-known-site"), withSite, context).verdict, "PASS");
+    const siteByLine = { locations: [{ file: "src/app.txt", line: 1 }, { file: "src/app.txt", line: 4 }] };
+    assert.equal(scoreTask(task("s-known-site"), siteByLine, context).verdict, "PASS");
+    const siteByRange = { locations: [{ file: "src/app.txt", line: 1 }, { file: "src/app.txt", line: 3, end_line: 5 }] };
+    const ranged = scoreTask(task("s-known-site"), siteByRange, context);
+    assert.equal(ranged.verdict, "FAIL", "a range from line 3 covers the known site on line 4, but does not name it");
+    assert.match(ranged.detail, /unexpected location/);
 });
 
 test("results asked under different protocols are reported on separate lines, never summed", () => {
@@ -127,18 +131,14 @@ test("an exclusion is matched on the reported line, and a known site is never an
     assert.equal(scoreTask(task("s-known-site-excluded-path"), knownSite, context).verdict, "PASS");
 });
 
-test("a target anchored inside its declaration matches by containment, in that lane only", () => {
+test("a target anchored inside its declaration is UNSCORABLE, so no range over it can pass", () => {
     const repo = resolve(HERE, "..", "..", "..");
     const python = JSON.parse(readFileSync(join(repo, "python", "bench", "tasks.json"), "utf8")).tasks;
     const anchored = python.find((candidate) => candidate.id === "def-super-cooperative");
-    assert.equal(planTask(anchored, "python").targetInsideSymbol, true);
-    assert.equal(planTask(anchored, "go").targetInsideSymbol, false);
-
+    assert.equal(planTask(anchored, "python").scorable, false);
     const root = join(repo, "python");
-    const { line } = buildOracle(root, [anchored]).answers[anchored.id].locations[0];
-    const method = { locations: [{ file: anchored.expect.file, line: line - 1, end_line: line }] };
-    assert.equal(scoreTask(anchored, method, { root, lane: "python", scope: "repo" }).verdict, "PASS");
-    assert.equal(scoreTask(anchored, method, { root, lane: "go", scope: "repo" }).verdict, "FAIL");
+    const wholeFile = { locations: [{ file: anchored.expect.file, line: 1, end_line: 10000 }] };
+    assert.equal(scoreTask(anchored, wholeFile, { root, lane: "python", scope: "repo" }).verdict, "UNSCORABLE");
 });
 
 test("oracle.mjs output is accepted by score.mjs and passes every scorable task", () => {
@@ -153,7 +153,7 @@ test("oracle.mjs output is accepted by score.mjs and passes every scorable task"
     assert.match(scored.stdout, /recall-only +passed (\d+) of \1 scorable \(100\.0%\)/);
 });
 
-test("every target matched by containment names a task that exists and is scorable", () => {
+test("every target anchored inside its declaration names a task that exists, and is UNSCORABLE in its lane", () => {
     const repo = resolve(HERE, "..", "..", "..");
     for (const key of TARGET_INSIDE_SYMBOL) {
         const [lane, id] = key.split(":");
@@ -162,8 +162,8 @@ test("every target matched by containment names a task that exists and is scorab
         const found = JSON.parse(readFileSync(join(root, "bench", "tasks.json"), "utf8")).tasks.find((candidate) => candidate.id === id);
         assert.ok(found, `${key}: no such task; the id was renamed or removed`);
         const plan = planTask(found, lane);
-        assert.equal(plan.scorable, true, `${key}: ${plan.reason}`);
-        assert.equal(resolveNeedle(root, plan.target).ok, true, `${key}: target does not resolve`);
+        assert.equal(plan.scorable, false, `${key}: should be UNSCORABLE`);
+        assert.match(plan.reason, /anchors the target inside its declaration/);
     }
 });
 

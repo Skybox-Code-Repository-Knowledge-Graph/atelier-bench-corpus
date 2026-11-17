@@ -173,9 +173,10 @@ export function listCount(expect) {
 /**
  * Targets anchored on a line INSIDE the declaration they stand for, keyed `lane:id`. The needle sits
  * in the body because the declaration line is not unique in its file, or because the answer is a
- * statement (a blank import's effect is a call inside init). A tool returns the declaration, so
- * these targets are matched by containment: the returned range must cover the anchored line.
- * Every other target is matched by its exact line.
+ * statement (a blank import's effect is a call inside init). No line of the key names the
+ * declaration, and matching by containment would pass any range that covers the anchor, one over
+ * the whole file included, so these tasks are UNSCORABLE until their key anchors a line a tool can
+ * return. Every other target is matched by its exact line.
  */
 export const TARGET_INSIDE_SYMBOL = new Set([
     "python:def-super-cooperative",
@@ -271,11 +272,13 @@ export function planTask(task, lane = null) {
         if (!isFileNeedle(target)) {
             return { scorable: false, reason: `${rule.name}: target is not a file and needle pair` };
         }
+        if (TARGET_INSIDE_SYMBOL.has(`${lane}:${task.id}`)) {
+            return { scorable: false, reason: `${rule.name}: the key anchors the target inside its declaration, so no line names it; matched by containment, one range over the whole file would pass` };
+        }
 
         return {
             ...common,
             target,
-            targetInsideSymbol: TARGET_INSIDE_SYMBOL.has(`${lane}:${task.id}`),
             allow: Array.isArray(expect.known_sites) ? expect.known_sites.filter(isFileNeedle) : [],
         };
     }
