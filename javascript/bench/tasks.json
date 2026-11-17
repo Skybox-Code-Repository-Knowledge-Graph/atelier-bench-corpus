@@ -935,7 +935,7 @@
         {
             "id": "refs-report-registry",
             "surface": "references",
-            "note": "The registry has a handful of read sites; the 24 `new XReport()` entries inside it are construction sites of report implementors, not references to REPORTS.",
+            "note": "10 reference sites: 7 reads and 3 binding lines (the export in the registry module, the import in the breadth test and the require in the app index); the 24 `new XReport()` entries inside the registry are construction sites of report implementors, not references to REPORTS.",
             "from": {
                 "file": "packages/bench/src/index.cjs",
                 "needle": "const REPORTS = [",
@@ -1098,7 +1098,7 @@
         {
             "id": "card-rule-contract",
             "surface": "cardinality",
-            "note": "48 implementors of one contract: 24 classes, one per file, statically required in rules/index.cjs, plus 24 object literals in rules/structural.cjs. Only the class half has a name to report; the structural half answers `evaluate(data)` with no name at all.",
+            "note": "48 implementors of one contract: 24 classes, one per file, statically required in rules/index.cjs, plus 24 object literals in rules/structural.cjs. Only the class half has a class name to report; each structural literal has no class and no name binding, so it is keyed by its `key:` line, and it answers `evaluate(data)` by shape alone.",
             "from": {
                 "file": "packages/bench/src/contracts/ruleContract.cjs",
                 "needle": " * @typedef {object} RuleContract",
@@ -2613,7 +2613,7 @@
         {
             "id": "refs-format-reference",
             "surface": "references",
-            "note": "Nine lines carry the name; one of them is the string literal \"atelierFormatReference\" inside the glob test's key assertion, which is not a reference. The floor counts genuine reference sites outside the declaration.",
+            "note": "Nine lines carry the name; one of them is the string literal \"atelierFormatReference\" inside the glob test's key assertion, which is not a reference. The exact count is the 8 genuine reference sites outside the declaration.",
             "from": {
                 "file": "packages/core/src/support/helpers.js",
                 "needle": "export function atelierFormatReference(prefix, num, year = Reference.DEFAULT_YEAR) {",
