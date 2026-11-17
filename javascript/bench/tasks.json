@@ -2,7 +2,7 @@
     "version": 1,
     "corpus": "atelier-bench-corpus",
     "lane": "javascript",
-    "notes": "Known-answer navigation tasks for the javascript lane. Needle-based, not line-based: bench/verify-tasks/verify.mjs resolves every needle to a unique line at the current SHA, so the manifest survives edits without stale line numbers. Paths are relative to the lane root (javascript/), not to the repository root. 'expect' blocks carry the ground truth a harness scores against; counts are minimums where marked. exact_count is exact and counts concrete, non-generic, unconditionally computed impls only. cfg-gated impls are excluded. On the implementation surface min_implementations counts concrete classes only: JavaScript has no implements keyword, so satisfaction is structural and reached through the prototype chain, and the abstract bases (AbstractReport, AbstractPeriodicReport, AbstractCompositeReport, AbstractNotifier) are excluded from every count. Kinds added by the fifth wave: builtin_parent (extends a node built-in), same_name (two exports with one name in different modules), jsdoc_generic (a JSDoc @template type parameter, which exists only in the comment and has no runtime form), dynamic_import (import() with a static specifier). Kind added by the implementation surface: structural (the implementor never names the contract, which is a JSDoc @typedef with no runtime declaration), glob (`export *`, whose exact_count is the number of names crossing the re-export), namespace_import (`import * as`, where the answer is the one member actually read off the namespace object). IDs shared with the php, rust, typescript, python and go lanes ask the same question in each language. document_symbol tasks count every named symbol the anchored FILE declares at any nesting depth (classes, members, functions, constants); each task's note enumerates that count N and states min_symbols = floor(0.75 * N), the 25% margin absorbing listings that fold container nodes. call_hierarchy tasks name callees under outgoing_includes and callers under incoming_includes; both are file+needle pairs the verifier resolves. Other kinds this lane uses: barrel (packages/core/src/index.js declares no name of its own and only forwards exports, so an import from @atelier/core resolves through it to the declaring module and never stops on the index file), mixin_parents (a class whose parents are one extends edge plus mixins copied onto its prototype with Object.assign: only the extends parent is visible at the class line, yet every one of them counts as a parent, either as exact_count or as extends_count plus implements_count), name_only (the subscribe call writes the event name \"repair.completed\" as a bare literal and no symbol reference links it to the emit path; the dispatch side may pass the REPAIR_COMPLETED constant, but only the matching string value ties the two together), shadow_alias (a rename of one of two same-name export class Formatter declarations, written as an ESM import { Formatter as X }, a CommonJS destructuring rename { Formatter: X } = require(...), or a JSDoc type written against such an alias: it resolves to the class in the module the import names, never its namesake), syntax_error (a negative-case fixture with an unclosed function or class body or an unbalanced destructuring pattern: any parser has to fail on it rather than invent closing braces and resolve halfway), type_only (a JSDoc type reference such as @type {import(\"...\").X}, which creates no runtime edge: the file never requires the module it names). Kinds shared with other lanes, worded identically in every lane that uses them. child_of: the anchored declaration is the child end of a parent edge, and the answer is a direct parent it extends, implements or embeds, one level up, never a further ancestor and never one of its own children. imports: an import that binds only the names it lists; the answer is each named declaration in the file that declares it, never a sibling declared beside it and never every name the target module exports. lane_local: a symbol every lane carries under the same name or as its lane equivalent (Money, Customer, Dataset, the reference prefix, the invoice calculator's calculate, the billing Formatter); resolution must land on this lane's own declaration and never cross into a sibling lane. parent_of: a parent edge scored for direction, with the anchor at either end; the parent is the type that is extended, implemented or embedded, the child is the type that does so, and an answer that reports the child as the parent is wrong. unresolvable_static: an import whose target module is built from a runtime value, so no single module is the static answer; the honest result is every candidate module, and exact_count counts them. uses_self: a type that refers to itself, such as a tree node holding children of its own type; the edge is a uses edge back to the declaring type, never extends, implements or embedding.",
+    "notes": "Known-answer navigation tasks for the javascript lane. Needle-based, not line-based: bench/verify-tasks/verify.mjs resolves every needle to a unique line at the current SHA, so the manifest survives edits without stale line numbers. Paths are relative to the lane root (javascript/), not to the repository root. 'expect' blocks carry the ground truth a harness scores against; counts are minimums where marked. exact_count is exact and counts concrete, non-generic, unconditionally computed impls only. cfg-gated impls are excluded. On the implementation surface min_implementations counts concrete classes only: JavaScript has no implements keyword, so satisfaction is structural and reached through the prototype chain, and the abstract bases (AbstractReport, AbstractPeriodicReport, AbstractCompositeReport, AbstractNotifier) are excluded from every count. Kinds added by the fifth wave: builtin_parent (extends a node built-in), same_name (two exports with one name in different modules), jsdoc_generic (a JSDoc @template type parameter, which exists only in the comment and has no runtime form), dynamic_import (import() with a static specifier). Kind added by the implementation surface: structural (the implementor never names the contract, which is a JSDoc @typedef with no runtime declaration), glob (`export *`, whose exact_count is the number of names crossing the re-export), namespace_import (`import * as`, where the answer is the one member actually read off the namespace object). IDs shared with the php, rust, typescript, python and go lanes ask the same question in each language. document_symbol tasks count every named symbol the anchored FILE declares at any nesting depth (classes, members, functions, constants); each task's note enumerates that count N and states min_symbols = floor(0.75 * N), the 25% margin absorbing listings that fold container nodes. call_hierarchy tasks name callees under outgoing_includes and callers under incoming_includes; both are file+needle pairs the verifier resolves. Other kinds this lane uses: barrel (packages/core/src/index.js declares no name of its own and only forwards exports, so an import from @atelier/core resolves through it to the declaring module and never stops on the index file), mixin_parents (a class whose parents are one extends edge plus mixins copied onto its prototype with Object.assign: only the extends parent is visible at the class line, yet every one of them counts as a parent, either as exact_count or as extends_count plus implements_count), name_only (the subscribe call writes the event name \"repair.completed\" as a bare literal and no symbol reference links it to the emit path; the dispatch side may pass the REPAIR_COMPLETED constant, but only the matching string value ties the two together), shadow_alias (a rename of one of two same-name export class Formatter declarations, written as an ESM import { Formatter as X }, a CommonJS destructuring rename { Formatter: X } = require(...), or a JSDoc type written against such an alias: it resolves to the class in the module the import names, never its namesake), syntax_error (a negative-case fixture with an unclosed function or class body or an unbalanced destructuring pattern: any parser has to fail on it rather than invent closing braces and resolve halfway), type_only (a JSDoc type reference such as @type {import(\"...\").X}, which creates no runtime edge: the file never requires the module it names). Kinds shared with other lanes, worded identically in every lane that uses them. child_of: the anchored declaration is the child end of a parent edge, and the answer is a direct parent it extends, implements or embeds, one level up, never a further ancestor and never one of its own children. imports: an import that binds only the names it lists; the answer is each named declaration in the file that declares it, never a sibling declared beside it and never every name the target module exports. lane_local: a symbol every lane carries under the same name or as its lane equivalent (Money, Customer, Dataset, the reference prefix, the invoice calculator's calculate, the billing Formatter); resolution must land on this lane's own declaration and never cross into a sibling lane. parent_of: a parent edge scored for direction, with the anchor at either end; the parent is the type that is extended, implemented or embedded, the child is the type that does so, and an answer that reports the child as the parent is wrong. unresolvable_static: an import whose target module is built from a runtime value, so no single module is the static answer; the honest result is every candidate module, and exact_count counts them. uses_self: a type that refers to itself, such as a tree node holding children of its own type; the edge is a uses edge back to the declaring type, never extends, implements or embedding. from.symbol is the identifier a task asks about, exactly as written on the from line and with no qualifier: the alias where an alias is used, the member on a member access, null when the question has no single identifier. from.occurrence (1-based) says which one when it appears more than once on that line, and is then required. document_symbol, parse-negative and diagnostics tasks ask about a file and carry neither key.",
     "tasks": [
         {
             "id": "def-through-require",
@@ -10,7 +10,8 @@
             "note": "The require destructure is the only link between the two files; the declaration is a plain class in the required module.",
             "from": {
                 "file": "packages/bench/src/index.cjs",
-                "needle": "const { Dataset } = require(\"./dataset.cjs\");"
+                "needle": "const { Dataset } = require(\"./dataset.cjs\");",
+                "symbol": "Dataset"
             },
             "expect": {
                 "file": "packages/bench/src/dataset.cjs",
@@ -23,7 +24,8 @@
             "note": "rowFromCents is a property of one `module.exports = { ... }` literal; the definition is the function declaration above it, never the export line.",
             "from": {
                 "file": "packages/bench/src/reports/gross-profit.cjs",
-                "needle": "rowFromCents(\"revenue\", revenue),"
+                "needle": "rowFromCents(\"revenue\", revenue),",
+                "symbol": "rowFromCents"
             },
             "expect": {
                 "file": "packages/bench/src/contracts/reportContract.cjs",
@@ -36,7 +38,8 @@
             "note": "suffix is added with `exports.suffix =`, so the declaration and the export are the same statement.",
             "from": {
                 "file": "packages/bench/src/support/abstractMetric.cjs",
-                "needle": "return `${this.compute(data).toFixed(2)}${suffix(this.unit)}`;"
+                "needle": "return `${this.compute(data).toFixed(2)}${suffix(this.unit)}`;",
+                "symbol": "suffix"
             },
             "expect": {
                 "file": "packages/bench/src/contracts/metricContract.cjs",
@@ -49,7 +52,8 @@
             "note": "src/reportContract.cjs is one line: `module.exports = require(...)`. A lookup on rowFromCents must hop through it to the declaring function in contracts/reportContract.cjs; the hop itself is a known site, not the answer.",
             "from": {
                 "file": "packages/bench/src/index.cjs",
-                "needle": "const { reportRow, rowFromCents } = require(\"./reportContract.cjs\");"
+                "needle": "const { reportRow, rowFromCents } = require(\"./reportContract.cjs\");",
+                "symbol": "rowFromCents"
             },
             "expect": {
                 "file": "packages/bench/src/contracts/reportContract.cjs",
@@ -68,7 +72,8 @@
             "note": "Device is a constructor function; label lives on Device.prototype, not in a class body.",
             "from": {
                 "file": "packages/core/src/observers.js",
-                "needle": "this.lines.push(`device.created ${device.label()}`);"
+                "needle": "this.lines.push(`device.created ${device.label()}`);",
+                "symbol": "label"
             },
             "expect": {
                 "file": "packages/core/src/models/device.js",
@@ -81,7 +86,8 @@
             "note": "Inheritance is wired by hand: Object.create(Device.prototype) is the only parent edge Laptop has.",
             "from": {
                 "file": "packages/core/src/models/device.js",
-                "needle": "Laptop.prototype = Object.create(Device.prototype);"
+                "needle": "Laptop.prototype = Object.create(Device.prototype);",
+                "symbol": "Laptop"
             },
             "expect": {
                 "kind": "parent_of",
@@ -95,7 +101,9 @@
             "note": "reference() has no declaration in customer.js or repairOrder.js: withReference copies it onto the prototype with Object.assign.",
             "from": {
                 "file": "packages/app/src/http/api.js",
-                "needle": "reference: order.reference(),"
+                "needle": "reference: order.reference(),",
+                "symbol": "reference",
+                "occurrence": 2
             },
             "expect": {
                 "file": "packages/core/src/concerns/hasReference.js",
@@ -108,7 +116,8 @@
             "note": "A technician declares no nextSlot; the call resolves through the Proxy in concerns/forwardsToSchedule.js into Schedule.",
             "from": {
                 "file": "packages/bench/src/repositories/technicianRepository.cjs",
-                "needle": "technician.nextSlot() !== undefined"
+                "needle": "technician.nextSlot() !== undefined",
+                "symbol": "nextSlot"
             },
             "expect": {
                 "file": "packages/core/src/support/schedule.js",
@@ -121,7 +130,8 @@
             "note": "The only type surface is JSDoc: the @type annotation points at a @typedef in another package, with no runtime edge behind it.",
             "from": {
                 "file": "packages/bench/src/repositories/orderRepository.cjs",
-                "needle": "@type {import(\"@atelier/core/contracts/repository.js\").Repository<number, import(\"@atelier/core\").RepairOrder>}"
+                "needle": "@type {import(\"@atelier/core/contracts/repository.js\").Repository<number, import(\"@atelier/core\").RepairOrder>}",
+                "symbol": "Repository"
             },
             "expect": {
                 "file": "packages/core/src/contracts/repository.js",
@@ -134,7 +144,9 @@
             "note": "An ESM file default-imports a CommonJS package: the default binding is that package's module.exports object.",
             "from": {
                 "file": "packages/app/src/state.js",
-                "needle": "import bench from \"@atelier/bench\";"
+                "needle": "import bench from \"@atelier/bench\";",
+                "symbol": "bench",
+                "occurrence": 1
             },
             "expect": {
                 "file": "packages/bench/src/index.cjs",
@@ -147,7 +159,8 @@
             "note": "The module path is built from an argument, so no single file is the answer: the honest result is the 24 candidates under reports/.",
             "from": {
                 "file": "packages/bench/src/index.cjs",
-                "needle": "return require(`./reports/${slug}.cjs`);"
+                "needle": "return require(`./reports/${slug}.cjs`);",
+                "symbol": null
             },
             "expect": {
                 "kind": "unresolvable_static",
@@ -257,7 +270,8 @@
             "surface": "definition",
             "from": {
                 "file": "packages/core/src/concerns/hasReference.js",
-                "needle": "return atelierFormatReference(this.referencePrefix, this.referenceNumber);"
+                "needle": "return atelierFormatReference(this.referencePrefix, this.referenceNumber);",
+                "symbol": "atelierFormatReference"
             },
             "expect": {
                 "file": "packages/core/src/support/helpers.js",
@@ -269,7 +283,8 @@
             "surface": "definition",
             "from": {
                 "file": "packages/core/src/concerns/hasReference.js",
-                "needle": "export const DEFAULT_REFERENCE_PREFIX = ATELIER_REF_PREFIX;"
+                "needle": "export const DEFAULT_REFERENCE_PREFIX = ATELIER_REF_PREFIX;",
+                "symbol": "ATELIER_REF_PREFIX"
             },
             "expect": {
                 "file": "packages/core/src/support/helpers.js",
@@ -282,7 +297,8 @@
             "note": "Static class field on a class that is never instantiated.",
             "from": {
                 "file": "packages/core/src/support/helpers.js",
-                "needle": "const sep = Reference.PREFIX_SEPARATOR;"
+                "needle": "const sep = Reference.PREFIX_SEPARATOR;",
+                "symbol": "PREFIX_SEPARATOR"
             },
             "expect": {
                 "file": "packages/core/src/support/reference.js",
@@ -295,7 +311,8 @@
             "note": "Money.ZERO is declared as an empty static field and assigned inside a static initialisation block; the block is the definition site.",
             "from": {
                 "file": "packages/core/src/models/invoice.js",
-                "needle": "return this.paid ? Money.ZERO : this.total;"
+                "needle": "return this.paid ? Money.ZERO : this.total;",
+                "symbol": "ZERO"
             },
             "expect": {
                 "file": "packages/core/src/money.js",
@@ -308,7 +325,8 @@
             "note": "`cents` is a getter over a #private field: there is no property of that name on the instance.",
             "from": {
                 "file": "packages/bench/src/reports/cash-flow.cjs",
-                "needle": ".reduce((total, invoice) => total + invoice.total.cents, 0);"
+                "needle": ".reduce((total, invoice) => total + invoice.total.cents, 0);",
+                "symbol": "cents"
             },
             "expect": {
                 "file": "packages/core/src/money.js",
@@ -320,7 +338,8 @@
             "surface": "definition",
             "from": {
                 "file": "packages/app/src/index.js",
-                "needle": "app.get(\"/report/:reference\", showReport(state));"
+                "needle": "app.get(\"/report/:reference\", showReport(state));",
+                "symbol": "showReport"
             },
             "expect": {
                 "file": "packages/app/src/http/report.js",
@@ -333,7 +352,8 @@
             "note": "Same question as the typescript lane: the thrown subclass, not its base.",
             "from": {
                 "file": "packages/app/src/http/report.js",
-                "needle": "throw new NotFoundError(\"repair order\", reference);"
+                "needle": "throw new NotFoundError(\"repair order\", reference);",
+                "symbol": "NotFoundError"
             },
             "expect": {
                 "file": "packages/core/src/errors.js",
@@ -345,7 +365,8 @@
             "surface": "definition",
             "from": {
                 "file": "packages/bench/src/dataset.cjs",
-                "needle": "Customer.seed(1, \"Ada Byron\", \"ada@example.test\", \"+32 470 00 00 01\"),"
+                "needle": "Customer.seed(1, \"Ada Byron\", \"ada@example.test\", \"+32 470 00 00 01\"),",
+                "symbol": "seed"
             },
             "expect": {
                 "file": "packages/core/src/models/customer.js",
@@ -358,7 +379,8 @@
             "note": "The call site sees only the container; two implementations answer calculate, and the binding decides which one runs.",
             "from": {
                 "file": "packages/core/src/models/repairOrder.js",
-                "needle": "return container.invoiceCalculator().calculate(this);"
+                "needle": "return container.invoiceCalculator().calculate(this);",
+                "symbol": "calculate"
             },
             "expect": {
                 "exact_count": 2,
@@ -387,7 +409,8 @@
             "note": "`for (const order of data)` resolves to a generator method keyed by a computed Symbol, not to a property named orders.",
             "from": {
                 "file": "packages/bench/tests/interop.test.cjs",
-                "needle": "for (const order of data) {"
+                "needle": "for (const order of data) {",
+                "symbol": null
             },
             "expect": {
                 "file": "packages/bench/src/dataset.cjs",
@@ -399,7 +422,8 @@
             "surface": "definition",
             "from": {
                 "file": "packages/app/src/state.js",
-                "needle": "import { Formatter as MoneyFormatter } from \"@atelier/core/billing\";"
+                "needle": "import { Formatter as MoneyFormatter } from \"@atelier/core/billing\";",
+                "symbol": "Formatter"
             },
             "expect": {
                 "file": "packages/core/src/billing/formatter.js",
@@ -411,7 +435,8 @@
             "surface": "references",
             "from": {
                 "file": "packages/core/src/models/repairOrder.js",
-                "needle": "    transitionTo(next, changedBy) {"
+                "needle": "    transitionTo(next, changedBy) {",
+                "symbol": "transitionTo"
             },
             "expect": {
                 "min_references": 10,
@@ -436,7 +461,8 @@
             "surface": "references",
             "from": {
                 "file": "packages/core/src/models/part.js",
-                "needle": "    consumedQuantity() {"
+                "needle": "    consumedQuantity() {",
+                "symbol": "consumedQuantity"
             },
             "expect": {
                 "min_references": 4,
@@ -457,7 +483,8 @@
             "surface": "references",
             "from": {
                 "file": "packages/bench/src/dataset.cjs",
-                "needle": "    static seeded() {"
+                "needle": "    static seeded() {",
+                "symbol": "seeded"
             },
             "expect": {
                 "min_references": 8,
@@ -478,7 +505,8 @@
             "surface": "references",
             "from": {
                 "file": "packages/core/src/money.js",
-                "needle": "export class Money {"
+                "needle": "export class Money {",
+                "symbol": "Money"
             },
             "expect": {
                 "min_references": 6,
@@ -499,7 +527,8 @@
             "surface": "references",
             "from": {
                 "file": "packages/bench/src/contracts/reportContract.cjs",
-                "needle": "function rowFromCents(label, cents) {"
+                "needle": "function rowFromCents(label, cents) {",
+                "symbol": "rowFromCents"
             },
             "expect": {
                 "min_references": 8,
@@ -521,7 +550,8 @@
             "note": "The registry has a handful of read sites; the 24 `new XReport()` entries inside it are construction sites of report implementors, not references to REPORTS.",
             "from": {
                 "file": "packages/bench/src/index.cjs",
-                "needle": "const REPORTS = ["
+                "needle": "const REPORTS = [",
+                "symbol": "REPORTS"
             },
             "expect": {
                 "min_references": 4,
@@ -543,7 +573,8 @@
             "note": "Nothing declares 'repair.completed'. The subscribe site and the emit path are connected by the literal alone. Five code sites carry it; the floor counts the four outside the `from` site, matching the min_references convention of the sibling refs-* tasks.",
             "from": {
                 "file": "packages/core/src/events.js",
-                "needle": "dispatcher.on(\"repair.completed\", (payload) => this.handle(payload));"
+                "needle": "dispatcher.on(\"repair.completed\", (payload) => this.handle(payload));",
+                "symbol": "repair.completed"
             },
             "expect": {
                 "kind": "name_only",
@@ -574,7 +605,8 @@
             "note": "`quiet` is an arrow and keeps the notifier as `this`; `loud` is a function declaration whose `this` only exists because of the .call.",
             "from": {
                 "file": "packages/bench/src/support/abstractNotifier.cjs",
-                "needle": "return subjects.map((subject) => `${quiet(subject)} ${loud.call(this, subject)}`);"
+                "needle": "return subjects.map((subject) => `${quiet(subject)} ${loud.call(this, subject)}`);",
+                "symbol": "loud"
             },
             "expect": {
                 "candidate": {
@@ -592,7 +624,8 @@
             "note": "CommonJS half of the shadow pair: the alias is a destructuring rename in the require call.",
             "from": {
                 "file": "packages/bench/tests/interop.test.cjs",
-                "needle": "const { Formatter: StatusFormatter } = require(\"@atelier/core/reporting\");"
+                "needle": "const { Formatter: StatusFormatter } = require(\"@atelier/core/reporting\");",
+                "symbol": "Formatter"
             },
             "expect": {
                 "kind": "shadow_alias",
@@ -611,7 +644,8 @@
             "note": "ESM half of the shadow pair: same class name, different module, aliased at the import site.",
             "from": {
                 "file": "packages/app/src/state.js",
-                "needle": "import { Formatter as StatusFormatter } from \"@atelier/core/reporting\";"
+                "needle": "import { Formatter as StatusFormatter } from \"@atelier/core/reporting\";",
+                "symbol": "Formatter"
             },
             "expect": {
                 "kind": "shadow_alias",
@@ -630,7 +664,8 @@
             "note": "Nothing declares that it implements HasFormatting; the value satisfies the typedef structurally. A tool that follows only extends/Object.assign edges finds no implementor.",
             "from": {
                 "file": "packages/bench/src/concerns/hasFormatting.cjs",
-                "needle": "const formatting = {"
+                "needle": "const formatting = {",
+                "symbol": "formatting"
             },
             "expect": {
                 "kind": "structural",
@@ -646,7 +681,8 @@
             "note": "48 implementors of one contract: 24 classes, one per file, statically required in rules/index.cjs, plus 24 object literals in rules/structural.cjs. Only the class half has a name to report; the structural half answers `evaluate(data)` with no name at all.",
             "from": {
                 "file": "packages/bench/src/contracts/ruleContract.cjs",
-                "needle": " * @typedef {object} RuleContract"
+                "needle": " * @typedef {object} RuleContract",
+                "symbol": "RuleContract"
             },
             "expect": {
                 "exact_count": 48,
@@ -684,7 +720,8 @@
             "note": "Every implementor is a bare `module.exports = class`, so the class name is only reachable through the file.",
             "from": {
                 "file": "packages/bench/src/contracts/reportContract.cjs",
-                "needle": " * @typedef {object} ReportContract"
+                "needle": " * @typedef {object} ReportContract",
+                "symbol": "ReportContract"
             },
             "expect": {
                 "exact_count": 24,
@@ -794,7 +831,8 @@
             "note": "Direction matters: the contract is the parent of the implementor, not the other way round.",
             "from": {
                 "file": "packages/bench/src/contracts/reportContract.cjs",
-                "needle": " * @typedef {object} ReportContract"
+                "needle": " * @typedef {object} ReportContract",
+                "symbol": "ReportContract"
             },
             "expect": {
                 "kind": "parent_of",
@@ -813,7 +851,8 @@
             "surface": "direction",
             "from": {
                 "file": "packages/bench/src/reports/cash-flow.cjs",
-                "needle": "module.exports = class CashFlowReport extends AbstractReport {"
+                "needle": "module.exports = class CashFlowReport extends AbstractReport {",
+                "symbol": "CashFlowReport"
             },
             "expect": {
                 "kind": "child_of",
@@ -848,7 +887,8 @@
             "note": "Left and Right are declared in one file; the consumer imports Left only.",
             "from": {
                 "file": "packages/app/src/http/api.js",
-                "needle": "import { Left } from \"@atelier/core/support/pair.js\";"
+                "needle": "import { Left } from \"@atelier/core/support/pair.js\";",
+                "symbol": "Left"
             },
             "expect": {
                 "kind": "imports",
@@ -867,7 +907,8 @@
             "note": "The JSDoc import creates no runtime edge: nothing in this file requires @atelier/core.",
             "from": {
                 "file": "packages/bench/src/repositories/orderRepository.cjs",
-                "needle": "@type {import(\"@atelier/core/contracts/repository.js\").Repository<number, import(\"@atelier/core\").RepairOrder>}"
+                "needle": "@type {import(\"@atelier/core/contracts/repository.js\").Repository<number, import(\"@atelier/core\").RepairOrder>}",
+                "symbol": "Repository"
             },
             "expect": {
                 "kind": "type_only",
@@ -886,7 +927,8 @@
             "note": "The barrel declares nothing; the answer is the declaring module, not packages/core/src/index.js.",
             "from": {
                 "file": "packages/app/src/state.js",
-                "needle": "import { Container } from \"@atelier/core\";"
+                "needle": "import { Container } from \"@atelier/core\";",
+                "symbol": "Container"
             },
             "expect": {
                 "kind": "barrel",
@@ -906,7 +948,9 @@
             "note": "Money is declared once per lane, under an identical name. This guards against a resolver crossing lane boundaries.",
             "from": {
                 "file": "packages/bench/src/dataset.cjs",
-                "needle": "const invoices = [new Invoice(1, 1, new Money(34900)), new Invoice(2, 2, new Money(23425))];"
+                "needle": "const invoices = [new Invoice(1, 1, new Money(34900)), new Invoice(2, 2, new Money(23425))];",
+                "symbol": "Money",
+                "occurrence": 1
             },
             "expect": {
                 "kind": "lane_local",
@@ -948,7 +992,8 @@
             "note": "Dataset is declared once per lane, under an identical name.",
             "from": {
                 "file": "packages/app/src/state.js",
-                "needle": "const { Dataset } = bench;"
+                "needle": "const { Dataset } = bench;",
+                "symbol": "Dataset"
             },
             "expect": {
                 "kind": "lane_local",
@@ -969,7 +1014,8 @@
             "note": "ATELIER_REF_PREFIX is declared once per lane, under an identical name.",
             "from": {
                 "file": "packages/core/src/concerns/hasReference.js",
-                "needle": "import { ATELIER_REF_PREFIX, atelierFormatReference } from \"../support/helpers.js\";"
+                "needle": "import { ATELIER_REF_PREFIX, atelierFormatReference } from \"../support/helpers.js\";",
+                "symbol": "ATELIER_REF_PREFIX"
             },
             "expect": {
                 "kind": "lane_local",
@@ -990,7 +1036,8 @@
             "note": "InvoiceCalculator.calculate is declared once per lane, under an identical name. In this lane the contract is a JSDoc @typedef with no method body, so the candidate is the implementation in standardInvoiceCalculator.js rather than the contract declaration the typed lanes point at.",
             "from": {
                 "file": "packages/core/src/services/rushInvoiceCalculator.js",
-                "needle": "const base = this.inner.calculate(order);"
+                "needle": "const base = this.inner.calculate(order);",
+                "symbol": "calculate"
             },
             "expect": {
                 "kind": "lane_local",
@@ -1032,7 +1079,8 @@
             "note": "One extends edge plus two mixins copied with Object.assign: three parents, and only one of them is visible at the class line.",
             "from": {
                 "file": "packages/bench/src/contracts/compositeContract.cjs",
-                "needle": "class CompositeContract extends AbstractComponent {"
+                "needle": "class CompositeContract extends AbstractComponent {",
+                "symbol": "CompositeContract"
             },
             "expect": {
                 "kind": "mixin_parents",
@@ -1058,7 +1106,8 @@
             "surface": "multi-parent",
             "from": {
                 "file": "packages/bench/src/support/abstractCompositeReport.cjs",
-                "needle": "class AbstractCompositeReport extends AbstractPeriodicReport {"
+                "needle": "class AbstractCompositeReport extends AbstractPeriodicReport {",
+                "symbol": "AbstractCompositeReport"
             },
             "expect": {
                 "kind": "mixin_parents",
@@ -1085,7 +1134,8 @@
             "surface": "hover",
             "from": {
                 "file": "packages/bench/src/dataset.cjs",
-                "needle": "    static seeded() {"
+                "needle": "    static seeded() {",
+                "symbol": "seeded"
             },
             "expect": {
                 "contains": "Changing these rows changes bench ground truth"
@@ -1096,7 +1146,8 @@
             "surface": "hover",
             "from": {
                 "file": "packages/core/src/models/technician.js",
-                "needle": "export function makeTechnician(id, name, schedule = new Schedule()) {"
+                "needle": "export function makeTechnician(id, name, schedule = new Schedule()) {",
+                "symbol": "makeTechnician"
             },
             "expect": {
                 "contains": "resolves through the Proxy"
@@ -1147,7 +1198,8 @@
             "note": "Same question as the typescript lane: the default binding constructs StandardInvoiceCalculator; the definition is that class.",
             "from": {
                 "file": "packages/core/src/container.js",
-                "needle": "return new Container(new StandardInvoiceCalculator());"
+                "needle": "return new Container(new StandardInvoiceCalculator());",
+                "symbol": "StandardInvoiceCalculator"
             },
             "expect": {
                 "file": "packages/core/src/services/standardInvoiceCalculator.js",
@@ -1160,7 +1212,8 @@
             "note": "Dispatcher extends the node:events EventEmitter: dispatcher.on/emit have no declaration in the lane; the class line is the only in-tree definition and the parent is a built-in module.",
             "from": {
                 "file": "packages/app/src/commands/recalculateInventory.js",
-                "needle": "const dispatcher = new Dispatcher();"
+                "needle": "const dispatcher = new Dispatcher();",
+                "symbol": "Dispatcher"
             },
             "expect": {
                 "kind": "builtin_parent",
@@ -1180,7 +1233,8 @@
             "note": "One job, three styles (1/3): node-style callback (error, count). The command module exports a DIFFERENT function with the same name; must_not_include keeps them apart.",
             "from": {
                 "file": "packages/app/tests/jobs.test.js",
-                "needle": "recalculateInventory(Dataset.seeded(), new Dispatcher(), (error, count) => {"
+                "needle": "recalculateInventory(Dataset.seeded(), new Dispatcher(), (error, count) => {",
+                "symbol": "recalculateInventory"
             },
             "expect": {
                 "file": "packages/app/src/jobs.js",
@@ -1196,7 +1250,8 @@
             "note": "One job, three styles (2/3): a hand-built Promise wrapping the callback form; no async keyword.",
             "from": {
                 "file": "packages/app/src/jobs.js",
-                "needle": "const count = await recalculateInventoryPromise(data, dispatcher);"
+                "needle": "const count = await recalculateInventoryPromise(data, dispatcher);",
+                "symbol": "recalculateInventoryPromise"
             },
             "expect": {
                 "file": "packages/app/src/jobs.js",
@@ -1209,7 +1264,8 @@
             "note": "One job, three styles (3/3): async/await over the promise form.",
             "from": {
                 "file": "packages/app/src/commands/recalculateInventory.js",
-                "needle": "return recalculateInventoryAsync(state.data, dispatcher);"
+                "needle": "return recalculateInventoryAsync(state.data, dispatcher);",
+                "symbol": "recalculateInventoryAsync"
             },
             "expect": {
                 "file": "packages/app/src/jobs.js",
@@ -1222,7 +1278,8 @@
             "note": "Two exported functions named recalculateInventory in two modules (the console command and the callback job); the import in main.js picks the command by module path, not by name.",
             "from": {
                 "file": "packages/app/src/main.js",
-                "needle": "console.log(await recalculateInventory(state));"
+                "needle": "console.log(await recalculateInventory(state));",
+                "symbol": "recalculateInventory"
             },
             "expect": {
                 "kind": "same_name",
@@ -1241,7 +1298,8 @@
             "note": "createRequire from an ESM file: a synchronous require of the CommonJS bench package; the destructured REPORTS is the CJS registry array.",
             "from": {
                 "file": "packages/app/src/reportsIndex.js",
-                "needle": "const { REPORTS } = require(\"@atelier/bench\");"
+                "needle": "const { REPORTS } = require(\"@atelier/bench\");",
+                "symbol": "REPORTS"
             },
             "expect": {
                 "kind": "imports",
@@ -1261,7 +1319,8 @@
             "note": "JSDoc @template is the only place the type parameter exists; the call resolves to the generic helper and its result type is ReportContract | undefined.",
             "from": {
                 "file": "packages/app/src/reportsIndex.js",
-                "needle": "return firstWhere(REPORTS, (report) => report.slug === slug);"
+                "needle": "return firstWhere(REPORTS, (report) => report.slug === slug);",
+                "symbol": "firstWhere"
             },
             "expect": {
                 "kind": "jsdoc_generic",
@@ -1281,7 +1340,9 @@
             "note": "Dynamic import() with a STATIC specifier: resolvable without running anything (contrast def-dynamic-require, whose specifier is a template literal); the target is the reporting Formatter through the @atelier/core exports map.",
             "from": {
                 "file": "packages/app/src/reportsIndex.js",
-                "needle": "const reporting = await import(\"@atelier/core/reporting\");"
+                "needle": "const reporting = await import(\"@atelier/core/reporting\");",
+                "symbol": "reporting",
+                "occurrence": 2
             },
             "expect": {
                 "kind": "dynamic_import",
@@ -1298,7 +1359,9 @@
             "note": "There is no enum keyword: RepairStatus is one frozen object where the states and the behaviour over them are sibling properties, so RepairStatus.label is a method on the same declaration that carries RepairStatus.Completed.",
             "from": {
                 "file": "packages/core/src/reporting/formatter.js",
-                "needle": "const label = RepairStatus.label(status);"
+                "needle": "const label = RepairStatus.label(status);",
+                "symbol": "label",
+                "occurrence": 2
             },
             "expect": {
                 "file": "packages/core/src/support/status.js",
@@ -1311,7 +1374,8 @@
             "note": "Enum member: Priority.Rush is a property of the frozen Priority object whose value is cast to PriorityValue by an inline JSDoc annotation, not a declaration keyword.",
             "from": {
                 "file": "packages/bench/src/dataset.cjs",
-                "needle": "orders[1].priority = Priority.Rush;"
+                "needle": "orders[1].priority = Priority.Rush;",
+                "symbol": "Rush"
             },
             "expect": {
                 "file": "packages/core/src/support/priority.js",
@@ -1324,7 +1388,9 @@
             "note": "Same-name pair: state.money is the billing Formatter (aliased MoneyFormatter in state.js), never the reporting one, which declares no money().",
             "from": {
                 "file": "packages/app/src/http/report.js",
-                "needle": "total: state.money.money(order.total(state.container), \"EUR\"),"
+                "needle": "total: state.money.money(order.total(state.container), \"EUR\"),",
+                "symbol": "money",
+                "occurrence": 2
             },
             "expect": {
                 "file": "packages/core/src/billing/formatter.js",
@@ -1337,7 +1403,8 @@
             "note": "The other half: state.status is the reporting Formatter (aliased StatusFormatter in state.js), the only one that declares statusLine().",
             "from": {
                 "file": "packages/app/src/http/report.js",
-                "needle": "status: state.status.statusLine(order.status, \"intake\"),"
+                "needle": "status: state.status.statusLine(order.status, \"intake\"),",
+                "symbol": "statusLine"
             },
             "expect": {
                 "file": "packages/core/src/reporting/formatter.js",
@@ -1350,7 +1417,8 @@
             "note": "The call site sees only the container, and the contract has no interface keyword behind it: the declaration is the calculate property of the InvoiceCalculator @typedef, which no implementor names (two implementations, see impl-invoice-calculator).",
             "from": {
                 "file": "packages/core/src/models/repairOrder.js",
-                "needle": "return container.invoiceCalculator().calculate(this);"
+                "needle": "return container.invoiceCalculator().calculate(this);",
+                "symbol": "calculate"
             },
             "expect": {
                 "file": "packages/core/src/contracts/invoiceCalculator.js",
@@ -1362,7 +1430,8 @@
             "surface": "hover",
             "from": {
                 "file": "packages/core/src/concerns/hasReference.js",
-                "needle": "return atelierFormatReference(this.referencePrefix, this.referenceNumber);"
+                "needle": "return atelierFormatReference(this.referencePrefix, this.referenceNumber);",
+                "symbol": "atelierFormatReference"
             },
             "expect": {
                 "contains": "zero-padded width"
@@ -1374,7 +1443,8 @@
             "note": "The contract is a JSDoc @typedef and nothing else; the two implementors never name it, so satisfaction is structural on name, appliesSurcharge and calculate(order).",
             "from": {
                 "file": "packages/core/src/contracts/invoiceCalculator.js",
-                "needle": " * @typedef {object} InvoiceCalculator"
+                "needle": " * @typedef {object} InvoiceCalculator",
+                "symbol": "InvoiceCalculator"
             },
             "expect": {
                 "kind": "structural",
@@ -1397,7 +1467,8 @@
             "note": "No transport names NotifierContract: the contract is a JSDoc @typedef with no runtime declaration, and the 8 transports satisfy it through one extends edge to AbstractNotifier, which supplies channel, maxBytes and guard() while each transport writes its own send(). AbstractNotifier is a base and is not counted.",
             "from": {
                 "file": "packages/bench/src/contracts/notifierContract.cjs",
-                "needle": " * @typedef {object} NotifierContract"
+                "needle": " * @typedef {object} NotifierContract",
+                "symbol": "NotifierContract"
             },
             "expect": {
                 "kind": "structural",
@@ -1444,7 +1515,8 @@
             "note": "Widest fan-out in the lane, and no textual edge anywhere: ReportContract is a JSDoc @typedef, so the 24 concrete reports satisfy it structurally through the prototype chain that ends on AbstractReport (slug, title, rows, total, isEmpty). 21 extend AbstractReport directly, 2 extend AbstractPeriodicReport (daily-revenue, weekly-revenue) and 1 extends AbstractCompositeReport (monthly-revenue), which itself extends AbstractPeriodicReport. All 24 must be reported; the 3 abstract bases are not counted.",
             "from": {
                 "file": "packages/bench/src/contracts/reportContract.cjs",
-                "needle": " * @typedef {object} ReportContract"
+                "needle": " * @typedef {object} ReportContract",
+                "symbol": "ReportContract"
             },
             "expect": {
                 "kind": "structural",
@@ -1555,7 +1627,8 @@
             "note": "Two `export class Formatter` declarations exist; this JSDoc property type, written against the import alias, must land on the billing one.",
             "from": {
                 "file": "packages/app/src/state.js",
-                "needle": " * @property {MoneyFormatter} money"
+                "needle": " * @property {MoneyFormatter} money",
+                "symbol": "MoneyFormatter"
             },
             "expect": {
                 "kind": "shadow_alias",
@@ -1572,7 +1645,8 @@
             "note": "Same shape, other half: the JSDoc property type written against the StatusFormatter alias must land on the reporting Formatter.",
             "from": {
                 "file": "packages/app/src/state.js",
-                "needle": " * @property {StatusFormatter} status"
+                "needle": " * @property {StatusFormatter} status",
+                "symbol": "StatusFormatter"
             },
             "expect": {
                 "kind": "shadow_alias",
@@ -1615,7 +1689,8 @@
             "note": "Outgoing edge inside the aggregate: complete() delegates to transitionTo() in the same file.",
             "from": {
                 "file": "packages/core/src/models/repairOrder.js",
-                "needle": "    complete(changedBy) {"
+                "needle": "    complete(changedBy) {",
+                "symbol": "complete"
             },
             "expect": {
                 "outgoing_includes": [
@@ -1632,7 +1707,8 @@
             "note": "Incoming edges on the lifecycle hub: at least three callers of transitionTo, spread over the core package, the bench package and the core test suite.",
             "from": {
                 "file": "packages/core/src/models/repairOrder.js",
-                "needle": "    transitionTo(next, changedBy) {"
+                "needle": "    transitionTo(next, changedBy) {",
+                "symbol": "transitionTo"
             },
             "expect": {
                 "min_incoming": 3,
@@ -1658,7 +1734,8 @@
             "note": "Package-boundary edge: the app package's recalculate command calls SendCompletionNotice.subscribe, which is declared in the core package. The outgoing edge must cross @atelier/app -> @atelier/core.",
             "from": {
                 "file": "packages/app/src/commands/recalculateInventory.js",
-                "needle": "export async function recalculateInventory(state) {"
+                "needle": "export async function recalculateInventory(state) {",
+                "symbol": "recalculateInventory"
             },
             "expect": {
                 "outgoing_includes": [
@@ -1675,7 +1752,8 @@
             "note": "Generator method: the spread drives `*ordersOf`, and the star that makes it a generator is on the declaration, never at the call site.",
             "from": {
                 "file": "packages/bench/src/dataset.cjs",
-                "needle": "return [...this.ordersOf(customerId)];"
+                "needle": "return [...this.ordersOf(customerId)];",
+                "symbol": "ordersOf"
             },
             "expect": {
                 "file": "packages/bench/src/dataset.cjs",
@@ -1688,7 +1766,8 @@
             "note": "RepairOrder declares no shortReference(): withReference copies it onto the prototype with Object.assign. Contrast def-object-assign-mixin, which asks the same question of the sibling method reference().",
             "from": {
                 "file": "packages/core/tests/lifecycle.test.js",
-                "needle": "assert.equal(order.shortReference(), \"AT1\");"
+                "needle": "assert.equal(order.shortReference(), \"AT1\");",
+                "symbol": "shortReference"
             },
             "expect": {
                 "file": "packages/core/src/concerns/hasReference.js",
@@ -1701,7 +1780,8 @@
             "note": "`export *` is JavaScript's glob: it forwards all four exports of helpers.js without naming one of them, so the answer is the declaring module and not the re-export that carries them.",
             "from": {
                 "file": "packages/core/src/support/helpersGlob.js",
-                "needle": "export * from \"./helpers.js\";"
+                "needle": "export * from \"./helpers.js\";",
+                "symbol": "helpers"
             },
             "expect": {
                 "kind": "glob",
@@ -1731,7 +1811,8 @@
             "note": "`import * as board` binds every export of slotBoard.js; exactly one of them, board.SlotBoard, is read anywhere in this file.",
             "from": {
                 "file": "packages/core/src/support/boardSummary.js",
-                "needle": "import * as board from \"./slotBoard.js\";"
+                "needle": "import * as board from \"./slotBoard.js\";",
+                "symbol": "slotBoard"
             },
             "expect": {
                 "kind": "namespace_import",
@@ -1750,7 +1831,8 @@
             "note": "The generic contract is a JSDoc @typedef with two @template parameters and no runtime declaration; the eight repositories never name it and satisfy it structurally on find, all and count, each pinning Rec in its own @type annotation.",
             "from": {
                 "file": "packages/core/src/contracts/repository.js",
-                "needle": " * @typedef {object} Repository"
+                "needle": " * @typedef {object} Repository",
+                "symbol": "Repository"
             },
             "expect": {
                 "kind": "structural",
@@ -1797,7 +1879,8 @@
             "note": "An assignment, not a call: `schedule.capacity = 1` resolves to the setter half of the accessor pair, never to the getter declared above it.",
             "from": {
                 "file": "packages/core/tests/forwarding.test.js",
-                "needle": "schedule.capacity = 1;"
+                "needle": "schedule.capacity = 1;",
+                "symbol": "capacity"
             },
             "expect": {
                 "file": "packages/core/src/support/schedule.js",
@@ -1823,7 +1906,8 @@
             "note": "describe is a class FIELD holding an arrow, so it is an own property of every instance and never appears on SlotBoard.prototype; the test detaches it to prove the binding.",
             "from": {
                 "file": "packages/core/tests/board.test.js",
-                "needle": "const detached = board.describe;"
+                "needle": "const detached = board.describe;",
+                "symbol": "describe"
             },
             "expect": {
                 "file": "packages/core/src/support/slotBoard.js",
@@ -1836,7 +1920,9 @@
             "note": "`day.load` has no method syntax anywhere in the lane: the getter is installed on the prototype by an Object.defineProperty call placed after the class body.",
             "from": {
                 "file": "packages/core/src/support/boardSummary.js",
-                "needle": "        load: day.load,"
+                "needle": "        load: day.load,",
+                "symbol": "load",
+                "occurrence": 2
             },
             "expect": {
                 "file": "packages/core/src/support/slotBoard.js",
@@ -1849,7 +1935,8 @@
             "note": "slotWindow.js exports no name at all; DayWindow is the importing file's own binding, so the lookup has to cross the default edge to reach the declaration.",
             "from": {
                 "file": "packages/core/src/support/boardSummary.js",
-                "needle": "const span = new DayWindow(first, day.booked.length);"
+                "needle": "const span = new DayWindow(first, day.booked.length);",
+                "symbol": "DayWindow"
             },
             "expect": {
                 "file": "packages/core/src/support/slotWindow.js",
@@ -1862,7 +1949,8 @@
             "note": "Interpolating a SlotWindow calls the method keyed by the well-known Symbol.toPrimitive; no identifier at the call site names it.",
             "from": {
                 "file": "packages/core/src/support/boardSummary.js",
-                "needle": "        window: `${span}`,"
+                "needle": "        window: `${span}`,",
+                "symbol": null
             },
             "expect": {
                 "file": "packages/core/src/support/slotWindow.js",
@@ -1875,7 +1963,8 @@
             "note": "A tag call carries no parentheses and no argument list: the template literal itself is the call, and refTag receives the static strings plus the interpolated values.",
             "from": {
                 "file": "packages/core/src/support/boardSummary.js",
-                "needle": "        caption: refTag`board ${reference} holds ${day.booked.length} of ${capacity}`,"
+                "needle": "        caption: refTag`board ${reference} holds ${day.booked.length} of ${capacity}`,",
+                "symbol": "refTag"
             },
             "expect": {
                 "file": "packages/core/src/support/referenceTag.js",
@@ -1888,7 +1977,8 @@
             "note": "Nine lines carry the name; one of them is the string literal \"atelierFormatReference\" inside the glob test's key assertion, which is not a reference. The floor counts genuine reference sites outside the declaration.",
             "from": {
                 "file": "packages/core/src/support/helpers.js",
-                "needle": "export function atelierFormatReference(prefix, num, year = Reference.DEFAULT_YEAR) {"
+                "needle": "export function atelierFormatReference(prefix, num, year = Reference.DEFAULT_YEAR) {",
+                "symbol": "atelierFormatReference"
             },
             "expect": {
                 "min_references": 6,
@@ -1914,7 +2004,8 @@
             "note": "The value-derived row helper, used across the report package; its sibling rowFromCents is a different function with its own task.",
             "from": {
                 "file": "packages/bench/src/contracts/reportContract.cjs",
-                "needle": "function reportRow(label, value) {"
+                "needle": "function reportRow(label, value) {",
+                "symbol": "reportRow"
             },
             "expect": {
                 "min_references": 12,
@@ -1940,7 +2031,8 @@
             "note": "The mixin installer, called once per model at module scope: the call is a side effect at the foot of the file, not part of any class body.",
             "from": {
                 "file": "packages/core/src/concerns/hasReference.js",
-                "needle": "export function withReference(Target, prefix = DEFAULT_REFERENCE_PREFIX) {"
+                "needle": "export function withReference(Target, prefix = DEFAULT_REFERENCE_PREFIX) {",
+                "symbol": "withReference"
             },
             "expect": {
                 "min_references": 4,
@@ -1966,7 +2058,8 @@
             "note": "No exporter names ExporterContract: it is a JSDoc @typedef with no runtime declaration, and the 8 exporters satisfy it through one extends edge to AbstractExporter, which supplies filename() while each writes its own export(). AbstractExporter is a base and is not counted.",
             "from": {
                 "file": "packages/bench/src/contracts/exporterContract.cjs",
-                "needle": " * @typedef {object} ExporterContract"
+                "needle": " * @typedef {object} ExporterContract",
+                "symbol": "ExporterContract"
             },
             "expect": {
                 "kind": "structural",
@@ -2013,7 +2106,8 @@
             "surface": "hover",
             "from": {
                 "file": "packages/core/src/support/schedule.js",
-                "needle": "    set capacity(value) {"
+                "needle": "    set capacity(value) {",
+                "symbol": "capacity"
             },
             "expect": {
                 "contains": "never drops an already booked slot"
