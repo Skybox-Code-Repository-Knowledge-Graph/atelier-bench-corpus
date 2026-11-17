@@ -27,6 +27,12 @@ export const ANCHORED_SURFACES = new Set(["hover", "call_hierarchy", "references
 /** Surfaces asked under "file": the question names a file. */
 export const FILE_SURFACES = new Set(["document_symbol"]);
 
+/**
+ * Surfaces that ask whether a broken file is reported as broken. skybox has no interface that says
+ * a file failed to parse, so these are answered `unsupported` (counted as asked, not passed).
+ */
+export const BEHAVIOUR_SURFACES = new Set(["parse-negative", "diagnostics"]);
+
 /** Kinds whose answer is a relation of the symbol, not its definition. Not asked under "raw". */
 /**
  * Questions whose answer is a relation of the symbol, not its definition, keyed `surface:kind`. Not
@@ -245,6 +251,12 @@ async function askFile(question, call) {
 
 export async function askSkybox(question, call) {
     try {
+        if (BEHAVIOUR_SURFACES.has(question.surface)) {
+            return {
+                status: "unsupported",
+                detail: "skybox 0.9.0 reports no per-file parse failure: its MCP tools have no diagnostics, and its index report (--format json) carries node and edge counts only",
+            };
+        }
         if (FILE_SURFACES.has(question.surface)) {
             return await askFile(question, call);
         }
