@@ -1891,8 +1891,7 @@
             "note": "The method key is the BOARD_REFRESH constant, so neither the declaration nor the call site spells a literal `refresh` token.",
             "from": {
                 "file": "packages/core/tests/board.test.js",
-                "needle": "assert.deepEqual(board[BOARD_REFRESH]([2, 1]).booked, [1, 2]);",
-                "symbol": "BOARD_REFRESH"
+                "needle": "assert.deepEqual(board[BOARD_REFRESH]([2, 1]).booked, [1, 2]);"
             },
             "expect": {
                 "file": "packages/core/src/support/slotBoard.js",
