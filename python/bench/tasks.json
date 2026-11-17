@@ -921,6 +921,24 @@
                         "file": "atelier_bench/reports/weekly_revenue.py",
                         "needle": "class WeeklyRevenueReport(AbstractPeriodicReport):"
                     }
+                ],
+                "optional_sites": [
+                    {
+                        "file": "atelier_bench/contracts/composite_contract.py",
+                        "needle": "class CompositeContract(ReportContract, CacheableContract, ScheduleContract):"
+                    },
+                    {
+                        "file": "atelier_bench/support/abstract_report.py",
+                        "needle": "class AbstractReport(ReportContract, CacheableContract, HasCache, AbstractComponent):"
+                    },
+                    {
+                        "file": "atelier_bench/support/abstract_periodic_report.py",
+                        "needle": "class AbstractPeriodicReport(AbstractReport, ScheduleContract):"
+                    },
+                    {
+                        "file": "atelier_bench/support/abstract_composite_report.py",
+                        "needle": "class AbstractCompositeReport(AbstractPeriodicReport, HasAudit, HasMetadataAccess):"
+                    }
                 ]
             }
         },
@@ -1015,6 +1033,12 @@
                     {
                         "file": "atelier_bench/notifiers/webhook_notifier.py",
                         "needle": "class WebhookNotifier(AbstractNotifier):"
+                    }
+                ],
+                "optional_sites": [
+                    {
+                        "file": "atelier_bench/support/abstract_notifier.py",
+                        "needle": "class AbstractNotifier(NotifierContract, HasValidation):"
                     }
                 ]
             }
@@ -2100,6 +2124,24 @@
                     {
                         "file": "atelier_bench/reports/weekly_revenue.py",
                         "needle": "class WeeklyRevenueReport(AbstractPeriodicReport):"
+                    }
+                ],
+                "optional_sites": [
+                    {
+                        "file": "atelier_bench/contracts/composite_contract.py",
+                        "needle": "class CompositeContract(ReportContract, CacheableContract, ScheduleContract):"
+                    },
+                    {
+                        "file": "atelier_bench/support/abstract_report.py",
+                        "needle": "class AbstractReport(ReportContract, CacheableContract, HasCache, AbstractComponent):"
+                    },
+                    {
+                        "file": "atelier_bench/support/abstract_periodic_report.py",
+                        "needle": "class AbstractPeriodicReport(AbstractReport, ScheduleContract):"
+                    },
+                    {
+                        "file": "atelier_bench/support/abstract_composite_report.py",
+                        "needle": "class AbstractCompositeReport(AbstractPeriodicReport, HasAudit, HasMetadataAccess):"
                     }
                 ]
             }
