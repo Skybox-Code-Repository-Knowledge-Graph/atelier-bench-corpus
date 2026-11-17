@@ -379,7 +379,8 @@
             "note": "The call site sees only the container; two implementations answer calculate, and the binding decides which one runs.",
             "from": {
                 "file": "packages/core/src/models/repairOrder.js",
-                "needle": "return container.invoiceCalculator().calculate(this);"
+                "needle": "return container.invoiceCalculator().calculate(this);",
+                "symbol": "calculate"
             },
             "expect": {
                 "exact_count": 2,
@@ -408,7 +409,8 @@
             "note": "`for (const order of data)` resolves to a generator method keyed by a computed Symbol, not to a property named orders.",
             "from": {
                 "file": "packages/bench/tests/interop.test.cjs",
-                "needle": "for (const order of data) {"
+                "needle": "for (const order of data) {",
+                "symbol": null
             },
             "expect": {
                 "file": "packages/bench/src/dataset.cjs",
@@ -1947,7 +1949,8 @@
             "note": "Interpolating a SlotWindow calls the method keyed by the well-known Symbol.toPrimitive; no identifier at the call site names it.",
             "from": {
                 "file": "packages/core/src/support/boardSummary.js",
-                "needle": "        window: `${span}`,"
+                "needle": "        window: `${span}`,",
+                "symbol": null
             },
             "expect": {
                 "file": "packages/core/src/support/slotWindow.js",
