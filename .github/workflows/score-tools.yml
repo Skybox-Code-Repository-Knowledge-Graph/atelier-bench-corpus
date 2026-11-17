@@ -1,0 +1,83 @@
+name: score-tools
+
+# Scores code-intelligence tools against the corpus (issue #135). Never runs on push or pull
+# request and is never a required check: a tool's result is a result, not a gate. Each run indexes
+# a lane with the tool, asks the corpus's questions through the tool's adapter (bench/adapters/),
+# scores the answers (bench/score/), and writes the per-surface table to the job summary. The
+# answer file and the full report are kept as an artifact.
+#
+# Lanes are added to a tool's matrix only after its non-passes on that lane have been read, so a
+# number is never published for a lane the adapter has not been checked on.
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "17 4 * * 1"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: score-tools
+  cancel-in-progress: false
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  skybox:
+    name: skybox (${{ matrix.lane }})
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        lane: [go]
+    env:
+      SKYBOX_VERSION: "0.9.0"
+      LANE: ${{ matrix.lane }}
+    steps:
+      - uses: actions/checkout@v7.0.1
+
+      - name: Node 22
+        uses: actions/setup-node@v7.0.0
+        with:
+          node-version: "22"
+
+      # The public npm package; its platform build comes in as an optional dependency.
+      - name: Install skybox ${{ env.SKYBOX_VERSION }} (pinned)
+        run: |
+          npm install --prefix "$RUNNER_TEMP/skybox" --no-save --no-audit --no-fund "@skylence-ai/skybox@${SKYBOX_VERSION}"
+          "$RUNNER_TEMP/skybox/node_modules/.bin/skybox" --version
+
+      - name: Ask (lane scope, raw protocol)
+        run: >
+          node bench/adapters/skybox/run.mjs
+          --lane "$LANE"
+          --skybox "$RUNNER_TEMP/skybox/node_modules/.bin/skybox"
+          --version "$SKYBOX_VERSION"
+          --out "skybox-$LANE.json"
+
+      - name: Score
+        run: |
+          node bench/score/score.mjs --lane "$LANE" --answers "skybox-$LANE.json" > "skybox-$LANE.report.txt"
+          {
+            echo "### skybox ${SKYBOX_VERSION}, lane ${LANE}, scope lane, protocol raw, corpus ${GITHUB_SHA::7}"
+            echo
+            echo '```'
+            sed -n '/^surface /,$p' "skybox-$LANE.report.txt"
+            echo '```'
+            echo
+            echo "Per-task verdicts are in the artifact skybox-${LANE}."
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Keep the answers and the report
+        if: always()
+        uses: actions/upload-artifact@v7.0.1
+        with:
+          name: skybox-${{ matrix.lane }}
+          path: |
+            skybox-${{ matrix.lane }}.json
+            skybox-${{ matrix.lane }}.report.txt
+          if-no-files-found: ignore
