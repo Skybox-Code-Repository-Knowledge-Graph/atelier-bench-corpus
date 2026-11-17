@@ -1127,7 +1127,7 @@
         {
             "id": "refs-report-registry",
             "surface": "references",
-            "note": "The registry itself has 4 read sites; its 24 `new XReport()` entries are construction sites of ReportContract implementors, not references to REPORTS.",
+            "note": "The registry itself has 4 read sites and 1 import line that names it (5 reference sites in all); its 24 `new XReport()` entries are construction sites of ReportContract implementors, not references to REPORTS.",
             "from": {
                 "file": "packages/bench/src/index.ts",
                 "needle": "export const REPORTS: readonly ReportContract[] = [",
@@ -2557,15 +2557,7 @@
                     },
                     {
                         "file": "packages/bench/src/contracts/reportContract.ts",
-                        "needle": "export function reportRow(label: string, value: number): ReportRow {"
-                    },
-                    {
-                        "file": "packages/bench/src/contracts/reportContract.ts",
                         "needle": "export function rowFromCents(label: string, cents: number): ReportRow {"
-                    },
-                    {
-                        "file": "packages/bench/src/contracts/reportContract.ts",
-                        "needle": "export interface ReportContract {"
                     }
                 ],
                 "must_include": ["ReportContract", "reportRow"]
@@ -2626,7 +2618,7 @@
         {
             "id": "refs-type-only-report-row",
             "surface": "references",
-            "note": "Lane-local: ReportRow is an interface, so every one of its use sites is a type position and none survives to runtime. 74 lines name it at the base SHA, one of them the declaration; the 73 other lines (31 type positions, 42 import lines) are the exact answer.",
+            "note": "Lane-local: ReportRow is an interface, so every one of its use sites is a type position and none survives to runtime. 74 lines name it at the base SHA, one of them the declaration; the 73 other lines (38 type positions, 35 import lines) are the exact answer.",
             "from": {
                 "file": "packages/bench/src/contracts/reportContract.ts",
                 "needle": "export interface ReportRow {",
