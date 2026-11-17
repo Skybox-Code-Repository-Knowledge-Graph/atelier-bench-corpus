@@ -439,7 +439,7 @@
                 "symbol": "transitionTo"
             },
             "expect": {
-                "min_references": 10,
+                "exact_count": 11,
                 "known_sites": [
                     {
                         "file": "packages/core/src/models/repairOrder.js",
@@ -452,6 +452,38 @@
                     {
                         "file": "packages/core/tests/lifecycle.test.js",
                         "needle": "assert.ok(!order.transitionTo(RepairStatus.Collected, \"seeder\"));"
+                    },
+                    {
+                        "file": "packages/bench/src/dataset.cjs",
+                        "needle": "        orders[0].transitionTo(RepairStatus.Diagnosing, \"seeder\");"
+                    },
+                    {
+                        "file": "packages/bench/src/dataset.cjs",
+                        "needle": "        orders[0].transitionTo(RepairStatus.Repairing, \"seeder\");"
+                    },
+                    {
+                        "file": "packages/bench/src/dataset.cjs",
+                        "needle": "        orders[0].transitionTo(RepairStatus.Completed, \"seeder\");"
+                    },
+                    {
+                        "file": "packages/bench/src/dataset.cjs",
+                        "needle": "        orders[1].transitionTo(RepairStatus.Diagnosing, \"seeder\");"
+                    },
+                    {
+                        "file": "packages/bench/src/dataset.cjs",
+                        "needle": "        orders[2].transitionTo(RepairStatus.Diagnosing, \"seeder\");"
+                    },
+                    {
+                        "file": "packages/bench/src/dataset.cjs",
+                        "needle": "        orders[2].transitionTo(RepairStatus.Repairing, \"seeder\");"
+                    },
+                    {
+                        "file": "packages/core/tests/lifecycle.test.js",
+                        "needle": "        assert.ok(order.transitionTo(RepairStatus.Diagnosing, \"seeder\"));"
+                    },
+                    {
+                        "file": "packages/core/tests/lifecycle.test.js",
+                        "needle": "        assert.ok(order.transitionTo(RepairStatus.Repairing, \"seeder\"));"
                     }
                 ]
             }
@@ -465,7 +497,7 @@
                 "symbol": "consumedQuantity"
             },
             "expect": {
-                "min_references": 4,
+                "exact_count": 5,
                 "known_sites": [
                     {
                         "file": "packages/bench/src/reports/part-usage.cjs",
@@ -474,6 +506,18 @@
                     {
                         "file": "packages/bench/src/services/inventoryTurnoverService.cjs",
                         "needle": "return part.stock === 0 ? 0 : part.consumedQuantity() / part.stock;"
+                    },
+                    {
+                        "file": "packages/bench/src/reports/inventory-turnover.cjs",
+                        "needle": "            reportRow(part.sku, part.stock === 0 ? 0 : part.consumedQuantity() / part.stock),"
+                    },
+                    {
+                        "file": "packages/bench/src/rules/structural.cjs",
+                        "needle": "            return data.parts.some((part) => part.consumedQuantity() >= 0);"
+                    },
+                    {
+                        "file": "packages/bench/src/services/partUsageService.cjs",
+                        "needle": "        return data.parts.reduce((total, part) => total + part.consumedQuantity(), 0);"
                     }
                 ]
             }
@@ -481,13 +525,14 @@
         {
             "id": "refs-dataset-seeded",
             "surface": "references",
+            "note": "Not counted: 6 reference lines whose text is identical to another line of the same file, so no needle can key them (packages/bench/tests/breadth.test.cjs lines 33, 49, 57, 70; packages/bench/tests/interop.test.cjs lines 15, 33).",
             "from": {
                 "file": "packages/bench/src/dataset.cjs",
                 "needle": "    static seeded() {",
                 "symbol": "seeded"
             },
             "expect": {
-                "min_references": 8,
+                "exact_count": 10,
                 "known_sites": [
                     {
                         "file": "packages/app/src/state.js",
@@ -496,6 +541,38 @@
                     {
                         "file": "packages/app/tests/jobs.test.js",
                         "needle": "assert.equal(new RecalculateInventory().run(Dataset.seeded(), dispatcher), 1);"
+                    },
+                    {
+                        "file": "packages/app/tests/jobs.test.js",
+                        "needle": "        recalculateInventory(Dataset.seeded(), new Dispatcher(), (error, count) => {"
+                    },
+                    {
+                        "file": "packages/app/tests/jobs.test.js",
+                        "needle": "        assert.equal(await recalculateInventoryPromise(Dataset.seeded(), new Dispatcher()), 1);"
+                    },
+                    {
+                        "file": "packages/app/tests/jobs.test.js",
+                        "needle": "        assert.equal(await recalculateInventoryAsync(Dataset.seeded(), new Dispatcher()), \"recalculated 1 part(s)\");"
+                    },
+                    {
+                        "file": "packages/app/tests/jobs.test.js",
+                        "needle": "        assert.equal(new RecalculateInventory(4).run(Dataset.seeded(), new Dispatcher()), 3);"
+                    },
+                    {
+                        "file": "packages/bench/tests/breadth.test.cjs",
+                        "needle": "        const repo = new OrderRepository(Dataset.seeded().orders);"
+                    },
+                    {
+                        "file": "packages/bench/tests/breadth.test.cjs",
+                        "needle": "        const sweep = new RevenueService().metricSweep(Dataset.seeded());"
+                    },
+                    {
+                        "file": "packages/bench/tests/rules.test.cjs",
+                        "needle": "        const data = Dataset.seeded();"
+                    },
+                    {
+                        "file": "packages/bench/tests/rules.test.cjs",
+                        "needle": "        assert.ok(RuleRegistry.rule(\"gross-profit\").evaluate(Dataset.seeded()));"
                     }
                 ]
             }
@@ -503,13 +580,14 @@
         {
             "id": "refs-money-class",
             "surface": "references",
+            "note": "Not counted: 15 reference lines whose text is identical to another line of the same file, so no needle can key them (packages/core/src/billing/formatter.js lines 17, 30; packages/core/src/models/repairOrder.js lines 87, 97; packages/core/src/money.js lines 52, 59, 60, 67, 68, 76, 101, 111, 126; packages/core/src/services/standardInvoiceCalculator.js lines 23, 31).",
             "from": {
                 "file": "packages/core/src/money.js",
                 "needle": "export class Money {",
                 "symbol": "Money"
             },
             "expect": {
-                "min_references": 6,
+                "exact_count": 48,
                 "known_sites": [
                     {
                         "file": "packages/core/src/models/invoice.js",
@@ -518,6 +596,190 @@
                     {
                         "file": "packages/bench/src/dataset.cjs",
                         "needle": "new Part(1, \"SCR-13\", 'Screen 13\"', new Money(19900), 4),"
+                    },
+                    {
+                        "file": "packages/bench/src/dataset.cjs",
+                        "needle": "    Money,"
+                    },
+                    {
+                        "file": "packages/bench/src/dataset.cjs",
+                        "needle": "            new Part(2, \"BAT-55\", \"Battery 55Wh\", new Money(8900), 1),"
+                    },
+                    {
+                        "file": "packages/bench/src/dataset.cjs",
+                        "needle": "            new Part(3, \"KBD-EU\", \"Keyboard EU\", new Money(6400), 7),"
+                    },
+                    {
+                        "file": "packages/bench/src/dataset.cjs",
+                        "needle": "            new Part(4, \"FAN-A1\", \"Cooling fan\", new Money(2200), 2),"
+                    },
+                    {
+                        "file": "packages/bench/src/dataset.cjs",
+                        "needle": "        const invoices = [new Invoice(1, 1, new Money(34900)), new Invoice(2, 2, new Money(23425))];"
+                    },
+                    {
+                        "file": "packages/bench/tests/interop.test.cjs",
+                        "needle": "const { Money } = require(\"@atelier/core\");"
+                    },
+                    {
+                        "file": "packages/bench/tests/interop.test.cjs",
+                        "needle": "        assert.equal(new Money(1).cents, 1);"
+                    },
+                    {
+                        "file": "packages/core/src/contracts/invoiceCalculator.js",
+                        "needle": " * @property {(order: import(\"../models/repairOrder.js\").RepairOrder) => import(\"../money.js\").Money} calculate Total payable for an order, surcharges included."
+                    },
+                    {
+                        "file": "packages/core/src/index.js",
+                        "needle": "export { Money } from \"./money.js\";"
+                    },
+                    {
+                        "file": "packages/core/src/models/invoice.js",
+                        "needle": "     * @param {Money} total"
+                    },
+                    {
+                        "file": "packages/core/src/models/invoice.js",
+                        "needle": "    /** @returns {Money} */"
+                    },
+                    {
+                        "file": "packages/core/src/models/invoice.js",
+                        "needle": "        return this.paid ? Money.ZERO : this.total;"
+                    },
+                    {
+                        "file": "packages/core/src/models/part.js",
+                        "needle": "/** @typedef {import(\"../money.js\").Money} Money */"
+                    },
+                    {
+                        "file": "packages/core/src/models/part.js",
+                        "needle": "     * @param {Money} unitPrice"
+                    },
+                    {
+                        "file": "packages/core/src/models/part.js",
+                        "needle": "     * @returns {Money}"
+                    },
+                    {
+                        "file": "packages/core/src/models/repairOrder.js",
+                        "needle": "import { Money } from \"../money.js\";"
+                    },
+                    {
+                        "file": "packages/core/src/models/repairOrder.js",
+                        "needle": " * @property {Money} unitPrice"
+                    },
+                    {
+                        "file": "packages/core/src/models/repairOrder.js",
+                        "needle": "        return Money.sum(this.parts.map((line) => line.unitPrice.times(line.quantity)));"
+                    },
+                    {
+                        "file": "packages/core/src/money.js",
+                        "needle": "     * @type {Money}"
+                    },
+                    {
+                        "file": "packages/core/src/money.js",
+                        "needle": "        Money.ZERO = new Money(0);"
+                    },
+                    {
+                        "file": "packages/core/src/money.js",
+                        "needle": "        return new Money(this.#cents + Math.floor((this.#cents * bp + 5000) / 10000));"
+                    },
+                    {
+                        "file": "packages/core/src/money.js",
+                        "needle": "        return new Money(this.#cents + other.cents);"
+                    },
+                    {
+                        "file": "packages/core/src/money.js",
+                        "needle": "        return new Money(this.#cents - other.cents);"
+                    },
+                    {
+                        "file": "packages/core/src/money.js",
+                        "needle": "        return new Money(this.#cents * factor);"
+                    },
+                    {
+                        "file": "packages/core/src/money.js",
+                        "needle": "        return new Money(cents);"
+                    },
+                    {
+                        "file": "packages/core/src/money.js",
+                        "needle": "        return new Money(Number(whole) * 100 + Number(fraction.padEnd(2, \"0\")));"
+                    },
+                    {
+                        "file": "packages/core/src/money.js",
+                        "needle": "     * @param {readonly Money[]} amounts"
+                    },
+                    {
+                        "file": "packages/core/src/money.js",
+                        "needle": "        return amounts.reduce((total, amount) => total.plus(amount), Money.ZERO);"
+                    },
+                    {
+                        "file": "packages/core/src/services/rushInvoiceCalculator.js",
+                        "needle": "     * @returns {import(\"../money.js\").Money}"
+                    },
+                    {
+                        "file": "packages/core/src/services/standardInvoiceCalculator.js",
+                        "needle": "import { Money } from \"../money.js\";"
+                    },
+                    {
+                        "file": "packages/core/src/services/standardInvoiceCalculator.js",
+                        "needle": "        return new Money(Math.floor((this.labourRateCentsPerHour * order.laborMinutes) / 60));"
+                    },
+                    {
+                        "file": "packages/core/tests/lifecycle.test.js",
+                        "needle": "    Money,"
+                    },
+                    {
+                        "file": "packages/core/tests/lifecycle.test.js",
+                        "needle": "        order.addPart(new Part(1, \"SCR-13\", 'Screen 13\"', new Money(19900), 4), 1);"
+                    },
+                    {
+                        "file": "packages/core/tests/money.test.js",
+                        "needle": "import { Money } from \"@atelier/core\";"
+                    },
+                    {
+                        "file": "packages/core/tests/money.test.js",
+                        "needle": "        const amount = new Money(1234);"
+                    },
+                    {
+                        "file": "packages/core/tests/money.test.js",
+                        "needle": "        assert.equal(Money.ZERO.cents, 0);"
+                    },
+                    {
+                        "file": "packages/core/tests/money.test.js",
+                        "needle": "        assert.ok(Money.ZERO.isZero());"
+                    },
+                    {
+                        "file": "packages/core/tests/money.test.js",
+                        "needle": "        assert.equal(Money.sum([new Money(100), new Money(25)]).cents, 125);"
+                    },
+                    {
+                        "file": "packages/core/tests/money.test.js",
+                        "needle": "        assert.equal(new Money(23425).withSurchargeBp(2500).cents, 29281);"
+                    },
+                    {
+                        "file": "packages/core/tests/money.test.js",
+                        "needle": "        assert.equal(new Money(34900).withSurchargeBp(0).cents, 34900);"
+                    },
+                    {
+                        "file": "packages/core/tests/money.test.js",
+                        "needle": "        assert.equal(Money.parse(\"12.34\").cents, 1234);"
+                    },
+                    {
+                        "file": "packages/core/tests/money.test.js",
+                        "needle": "        assert.equal(Money.fromCents(5).cents, 5);"
+                    },
+                    {
+                        "file": "packages/core/tests/money.test.js",
+                        "needle": "        assert.throws(() => Money.parse(\"12.345\"), TypeError);"
+                    },
+                    {
+                        "file": "packages/core/tests/shadowPair.test.js",
+                        "needle": "import { Money, RepairStatus } from \"@atelier/core\";"
+                    },
+                    {
+                        "file": "packages/core/tests/shadowPair.test.js",
+                        "needle": "        assert.equal(money.money(new Money(34900)), \"349.00 EUR\");"
+                    },
+                    {
+                        "file": "packages/core/tests/shadowPair.test.js",
+                        "needle": "        assert.equal(money.line(2, \"Battery\", new Money(17800)), \"2 x Battery = 178.00 EUR\");"
                     }
                 ]
             }
@@ -531,7 +793,7 @@
                 "symbol": "rowFromCents"
             },
             "expect": {
-                "min_references": 8,
+                "exact_count": 23,
                 "known_sites": [
                     {
                         "file": "packages/bench/src/reports/gross-profit.cjs",
@@ -540,6 +802,90 @@
                     {
                         "file": "packages/bench/src/reports/cash-flow.cjs",
                         "needle": "return [rowFromCents(\"paid\", paid), rowFromCents(\"outstanding\", outstanding)];"
+                    },
+                    {
+                        "file": "packages/bench/src/contracts/reportContract.cjs",
+                        "needle": "module.exports = { reportRow, rowFromCents };"
+                    },
+                    {
+                        "file": "packages/bench/src/index.cjs",
+                        "needle": "const { reportRow, rowFromCents } = require(\"./reportContract.cjs\");"
+                    },
+                    {
+                        "file": "packages/bench/src/index.cjs",
+                        "needle": "    rowFromCents,"
+                    },
+                    {
+                        "file": "packages/bench/src/reports/cash-flow.cjs",
+                        "needle": "const { rowFromCents } = require(\"../contracts/reportContract.cjs\");"
+                    },
+                    {
+                        "file": "packages/bench/src/reports/customer-lifetime.cjs",
+                        "needle": "const { rowFromCents } = require(\"../contracts/reportContract.cjs\");"
+                    },
+                    {
+                        "file": "packages/bench/src/reports/customer-lifetime.cjs",
+                        "needle": "            rowFromCents("
+                    },
+                    {
+                        "file": "packages/bench/src/reports/daily-revenue.cjs",
+                        "needle": "const { rowFromCents } = require(\"../contracts/reportContract.cjs\");"
+                    },
+                    {
+                        "file": "packages/bench/src/reports/daily-revenue.cjs",
+                        "needle": "            .map((order) => rowFromCents(`order-${order.id}`, order.partsSubtotal().cents));"
+                    },
+                    {
+                        "file": "packages/bench/src/reports/gross-profit.cjs",
+                        "needle": "const { rowFromCents } = require(\"../contracts/reportContract.cjs\");"
+                    },
+                    {
+                        "file": "packages/bench/src/reports/gross-profit.cjs",
+                        "needle": "            rowFromCents(\"revenue\", revenue),"
+                    },
+                    {
+                        "file": "packages/bench/src/reports/gross-profit.cjs",
+                        "needle": "            rowFromCents(\"part cost\", cost),"
+                    },
+                    {
+                        "file": "packages/bench/src/reports/monthly-revenue.cjs",
+                        "needle": "const { rowFromCents } = require(\"../contracts/reportContract.cjs\");"
+                    },
+                    {
+                        "file": "packages/bench/src/reports/monthly-revenue.cjs",
+                        "needle": "        return [rowFromCents(\"month to date\", data.revenueCents())];"
+                    },
+                    {
+                        "file": "packages/bench/src/reports/payment-default.cjs",
+                        "needle": "const { rowFromCents } = require(\"../contracts/reportContract.cjs\");"
+                    },
+                    {
+                        "file": "packages/bench/src/reports/payment-default.cjs",
+                        "needle": "            .map((invoice) => rowFromCents(`invoice-${invoice.id}`, invoice.outstanding().cents));"
+                    },
+                    {
+                        "file": "packages/bench/src/reports/technician-payroll.cjs",
+                        "needle": "const { rowFromCents } = require(\"../contracts/reportContract.cjs\");"
+                    },
+                    {
+                        "file": "packages/bench/src/reports/technician-payroll.cjs",
+                        "needle": "        return data.technicians.map((technician) => rowFromCents(technician.name, share));"
+                    },
+                    {
+                        "file": "packages/bench/src/reports/warranty-cost.cjs",
+                        "needle": "const { rowFromCents } = require(\"../contracts/reportContract.cjs\");"
+                    },
+                    {
+                        "file": "packages/bench/src/reports/warranty-cost.cjs",
+                        "needle": "            .map((order) => rowFromCents(`order-${order.id}`, order.partsSubtotal().cents));"
+                    },
+                    {
+                        "file": "packages/bench/src/reports/weekly-revenue.cjs",
+                        "needle": "const { rowFromCents } = require(\"../contracts/reportContract.cjs\");"
+                    },
+                    {
+                        "file": "packages/bench/src/reports/weekly-revenue.cjs",
+                        "needle": "        return [rowFromCents(\"week to date\", data.revenueCents())];"
                     }
                 ]
             }
@@ -554,7 +900,7 @@
                 "symbol": "REPORTS"
             },
             "expect": {
-                "min_references": 4,
+                "exact_count": 10,
                 "known_sites": [
                     {
                         "file": "packages/bench/src/index.cjs",
@@ -563,6 +909,38 @@
                     {
                         "file": "packages/bench/tests/breadth.test.cjs",
                         "needle": "assert.equal(REPORTS.length, 24);"
+                    },
+                    {
+                        "file": "packages/app/src/reportsIndex.js",
+                        "needle": "const { REPORTS } = require(\"@atelier/bench\");"
+                    },
+                    {
+                        "file": "packages/app/src/reportsIndex.js",
+                        "needle": "    return REPORTS.map((report) => report.slug);"
+                    },
+                    {
+                        "file": "packages/app/src/reportsIndex.js",
+                        "needle": "    return firstWhere(REPORTS, (report) => report.slug === slug);"
+                    },
+                    {
+                        "file": "packages/bench/src/index.cjs",
+                        "needle": "const REPORT_SLUGS = REPORTS.map((entry) => entry.slug);"
+                    },
+                    {
+                        "file": "packages/bench/src/index.cjs",
+                        "needle": "    REPORTS,"
+                    },
+                    {
+                        "file": "packages/bench/tests/breadth.test.cjs",
+                        "needle": "    REPORTS,"
+                    },
+                    {
+                        "file": "packages/bench/tests/breadth.test.cjs",
+                        "needle": "        assert.equal(new Set(REPORTS.map((entry) => entry.slug)).size, REPORTS.length);"
+                    },
+                    {
+                        "file": "packages/bench/tests/breadth.test.cjs",
+                        "needle": "        for (const entry of REPORTS) {"
                     }
                 ]
             }
@@ -1985,7 +2363,7 @@
                 "symbol": "atelierFormatReference"
             },
             "expect": {
-                "min_references": 6,
+                "exact_count": 8,
                 "known_sites": [
                     {
                         "file": "packages/core/src/concerns/hasReference.js",
@@ -1998,6 +2376,26 @@
                     {
                         "file": "packages/core/tests/structure.test.js",
                         "needle": "assert.equal(atelierFormatReference(\"AT\", 1), \"AT-2026-000001\");"
+                    },
+                    {
+                        "file": "packages/core/src/concerns/hasReference.js",
+                        "needle": "import { ATELIER_REF_PREFIX, atelierFormatReference } from \"../support/helpers.js\";"
+                    },
+                    {
+                        "file": "packages/core/src/index.js",
+                        "needle": "    atelierFormatReference,"
+                    },
+                    {
+                        "file": "packages/core/src/support/boardSummary.js",
+                        "needle": "import { atelierFormatReference } from \"./helpersGlob.js\";"
+                    },
+                    {
+                        "file": "packages/core/tests/board.test.js",
+                        "needle": "        assert.equal(glob.atelierFormatReference(\"AT\", 1), \"AT-2026-000001\");"
+                    },
+                    {
+                        "file": "packages/core/tests/structure.test.js",
+                        "needle": "import { TreeNode, atelierFormatReference, atelierParseReference } from \"@atelier/core\";"
                     }
                 ]
             }
@@ -2012,7 +2410,7 @@
                 "symbol": "reportRow"
             },
             "expect": {
-                "min_references": 12,
+                "exact_count": 34,
                 "known_sites": [
                     {
                         "file": "packages/bench/src/reports/churn-risk.cjs",
@@ -2025,6 +2423,130 @@
                     {
                         "file": "packages/bench/src/reports/net-margin.cjs",
                         "needle": "return [reportRow(\"net margin\", revenue === 0 ? 0 : (revenue - data.partsCostCents()) / revenue)];"
+                    },
+                    {
+                        "file": "packages/bench/src/contracts/reportContract.cjs",
+                        "needle": "module.exports = { reportRow, rowFromCents };"
+                    },
+                    {
+                        "file": "packages/bench/src/index.cjs",
+                        "needle": "const { reportRow, rowFromCents } = require(\"./reportContract.cjs\");"
+                    },
+                    {
+                        "file": "packages/bench/src/index.cjs",
+                        "needle": "    reportRow,"
+                    },
+                    {
+                        "file": "packages/bench/src/reports/churn-risk.cjs",
+                        "needle": "const { reportRow } = require(\"../contracts/reportContract.cjs\");"
+                    },
+                    {
+                        "file": "packages/bench/src/reports/customer-retention.cjs",
+                        "needle": "const { reportRow } = require(\"../contracts/reportContract.cjs\");"
+                    },
+                    {
+                        "file": "packages/bench/src/reports/customer-retention.cjs",
+                        "needle": "            .map((customer) => reportRow(customer.name, data.ordersFor(customer.id).length))"
+                    },
+                    {
+                        "file": "packages/bench/src/reports/inventory-turnover.cjs",
+                        "needle": "const { reportRow } = require(\"../contracts/reportContract.cjs\");"
+                    },
+                    {
+                        "file": "packages/bench/src/reports/inventory-turnover.cjs",
+                        "needle": "            reportRow(part.sku, part.stock === 0 ? 0 : part.consumedQuantity() / part.stock),"
+                    },
+                    {
+                        "file": "packages/bench/src/reports/net-margin.cjs",
+                        "needle": "const { reportRow } = require(\"../contracts/reportContract.cjs\");"
+                    },
+                    {
+                        "file": "packages/bench/src/reports/order-backlog.cjs",
+                        "needle": "const { reportRow } = require(\"../contracts/reportContract.cjs\");"
+                    },
+                    {
+                        "file": "packages/bench/src/reports/order-throughput.cjs",
+                        "needle": "const { reportRow } = require(\"../contracts/reportContract.cjs\");"
+                    },
+                    {
+                        "file": "packages/bench/src/reports/order-throughput.cjs",
+                        "needle": "            reportRow(\"completed\", data.completedOrders().length),"
+                    },
+                    {
+                        "file": "packages/bench/src/reports/order-throughput.cjs",
+                        "needle": "            reportRow(\"open\", data.openOrders().length),"
+                    },
+                    {
+                        "file": "packages/bench/src/reports/order-volume.cjs",
+                        "needle": "const { reportRow } = require(\"../contracts/reportContract.cjs\");"
+                    },
+                    {
+                        "file": "packages/bench/src/reports/order-volume.cjs",
+                        "needle": "            .map(([label, count]) => reportRow(label, count));"
+                    },
+                    {
+                        "file": "packages/bench/src/reports/part-shortage.cjs",
+                        "needle": "const { reportRow } = require(\"../contracts/reportContract.cjs\");"
+                    },
+                    {
+                        "file": "packages/bench/src/reports/part-shortage.cjs",
+                        "needle": "        return data.lowStockParts().map((part) => reportRow(part.sku, part.stock));"
+                    },
+                    {
+                        "file": "packages/bench/src/reports/part-usage.cjs",
+                        "needle": "const { reportRow } = require(\"../contracts/reportContract.cjs\");"
+                    },
+                    {
+                        "file": "packages/bench/src/reports/part-usage.cjs",
+                        "needle": "        return data.parts.map((part) => reportRow(part.name, part.consumedQuantity()));"
+                    },
+                    {
+                        "file": "packages/bench/src/reports/payment-latency.cjs",
+                        "needle": "const { reportRow } = require(\"../contracts/reportContract.cjs\");"
+                    },
+                    {
+                        "file": "packages/bench/src/reports/payment-latency.cjs",
+                        "needle": "            reportRow(`invoice-${invoice.id}`, invoice.paid ? 0 : invoice.id * 3.5),"
+                    },
+                    {
+                        "file": "packages/bench/src/reports/profit-margin.cjs",
+                        "needle": "const { reportRow } = require(\"../contracts/reportContract.cjs\");"
+                    },
+                    {
+                        "file": "packages/bench/src/reports/profit-margin.cjs",
+                        "needle": "            return reportRow(`order-${order.id}`, parts + labour === 0 ? 0 : labour / (parts + labour));"
+                    },
+                    {
+                        "file": "packages/bench/src/reports/technician-efficiency.cjs",
+                        "needle": "const { reportRow } = require(\"../contracts/reportContract.cjs\");"
+                    },
+                    {
+                        "file": "packages/bench/src/reports/technician-efficiency.cjs",
+                        "needle": "        return data.technicians.map((technician) => reportRow(technician.name, 1 - technician.utilisation()));"
+                    },
+                    {
+                        "file": "packages/bench/src/reports/technician-load.cjs",
+                        "needle": "const { reportRow } = require(\"../contracts/reportContract.cjs\");"
+                    },
+                    {
+                        "file": "packages/bench/src/reports/technician-load.cjs",
+                        "needle": "        return data.technicians.map((technician) => reportRow(technician.name, technician.utilisation()));"
+                    },
+                    {
+                        "file": "packages/bench/src/reports/warranty-claim.cjs",
+                        "needle": "const { reportRow } = require(\"../contracts/reportContract.cjs\");"
+                    },
+                    {
+                        "file": "packages/bench/src/reports/warranty-claim.cjs",
+                        "needle": "            .map((order) => reportRow(`order-${order.id}`, 1));"
+                    },
+                    {
+                        "file": "packages/bench/src/reports/warranty-trend.cjs",
+                        "needle": "const { reportRow } = require(\"../contracts/reportContract.cjs\");"
+                    },
+                    {
+                        "file": "packages/bench/src/reports/warranty-trend.cjs",
+                        "needle": "        return [reportRow(\"warranty share\", data.orders.length === 0 ? 0 : warranty / data.orders.length)];"
                     }
                 ]
             }
@@ -2039,7 +2561,7 @@
                 "symbol": "withReference"
             },
             "expect": {
-                "min_references": 4,
+                "exact_count": 5,
                 "known_sites": [
                     {
                         "file": "packages/core/src/models/customer.js",
@@ -2052,6 +2574,14 @@
                     {
                         "file": "packages/core/src/index.js",
                         "needle": "export { hasReference, withReference } from \"./concerns/hasReference.js\";"
+                    },
+                    {
+                        "file": "packages/core/src/models/customer.js",
+                        "needle": "import { withReference } from \"../concerns/hasReference.js\";"
+                    },
+                    {
+                        "file": "packages/core/src/models/repairOrder.js",
+                        "needle": "import { withReference } from \"../concerns/hasReference.js\";"
                     }
                 ]
             }
