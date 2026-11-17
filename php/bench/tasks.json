@@ -140,7 +140,8 @@
             "from": { "file": "app/Models/RepairOrder.php", "needle": "class RepairOrder extends Model" },
             "expect": {
                 "min_symbols": 13,
-                "must_include": ["complete", "transitionTo", "scopeOpen", "scopeRush", "parts", "casts"]
+                "must_include": ["complete", "transitionTo", "scopeOpen", "scopeRush", "parts", "casts"],
+                "symbols": ["RepairOrder", "$guarded", "$attributes", "casts", "customer", "device", "technician", "parts", "notes", "statusLogs", "invoice", "signature", "latestNote", "labels", "scopeOpen", "scopeRush", "transitionTo", "complete"]
             }
         },
         {
@@ -330,9 +331,54 @@
             "expect": {
                 "exact_count": 48,
                 "implementations": [
-                    { "file": "app/Bench/Rules/MinimumStockRule.php", "needle": "final class MinimumStockRule implements RuleContract" },
+                    { "file": "app/Bench/Rules/AuditTrailRule.php", "needle": "final class AuditTrailRule implements RuleContract" },
+                    { "file": "app/Bench/Rules/AverageTicketRule.php", "needle": "final class AverageTicketRule implements RuleContract" },
+                    { "file": "app/Bench/Rules/CacheTtlRule.php", "needle": "final class CacheTtlRule implements RuleContract" },
+                    { "file": "app/Bench/Rules/CompletionRateRule.php", "needle": "final class CompletionRateRule implements RuleContract" },
+                    { "file": "app/Bench/Rules/CurrencyConsistencyRule.php", "needle": "final class CurrencyConsistencyRule implements RuleContract" },
+                    { "file": "app/Bench/Rules/CustomerCountRule.php", "needle": "final class CustomerCountRule implements RuleContract" },
+                    { "file": "app/Bench/Rules/CustomerCreditRule.php", "needle": "final class CustomerCreditRule implements RuleContract" },
+                    { "file": "app/Bench/Rules/DatasetIntegrityRule.php", "needle": "final class DatasetIntegrityRule implements RuleContract" },
+                    { "file": "app/Bench/Rules/DepositRequiredRule.php", "needle": "final class DepositRequiredRule implements RuleContract" },
+                    { "file": "app/Bench/Rules/DeviceAgeRule.php", "needle": "final class DeviceAgeRule implements RuleContract" },
+                    { "file": "app/Bench/Rules/DeviceCategoryRule.php", "needle": "final class DeviceCategoryRule implements RuleContract" },
+                    { "file": "app/Bench/Rules/DiscountCeilingRule.php", "needle": "final class DiscountCeilingRule implements RuleContract" },
+                    { "file": "app/Bench/Rules/DuplicateReferenceRule.php", "needle": "final class DuplicateReferenceRule implements RuleContract" },
+                    { "file": "app/Bench/Rules/ExportFreshnessRule.php", "needle": "final class ExportFreshnessRule implements RuleContract" },
+                    { "file": "app/Bench/Rules/GrossProfitRule.php", "needle": "final class GrossProfitRule implements RuleContract" },
+                    { "file": "app/Bench/Rules/IdleTechnicianRule.php", "needle": "final class IdleTechnicianRule implements RuleContract" },
+                    { "file": "app/Bench/Rules/InventoryTurnoverRule.php", "needle": "final class InventoryTurnoverRule implements RuleContract" },
                     { "file": "app/Bench/Rules/InvoiceBalanceRule.php", "needle": "final class InvoiceBalanceRule implements RuleContract" },
-                    { "file": "app/Bench/Rules/InventoryTurnoverRule.php", "needle": "final class InventoryTurnoverRule implements RuleContract" }
+                    { "file": "app/Bench/Rules/InvoiceCountRule.php", "needle": "final class InvoiceCountRule implements RuleContract" },
+                    { "file": "app/Bench/Rules/LabelPresenceRule.php", "needle": "final class LabelPresenceRule implements RuleContract" },
+                    { "file": "app/Bench/Rules/MaximumBacklogRule.php", "needle": "final class MaximumBacklogRule implements RuleContract" },
+                    { "file": "app/Bench/Rules/MetricRangeRule.php", "needle": "final class MetricRangeRule implements RuleContract" },
+                    { "file": "app/Bench/Rules/MinimumStockRule.php", "needle": "final class MinimumStockRule implements RuleContract" },
+                    { "file": "app/Bench/Rules/NoteRequiredRule.php", "needle": "final class NoteRequiredRule implements RuleContract" },
+                    { "file": "app/Bench/Rules/NotificationSentRule.php", "needle": "final class NotificationSentRule implements RuleContract" },
+                    { "file": "app/Bench/Rules/OpenOrderRatioRule.php", "needle": "final class OpenOrderRatioRule implements RuleContract" },
+                    { "file": "app/Bench/Rules/OrderCountRule.php", "needle": "final class OrderCountRule implements RuleContract" },
+                    { "file": "app/Bench/Rules/PartAvailabilityRule.php", "needle": "final class PartAvailabilityRule implements RuleContract" },
+                    { "file": "app/Bench/Rules/PartCostMarginRule.php", "needle": "final class PartCostMarginRule implements RuleContract" },
+                    { "file": "app/Bench/Rules/PartCountRule.php", "needle": "final class PartCountRule implements RuleContract" },
+                    { "file": "app/Bench/Rules/PartsPerOrderRule.php", "needle": "final class PartsPerOrderRule implements RuleContract" },
+                    { "file": "app/Bench/Rules/PriorityEscalationRule.php", "needle": "final class PriorityEscalationRule implements RuleContract" },
+                    { "file": "app/Bench/Rules/ReferencePrefixRule.php", "needle": "final class ReferencePrefixRule implements RuleContract" },
+                    { "file": "app/Bench/Rules/RepairDurationRule.php", "needle": "final class RepairDurationRule implements RuleContract" },
+                    { "file": "app/Bench/Rules/RepeatCustomerRule.php", "needle": "final class RepeatCustomerRule implements RuleContract" },
+                    { "file": "app/Bench/Rules/ReportCoverageRule.php", "needle": "final class ReportCoverageRule implements RuleContract" },
+                    { "file": "app/Bench/Rules/RevenueFloorRule.php", "needle": "final class RevenueFloorRule implements RuleContract" },
+                    { "file": "app/Bench/Rules/ReworkLimitRule.php", "needle": "final class ReworkLimitRule implements RuleContract" },
+                    { "file": "app/Bench/Rules/RoundingRule.php", "needle": "final class RoundingRule implements RuleContract" },
+                    { "file": "app/Bench/Rules/RushSurchargeRule.php", "needle": "final class RushSurchargeRule implements RuleContract" },
+                    { "file": "app/Bench/Rules/ScheduleGapRule.php", "needle": "final class ScheduleGapRule implements RuleContract" },
+                    { "file": "app/Bench/Rules/SeedDeterminismRule.php", "needle": "final class SeedDeterminismRule implements RuleContract" },
+                    { "file": "app/Bench/Rules/SignatureRequiredRule.php", "needle": "final class SignatureRequiredRule implements RuleContract" },
+                    { "file": "app/Bench/Rules/SlotOverbookingRule.php", "needle": "final class SlotOverbookingRule implements RuleContract" },
+                    { "file": "app/Bench/Rules/StatusSequenceRule.php", "needle": "final class StatusSequenceRule implements RuleContract" },
+                    { "file": "app/Bench/Rules/TaxAppliedRule.php", "needle": "final class TaxAppliedRule implements RuleContract" },
+                    { "file": "app/Bench/Rules/TechnicianCapacityRule.php", "needle": "final class TechnicianCapacityRule implements RuleContract" },
+                    { "file": "app/Bench/Rules/WarrantyWindowRule.php", "needle": "final class WarrantyWindowRule implements RuleContract" }
                 ]
             }
         },
@@ -341,7 +387,35 @@
             "surface": "cardinality",
             "note": "exact_count is exact, not a minimum: a tool returning 20, 25 or 100 implementors is wrong.",
             "from": { "file": "app/Bench/Contracts/ReportContract.php", "needle": "interface ReportContract", "symbol": "ReportContract" },
-            "expect": { "exact_count": 24 }
+            "expect": {
+                "exact_count": 24,
+                "implementations": [
+                    { "file": "app/Bench/Reports/CashFlowReport.php", "needle": "class CashFlowReport extends AbstractPeriodicReport" },
+                    { "file": "app/Bench/Reports/ChurnRiskReport.php", "needle": "class ChurnRiskReport extends AbstractPeriodicReport" },
+                    { "file": "app/Bench/Reports/CustomerLifetimeReport.php", "needle": "class CustomerLifetimeReport extends AbstractPeriodicReport" },
+                    { "file": "app/Bench/Reports/CustomerRetentionReport.php", "needle": "class CustomerRetentionReport extends AbstractPeriodicReport" },
+                    { "file": "app/Bench/Reports/DailyRevenueReport.php", "needle": "class DailyRevenueReport extends AbstractPeriodicReport" },
+                    { "file": "app/Bench/Reports/GrossProfitReport.php", "needle": "class GrossProfitReport extends AbstractPeriodicReport" },
+                    { "file": "app/Bench/Reports/InventoryTurnoverReport.php", "needle": "class InventoryTurnoverReport extends AbstractPeriodicReport" },
+                    { "file": "app/Bench/Reports/MonthlyRevenueReport.php", "needle": "class MonthlyRevenueReport extends AbstractPeriodicReport" },
+                    { "file": "app/Bench/Reports/NetMarginReport.php", "needle": "class NetMarginReport extends AbstractPeriodicReport" },
+                    { "file": "app/Bench/Reports/OrderBacklogReport.php", "needle": "class OrderBacklogReport extends AbstractPeriodicReport" },
+                    { "file": "app/Bench/Reports/OrderThroughputReport.php", "needle": "class OrderThroughputReport extends AbstractPeriodicReport" },
+                    { "file": "app/Bench/Reports/OrderVolumeReport.php", "needle": "class OrderVolumeReport extends AbstractPeriodicReport" },
+                    { "file": "app/Bench/Reports/PartShortageReport.php", "needle": "class PartShortageReport extends AbstractPeriodicReport" },
+                    { "file": "app/Bench/Reports/PartUsageReport.php", "needle": "class PartUsageReport extends AbstractPeriodicReport" },
+                    { "file": "app/Bench/Reports/PaymentDefaultReport.php", "needle": "class PaymentDefaultReport extends AbstractPeriodicReport" },
+                    { "file": "app/Bench/Reports/PaymentLatencyReport.php", "needle": "class PaymentLatencyReport extends AbstractPeriodicReport" },
+                    { "file": "app/Bench/Reports/ProfitMarginReport.php", "needle": "class ProfitMarginReport extends AbstractPeriodicReport" },
+                    { "file": "app/Bench/Reports/TechnicianEfficiencyReport.php", "needle": "class TechnicianEfficiencyReport extends AbstractPeriodicReport" },
+                    { "file": "app/Bench/Reports/TechnicianLoadReport.php", "needle": "class TechnicianLoadReport extends AbstractPeriodicReport" },
+                    { "file": "app/Bench/Reports/TechnicianPayrollReport.php", "needle": "class TechnicianPayrollReport extends AbstractPeriodicReport" },
+                    { "file": "app/Bench/Reports/WarrantyClaimReport.php", "needle": "class WarrantyClaimReport extends AbstractPeriodicReport" },
+                    { "file": "app/Bench/Reports/WarrantyCostReport.php", "needle": "class WarrantyCostReport extends AbstractPeriodicReport" },
+                    { "file": "app/Bench/Reports/WarrantyTrendReport.php", "needle": "class WarrantyTrendReport extends AbstractPeriodicReport" },
+                    { "file": "app/Bench/Reports/WeeklyRevenueReport.php", "needle": "class WeeklyRevenueReport extends AbstractPeriodicReport" }
+                ]
+            }
         },
         {
             "id": "dir-contract-parent",
@@ -847,11 +921,14 @@
             "note": "The lane-local Money cast (see lane-local-money): three `use` imports plus three cast-map entries.",
             "from": { "file": "app/Casts/Money.php", "needle": "class Money implements CastsAttributes", "symbol": "Money" },
             "expect": {
-                "min_references": 6,
+                "exact_count": 6,
                 "known_sites": [
-                    { "file": "app/Models/RepairOrder.php", "needle": "'subtotal_cents' => Money::class," },
+                    { "file": "app/Models/Invoice.php", "needle": "use App\\Casts\\Money;" },
                     { "file": "app/Models/Invoice.php", "needle": "'total_cents' => Money::class," },
-                    { "file": "app/Models/Part.php", "needle": "'unit_price_cents' => Money::class," }
+                    { "file": "app/Models/Part.php", "needle": "use App\\Casts\\Money;" },
+                    { "file": "app/Models/Part.php", "needle": "'unit_price_cents' => Money::class," },
+                    { "file": "app/Models/RepairOrder.php", "needle": "use App\\Casts\\Money;" },
+                    { "file": "app/Models/RepairOrder.php", "needle": "'subtotal_cents' => Money::class," }
                 ]
             }
         },
@@ -861,9 +938,10 @@
             "note": "DatabaseSeeder is the php lane's frozen Dataset (see lane-local-dataset); the in-code references are the delegating CanonicalSeeder and the canonical feature test.",
             "from": { "file": "database/seeders/DatabaseSeeder.php", "needle": "class DatabaseSeeder extends Seeder", "symbol": "DatabaseSeeder" },
             "expect": {
-                "min_references": 3,
+                "exact_count": 3,
                 "known_sites": [
                     { "file": "database/seeders/CanonicalSeeder.php", "needle": "$this->call(DatabaseSeeder::class);" },
+                    { "file": "tests/Feature/CanonicalSurfaceTest.php", "needle": "use Database\\Seeders\\DatabaseSeeder;" },
                     { "file": "tests/Feature/CanonicalSurfaceTest.php", "needle": "$this->seed(DatabaseSeeder::class);" }
                 ]
             }
@@ -874,10 +952,16 @@
             "note": "Eight canonical summaries call the row helper once each; nothing else constructs a ReportRow.",
             "from": { "file": "app/Support/Canonical/Reporting/ReportRow.php", "needle": "public static function rowFromCents(string $label, int $cents): self", "symbol": "rowFromCents" },
             "expect": {
-                "min_references": 8,
+                "exact_count": 8,
                 "known_sites": [
                     { "file": "app/Support/Canonical/Reporting/Summaries/CashSummary.php", "needle": "return [ReportRow::rowFromCents('cash on hand', 125000)];" },
-                    { "file": "app/Support/Canonical/Reporting/Summaries/TaxSummary.php", "needle": "return [ReportRow::rowFromCents('tax collected', 22150)];" }
+                    { "file": "app/Support/Canonical/Reporting/Summaries/DiscountSummary.php", "needle": "return [ReportRow::rowFromCents('discounts given', 6750)];" },
+                    { "file": "app/Support/Canonical/Reporting/Summaries/LaborSummary.php", "needle": "return [ReportRow::rowFromCents('labor billed', 84500)];" },
+                    { "file": "app/Support/Canonical/Reporting/Summaries/PartsSummary.php", "needle": "return [ReportRow::rowFromCents('parts sold', 61200)];" },
+                    { "file": "app/Support/Canonical/Reporting/Summaries/PayrollSummary.php", "needle": "return [ReportRow::rowFromCents('technician payroll', 47300)];" },
+                    { "file": "app/Support/Canonical/Reporting/Summaries/RefundSummary.php", "needle": "return [ReportRow::rowFromCents('refunds issued', 9800)];" },
+                    { "file": "app/Support/Canonical/Reporting/Summaries/TaxSummary.php", "needle": "return [ReportRow::rowFromCents('tax collected', 22150)];" },
+                    { "file": "app/Support/Canonical/Reporting/Summaries/WarrantySummary.php", "needle": "return [ReportRow::rowFromCents('warranty cost', 15400)];" }
                 ]
             }
         },
@@ -887,10 +971,12 @@
             "note": "Single fan-in constant for the 24 reports, mirroring RuleRegistry::RULES; read by the registry's own accessors and by the canonical feature test.",
             "from": { "file": "app/Bench/Reports/ReportRegistry.php", "needle": "public const array REPORTS = [", "symbol": "REPORTS" },
             "expect": {
-                "min_references": 3,
+                "exact_count": 4,
                 "known_sites": [
                     { "file": "app/Bench/Reports/ReportRegistry.php", "needle": "return self::REPORTS;" },
-                    { "file": "tests/Feature/CanonicalSurfaceTest.php", "needle": "$this->assertCount(24, ReportRegistry::REPORTS);" }
+                    { "file": "app/Bench/Reports/ReportRegistry.php", "needle": "return count(self::REPORTS);" },
+                    { "file": "tests/Feature/CanonicalSurfaceTest.php", "needle": "$this->assertCount(24, ReportRegistry::REPORTS);" },
+                    { "file": "tests/Feature/CanonicalSurfaceTest.php", "needle": "$this->assertSame(ReportRegistry::REPORTS, ReportRegistry::all());" }
                 ]
             }
         },
@@ -982,7 +1068,8 @@
             "from": { "file": "app/Bench/Reports/ReportRegistry.php", "needle": "public const array REPORTS = [" },
             "expect": {
                 "min_symbols": 3,
-                "must_include": ["REPORTS", "all", "count"]
+                "must_include": ["REPORTS", "all", "count"],
+                "symbols": ["ReportRegistry", "REPORTS", "all", "count"]
             }
         },
         {
@@ -1072,9 +1159,10 @@
             "from": { "file": "app/Livewire/StatusBoard.php", "needle": "#[On('note-added')]", "symbol": "note-added" },
             "expect": {
                 "kind": "name_only",
-                "min_references": 3,
+                "exact_count": 3,
                 "known_sites": [
                     { "file": "app/Livewire/NoteComposer.php", "needle": "$this->dispatch('note-added', orderId: $this->order->id);" },
+                    { "file": "app/Livewire/StatusBoard.php", "needle": "#[On('note-added')]" },
                     { "file": "tests/Feature/NoteComposerTest.php", "needle": "->assertDispatched('note-added', orderId: $order->id);" }
                 ]
             }
@@ -1115,6 +1203,12 @@
                 "exact_count": 8,
                 "known_sites": [
                     { "file": "app/Bench/Repositories/CustomerRepository.php", "needle": "class CustomerRepository extends AbstractComponent implements RepositoryContract" },
+                    { "file": "app/Bench/Repositories/InventoryRepository.php", "needle": "class InventoryRepository extends AbstractComponent implements RepositoryContract" },
+                    { "file": "app/Bench/Repositories/InvoiceRepository.php", "needle": "class InvoiceRepository extends AbstractComponent implements RepositoryContract" },
+                    { "file": "app/Bench/Repositories/OrderRepository.php", "needle": "class OrderRepository extends AbstractComponent implements RepositoryContract" },
+                    { "file": "app/Bench/Repositories/PartRepository.php", "needle": "class PartRepository extends AbstractComponent implements RepositoryContract" },
+                    { "file": "app/Bench/Repositories/PaymentRepository.php", "needle": "class PaymentRepository extends AbstractComponent implements RepositoryContract" },
+                    { "file": "app/Bench/Repositories/TechnicianRepository.php", "needle": "class TechnicianRepository extends AbstractComponent implements RepositoryContract" },
                     { "file": "app/Bench/Repositories/WarrantyRepository.php", "needle": "class WarrantyRepository extends AbstractComponent implements RepositoryContract" }
                 ],
                 "must_not_include": [
