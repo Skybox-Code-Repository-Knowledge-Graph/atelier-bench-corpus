@@ -39,7 +39,9 @@ const fileAndNeedle = (expect) => ({ file: expect.file, needle: expect.needle })
  *             fail it. A recall rule cannot catch a tool that returns everything; its results are
  *             reported in their own column and never added to the exact one.
  *   target    for check "target": where the expected declaration is
- *   list      for checks "callees" and "callers": the expect key holding the listed entries
+ *   list      for checks "callees", "callers" and "sites": the expect key holding the listed entries
+ *   neutralLists  for check "sites": expect keys whose lines may be returned or not
+ *   noun      for check "sites": what one entry is, in reasons ("site", "declaration")
  *   uses      expect keys the rule reads (everything else is "not scored")
  */
 export const RULES = [
@@ -120,9 +122,53 @@ export const RULES = [
         forbidReason: "a floor beside a count, the list is not known to be complete",
         check: "sites",
         class: "exact",
+        list: "known_sites",
+        neutralLists: ["optional_sites"],
+        noun: "site",
         uses: ["known_sites", "exact_count", "repeated_sites", "optional_sites", "must_not_include"],
     },
+    ...["implementation", "cardinality", "multi-parent"].map((surface) => ({
+        name: `${surface}/list`,
+        surface,
+        requires: ["implementations"],
+        forbids: ["min_implementations", "min_references"],
+        forbidReason: "a floor, the list is not known to be complete",
+        check: "sites",
+        class: "exact",
+        list: "implementations",
+        neutralLists: ["optional_sites", "known_sites"],
+        noun: "declaration",
+        uses: ["implementations", "exact_count", "extends_count", "implements_count", "optional_sites", "known_sites", "must_not_include"],
+    })),
 ];
+
+/**
+ * Implementation lists whose entries are not the implementing types an implementation query
+ * returns, keyed by id (every lane) or `lane:id`. Such a task is UNSCORABLE under the list rules.
+ */
+export const LIST_NOT_TYPES = {
+    "card-rule-contract": "half the list is rule values (instances, object literals, macro arms), and an implementation query returns types",
+    "go:impl-structural-no-assertion": "the list is struct-literal values, and an implementation query returns types",
+    "go:card-embedded-promotion": "the list is promoted methods, not implementing types",
+    "rust:def-async-trait-method": "the list is methods, not implementing types",
+    "php:impl-trait-abstract": "the list is methods, not implementing types",
+};
+
+/**
+ * The number of entries a list task states: `exact_count`, or `extends_count` plus
+ * `implements_count` where a parents task splits it. null when it states none (the list is not
+ * known to be complete); undefined when the two disagree.
+ */
+export function listCount(expect) {
+    const exact = Number.isInteger(expect.exact_count) ? expect.exact_count : null;
+    const split = Number.isInteger(expect.extends_count) && Number.isInteger(expect.implements_count)
+        ? expect.extends_count + expect.implements_count
+        : null;
+    if (exact !== null && split !== null && exact !== split) {
+        return undefined;
+    }
+    return exact ?? split;
+}
 
 /**
  * Targets anchored on a line INSIDE the declaration they stand for, keyed `lane:id`. The needle sits
@@ -189,23 +235,34 @@ export function planTask(task, lane = null) {
 
         if (rule.check === "sites") {
             const list = (key) => (Array.isArray(expect[key]) ? expect[key] : []);
-            const entries = list("known_sites");
-            const repeated = list("repeated_sites");
-            const optional = list("optional_sites");
+            const exception = LIST_NOT_TYPES[task.id] ?? LIST_NOT_TYPES[`${lane}:${task.id}`];
+            if (rule.list === "implementations" && exception !== undefined) {
+                return { scorable: false, reason: `${rule.name}: ${exception}` };
+            }
+            const entries = list(rule.list);
+            const repeated = rule.list === "known_sites" ? list("repeated_sites") : [];
+            const optional = rule.neutralLists.flatMap(list);
             const wellFormed = entries.every(isFileNeedle)
                 && repeated.every((group) => isFileNeedle(group) && Number.isInteger(group.lines))
-                && optional.every(isFileNeedle)
-                && Number.isInteger(expect.exact_count);
+                && optional.every(isFileNeedle);
             if (!wellFormed) {
-                return { scorable: false, reason: `${rule.name}: the site lists are not file and needle pairs, or exact_count is not an integer` };
+                return { scorable: false, reason: `${rule.name}: the lists are not file and needle pairs` };
+            }
+            const count = listCount(expect);
+            if (count === null) {
+                return { scorable: false, reason: `${rule.name}: no count states the list is complete` };
+            }
+            if (count === undefined) {
+                return { scorable: false, reason: `${rule.name}: exact_count disagrees with extends_count plus implements_count` };
             }
             return {
                 ...common,
                 entries,
                 repeated,
                 optional,
+                noun: rule.noun,
                 from: isFileNeedle(task.from) ? { file: task.from.file, needle: task.from.needle } : null,
-                exactCount: expect.exact_count,
+                exactCount: count,
                 allow: [],
             };
         }

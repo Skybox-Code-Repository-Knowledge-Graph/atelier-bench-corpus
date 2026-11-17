@@ -32,6 +32,10 @@
         "s-refs-extra": { "locations": [ { "file": "src/app.txt", "line": 3 }, { "file": "src/app.txt", "line": 4 }, { "file": "src/app.txt", "line": 5 } ] },
         "s-refs-range": { "locations": [ { "file": "src/app.txt", "line": 2, "end_line": 6 } ] },
         "s-refs-floor": { "locations": [ { "file": "src/app.txt", "line": 3 } ] },
-        "s-refs-miscount": { "locations": [ { "file": "src/app.txt", "line": 3 }, { "file": "src/app.txt", "line": 4 } ] }
+        "s-refs-miscount": { "locations": [ { "file": "src/app.txt", "line": 3 }, { "file": "src/app.txt", "line": 4 } ] },
+        "s-impl": { "locations": [ { "file": "src/app.txt", "line": 2 }, { "file": "src/app.txt", "line": 5 }, { "file": "src/app.txt", "line": 7 } ] },
+        "s-impl-missing": { "locations": [ { "file": "src/app.txt", "line": 2 } ] },
+        "s-parents-split": { "locations": [ { "file": "src/app.txt", "line": 1 }, { "file": "src/app.txt", "line": 2 } ] },
+        "s-impl-no-count": { "locations": [ { "file": "src/app.txt", "line": 2 } ] }
     }
 }

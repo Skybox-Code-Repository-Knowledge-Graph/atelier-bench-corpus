@@ -193,7 +193,31 @@ line, fails the answer, as does a `must_not_include` hit. A task that still carr
 (`min_references`) is `UNSCORABLE`. The kinds on these tasks (`name_only`, `type_only`) are labels:
 the lists already say which lines count, the string literal lines for `name_only`.
 
-### Recall rules
+### Implementation lists
+
+| Rule | Surface | Needs | Pass when |
+| --- | --- | --- | --- |
+| `implementation/list` | `implementation` | `implementations` and a count | every listed declaration is returned, and nothing else |
+| `cardinality/list` | `cardinality` | `implementations` and a count | the same |
+| `multi-parent/list` | `multi-parent` | `implementations` and a count | the same: the list holds the parents |
+
+An exact rule, the `references` rule over another list. The count is `exact_count`, or
+`extends_count` plus `implements_count` on a parents task; it must equal the listed lines (the
+same test holds every lane to it), and a task with no count is `UNSCORABLE`, since nothing says its
+list is complete. Each entry is matched by its line, the line an implementor is declared on: the
+class declaration that names the contract (php, typescript, javascript, python), the
+`impl Contract for Type` block (rust), the type declaration (go, where satisfaction is implicit).
+Neutral, returned or not: the line asked from, each `known_sites` line, and each `optional_sites`
+line (a declaration that satisfies the contract but is not counted, such as an abstract base or an
+interface that extends it). The other sub-counts (`nominal_count`, `structural_count`,
+`textual_count`, `generated_count`) and `must_include` names are reported as not scored.
+
+Some lists are not implementing types, and their tasks are `UNSCORABLE` under these rules
+(`LIST_NOT_TYPES` in `lib/plan.mjs`): `card-rule-contract` in every lane, whose list is half rule
+values (instances, object literals, macro arms); go `impl-structural-no-assertion` (struct-literal
+values); and the method lists of go `card-embedded-promotion`, rust `def-async-trait-method` and
+php `impl-trait-abstract`.
+
 ### Recall rules
 
 | Rule | Surface | Needs | Pass when |
@@ -209,9 +233,8 @@ an `exact` line and a `recall-only` line, and the two are never added up. `min_i
 as `not scored`: tools count callers per call site or per calling function, and the key does not
 say which.
 
-Not covered yet, reported `UNSCORABLE`: `implementation`, `cardinality`, `multi-parent`,
-`direction`, `document_symbol`, `parse-negative`, `diagnostics`, and tasks whose only expectation
-is a count.
+Not covered yet, reported `UNSCORABLE`: `direction`, `document_symbol`, `parse-negative`,
+`diagnostics`, and tasks whose only expectation is a count.
 
 ### `must_not_include`
 
