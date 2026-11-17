@@ -2,7 +2,7 @@
     "version": 1,
     "corpus": "atelier-bench-corpus",
     "lane": "typescript",
-        "notes": "Known-answer navigation tasks for the typescript lane. Needle-based, not line-based: bench/verify-tasks/verify.mjs resolves every needle to a unique line at the current SHA, so the manifest survives edits without stale line numbers. Paths are relative to the lane root (typescript/), not to the repository root. 'expect' blocks carry the ground truth a harness scores against; counts are minimums where marked. exact_count is exact and counts concrete, non-generic, unconditionally compiled types that satisfy the contract directly or through inheritance; abstract bases, blanket impls and cfg-gated impls are excluded. Kinds added by the fifth wave: jsx_element (a capitalised JSX tag, which resolves to the component function of that name), jsx_factory (an intrinsic lowercase JSX tag, which is a call to the factory h that jsxFactory configures), ambient (global namespace in a .d.ts), ambient_module (a declare module block in a .d.ts that stands in for a package no file provides), paths_alias (an import specifier rewritten by a tsconfig paths entry, such as @app/* to packages/app/src/*). document_symbol tasks count every named symbol the anchored FILE declares at any nesting depth (types, members, functions, constants); each task's note enumerates that count N and states min_symbols = floor(0.75 * N), the 25% margin absorbing listings that fold container nodes. call_hierarchy tasks name callees under outgoing_includes and callers under incoming_includes; both are file+needle pairs the verifier resolves. Kinds added by wave 2: same_name (two exported symbols carry one name in two modules, so the module path decides and the name cannot), name_only (a string literal is the only link between two sites because nothing declares it as a symbol), glob (an all-names edge, `export * from`, which re-exports every name its target module exports; exact_count on this surface counts those names and is a lane-specific fact, not a cross-lane one). Other kinds this lane uses: barrel (a named import from the @atelier/core package root, whose index.ts holds only export ... from lines: following it must reach the declaring module and must not fan out to the other modules the index re-exports), declaration_merge (one name declared twice in one scope, an enum plus a namespace or a class plus an interface, which TypeScript merges into one symbol: the name resolves to both declarations, a member resolves to the half that declares it, and the merge is never an inheritance edge), namespace_import (import * as Rules from \"../rules\" gives one object holding every export; only the members this file reads, here Rules.RULES, are edges, so the import must not expand to the whole module), shadow_alias (two modules each export a class called Formatter, and state.ts imports both under renames, Formatter as MoneyFormatter and Formatter as StatusFormatter: a type written with the rename resolves to the class in the module its import specifier names), structural (a value that satisfies an interface by shape alone: no implements clause names the interface, so the link is reached only through type compatibility, never through an implements or extends edge), syntax_error (a deliberately broken .ts fixture, an unclosed class body or unbalanced generics, that tsconfig excludes from the build: the expected parse result is an error, never a recovered tree), type_only (an import type, or a name used only in type positions, which is erased at compile time: the edge is type-level only and is never a runtime dependency). Kinds shared with other lanes, worded identically in every lane that uses them. child_of: the anchored declaration is the child end of a parent edge, and the answer is a direct parent it extends, implements or embeds, one level up, never a further ancestor and never one of its own children. imports: an import that binds only the names it lists; the answer is each named declaration in the file that declares it, never a sibling declared beside it and never every name the target module exports. lane_local: a symbol every lane carries under the same name or as its lane equivalent (Money, Customer, Dataset, the reference prefix, the invoice calculator's calculate, the billing Formatter); resolution must land on this lane's own declaration and never cross into a sibling lane. parent_of: a parent edge scored for direction, with the anchor at either end; the parent is the type that is extended, implemented or embedded, the child is the type that does so, and an answer that reports the child as the parent is wrong. uses_self: a type that refers to itself, such as a tree node holding children of its own type; the edge is a uses edge back to the declaring type, never extends, implements or embedding.",
+        "notes": "Known-answer navigation tasks for the typescript lane. Needle-based, not line-based: bench/verify-tasks/verify.mjs resolves every needle to a unique line at the current SHA, so the manifest survives edits without stale line numbers. Paths are relative to the lane root (typescript/), not to the repository root. 'expect' blocks carry the ground truth a harness scores against; counts are minimums where marked. exact_count is exact and counts concrete, non-generic, unconditionally compiled types that satisfy the contract directly or through inheritance; abstract bases, blanket impls and cfg-gated impls are excluded. Kinds added by the fifth wave: jsx_element (a capitalised JSX tag, which resolves to the component function of that name), jsx_factory (an intrinsic lowercase JSX tag, which is a call to the factory h that jsxFactory configures), ambient (global namespace in a .d.ts), ambient_module (a declare module block in a .d.ts that stands in for a package no file provides), paths_alias (an import specifier rewritten by a tsconfig paths entry, such as @app/* to packages/app/src/*). document_symbol tasks count every named symbol the anchored FILE declares at any nesting depth (types, members, functions, constants); each task's note enumerates that count N and states min_symbols = floor(0.75 * N), the 25% margin absorbing listings that fold container nodes. call_hierarchy tasks name callees under outgoing_includes and callers under incoming_includes; both are file+needle pairs the verifier resolves. Kinds added by wave 2: same_name (two exported symbols carry one name in two modules, so the module path decides and the name cannot), name_only (a string literal is the only link between two sites because nothing declares it as a symbol), glob (an all-names edge, `export * from`, which re-exports every name its target module exports; exact_count on this surface counts those names and is a lane-specific fact, not a cross-lane one). Other kinds this lane uses: barrel (a named import from the @atelier/core package root, whose index.ts holds only export ... from lines: following it must reach the declaring module and must not fan out to the other modules the index re-exports), declaration_merge (one name declared twice in one scope, an enum plus a namespace or a class plus an interface, which TypeScript merges into one symbol: the name resolves to both declarations, a member resolves to the half that declares it, and the merge is never an inheritance edge), namespace_import (import * as Rules from \"../rules\" gives one object holding every export; only the members this file reads, here Rules.RULES, are edges, so the import must not expand to the whole module), shadow_alias (two modules each export a class called Formatter, and state.ts imports both under renames, Formatter as MoneyFormatter and Formatter as StatusFormatter: a type written with the rename resolves to the class in the module its import specifier names), structural (a value that satisfies an interface by shape alone: no implements clause names the interface, so the link is reached only through type compatibility, never through an implements or extends edge), syntax_error (a deliberately broken .ts fixture, an unclosed class body or unbalanced generics, that tsconfig excludes from the build: the expected parse result is an error, never a recovered tree), type_only (an import type, or a name used only in type positions, which is erased at compile time: the edge is type-level only and is never a runtime dependency). Kinds shared with other lanes, worded identically in every lane that uses them. child_of: the anchored declaration is the child end of a parent edge, and the answer is a direct parent it extends, implements or embeds, one level up, never a further ancestor and never one of its own children. imports: an import that binds only the names it lists; the answer is each named declaration in the file that declares it, never a sibling declared beside it and never every name the target module exports. lane_local: a symbol every lane carries under the same name or as its lane equivalent (Money, Customer, Dataset, the reference prefix, the invoice calculator's calculate, the billing Formatter); resolution must land on this lane's own declaration and never cross into a sibling lane. parent_of: a parent edge scored for direction, with the anchor at either end; the parent is the type that is extended, implemented or embedded, the child is the type that does so, and an answer that reports the child as the parent is wrong. uses_self: a type that refers to itself, such as a tree node holding children of its own type; the edge is a uses edge back to the declaring type, never extends, implements or embedding. from.symbol is the identifier a task asks about, exactly as written on the from line and with no qualifier: the alias where an alias is used, the member on a member access, null when the question has no single identifier. from.occurrence (1-based) says which one when it appears more than once on that line, and is then required. document_symbol, parse-negative and diagnostics tasks ask about a file and carry neither key.",
     "tasks": [
         {
             "id": "def-enum-method",
@@ -10,7 +10,9 @@
             "note": "Enum/namespace merge: RepairStatus.label lives in the namespace half, not the enum half.",
             "from": {
                 "file": "packages/core/src/reporting/formatter.ts",
-                "needle": "const label = RepairStatus.label(status);"
+                "needle": "const label = RepairStatus.label(status);",
+                "symbol": "label",
+                "occurrence": 2
             },
             "expect": {
                 "file": "packages/core/src/support/status.ts",
@@ -22,7 +24,8 @@
             "surface": "definition",
             "from": {
                 "file": "packages/bench/src/dataset.ts",
-                "needle": "orders[1]!.priority = Priority.Rush;"
+                "needle": "orders[1]!.priority = Priority.Rush;",
+                "symbol": "Rush"
             },
             "expect": {
                 "file": "packages/core/src/support/priority.ts",
@@ -35,7 +38,8 @@
             "note": "Class/namespace merge: Money.ZERO is the namespace const, never the class declaration line.",
             "from": {
                 "file": "packages/core/src/models/invoice.ts",
-                "needle": "return this.paid ? Money.ZERO : this.total;"
+                "needle": "return this.paid ? Money.ZERO : this.total;",
+                "symbol": "ZERO"
             },
             "expect": {
                 "file": "packages/core/src/money.ts",
@@ -48,7 +52,8 @@
             "note": "Two-argument call: the matching overload signature is the definition; see def-overload for the implementation.",
             "from": {
                 "file": "packages/core/src/concerns/hasReference.ts",
-                "needle": "return atelierFormatReference(prefix, this.referenceNumber);"
+                "needle": "return atelierFormatReference(prefix, this.referenceNumber);",
+                "symbol": "atelierFormatReference"
             },
             "expect": {
                 "file": "packages/core/src/support/helpers.ts",
@@ -60,7 +65,8 @@
             "surface": "definition",
             "from": {
                 "file": "packages/core/src/concerns/hasReference.ts",
-                "needle": "export const DEFAULT_REFERENCE_PREFIX = ATELIER_REF_PREFIX;"
+                "needle": "export const DEFAULT_REFERENCE_PREFIX = ATELIER_REF_PREFIX;",
+                "symbol": "ATELIER_REF_PREFIX"
             },
             "expect": {
                 "file": "packages/core/src/support/helpers.ts",
@@ -72,7 +78,8 @@
             "surface": "definition",
             "from": {
                 "file": "packages/core/src/support/helpers.ts",
-                "needle": "const sep = Reference.PREFIX_SEPARATOR;"
+                "needle": "const sep = Reference.PREFIX_SEPARATOR;",
+                "symbol": "PREFIX_SEPARATOR"
             },
             "expect": {
                 "file": "packages/core/src/support/reference.ts",
@@ -85,7 +92,9 @@
             "note": "Same-name pair: state.money is the billing Formatter (aliased MoneyFormatter in state.ts), never the reporting one.",
             "from": {
                 "file": "packages/app/src/http/report.ts",
-                "needle": "total: state.money.money(order.total(state.container), \"EUR\"),"
+                "needle": "total: state.money.money(order.total(state.container), \"EUR\"),",
+                "symbol": "money",
+                "occurrence": 2
             },
             "expect": {
                 "file": "packages/core/src/billing/formatter.ts",
@@ -97,7 +106,8 @@
             "surface": "definition",
             "from": {
                 "file": "packages/app/src/http/report.ts",
-                "needle": "status: state.status.statusLine(order.status as RepairStatus, \"intake\"),"
+                "needle": "status: state.status.statusLine(order.status as RepairStatus, \"intake\"),",
+                "symbol": "statusLine"
             },
             "expect": {
                 "file": "packages/core/src/reporting/formatter.ts",
@@ -110,7 +120,8 @@
             "note": "Contract def is the interface member; the container binds StandardInvoiceCalculator (see impl-invoice-calculator).",
             "from": {
                 "file": "packages/core/src/models/repairOrder.ts",
-                "needle": "return container.invoiceCalculator().calculate(this);"
+                "needle": "return container.invoiceCalculator().calculate(this);",
+                "symbol": "calculate"
             },
             "expect": {
                 "file": "packages/core/src/contracts/invoiceCalculator.ts",
@@ -123,7 +134,8 @@
             "note": "RepairOrder declares no reference(); it comes from the withReference mixin class.",
             "from": {
                 "file": "packages/core/tests/lifecycle.test.ts",
-                "needle": "expect(seededOrder().reference()).toBe(\"AT-2026-000001\");"
+                "needle": "expect(seededOrder().reference()).toBe(\"AT-2026-000001\");",
+                "symbol": "reference"
             },
             "expect": {
                 "file": "packages/core/src/concerns/hasReference.ts",
@@ -136,7 +148,8 @@
             "note": "Technician declares no nextSlot; the call resolves through the Proxy in concerns/forwardsToSchedule.ts into Schedule.",
             "from": {
                 "file": "packages/bench/src/repositories/technicianRepository.ts",
-                "needle": "technician.nextSlot() !== undefined"
+                "needle": "technician.nextSlot() !== undefined",
+                "symbol": "nextSlot"
             },
             "expect": {
                 "file": "packages/core/src/support/schedule.ts",
@@ -149,7 +162,8 @@
             "note": "Import goes through the barrel index.ts, which declares nothing; the definition is the declaring module.",
             "from": {
                 "file": "packages/bench/src/repositories/customerRepository.ts",
-                "needle": "import type { Customer } from \"@atelier/core\";"
+                "needle": "import type { Customer } from \"@atelier/core\";",
+                "symbol": "Customer"
             },
             "expect": {
                 "file": "packages/core/src/models/customer.ts",
@@ -165,7 +179,8 @@
             "note": "Package.json subpath export ./billing maps to src/billing/formatter.ts.",
             "from": {
                 "file": "packages/app/src/state.ts",
-                "needle": "import { Formatter as MoneyFormatter } from \"@atelier/core/billing\";"
+                "needle": "import { Formatter as MoneyFormatter } from \"@atelier/core/billing\";",
+                "symbol": "Formatter"
             },
             "expect": {
                 "file": "packages/core/src/billing/formatter.ts",
@@ -178,7 +193,8 @@
             "note": "debugLabel is declared by a `declare module` augmentation in @atelier/bench; the class in @atelier/core never mentions it. The runtime body is the prototype assignment four lines below the declaration, in the same file.",
             "from": {
                 "file": "packages/bench/tests/augmentation.test.ts",
-                "needle": "expect(new Formatter(\"EUR\").debugLabel()).toBe(\"billing-formatter(money)\");"
+                "needle": "expect(new Formatter(\"EUR\").debugLabel()).toBe(\"billing-formatter(money)\");",
+                "symbol": "debugLabel"
             },
             "expect": {
                 "file": "packages/bench/src/augmentations.ts",
@@ -194,7 +210,8 @@
             "note": "The type is inferred from a value; the definition of the shape is the const schema.",
             "from": {
                 "file": "packages/app/src/http/api.ts",
-                "needle": "export type StoreNote = z.infer<typeof storeNoteSchema>;"
+                "needle": "export type StoreNote = z.infer<typeof storeNoteSchema>;",
+                "symbol": "storeNoteSchema"
             },
             "expect": {
                 "file": "packages/app/src/http/api.ts",
@@ -207,7 +224,8 @@
             "note": "Two overload signatures (exact_count) plus one implementation signature (candidate = its parameter line). A tool that lists only one overload, or the implementation only, is incomplete.",
             "from": {
                 "file": "packages/core/src/concerns/hasReference.ts",
-                "needle": "return atelierFormatReference(prefix, this.referenceNumber);"
+                "needle": "return atelierFormatReference(prefix, this.referenceNumber);",
+                "symbol": "atelierFormatReference"
             },
             "expect": {
                 "exact_count": 2,
@@ -232,7 +250,8 @@
             "surface": "definition",
             "from": {
                 "file": "packages/app/src/index.ts",
-                "needle": "app.get(\"/report/:reference\", showReport(state));"
+                "needle": "app.get(\"/report/:reference\", showReport(state));",
+                "symbol": "showReport"
             },
             "expect": {
                 "file": "packages/app/src/http/report.ts",
@@ -244,7 +263,8 @@
             "surface": "definition",
             "from": {
                 "file": "packages/app/src/http/report.ts",
-                "needle": "throw new NotFoundError(\"repair order\", reference);"
+                "needle": "throw new NotFoundError(\"repair order\", reference);",
+                "symbol": "NotFoundError"
             },
             "expect": {
                 "file": "packages/core/src/errors.ts",
@@ -256,7 +276,8 @@
             "surface": "definition",
             "from": {
                 "file": "packages/app/src/state.ts",
-                "needle": "container: Container.bindDefault(),"
+                "needle": "container: Container.bindDefault(),",
+                "symbol": "bindDefault"
             },
             "expect": {
                 "file": "packages/core/src/container.ts",
@@ -269,7 +290,8 @@
             "note": "Imported as `report as findReport`; the definition is the un-aliased export.",
             "from": {
                 "file": "packages/app/src/http/api.ts",
-                "needle": "const entry = findReport(slug);"
+                "needle": "const entry = findReport(slug);",
+                "symbol": "findReport"
             },
             "expect": {
                 "file": "packages/bench/src/index.ts",
@@ -281,7 +303,8 @@
             "surface": "definition",
             "from": {
                 "file": "packages/core/src/container.ts",
-                "needle": "return new Container(new StandardInvoiceCalculator());"
+                "needle": "return new Container(new StandardInvoiceCalculator());",
+                "symbol": "StandardInvoiceCalculator"
             },
             "expect": {
                 "file": "packages/core/src/services/standardInvoiceCalculator.ts",
@@ -294,7 +317,8 @@
             "note": "Technician is a type alias over an intersection, not a class; the barrel re-exports it with `export type`.",
             "from": {
                 "file": "packages/bench/src/dataset.ts",
-                "needle": "type Technician,"
+                "needle": "type Technician,",
+                "symbol": "Technician"
             },
             "expect": {
                 "file": "packages/core/src/models/technician.ts",
@@ -307,7 +331,8 @@
             "note": "repo is an OrderRepository; the definition is the class method that pins Repository<number, RepairOrder>, not the generic interface member.",
             "from": {
                 "file": "packages/bench/tests/breadth.test.ts",
-                "needle": "expect(repo.find(1)).toBeDefined();"
+                "needle": "expect(repo.find(1)).toBeDefined();",
+                "symbol": "find"
             },
             "expect": {
                 "file": "packages/bench/src/repositories/orderRepository.ts",
@@ -319,7 +344,8 @@
             "surface": "implementation",
             "from": {
                 "file": "packages/core/src/contracts/invoiceCalculator.ts",
-                "needle": "export interface InvoiceCalculator {"
+                "needle": "export interface InvoiceCalculator {",
+                "symbol": "InvoiceCalculator"
             },
             "expect": {
                 "min_implementations": 2,
@@ -341,7 +367,8 @@
             "note": "Widest fan-out in the lane. Only AbstractReport carries a textual `implements ReportContract`; the 24 concrete reports implement it by extending AbstractReport (21 directly, 3 through AbstractPeriodicReport). All 24 must be reported.",
             "from": {
                 "file": "packages/bench/src/contracts/reportContract.ts",
-                "needle": "export interface ReportContract {"
+                "needle": "export interface ReportContract {",
+                "symbol": "ReportContract"
             },
             "expect": {
                 "min_implementations": 24,
@@ -451,7 +478,8 @@
             "note": "Subclass fan-out of an abstract class: 21 direct concrete subclasses, one abstract intermediate (AbstractPeriodicReport) and 3 concrete subclasses of that. min counts the 24 concrete ones.",
             "from": {
                 "file": "packages/bench/src/support/abstractReport.ts",
-                "needle": "export abstract class AbstractReport"
+                "needle": "export abstract class AbstractReport",
+                "symbol": "AbstractReport"
             },
             "expect": {
                 "min_implementations": 24,
@@ -481,7 +509,8 @@
             "note": "Interface declared in @atelier/core; every implementor lives in @atelier/bench and pins both type parameters.",
             "from": {
                 "file": "packages/core/src/contracts/repository.ts",
-                "needle": "export interface Repository<Id, Rec> {"
+                "needle": "export interface Repository<Id, Rec> {",
+                "symbol": "Repository"
             },
             "expect": {
                 "min_implementations": 8,
@@ -527,7 +556,8 @@
             "note": "AbstractNotifier is the only textual `implements NotifierContract`; the 8 transports implement it by extending AbstractNotifier.",
             "from": {
                 "file": "packages/bench/src/contracts/notifierContract.ts",
-                "needle": "export interface NotifierContract {"
+                "needle": "export interface NotifierContract {",
+                "symbol": "NotifierContract"
             },
             "expect": {
                 "min_implementations": 8,
@@ -572,7 +602,8 @@
             "surface": "references",
             "from": {
                 "file": "packages/core/src/models/repairOrder.ts",
-                "needle": "transitionTo(next: RepairStatus, changedBy: string): boolean {"
+                "needle": "transitionTo(next: RepairStatus, changedBy: string): boolean {",
+                "symbol": "transitionTo"
             },
             "expect": {
                 "min_references": 11,
@@ -597,7 +628,8 @@
             "surface": "references",
             "from": {
                 "file": "packages/core/src/models/part.ts",
-                "needle": "consumedQuantity(): number {"
+                "needle": "consumedQuantity(): number {",
+                "symbol": "consumedQuantity"
             },
             "expect": {
                 "min_references": 4,
@@ -622,7 +654,8 @@
             "surface": "references",
             "from": {
                 "file": "packages/bench/src/dataset.ts",
-                "needle": "static seeded(): Dataset {"
+                "needle": "static seeded(): Dataset {",
+                "symbol": "seeded"
             },
             "expect": {
                 "min_references": 7,
@@ -643,7 +676,8 @@
             "surface": "references",
             "from": {
                 "file": "packages/core/src/money.ts",
-                "needle": "export class Money {"
+                "needle": "export class Money {",
+                "symbol": "Money"
             },
             "expect": {
                 "min_references": 20,
@@ -669,7 +703,8 @@
             "note": "11 call lines across 9 report files at the pinned base; import lines do not count.",
             "from": {
                 "file": "packages/bench/src/contracts/reportContract.ts",
-                "needle": "export function rowFromCents(label: string, cents: number): ReportRow {"
+                "needle": "export function rowFromCents(label: string, cents: number): ReportRow {",
+                "symbol": "rowFromCents"
             },
             "expect": {
                 "min_references": 10,
@@ -691,7 +726,8 @@
             "note": "The registry itself has 4 read sites; its 24 `new XReport()` entries are construction sites of ReportContract implementors, not references to REPORTS.",
             "from": {
                 "file": "packages/bench/src/index.ts",
-                "needle": "export const REPORTS: readonly ReportContract[] = ["
+                "needle": "export const REPORTS: readonly ReportContract[] = [",
+                "symbol": "REPORTS"
             },
             "expect": {
                 "min_references": 4,
@@ -712,7 +748,8 @@
             "surface": "hover",
             "from": {
                 "file": "packages/core/src/concerns/hasReference.ts",
-                "needle": "return atelierFormatReference(prefix, this.referenceNumber);"
+                "needle": "return atelierFormatReference(prefix, this.referenceNumber);",
+                "symbol": "atelierFormatReference"
             },
             "expect": {
                 "contains": "zero-padded width"
@@ -723,7 +760,8 @@
             "surface": "hover",
             "from": {
                 "file": "packages/bench/src/dataset.ts",
-                "needle": "static seeded(): Dataset {"
+                "needle": "static seeded(): Dataset {",
+                "symbol": "seeded"
             },
             "expect": {
                 "contains": "Changing these rows changes bench ground truth"
@@ -734,7 +772,8 @@
             "surface": "hover",
             "from": {
                 "file": "packages/core/src/models/technician.ts",
-                "needle": "export function makeTechnician(id: number, name: string, schedule = new Schedule()): Technician {"
+                "needle": "export function makeTechnician(id: number, name: string, schedule = new Schedule()): Technician {",
+                "symbol": "makeTechnician"
             },
             "expect": {
                 "contains": "forward to its Schedule"
@@ -746,7 +785,8 @@
             "note": "Two `export class Formatter` declarations exist; this alias must land on the billing one.",
             "from": {
                 "file": "packages/app/src/state.ts",
-                "needle": "readonly money: MoneyFormatter;"
+                "needle": "readonly money: MoneyFormatter;",
+                "symbol": "MoneyFormatter"
             },
             "expect": {
                 "kind": "shadow_alias",
@@ -762,7 +802,8 @@
             "surface": "resolution",
             "from": {
                 "file": "packages/app/src/state.ts",
-                "needle": "readonly status: StatusFormatter;"
+                "needle": "readonly status: StatusFormatter;",
+                "symbol": "StatusFormatter"
             },
             "expect": {
                 "kind": "shadow_alias",
@@ -779,7 +820,8 @@
             "note": "No `implements HasFormatting` exists anywhere; the value satisfies the interface structurally. A tool that only follows implements/extends clauses finds no implementor.",
             "from": {
                 "file": "packages/bench/src/concerns/hasFormatting.ts",
-                "needle": "export const formatting: HasFormatting = {"
+                "needle": "export const formatting: HasFormatting = {",
+                "symbol": "HasFormatting"
             },
             "expect": {
                 "kind": "structural",
@@ -795,7 +837,8 @@
             "note": "`import type` is erased at runtime: the edge is type-level only and must not be reported as a value/runtime dependency.",
             "from": {
                 "file": "packages/core/src/models/repairOrder.ts",
-                "needle": "import type { Container } from \"../container\";"
+                "needle": "import type { Container } from \"../container\";",
+                "symbol": "Container"
             },
             "expect": {
                 "kind": "type_only",
@@ -811,7 +854,8 @@
             "note": "Inside the branch `event` is exactly one union member; the candidate is that member's line, not the whole alias.",
             "from": {
                 "file": "packages/core/src/events.ts",
-                "needle": "if (event.kind === \"repair_completed\") {"
+                "needle": "if (event.kind === \"repair_completed\") {",
+                "symbol": "repair_completed"
             },
             "expect": {
                 "resolution": "DomainEvent narrowed to the repair_completed member",
@@ -827,7 +871,8 @@
             "note": "RepairStatus resolves to two declarations (enum + namespace, exact_count); the member transitionsTo lives in the namespace half (candidate).",
             "from": {
                 "file": "packages/core/src/models/repairOrder.ts",
-                "needle": "if (!RepairStatus.transitionsTo(this.status).includes(next)) {"
+                "needle": "if (!RepairStatus.transitionsTo(this.status).includes(next)) {",
+                "symbol": "transitionsTo"
             },
             "expect": {
                 "kind": "declaration_merge",
@@ -880,7 +925,8 @@
             "note": "48 implementors: 24 nominal classes (`implements RuleContract`) and 24 structural object literals (no `implements` keyword anywhere; 16 typed `: RuleContract`, 8 checked via `satisfies RuleContract`). A tool that only counts `implements` clauses returns 24, not 48.",
             "from": {
                 "file": "packages/bench/src/contracts/ruleContract.ts",
-                "needle": "export interface RuleContract {"
+                "needle": "export interface RuleContract {",
+                "symbol": "RuleContract"
             },
             "expect": {
                 "exact_count": 48,
@@ -908,7 +954,8 @@
             "note": "24 classes extend AbstractReport (see impl-report-contract for the full fan-out); this task pins the exact count.",
             "from": {
                 "file": "packages/bench/src/contracts/reportContract.ts",
-                "needle": "export interface ReportContract {"
+                "needle": "export interface ReportContract {",
+                "symbol": "ReportContract"
             },
             "expect": {
                 "exact_count": 24,
@@ -1018,7 +1065,8 @@
             "note": "ReportContract is the parent; the CashFlow implementor's declaring line is the candidate child. must_not_include guards the reversed (interface-extends) phrasing.",
             "from": {
                 "file": "packages/bench/src/contracts/reportContract.ts",
-                "needle": "export interface ReportContract {"
+                "needle": "export interface ReportContract {",
+                "symbol": "ReportContract"
             },
             "expect": {
                 "kind": "parent_of",
@@ -1037,7 +1085,8 @@
             "note": "CashFlowReport is the child; its parent is the abstract base it extends, not ReportContract directly.",
             "from": {
                 "file": "packages/bench/src/reports/cashFlowReport.ts",
-                "needle": "export class CashFlowReport extends AbstractReport {"
+                "needle": "export class CashFlowReport extends AbstractReport {",
+                "symbol": "CashFlowReport"
             },
             "expect": {
                 "kind": "child_of",
@@ -1053,7 +1102,8 @@
             "note": "TreeNode.children and TreeNode.parent both reference TreeNode itself; this is recursion in the type, never an extends/implements edge.",
             "from": {
                 "file": "packages/core/src/support/treeNode.ts",
-                "needle": "children: TreeNode[];"
+                "needle": "children: TreeNode[];",
+                "symbol": "TreeNode"
             },
             "expect": {
                 "kind": "uses_self",
@@ -1072,7 +1122,8 @@
             "note": "enum RepairStatus + namespace RepairStatus merge into one name; the merge is not an inheritance edge in either direction.",
             "from": {
                 "file": "packages/core/src/support/status.ts",
-                "needle": "export enum RepairStatus {"
+                "needle": "export enum RepairStatus {",
+                "symbol": "RepairStatus"
             },
             "expect": {
                 "kind": "declaration_merge",
@@ -1099,7 +1150,8 @@
             "note": "Consumer imports only Left; Right never enters its import graph.",
             "from": {
                 "file": "packages/bench/src/support/pairConsumer.ts",
-                "needle": "import { Left } from \"@atelier/core\";"
+                "needle": "import { Left } from \"@atelier/core\";",
+                "symbol": "Left"
             },
             "expect": {
                 "kind": "imports",
@@ -1118,7 +1170,8 @@
             "note": "repairOrder.ts imports Container type-only (erased at runtime); state.ts imports the same Container as a value in the same module graph. The type-only site carries no runtime edge.",
             "from": {
                 "file": "packages/core/src/models/repairOrder.ts",
-                "needle": "import type { Container } from \"../container\";"
+                "needle": "import type { Container } from \"../container\";",
+                "symbol": "Container"
             },
             "expect": {
                 "kind": "type_only",
@@ -1144,7 +1197,8 @@
             "note": "Namespace import `import * as Rules from \"../rules\"`; only Rules.RULES is ever read.",
             "from": {
                 "file": "packages/bench/src/support/ruleNamespaceUser.ts",
-                "needle": "import * as Rules from \"../rules\";"
+                "needle": "import * as Rules from \"../rules\";",
+                "symbol": "rules"
             },
             "expect": {
                 "kind": "namespace_import",
@@ -1160,7 +1214,8 @@
             "note": "Customer imported through the @atelier/core barrel must resolve to models/customer.ts, not fan out to every other module the barrel re-exports.",
             "from": {
                 "file": "packages/bench/src/repositories/customerRepository.ts",
-                "needle": "import type { Customer } from \"@atelier/core\";"
+                "needle": "import type { Customer } from \"@atelier/core\";",
+                "symbol": "Customer"
             },
             "expect": {
                 "kind": "barrel",
@@ -1179,7 +1234,8 @@
             "note": "Money is declared once per lane, under an identical name. This guards against a resolver crossing lane boundaries.",
             "from": {
                 "file": "packages/core/src/models/part.ts",
-                "needle": "readonly unitPrice: Money,"
+                "needle": "readonly unitPrice: Money,",
+                "symbol": "Money"
             },
             "expect": {
                 "kind": "lane_local",
@@ -1200,7 +1256,8 @@
             "note": "Customer is declared once per lane, under an identical name.",
             "from": {
                 "file": "packages/bench/src/dataset.ts",
-                "needle": "Customer.seed(1, \"Ada Byron\", \"ada@example.test\", \"+32 470 00 00 01\"),"
+                "needle": "Customer.seed(1, \"Ada Byron\", \"ada@example.test\", \"+32 470 00 00 01\"),",
+                "symbol": "Customer"
             },
             "expect": {
                 "kind": "lane_local",
@@ -1221,7 +1278,8 @@
             "note": "Dataset is declared once per lane, under an identical name.",
             "from": {
                 "file": "packages/app/src/state.ts",
-                "needle": "data: Dataset.seeded(),"
+                "needle": "data: Dataset.seeded(),",
+                "symbol": "Dataset"
             },
             "expect": {
                 "kind": "lane_local",
@@ -1242,7 +1300,8 @@
             "note": "ATELIER_REF_PREFIX is declared once per lane, under an identical name.",
             "from": {
                 "file": "packages/core/src/concerns/hasReference.ts",
-                "needle": "export const DEFAULT_REFERENCE_PREFIX = ATELIER_REF_PREFIX;"
+                "needle": "export const DEFAULT_REFERENCE_PREFIX = ATELIER_REF_PREFIX;",
+                "symbol": "ATELIER_REF_PREFIX"
             },
             "expect": {
                 "kind": "lane_local",
@@ -1263,7 +1322,8 @@
             "note": "InvoiceCalculator.calculate is declared once per lane, under an identical name.",
             "from": {
                 "file": "packages/core/src/models/repairOrder.ts",
-                "needle": "return container.invoiceCalculator().calculate(this);"
+                "needle": "return container.invoiceCalculator().calculate(this);",
+                "symbol": "calculate"
             },
             "expect": {
                 "kind": "lane_local",
@@ -1284,7 +1344,8 @@
             "note": "The billing Formatter is declared once per lane, under an identical name (each lane also carries a same-name reporting Formatter -- see resolution-shadow-type-billing).",
             "from": {
                 "file": "packages/app/src/state.ts",
-                "needle": "money: new MoneyFormatter(\"EUR\"),"
+                "needle": "money: new MoneyFormatter(\"EUR\"),",
+                "symbol": "MoneyFormatter"
             },
             "expect": {
                 "kind": "lane_local",
@@ -1305,7 +1366,8 @@
             "note": "CompositeContract extends three interfaces at once; all three must be reported.",
             "from": {
                 "file": "packages/bench/src/contracts/compositeContract.ts",
-                "needle": "export interface CompositeContract extends ReportContract, CacheableContract, ScheduleContract {}"
+                "needle": "export interface CompositeContract extends ReportContract, CacheableContract, ScheduleContract {}",
+                "symbol": "CompositeContract"
             },
             "expect": {
                 "exact_count": 3,
@@ -1331,7 +1393,8 @@
             "note": "One extends (AbstractPeriodicReport) plus two implements (CompositeContract, HasLogging) on an EXISTING report, so the composite implementor adds no 25th ReportContract implementor and card-report-contract stays at exact_count 24.",
             "from": {
                 "file": "packages/bench/src/reports/dailyRevenueReport.ts",
-                "needle": "export class DailyRevenueReport extends AbstractPeriodicReport implements CompositeContract, HasLogging {"
+                "needle": "export class DailyRevenueReport extends AbstractPeriodicReport implements CompositeContract, HasLogging {",
+                "symbol": "DailyRevenueReport"
             },
             "expect": {
                 "extends_count": 1,
@@ -1358,7 +1421,8 @@
             "note": "Conditional type unwraps a Promise; a real value is typed through it, not just declared.",
             "from": {
                 "file": "packages/bench/src/support/unwrap.ts",
-                "needle": "export const unwrappedOrderCount: Unwrap<Promise<number>> = 4;"
+                "needle": "export const unwrappedOrderCount: Unwrap<Promise<number>> = 4;",
+                "symbol": "Unwrap"
             },
             "expect": {
                 "file": "packages/bench/src/support/unwrap.ts",
@@ -1371,7 +1435,8 @@
             "note": "Mapped type builds one boolean flag per key of the union.",
             "from": {
                 "file": "packages/bench/src/support/flags.ts",
-                "needle": "export const reportFlags: Flags<\"cacheable\" | \"billable\"> = {"
+                "needle": "export const reportFlags: Flags<\"cacheable\" | \"billable\"> = {",
+                "symbol": "Flags"
             },
             "expect": {
                 "file": "packages/bench/src/support/flags.ts",
@@ -1384,7 +1449,8 @@
             "note": "Template literal type constrains every Slug to end in `-report`.",
             "from": {
                 "file": "packages/bench/src/support/slug.ts",
-                "needle": "export const cashFlowSlug: Slug = \"cash-flow-report\";"
+                "needle": "export const cashFlowSlug: Slug = \"cash-flow-report\";",
+                "symbol": "Slug"
             },
             "expect": {
                 "file": "packages/bench/src/support/slug.ts",
@@ -1397,7 +1463,8 @@
             "note": "satisfies checks rulesConfig against the shape without widening its literal type -- unlike a `: Record<...>` annotation.",
             "from": {
                 "file": "packages/bench/src/support/rulesConfig.ts",
-                "needle": "export const rulesConfig = {"
+                "needle": "export const rulesConfig = {",
+                "symbol": "rulesConfig"
             },
             "expect": {
                 "resolution": "rulesConfig keeps its literal type; satisfies only checks it against Record<string, number | string>",
@@ -1413,7 +1480,8 @@
             "note": "Standard (TC39) decorator, TS 5 native -- no experimentalDecorators.",
             "from": {
                 "file": "packages/bench/src/support/logged.ts",
-                "needle": "@logged"
+                "needle": "@logged",
+                "symbol": "logged"
             },
             "expect": {
                 "file": "packages/bench/src/support/logged.ts",
@@ -1426,7 +1494,8 @@
             "note": "The decorator declaration; refs-decorator-usage is the inverse of def-decorator.",
             "from": {
                 "file": "packages/bench/src/support/logged.ts",
-                "needle": "function logged<This, Args extends unknown[], Return>("
+                "needle": "function logged<This, Args extends unknown[], Return>(",
+                "symbol": "logged"
             },
             "expect": {
                 "min_references": 1,
@@ -1444,7 +1513,8 @@
             "note": "declare global augments the built-in Array<T>; the call site is in the same file.",
             "from": {
                 "file": "packages/bench/src/support/arrayAugmentation.ts",
-                "needle": "return parts.second();"
+                "needle": "return parts.second();",
+                "symbol": "second"
             },
             "expect": {
                 "file": "packages/bench/src/support/arrayAugmentation.ts",
@@ -1457,7 +1527,8 @@
             "note": "isRush is a type guard (order is RushOrder); assertRush is the assertion-function analogue in the same file.",
             "from": {
                 "file": "packages/core/src/support/orderGuards.ts",
-                "needle": "if (!isRush(order)) {"
+                "needle": "if (!isRush(order)) {",
+                "symbol": "isRush"
             },
             "expect": {
                 "file": "packages/core/src/support/orderGuards.ts",
@@ -1470,7 +1541,8 @@
             "note": "unique symbol RULE_TAG used as a computed property key.",
             "from": {
                 "file": "packages/bench/src/support/uniqueKey.ts",
-                "needle": "return { [RULE_TAG]: true, key };"
+                "needle": "return { [RULE_TAG]: true, key };",
+                "symbol": "RULE_TAG"
             },
             "expect": {
                 "file": "packages/bench/src/support/uniqueKey.ts",
@@ -1483,7 +1555,8 @@
             "note": "const enum: inlined at every use site, but the declaration still exists for lookups.",
             "from": {
                 "file": "packages/bench/src/support/severity.ts",
-                "needle": "export const defaultSeverity = Severity.Medium;"
+                "needle": "export const defaultSeverity = Severity.Medium;",
+                "symbol": "Severity"
             },
             "expect": {
                 "file": "packages/bench/src/support/severity.ts",
@@ -1496,7 +1569,8 @@
             "note": "Adhoc is a class expression assigned to a const, not a class declaration.",
             "from": {
                 "file": "packages/bench/src/support/adhoc.ts",
-                "needle": "export const namedAdhoc = new Adhoc(\"demo\");"
+                "needle": "export const namedAdhoc = new Adhoc(\"demo\");",
+                "symbol": "Adhoc"
             },
             "expect": {
                 "file": "packages/bench/src/support/adhoc.ts",
@@ -1509,7 +1583,8 @@
             "note": "weightOf<K> has a default type parameter resolved through keyof typeof SEVERITY_WEIGHT.",
             "from": {
                 "file": "packages/bench/src/support/keyedLookup.ts",
-                "needle": "export const lowWeight = weightOf();"
+                "needle": "export const lowWeight = weightOf();",
+                "symbol": "weightOf"
             },
             "expect": {
                 "file": "packages/bench/src/support/keyedLookup.ts",
@@ -1522,7 +1597,8 @@
             "note": "Two overload signatures (exact_count) plus one implementation signature, on a class method this time -- def-overload/def-free-function already cover the free-function case.",
             "from": {
                 "file": "packages/core/src/money.ts",
-                "needle": "return amounts.reduce((total, amount) => total.plus(amount), ZERO);"
+                "needle": "return amounts.reduce((total, amount) => total.plus(amount), ZERO);",
+                "symbol": "plus"
             },
             "expect": {
                 "exact_count": 2,
@@ -1548,7 +1624,8 @@
             "note": "Declaration merging on a class: the interface half adds `concurrency`, a member the class body never declares.",
             "from": {
                 "file": "packages/bench/src/support/worker.ts",
-                "needle": "export abstract class Worker {"
+                "needle": "export abstract class Worker {",
+                "symbol": "Worker"
             },
             "expect": {
                 "kind": "declaration_merge",
@@ -1575,7 +1652,8 @@
             "note": "export * as Rules re-export; the definition is still the target module's declaration, not the re-export line.",
             "from": {
                 "file": "packages/bench/src/index.ts",
-                "needle": "export * as Rules from \"./rules\";"
+                "needle": "export * as Rules from \"./rules\";",
+                "symbol": "rules"
             },
             "expect": {
                 "file": "packages/bench/src/rules/index.ts",
@@ -1588,7 +1666,8 @@
             "note": "TSX surface: a JSX component element resolves to the function whose name it carries; the file is .tsx and the factory is h (jsxFactory in tsconfig.base.json).",
             "from": {
                 "file": "packages/app/src/views/reportPage.tsx",
-                "needle": "<ReportCard reference={view.reference} total={view.total} status={view.status} />"
+                "needle": "<ReportCard reference={view.reference} total={view.total} status={view.status} />",
+                "symbol": "ReportCard"
             },
             "expect": {
                 "kind": "jsx_element",
@@ -1626,7 +1705,9 @@
             "note": "Ambient .d.ts surface: the JSX namespace that types every intrinsic tag lives in a declaration file nothing imports; tsconfig includes it.",
             "from": {
                 "file": "packages/app/src/views/reportCard.tsx",
-                "needle": "<h2>{props.reference}</h2>"
+                "needle": "<h2>{props.reference}</h2>",
+                "symbol": "h2",
+                "occurrence": 1
             },
             "expect": {
                 "kind": "ambient",
@@ -1640,7 +1721,8 @@
             "note": "Ambient module: the specifier \"atelier-legacy-formatting\" resolves to a declare module block in a .d.ts, not to a file under node_modules (the package does not exist).",
             "from": {
                 "file": "packages/app/src/http/legacy.ts",
-                "needle": "import type { LegacyMoney } from \"atelier-legacy-formatting\";"
+                "needle": "import type { LegacyMoney } from \"atelier-legacy-formatting\";",
+                "symbol": "LegacyMoney"
             },
             "expect": {
                 "kind": "ambient_module",
@@ -1657,7 +1739,8 @@
             "note": "tsconfig paths alias: @app/* maps to packages/app/src/* (known_sites); the import is type-only so no bundler alias is needed at runtime.",
             "from": {
                 "file": "packages/app/src/http/reportLoader.ts",
-                "needle": "import type { AppState } from \"@app/state\";"
+                "needle": "import type { AppState } from \"@app/state\";",
+                "symbol": "AppState"
             },
             "expect": {
                 "kind": "paths_alias",
@@ -1677,7 +1760,8 @@
             "note": "Async surface: await on an async function; the definition returns a Promise.",
             "from": {
                 "file": "packages/app/src/http/reportLoader.ts",
-                "needle": "const order = await loadOrder(state, reference);"
+                "needle": "const order = await loadOrder(state, reference);",
+                "symbol": "loadOrder"
             },
             "expect": {
                 "file": "packages/app/src/http/reportLoader.ts",
@@ -1690,7 +1774,8 @@
             "note": "Generator: for..of over a function* call.",
             "from": {
                 "file": "packages/app/src/http/reportLoader.ts",
-                "needle": "for (const order of iterateOpenOrders(state)) {"
+                "needle": "for (const order of iterateOpenOrders(state)) {",
+                "symbol": "iterateOpenOrders"
             },
             "expect": {
                 "file": "packages/app/src/http/reportLoader.ts",
@@ -1703,7 +1788,8 @@
             "note": "Async generator: for await..of over an async function* call.",
             "from": {
                 "file": "packages/app/src/http/reportLoader.ts",
-                "needle": "for await (const reference of streamReferences(state)) {"
+                "needle": "for await (const reference of streamReferences(state)) {",
+                "symbol": "streamReferences"
             },
             "expect": {
                 "file": "packages/app/src/http/reportLoader.ts",
@@ -1716,7 +1802,8 @@
             "note": "References to a component include its JSX element usages, not only call expressions.",
             "from": {
                 "file": "packages/app/src/views/reportCard.tsx",
-                "needle": "export function ReportCard(props: ReportCardProps): Html {"
+                "needle": "export function ReportCard(props: ReportCardProps): Html {",
+                "symbol": "ReportCard"
             },
             "expect": {
                 "min_references": 2,
@@ -1764,7 +1851,8 @@
             "note": "Outgoing edge inside the aggregate: complete() delegates to transitionTo() in the same file.",
             "from": {
                 "file": "packages/core/src/models/repairOrder.ts",
-                "needle": "complete(changedBy: string): void {"
+                "needle": "complete(changedBy: string): void {",
+                "symbol": "complete"
             },
             "expect": {
                 "outgoing_includes": [
@@ -1781,7 +1869,8 @@
             "note": "Incoming edges on the lifecycle hub: at least three callers of transitionTo, spread over the core package, the bench package and the core test suite.",
             "from": {
                 "file": "packages/core/src/models/repairOrder.ts",
-                "needle": "transitionTo(next: RepairStatus, changedBy: string): boolean {"
+                "needle": "transitionTo(next: RepairStatus, changedBy: string): boolean {",
+                "symbol": "transitionTo"
             },
             "expect": {
                 "min_incoming": 3,
@@ -1807,7 +1896,8 @@
             "note": "Package-boundary edge: the app package's recalculate command calls Dispatcher.register, which is declared in the core package. The outgoing edge must cross @atelier/app -> @atelier/core.",
             "from": {
                 "file": "packages/app/src/commands/recalculateInventory.ts",
-                "needle": "export function recalculateInventory(state: AppState): number {"
+                "needle": "export function recalculateInventory(state: AppState): number {",
+                "symbol": "recalculateInventory"
             },
             "expect": {
                 "outgoing_includes": [
@@ -1824,7 +1914,8 @@
             "note": "Node-style callback job (error, count). The console command module exports a DIFFERENT function with the same name; must_not_include keeps them apart.",
             "from": {
                 "file": "packages/app/tests/jobs.test.ts",
-                "needle": "recalculateInventory(Dataset.seeded(), new Dispatcher(), (error, count) => {"
+                "needle": "recalculateInventory(Dataset.seeded(), new Dispatcher(), (error, count) => {",
+                "symbol": "recalculateInventory"
             },
             "expect": {
                 "file": "packages/app/src/jobs.ts",
@@ -1840,7 +1931,8 @@
             "note": "Module-level constant imported by name (same anchors as the javascript, python and go lanes). This lane also carries def-crate-const, which asks the same question under the id rust and typescript agreed on; both are kept because no id may be renamed.",
             "from": {
                 "file": "packages/core/src/concerns/hasReference.ts",
-                "needle": "export const DEFAULT_REFERENCE_PREFIX = ATELIER_REF_PREFIX;"
+                "needle": "export const DEFAULT_REFERENCE_PREFIX = ATELIER_REF_PREFIX;",
+                "symbol": "ATELIER_REF_PREFIX"
             },
             "expect": {
                 "file": "packages/core/src/support/helpers.ts",
@@ -1853,7 +1945,8 @@
             "note": "TypeScript has no unqualified glob import; `export * from` is the equivalent all-names edge, pulling in every name its target module exports. reportContract.ts exports exactly 4 names at the base SHA: ReportRow, reportRow, rowFromCents, ReportContract.",
             "from": {
                 "file": "packages/bench/src/index.ts",
-                "needle": "export * from \"./contracts/reportContract\";"
+                "needle": "export * from \"./contracts/reportContract\";",
+                "symbol": "reportContract"
             },
             "expect": {
                 "kind": "glob",
@@ -1877,7 +1970,8 @@
             "note": "Nothing declares 'repair.completed'. The subscribe site and the emit path are connected by the literal alone. Five code sites carry it; the floor counts the four outside the `from` site, matching the min_references convention of the sibling refs-* tasks.",
             "from": {
                 "file": "packages/core/src/events.ts",
-                "needle": "bus.on(\"repair.completed\", (payload) => {"
+                "needle": "bus.on(\"repair.completed\", (payload) => {",
+                "symbol": "repair.completed"
             },
             "expect": {
                 "kind": "name_only",
@@ -1908,7 +2002,8 @@
             "note": "Two exported functions named recalculateInventory in two modules (the console command and the callback job); the import in main.ts picks the command by module path, not by name.",
             "from": {
                 "file": "packages/app/src/main.ts",
-                "needle": "console.log(`recalculated ${recalculateInventory(state)} part(s)`);"
+                "needle": "console.log(`recalculated ${recalculateInventory(state)} part(s)`);",
+                "symbol": "recalculateInventory"
             },
             "expect": {
                 "kind": "same_name",
@@ -1927,7 +2022,8 @@
             "note": "Lane-local: ReportRow is an interface, so every one of its use sites is a type position and none survives to runtime. 74 lines name it at the base SHA, one of them the declaration; the floor of 60 leaves room for a tool that folds the import lines into their declarations.",
             "from": {
                 "file": "packages/bench/src/contracts/reportContract.ts",
-                "needle": "export interface ReportRow {"
+                "needle": "export interface ReportRow {",
+                "symbol": "ReportRow"
             },
             "expect": {
                 "kind": "type_only",
@@ -1954,7 +2050,8 @@
             "note": "Lane-local: a conditional type with `infer`. The doc comment is attached to the type alias, so the hover answer comes from the declaration, not from the value that uses it.",
             "from": {
                 "file": "packages/bench/src/support/unwrap.ts",
-                "needle": "export type Unwrap<T> = T extends Promise<infer U> ? U : T;"
+                "needle": "export type Unwrap<T> = T extends Promise<infer U> ? U : T;",
+                "symbol": "Unwrap"
             },
             "expect": {
                 "contains": "unwrap a Promise, or pass the type through unchanged"
