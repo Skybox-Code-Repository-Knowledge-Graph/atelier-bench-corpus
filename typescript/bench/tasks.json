@@ -2134,7 +2134,7 @@
                 "resolution": "rulesConfig keeps its literal type; satisfies only checks it against Record<string, number | string>",
                 "candidate": {
                     "file": "packages/bench/src/support/rulesConfig.ts",
-                    "needle": "} satisfies Record<string, number | string>;"
+                    "needle": "export const rulesConfig = {"
                 }
             }
         },

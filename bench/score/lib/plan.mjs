@@ -181,7 +181,6 @@ export function listCount(expect) {
 export const TARGET_INSIDE_SYMBOL = new Set([
     "python:def-super-cooperative",
     "go:imp-blank-import-side-effect",
-    "typescript:resolution-satisfies",
 ]);
 
 /** Decide how one task is scored, or why it is not. `lane` selects the per-lane exceptions above. */
