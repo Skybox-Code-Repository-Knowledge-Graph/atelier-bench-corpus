@@ -344,15 +344,99 @@
                 "symbol": "ReportContract"
             },
             "expect": {
-                "min_implementations": 24,
+                "exact_count": 24,
                 "implementations": [
+                    {
+                        "file": "crates/atelier-bench/src/reports/cash_flow_report.rs",
+                        "needle": "impl ReportContract for CashFlowReport {"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/reports/churn_risk_report.rs",
+                        "needle": "impl ReportContract for ChurnRiskReport {"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/reports/customer_lifetime_report.rs",
+                        "needle": "impl ReportContract for CustomerLifetimeReport {"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/reports/customer_retention_report.rs",
+                        "needle": "impl ReportContract for CustomerRetentionReport {"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/reports/daily_revenue_report.rs",
+                        "needle": "impl ReportContract for DailyRevenueReport {"
+                    },
                     {
                         "file": "crates/atelier-bench/src/reports/gross_profit_report.rs",
                         "needle": "impl ReportContract for GrossProfitReport {"
                     },
                     {
+                        "file": "crates/atelier-bench/src/reports/inventory_turnover_report.rs",
+                        "needle": "impl ReportContract for InventoryTurnoverReport {"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/reports/monthly_revenue_report.rs",
+                        "needle": "impl ReportContract for MonthlyRevenueReport {"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/reports/net_margin_report.rs",
+                        "needle": "impl ReportContract for NetMarginReport {"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/reports/order_backlog_report.rs",
+                        "needle": "impl ReportContract for OrderBacklogReport {"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/reports/order_throughput_report.rs",
+                        "needle": "impl ReportContract for OrderThroughputReport {"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/reports/order_volume_report.rs",
+                        "needle": "impl ReportContract for OrderVolumeReport {"
+                    },
+                    {
                         "file": "crates/atelier-bench/src/reports/part_shortage_report.rs",
                         "needle": "impl ReportContract for PartShortageReport {"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/reports/part_usage_report.rs",
+                        "needle": "impl ReportContract for PartUsageReport {"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/reports/payment_default_report.rs",
+                        "needle": "impl ReportContract for PaymentDefaultReport {"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/reports/payment_latency_report.rs",
+                        "needle": "impl ReportContract for PaymentLatencyReport {"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/reports/profit_margin_report.rs",
+                        "needle": "impl ReportContract for ProfitMarginReport {"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/reports/technician_efficiency_report.rs",
+                        "needle": "impl ReportContract for TechnicianEfficiencyReport {"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/reports/technician_load_report.rs",
+                        "needle": "impl ReportContract for TechnicianLoadReport {"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/reports/technician_payroll_report.rs",
+                        "needle": "impl ReportContract for TechnicianPayrollReport {"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/reports/warranty_claim_report.rs",
+                        "needle": "impl ReportContract for WarrantyClaimReport {"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/reports/warranty_cost_report.rs",
+                        "needle": "impl ReportContract for WarrantyCostReport {"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/reports/warranty_trend_report.rs",
+                        "needle": "impl ReportContract for WarrantyTrendReport {"
                     },
                     {
                         "file": "crates/atelier-bench/src/reports/weekly_revenue_report.rs",
@@ -371,15 +455,35 @@
                 "symbol": "Repository"
             },
             "expect": {
-                "min_implementations": 8,
+                "exact_count": 8,
                 "implementations": [
+                    {
+                        "file": "crates/atelier-bench/src/repositories/customer_repository.rs",
+                        "needle": "impl Repository for CustomerRepository {"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/repositories/inventory_repository.rs",
+                        "needle": "impl Repository for InventoryRepository {"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/repositories/invoice_repository.rs",
+                        "needle": "impl Repository for InvoiceRepository {"
+                    },
                     {
                         "file": "crates/atelier-bench/src/repositories/order_repository.rs",
                         "needle": "impl Repository for OrderRepository {"
                     },
                     {
-                        "file": "crates/atelier-bench/src/repositories/invoice_repository.rs",
-                        "needle": "impl Repository for InvoiceRepository {"
+                        "file": "crates/atelier-bench/src/repositories/part_repository.rs",
+                        "needle": "impl Repository for PartRepository {"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/repositories/payment_repository.rs",
+                        "needle": "impl Repository for PaymentRepository {"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/repositories/technician_repository.rs",
+                        "needle": "impl Repository for TechnicianRepository {"
                     },
                     {
                         "file": "crates/atelier-bench/src/repositories/warranty_repository.rs",
@@ -397,15 +501,39 @@
                 "symbol": "NotifierContract"
             },
             "expect": {
-                "min_implementations": 8,
+                "exact_count": 8,
                 "implementations": [
+                    {
+                        "file": "crates/atelier-bench/src/notifiers/discord_notifier.rs",
+                        "needle": "impl NotifierContract for DiscordNotifier {"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/notifiers/email_notifier.rs",
+                        "needle": "impl NotifierContract for EmailNotifier {"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/notifiers/pager_notifier.rs",
+                        "needle": "impl NotifierContract for PagerNotifier {"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/notifiers/push_notifier.rs",
+                        "needle": "impl NotifierContract for PushNotifier {"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/notifiers/slack_notifier.rs",
+                        "needle": "impl NotifierContract for SlackNotifier {"
+                    },
                     {
                         "file": "crates/atelier-bench/src/notifiers/sms_notifier.rs",
                         "needle": "impl NotifierContract for SmsNotifier {"
                     },
                     {
-                        "file": "crates/atelier-bench/src/notifiers/slack_notifier.rs",
-                        "needle": "impl NotifierContract for SlackNotifier {"
+                        "file": "crates/atelier-bench/src/notifiers/teams_notifier.rs",
+                        "needle": "impl NotifierContract for TeamsNotifier {"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/notifiers/webhook_notifier.rs",
+                        "needle": "impl NotifierContract for WebhookNotifier {"
                     }
                 ]
             }
@@ -806,26 +934,206 @@
             },
             "expect": {
                 "exact_count": 48,
+                "implementations": [
+                    {
+                        "file": "crates/atelier-bench/src/rules/customer_credit_rule.rs",
+                        "needle": "pub struct CustomerCreditRule;"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/rules/deposit_required_rule.rs",
+                        "needle": "pub struct DepositRequiredRule;"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/rules/device_age_rule.rs",
+                        "needle": "pub struct DeviceAgeRule;"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/rules/discount_ceiling_rule.rs",
+                        "needle": "pub struct DiscountCeilingRule;"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/rules/gross_profit_rule.rs",
+                        "needle": "pub struct GrossProfitRule;"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/rules/idle_technician_rule.rs",
+                        "needle": "pub struct IdleTechnicianRule;"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/rules/invoice_balance_rule.rs",
+                        "needle": "pub struct InvoiceBalanceRule;"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/rules/label_presence_rule.rs",
+                        "needle": "pub struct LabelPresenceRule;"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/rules/maximum_backlog_rule.rs",
+                        "needle": "pub struct MaximumBacklogRule;"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/rules/minimum_stock_rule.rs",
+                        "needle": "pub struct MinimumStockRule;"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/rules/note_required_rule.rs",
+                        "needle": "pub struct NoteRequiredRule;"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/rules/part_availability_rule.rs",
+                        "needle": "pub struct PartAvailabilityRule;"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/rules/part_cost_margin_rule.rs",
+                        "needle": "pub struct PartCostMarginRule;"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/rules/priority_escalation_rule.rs",
+                        "needle": "pub struct PriorityEscalationRule;"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/rules/repair_duration_rule.rs",
+                        "needle": "pub struct RepairDurationRule;"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/rules/revenue_floor_rule.rs",
+                        "needle": "pub struct RevenueFloorRule;"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/rules/rework_limit_rule.rs",
+                        "needle": "pub struct ReworkLimitRule;"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/rules/rush_surcharge_rule.rs",
+                        "needle": "pub struct RushSurchargeRule;"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/rules/schedule_gap_rule.rs",
+                        "needle": "pub struct ScheduleGapRule;"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/rules/signature_required_rule.rs",
+                        "needle": "pub struct SignatureRequiredRule;"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/rules/slot_overbooking_rule.rs",
+                        "needle": "pub struct SlotOverbookingRule;"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/rules/status_sequence_rule.rs",
+                        "needle": "pub struct StatusSequenceRule;"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/rules/technician_capacity_rule.rs",
+                        "needle": "pub struct TechnicianCapacityRule;"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/rules/warranty_window_rule.rs",
+                        "needle": "pub struct WarrantyWindowRule;"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/rules/generated.rs",
+                        "needle": "DuplicateReferenceRule =>"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/rules/generated.rs",
+                        "needle": "ReferencePrefixRule =>"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/rules/generated.rs",
+                        "needle": "CurrencyConsistencyRule =>"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/rules/generated.rs",
+                        "needle": "RoundingRule =>"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/rules/generated.rs",
+                        "needle": "TaxAppliedRule =>"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/rules/generated.rs",
+                        "needle": "ExportFreshnessRule =>"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/rules/generated.rs",
+                        "needle": "NotificationSentRule =>"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/rules/generated.rs",
+                        "needle": "AuditTrailRule =>"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/rules/generated.rs",
+                        "needle": "CacheTtlRule =>"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/rules/generated.rs",
+                        "needle": "ReportCoverageRule =>"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/rules/generated.rs",
+                        "needle": "MetricRangeRule =>"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/rules/generated.rs",
+                        "needle": "DatasetIntegrityRule =>"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/rules/generated.rs",
+                        "needle": "SeedDeterminismRule =>"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/rules/generated.rs",
+                        "needle": "OrderCountRule =>"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/rules/generated.rs",
+                        "needle": "CustomerCountRule =>"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/rules/generated.rs",
+                        "needle": "PartCountRule =>"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/rules/generated.rs",
+                        "needle": "InvoiceCountRule =>"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/rules/generated.rs",
+                        "needle": "OpenOrderRatioRule =>"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/rules/generated.rs",
+                        "needle": "CompletionRateRule =>"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/rules/generated.rs",
+                        "needle": "AverageTicketRule =>"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/rules/generated.rs",
+                        "needle": "PartsPerOrderRule =>"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/rules/generated.rs",
+                        "needle": "RepeatCustomerRule =>"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/rules/generated.rs",
+                        "needle": "DeviceCategoryRule =>"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/rules/generated.rs",
+                        "needle": "InventoryTurnoverRule =>"
+                    }
+                ],
                 "textual_count": 24,
                 "generated_count": 24,
                 "must_not_include": [
                     "impl<T: RuleContract> RuleContract for Vec<T>",
                     "ExperimentalRule",
                     "AlwaysTrueRule"
-                ],
-                "implementations": [
-                    {
-                        "file": "crates/atelier-bench/src/rules/minimum_stock_rule.rs",
-                        "needle": "pub struct MinimumStockRule;"
-                    },
-                    {
-                        "file": "crates/atelier-bench/src/rules/generated.rs",
-                        "needle": "define_rules! {"
-                    },
-                    {
-                        "file": "crates/atelier-bench/src/rules/mod.rs",
-                        "needle": "Box::new(generated::InventoryTurnoverRule),"
-                    }
                 ]
             }
         },
@@ -838,7 +1146,105 @@
                 "symbol": "ReportContract"
             },
             "expect": {
-                "exact_count": 24
+                "exact_count": 24,
+                "implementations": [
+                    {
+                        "file": "crates/atelier-bench/src/reports/cash_flow_report.rs",
+                        "needle": "impl ReportContract for CashFlowReport {"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/reports/churn_risk_report.rs",
+                        "needle": "impl ReportContract for ChurnRiskReport {"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/reports/customer_lifetime_report.rs",
+                        "needle": "impl ReportContract for CustomerLifetimeReport {"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/reports/customer_retention_report.rs",
+                        "needle": "impl ReportContract for CustomerRetentionReport {"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/reports/daily_revenue_report.rs",
+                        "needle": "impl ReportContract for DailyRevenueReport {"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/reports/gross_profit_report.rs",
+                        "needle": "impl ReportContract for GrossProfitReport {"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/reports/inventory_turnover_report.rs",
+                        "needle": "impl ReportContract for InventoryTurnoverReport {"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/reports/monthly_revenue_report.rs",
+                        "needle": "impl ReportContract for MonthlyRevenueReport {"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/reports/net_margin_report.rs",
+                        "needle": "impl ReportContract for NetMarginReport {"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/reports/order_backlog_report.rs",
+                        "needle": "impl ReportContract for OrderBacklogReport {"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/reports/order_throughput_report.rs",
+                        "needle": "impl ReportContract for OrderThroughputReport {"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/reports/order_volume_report.rs",
+                        "needle": "impl ReportContract for OrderVolumeReport {"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/reports/part_shortage_report.rs",
+                        "needle": "impl ReportContract for PartShortageReport {"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/reports/part_usage_report.rs",
+                        "needle": "impl ReportContract for PartUsageReport {"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/reports/payment_default_report.rs",
+                        "needle": "impl ReportContract for PaymentDefaultReport {"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/reports/payment_latency_report.rs",
+                        "needle": "impl ReportContract for PaymentLatencyReport {"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/reports/profit_margin_report.rs",
+                        "needle": "impl ReportContract for ProfitMarginReport {"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/reports/technician_efficiency_report.rs",
+                        "needle": "impl ReportContract for TechnicianEfficiencyReport {"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/reports/technician_load_report.rs",
+                        "needle": "impl ReportContract for TechnicianLoadReport {"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/reports/technician_payroll_report.rs",
+                        "needle": "impl ReportContract for TechnicianPayrollReport {"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/reports/warranty_claim_report.rs",
+                        "needle": "impl ReportContract for WarrantyClaimReport {"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/reports/warranty_cost_report.rs",
+                        "needle": "impl ReportContract for WarrantyCostReport {"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/reports/warranty_trend_report.rs",
+                        "needle": "impl ReportContract for WarrantyTrendReport {"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/reports/weekly_revenue_report.rs",
+                        "needle": "impl ReportContract for WeeklyRevenueReport {"
+                    }
+                ]
             }
         },
         {
