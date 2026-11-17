@@ -2,14 +2,15 @@
     "version": 1,
     "corpus": "atelier-bench-corpus",
     "lane": "rust",
-    "notes": "Known-answer navigation tasks for the rust lane. Needle-based, not line-based: bench/verify-tasks resolves every needle to a unique line at the current SHA, so the manifest survives edits without stale line numbers. Paths are relative to the lane root (rust/), not to the repository root. 'expect' blocks carry the ground truth a harness scores against; counts are minimums where marked. exact_count is exact and counts concrete, non-generic, unconditionally compiled types that satisfy the contract directly or through inheritance; abstract bases, blanket impls and cfg-gated impls are excluded. Kinds added by the fifth wave: build_generated (item spliced in by include! from OUT_DIR), path_attribute (#[path]-declared module), gat (generic associated type). Kinds added by the canonical-parity wave: barrel (import resolved through the crate-root pub use re-export), type_only (a use consumed only in type position, carrying no value-level edge), structural (a type that carries a trait's method set inherently without implementing it), deref_forward (a method reached through a Deref impl). For parents-class-one-plus-two, extends_count is the trait named on the impl line, implements_count its supertraits, and exact_count their total. document_symbol tasks count every named symbol the anchored FILE declares at any nesting depth (types, fields, functions, modules); each task's note enumerates that count N and states min_symbols = floor(0.75 * N), the 25% margin absorbing listings that fold container nodes. call_hierarchy tasks name callees under outgoing_includes and callers under incoming_includes; both are file+needle pairs the verifier resolves. Kinds added by the wave-2 parity pass: namespace_import (a module bound as a namespace, with one member read from it), same_name (two identically named functions in different modules, separated only by the path the call site writes), name_only (a topic matched by string literal, with no type or symbol edge between the subscribe site and the dispatch that reaches it). Other kinds this lane uses: associated_const (a const declared in a trait with a default value: an impl that overrides it resolves to the trait const it overrides, and a type that does not override it reads the trait default), blanket_impl (a method the receiver type gets only through an impl<T: Bound> Trait for T block, including one keyed on a foreign bound such as serde::Serialize or written for a foreign generic such as Vec<T>; no impl block names the receiver, so the blanket impl line is the answer), derive_generated (a trait impl written by #[derive(...)]: there is no textual impl block, so the derive attribute line is the implementation site), dyn_upcast (a coercion from &dyn SubTrait to &dyn SuperTrait: the edge that permits it is the supertrait bound on the sub-trait's declaration, not an impl block), glob (use crate::contracts::report_contract::*: every public item of that module comes into scope without being named, and exact_count is the number of such items), inherent_impl (an impl Type { ... } block that names no trait: it adds methods to the type itself and is never an IMPLEMENTS edge against any trait), struct (the symbol kind of the declaration answered: a pub struct, reached here through a use ... as alias of one of two same-name Formatter structs, so the aliased path decides which one and the name cannot), syntax_error (a file under fixtures/broken-syntax/ left invalid on purpose, an unterminated impl block or unbalanced generics, and kept outside every workspace member: parsing it must yield an error, not a partial tree), trait_default_method (a method called on a type whose impl of the trait does not override it: the answer is the default body in the trait declaration). Kinds shared with other lanes, worded identically in every lane that uses them. child_of: the anchored declaration is the child end of a parent edge, and the answer is a direct parent it extends, implements or embeds, one level up, never a further ancestor and never one of its own children. imports: an import that binds only the names it lists; the answer is each named declaration in the file that declares it, never a sibling declared beside it and never every name the target module exports. lane_local: a symbol every lane carries under the same name or as its lane equivalent (Money, Customer, Dataset, the reference prefix, the invoice calculator's calculate, the billing Formatter); resolution must land on this lane's own declaration and never cross into a sibling lane. parent_of: a parent edge scored for direction, with the anchor at either end; the parent is the type that is extended, implemented or embedded, the child is the type that does so, and an answer that reports the child as the parent is wrong. uses_self: a type that refers to itself, such as a tree node holding children of its own type; the edge is a uses edge back to the declaring type, never extends, implements or embedding.",
+    "notes": "Known-answer navigation tasks for the rust lane. Needle-based, not line-based: bench/verify-tasks resolves every needle to a unique line at the current SHA, so the manifest survives edits without stale line numbers. Paths are relative to the lane root (rust/), not to the repository root. 'expect' blocks carry the ground truth a harness scores against; counts are minimums where marked. exact_count is exact and counts concrete, non-generic, unconditionally compiled types that satisfy the contract directly or through inheritance; abstract bases, blanket impls and cfg-gated impls are excluded. Kinds added by the fifth wave: build_generated (item spliced in by include! from OUT_DIR), path_attribute (#[path]-declared module), gat (generic associated type). Kinds added by the canonical-parity wave: barrel (import resolved through the crate-root pub use re-export), type_only (a use consumed only in type position, carrying no value-level edge), structural (a type that carries a trait's method set inherently without implementing it), deref_forward (a method reached through a Deref impl). For parents-class-one-plus-two, extends_count is the trait named on the impl line, implements_count its supertraits, and exact_count their total. document_symbol tasks count every named symbol the anchored FILE declares at any nesting depth (types, fields, functions, modules); each task's note enumerates that count N and states min_symbols = floor(0.75 * N), the 25% margin absorbing listings that fold container nodes. call_hierarchy tasks name callees under outgoing_includes and callers under incoming_includes; both are file+needle pairs the verifier resolves. Kinds added by the wave-2 parity pass: namespace_import (a module bound as a namespace, with one member read from it), same_name (two identically named functions in different modules, separated only by the path the call site writes), name_only (a topic matched by string literal, with no type or symbol edge between the subscribe site and the dispatch that reaches it). Other kinds this lane uses: associated_const (a const declared in a trait with a default value: an impl that overrides it resolves to the trait const it overrides, and a type that does not override it reads the trait default), blanket_impl (a method the receiver type gets only through an impl<T: Bound> Trait for T block, including one keyed on a foreign bound such as serde::Serialize or written for a foreign generic such as Vec<T>; no impl block names the receiver, so the blanket impl line is the answer), derive_generated (a trait impl written by #[derive(...)]: there is no textual impl block, so the derive attribute line is the implementation site), dyn_upcast (a coercion from &dyn SubTrait to &dyn SuperTrait: the edge that permits it is the supertrait bound on the sub-trait's declaration, not an impl block), glob (use crate::contracts::report_contract::*: every public item of that module comes into scope without being named, and exact_count is the number of such items), inherent_impl (an impl Type { ... } block that names no trait: it adds methods to the type itself and is never an IMPLEMENTS edge against any trait), struct (the symbol kind of the declaration answered: a pub struct, reached here through a use ... as alias of one of two same-name Formatter structs, so the aliased path decides which one and the name cannot), syntax_error (a file under fixtures/broken-syntax/ left invalid on purpose, an unterminated impl block or unbalanced generics, and kept outside every workspace member: parsing it must yield an error, not a partial tree), trait_default_method (a method called on a type whose impl of the trait does not override it: the answer is the default body in the trait declaration). Kinds shared with other lanes, worded identically in every lane that uses them. child_of: the anchored declaration is the child end of a parent edge, and the answer is a direct parent it extends, implements or embeds, one level up, never a further ancestor and never one of its own children. imports: an import that binds only the names it lists; the answer is each named declaration in the file that declares it, never a sibling declared beside it and never every name the target module exports. lane_local: a symbol every lane carries under the same name or as its lane equivalent (Money, Customer, Dataset, the reference prefix, the invoice calculator's calculate, the billing Formatter); resolution must land on this lane's own declaration and never cross into a sibling lane. parent_of: a parent edge scored for direction, with the anchor at either end; the parent is the type that is extended, implemented or embedded, the child is the type that does so, and an answer that reports the child as the parent is wrong. uses_self: a type that refers to itself, such as a tree node holding children of its own type; the edge is a uses edge back to the declaring type, never extends, implements or embedding. from.symbol is the identifier a task asks about, exactly as written on the from line and with no qualifier: the alias where an alias is used, the member on a member access, null when the question has no single identifier. from.occurrence (1-based) says which one when it appears more than once on that line, and is then required. document_symbol, parse-negative and diagnostics tasks ask about a file and carry neither key.",
     "tasks": [
         {
             "id": "def-enum-method",
             "surface": "definition",
             "from": {
                 "file": "crates/atelier-core/src/models/repair_order.rs",
-                "needle": "self.status.transitions_to().contains(&next)"
+                "needle": "self.status.transitions_to().contains(&next)",
+                "symbol": "transitions_to"
             },
             "expect": {
                 "file": "crates/atelier-core/src/support/status.rs",
@@ -21,7 +22,8 @@
             "surface": "definition",
             "from": {
                 "file": "crates/atelier-bench/src/dataset.rs",
-                "needle": ".with_priority(Priority::Rush)"
+                "needle": ".with_priority(Priority::Rush)",
+                "symbol": "Rush"
             },
             "expect": {
                 "file": "crates/atelier-core/src/support/priority.rs",
@@ -33,7 +35,8 @@
             "surface": "definition",
             "from": {
                 "file": "crates/atelier-core/src/concerns/has_reference.rs",
-                "needle": "atelier_format_reference(Self::PREFIX, self.reference_number())"
+                "needle": "atelier_format_reference(Self::PREFIX, self.reference_number())",
+                "symbol": "atelier_format_reference"
             },
             "expect": {
                 "file": "crates/atelier-core/src/support/helpers.rs",
@@ -45,7 +48,8 @@
             "surface": "definition",
             "from": {
                 "file": "crates/atelier-core/src/concerns/has_reference.rs",
-                "needle": "const PREFIX: &'static str = ATELIER_REF_PREFIX;"
+                "needle": "const PREFIX: &'static str = ATELIER_REF_PREFIX;",
+                "symbol": "ATELIER_REF_PREFIX"
             },
             "expect": {
                 "file": "crates/atelier-core/src/support/helpers.rs",
@@ -57,7 +61,8 @@
             "surface": "definition",
             "from": {
                 "file": "crates/atelier-core/src/support/helpers.rs",
-                "needle": "let sep = Reference::PREFIX_SEPARATOR;"
+                "needle": "let sep = Reference::PREFIX_SEPARATOR;",
+                "symbol": "PREFIX_SEPARATOR"
             },
             "expect": {
                 "file": "crates/atelier-core/src/support/reference.rs",
@@ -70,7 +75,9 @@
             "note": "Same-name pair: the alias must resolve to billing::Formatter, never reporting::Formatter.",
             "from": {
                 "file": "crates/atelier-app/src/http/report.rs",
-                "needle": "state.money.money(order.total(&state.container)"
+                "needle": "state.money.money(order.total(&state.container)",
+                "symbol": "money",
+                "occurrence": 2
             },
             "expect": {
                 "file": "crates/atelier-core/src/billing/formatter.rs",
@@ -82,7 +89,8 @@
             "surface": "definition",
             "from": {
                 "file": "crates/atelier-app/src/http/report.rs",
-                "needle": "state.status.status_line(order.status"
+                "needle": "state.status.status_line(order.status",
+                "symbol": "status_line"
             },
             "expect": {
                 "file": "crates/atelier-core/src/reporting/formatter.rs",
@@ -95,7 +103,8 @@
             "note": "Contract def is the trait method; the container binds StandardInvoiceCalculator (see impl-invoice-calculator).",
             "from": {
                 "file": "crates/atelier-core/src/models/repair_order.rs",
-                "needle": "container.invoice_calculator().calculate(self)"
+                "needle": "container.invoice_calculator().calculate(self)",
+                "symbol": "calculate"
             },
             "expect": {
                 "file": "crates/atelier-core/src/contracts/invoice_calculator.rs",
@@ -108,7 +117,8 @@
             "note": "Technician declares no next_slot; the call resolves through the Deref impl into Schedule.",
             "from": {
                 "file": "crates/atelier-core/tests/schedule_forwarding.rs",
-                "needle": "technician.next_slot(), Some(0)"
+                "needle": "technician.next_slot(), Some(0)",
+                "symbol": "next_slot"
             },
             "expect": {
                 "file": "crates/atelier-core/src/support/schedule.rs",
@@ -121,7 +131,8 @@
             "note": "peek_next_slot has no textual declaration: it is generated by forwards_to_schedule!.",
             "from": {
                 "file": "crates/atelier-core/tests/schedule_forwarding.rs",
-                "needle": "technician.peek_next_slot()"
+                "needle": "technician.peek_next_slot()",
+                "symbol": "peek_next_slot"
             },
             "expect": {
                 "file": "crates/atelier-core/src/support/macros.rs",
@@ -133,7 +144,8 @@
             "surface": "definition",
             "from": {
                 "file": "crates/atelier-core/src/models/technician.rs",
-                "needle": "forwards_to_schedule!(Technician);"
+                "needle": "forwards_to_schedule!(Technician);",
+                "symbol": "forwards_to_schedule"
             },
             "expect": {
                 "file": "crates/atelier-core/src/support/macros.rs",
@@ -146,7 +158,8 @@
             "note": "format_value comes from a blanket impl over ReportContract, not from any report's own impl block.",
             "from": {
                 "file": "crates/atelier-bench/tests/breadth.rs",
-                "needle": "report.format_value(1.5)"
+                "needle": "report.format_value(1.5)",
+                "symbol": "format_value"
             },
             "expect": {
                 "file": "crates/atelier-bench/src/concerns/has_formatting.rs",
@@ -159,7 +172,8 @@
             "note": "Import goes through the crate-root pub use; the definition is in the declaring module.",
             "from": {
                 "file": "crates/atelier-bench/src/dataset.rs",
-                "needle": "use atelier_core::{Customer, Device, Part, Technician};"
+                "needle": "use atelier_core::{Customer, Device, Part, Technician};",
+                "symbol": "Customer"
             },
             "expect": {
                 "file": "crates/atelier-core/src/models/customer.rs",
@@ -171,7 +185,8 @@
             "surface": "definition",
             "from": {
                 "file": "crates/atelier-core/src/services/standard_invoice_calculator.rs",
-                "needle": "self.labour(order) + order.parts_subtotal()"
+                "needle": "self.labour(order) + order.parts_subtotal()",
+                "symbol": null
             },
             "expect": {
                 "file": "crates/atelier-core/src/money.rs",
@@ -184,7 +199,8 @@
             "note": "cents() on an i64 resolves to the local extension trait, not to Money's inherent cents().",
             "from": {
                 "file": "crates/atelier-core/src/money.rs",
-                "needle": "1_500_i64.cents()"
+                "needle": "1_500_i64.cents()",
+                "symbol": "cents"
             },
             "expect": {
                 "file": "crates/atelier-core/src/money.rs",
@@ -196,7 +212,8 @@
             "surface": "definition",
             "from": {
                 "file": "crates/atelier-bench/src/repositories/order_repository.rs",
-                "needle": "type Record = RepairOrder;"
+                "needle": "type Record = RepairOrder;",
+                "symbol": "Record"
             },
             "expect": {
                 "file": "crates/atelier-core/src/contracts/repository.rs",
@@ -208,7 +225,8 @@
             "surface": "definition",
             "from": {
                 "file": "crates/atelier-bench/src/repositories/part_repository.rs",
-                "needle": "impl Repository for PartRepository {"
+                "needle": "impl Repository for PartRepository {",
+                "symbol": "Repository"
             },
             "expect": {
                 "file": "crates/atelier-core/src/contracts/repository.rs",
@@ -220,7 +238,8 @@
             "surface": "definition",
             "from": {
                 "file": "crates/atelier-app/src/lib.rs",
-                "needle": "get(http::report::show)"
+                "needle": "get(http::report::show)",
+                "symbol": "show"
             },
             "expect": {
                 "file": "crates/atelier-app/src/http/report.rs",
@@ -232,7 +251,8 @@
             "surface": "definition",
             "from": {
                 "file": "crates/atelier-app/src/lib.rs",
-                "needle": "post(http::api::store_note)"
+                "needle": "post(http::api::store_note)",
+                "symbol": "store_note"
             },
             "expect": {
                 "file": "crates/atelier-app/src/http/api.rs",
@@ -245,7 +265,8 @@
             "note": "The ? conversion is generated by #[from]; the target type lives in another module.",
             "from": {
                 "file": "crates/atelier-core/src/errors.rs",
-                "needle": "Money(#[from] ParseMoneyError),"
+                "needle": "Money(#[from] ParseMoneyError),",
+                "symbol": "ParseMoneyError"
             },
             "expect": {
                 "file": "crates/atelier-core/src/money.rs",
@@ -257,7 +278,8 @@
             "surface": "definition",
             "from": {
                 "file": "crates/atelier-core/src/container.rs",
-                "needle": "Arc::new(StandardInvoiceCalculator::default())"
+                "needle": "Arc::new(StandardInvoiceCalculator::default())",
+                "symbol": "StandardInvoiceCalculator"
             },
             "expect": {
                 "file": "crates/atelier-core/src/services/standard_invoice_calculator.rs",
@@ -269,7 +291,8 @@
             "surface": "definition",
             "from": {
                 "file": "crates/atelier-bench/src/lib.rs",
-                "needle": "reports::gross_profit_report::GrossProfitReport::new()"
+                "needle": "reports::gross_profit_report::GrossProfitReport::new()",
+                "symbol": "GrossProfitReport"
             },
             "expect": {
                 "file": "crates/atelier-bench/src/reports/gross_profit_report.rs",
@@ -281,7 +304,8 @@
             "surface": "definition",
             "from": {
                 "file": "crates/atelier-core/src/models/note.rs",
-                "needle": "pub notable_kind: NotableKind,"
+                "needle": "pub notable_kind: NotableKind,",
+                "symbol": "NotableKind"
             },
             "expect": {
                 "file": "crates/atelier-core/src/models/note.rs",
@@ -293,7 +317,8 @@
             "surface": "implementation",
             "from": {
                 "file": "crates/atelier-core/src/contracts/invoice_calculator.rs",
-                "needle": "pub trait InvoiceCalculator: Send + Sync {"
+                "needle": "pub trait InvoiceCalculator: Send + Sync {",
+                "symbol": "InvoiceCalculator"
             },
             "expect": {
                 "min_implementations": 2,
@@ -315,7 +340,8 @@
             "note": "Widest fan-out in the lane: 24 implementors, all registered in atelier-bench/src/lib.rs.",
             "from": {
                 "file": "crates/atelier-bench/src/contracts/report_contract.rs",
-                "needle": "pub trait ReportContract: Send + Sync {"
+                "needle": "pub trait ReportContract: Send + Sync {",
+                "symbol": "ReportContract"
             },
             "expect": {
                 "min_implementations": 24,
@@ -341,7 +367,8 @@
             "note": "Trait is declared in atelier-core; every implementor lives in atelier-bench.",
             "from": {
                 "file": "crates/atelier-core/src/contracts/repository.rs",
-                "needle": "pub trait Repository {"
+                "needle": "pub trait Repository {",
+                "symbol": "Repository"
             },
             "expect": {
                 "min_implementations": 8,
@@ -366,7 +393,8 @@
             "surface": "implementation",
             "from": {
                 "file": "crates/atelier-bench/src/contracts/notifier_contract.rs",
-                "needle": "pub trait NotifierContract: Send + Sync {"
+                "needle": "pub trait NotifierContract: Send + Sync {",
+                "symbol": "NotifierContract"
             },
             "expect": {
                 "min_implementations": 8,
@@ -387,7 +415,8 @@
             "surface": "references",
             "from": {
                 "file": "crates/atelier-core/src/models/repair_order.rs",
-                "needle": "pub fn transition_to(&mut self, next: RepairStatus, changed_by: &str) -> bool {"
+                "needle": "pub fn transition_to(&mut self, next: RepairStatus, changed_by: &str) -> bool {",
+                "symbol": "transition_to"
             },
             "expect": {
                 "min_references": 8,
@@ -412,7 +441,8 @@
             "surface": "references",
             "from": {
                 "file": "crates/atelier-core/src/models/part.rs",
-                "needle": "pub fn consumed_quantity(&self) -> u32 {"
+                "needle": "pub fn consumed_quantity(&self) -> u32 {",
+                "symbol": "consumed_quantity"
             },
             "expect": {
                 "min_references": 4,
@@ -437,7 +467,8 @@
             "surface": "references",
             "from": {
                 "file": "crates/atelier-bench/src/dataset.rs",
-                "needle": "pub fn seeded() -> Self {"
+                "needle": "pub fn seeded() -> Self {",
+                "symbol": "seeded"
             },
             "expect": {
                 "min_references": 12,
@@ -458,7 +489,8 @@
             "surface": "references",
             "from": {
                 "file": "crates/atelier-core/src/money.rs",
-                "needle": "pub struct Money(pub i64);"
+                "needle": "pub struct Money(pub i64);",
+                "symbol": "Money"
             },
             "expect": {
                 "min_references": 20,
@@ -483,7 +515,8 @@
             "surface": "references",
             "from": {
                 "file": "crates/atelier-bench/src/contracts/report_contract.rs",
-                "needle": "pub fn from_cents(label: impl Into<String>, cents: i64) -> Self {"
+                "needle": "pub fn from_cents(label: impl Into<String>, cents: i64) -> Self {",
+                "symbol": "from_cents"
             },
             "expect": {
                 "min_references": 10,
@@ -505,7 +538,8 @@
             "note": "Every registry entry is a construction site of a ReportContract implementor.",
             "from": {
                 "file": "crates/atelier-bench/src/lib.rs",
-                "needle": "pub static REPORTS: Lazy<Vec<Box<dyn ReportContract>>>"
+                "needle": "pub static REPORTS: Lazy<Vec<Box<dyn ReportContract>>>",
+                "symbol": "REPORTS"
             },
             "expect": {
                 "min_references": 24,
@@ -526,7 +560,8 @@
             "surface": "hover",
             "from": {
                 "file": "crates/atelier-core/src/concerns/has_reference.rs",
-                "needle": "atelier_format_reference(Self::PREFIX"
+                "needle": "atelier_format_reference(Self::PREFIX",
+                "symbol": "atelier_format_reference"
             },
             "expect": {
                 "contains": "zero-padded width"
@@ -537,7 +572,8 @@
             "surface": "hover",
             "from": {
                 "file": "crates/atelier-core/src/models/technician.rs",
-                "needle": "forwards_to_schedule!(Technician)"
+                "needle": "forwards_to_schedule!(Technician)",
+                "symbol": "forwards_to_schedule"
             },
             "expect": {
                 "contains": "schedule-forwarding inherent methods"
@@ -548,7 +584,8 @@
             "surface": "hover",
             "from": {
                 "file": "crates/atelier-bench/src/dataset.rs",
-                "needle": "pub fn seeded() -> Self {"
+                "needle": "pub fn seeded() -> Self {",
+                "symbol": "seeded"
             },
             "expect": {
                 "contains": "Changing these rows changes bench ground truth"
@@ -560,7 +597,8 @@
             "note": "Two `pub struct Formatter` declarations exist; this alias must land on the billing one.",
             "from": {
                 "file": "crates/atelier-app/src/state.rs",
-                "needle": "pub money: MoneyFormatter,"
+                "needle": "pub money: MoneyFormatter,",
+                "symbol": "MoneyFormatter"
             },
             "expect": {
                 "kind": "struct",
@@ -576,7 +614,8 @@
             "surface": "resolution",
             "from": {
                 "file": "crates/atelier-app/src/state.rs",
-                "needle": "pub status: StatusFormatter,"
+                "needle": "pub status: StatusFormatter,",
+                "symbol": "StatusFormatter"
             },
             "expect": {
                 "kind": "struct",
@@ -625,7 +664,8 @@
             "note": "Customer overrides the trait's default associated const; RepairOrder does not.",
             "from": {
                 "file": "crates/atelier-core/src/models/customer.rs",
-                "needle": "const PREFIX: &'static str = \"CU\";"
+                "needle": "const PREFIX: &'static str = \"CU\";",
+                "symbol": "PREFIX"
             },
             "expect": {
                 "kind": "associated_const",
@@ -640,7 +680,8 @@
             "surface": "resolution",
             "from": {
                 "file": "crates/atelier-core/tests/lifecycle.rs",
-                "needle": "order.reference()"
+                "needle": "order.reference()",
+                "symbol": "reference"
             },
             "expect": {
                 "kind": "trait_default_method",
@@ -682,7 +723,8 @@
             "note": "48 implementors: 24 textual (one file each, rules/*_rule.rs) and 24 generated by define_rules! in rules/generated.rs with no textual impl line of their own. Excluded by the counting rule in notes: the blanket impl for Vec<T> (contracts/rule_contract.rs), the feature-gated ExperimentalRule and the #[cfg(test)]-only AlwaysTrueRule (rules/cfg_gated.rs).",
             "from": {
                 "file": "crates/atelier-bench/src/contracts/rule_contract.rs",
-                "needle": "pub trait RuleContract: Send + Sync {"
+                "needle": "pub trait RuleContract: Send + Sync {",
+                "symbol": "RuleContract"
             },
             "expect": {
                 "exact_count": 48,
@@ -714,7 +756,8 @@
             "surface": "cardinality",
             "from": {
                 "file": "crates/atelier-bench/src/contracts/report_contract.rs",
-                "needle": "pub trait ReportContract: Send + Sync {"
+                "needle": "pub trait ReportContract: Send + Sync {",
+                "symbol": "ReportContract"
             },
             "expect": {
                 "exact_count": 24
@@ -725,7 +768,8 @@
             "surface": "direction",
             "from": {
                 "file": "crates/atelier-bench/src/contracts/report_contract.rs",
-                "needle": "pub trait ReportContract: Send + Sync {"
+                "needle": "pub trait ReportContract: Send + Sync {",
+                "symbol": "ReportContract"
             },
             "expect": {
                 "kind": "parent_of",
@@ -741,7 +785,8 @@
             "surface": "direction",
             "from": {
                 "file": "crates/atelier-bench/src/reports/cash_flow_report.rs",
-                "needle": "impl ReportContract for CashFlowReport {"
+                "needle": "impl ReportContract for CashFlowReport {",
+                "symbol": "CashFlowReport"
             },
             "expect": {
                 "kind": "child_of",
@@ -757,7 +802,9 @@
             "note": "Expr::Add holds two Box<Expr>: a self type reference, not an IMPLEMENTS edge.",
             "from": {
                 "file": "crates/atelier-core/src/support/expr.rs",
-                "needle": "Add(Box<Expr>, Box<Expr>),"
+                "needle": "Add(Box<Expr>, Box<Expr>),",
+                "symbol": "Expr",
+                "occurrence": 1
             },
             "expect": {
                 "kind": "uses_self",
@@ -774,7 +821,8 @@
             "note": "impl Money { ... } is an inherent impl block; it must not be reported as an IMPLEMENTS edge against any trait.",
             "from": {
                 "file": "crates/atelier-core/src/money.rs",
-                "needle": "impl Money {"
+                "needle": "impl Money {",
+                "symbol": "Money"
             },
             "expect": {
                 "kind": "inherent_impl",
@@ -786,7 +834,8 @@
             "surface": "import-precision",
             "from": {
                 "file": "crates/atelier-core/src/support/orientation.rs",
-                "needle": "use crate::support::pair::Left;"
+                "needle": "use crate::support::pair::Left;",
+                "symbol": "Left"
             },
             "expect": {
                 "kind": "imports",
@@ -803,7 +852,8 @@
             "note": "dataset.rs imports Money only; ParseMoneyError lives in the same module but is never named here.",
             "from": {
                 "file": "crates/atelier-bench/src/dataset.rs",
-                "needle": "use atelier_core::money::Money;"
+                "needle": "use atelier_core::money::Money;",
+                "symbol": "Money"
             },
             "expect": {
                 "kind": "imports",
@@ -819,7 +869,8 @@
             "surface": "import-precision",
             "from": {
                 "file": "crates/atelier-bench/src/support/report_glob.rs",
-                "needle": "use crate::contracts::report_contract::*;"
+                "needle": "use crate::contracts::report_contract::*;",
+                "symbol": "report_contract"
             },
             "expect": {
                 "kind": "glob",
@@ -841,7 +892,8 @@
             "surface": "resolution",
             "from": {
                 "file": "crates/atelier-bench/src/dataset.rs",
-                "needle": "Part::new(1, \"SCR-13\", \"Screen 13\\\"\", Money(19_900)).with_stock(4),"
+                "needle": "Part::new(1, \"SCR-13\", \"Screen 13\\\"\", Money(19_900)).with_stock(4),",
+                "symbol": "Money"
             },
             "expect": {
                 "kind": "lane_local",
@@ -857,7 +909,8 @@
             "surface": "resolution",
             "from": {
                 "file": "crates/atelier-bench/src/dataset.rs",
-                "needle": "Customer::new(1, \"Ada Byron\", \"ada@example.test\").with_phone(\"+32 470 00 00 01\"),"
+                "needle": "Customer::new(1, \"Ada Byron\", \"ada@example.test\").with_phone(\"+32 470 00 00 01\"),",
+                "symbol": "Customer"
             },
             "expect": {
                 "kind": "lane_local",
@@ -873,7 +926,8 @@
             "surface": "resolution",
             "from": {
                 "file": "crates/atelier-app/src/state.rs",
-                "needle": "data: Arc::new(Dataset::seeded()),"
+                "needle": "data: Arc::new(Dataset::seeded()),",
+                "symbol": "Dataset"
             },
             "expect": {
                 "kind": "lane_local",
@@ -889,7 +943,8 @@
             "surface": "resolution",
             "from": {
                 "file": "crates/atelier-core/src/concerns/has_reference.rs",
-                "needle": "const PREFIX: &'static str = ATELIER_REF_PREFIX;"
+                "needle": "const PREFIX: &'static str = ATELIER_REF_PREFIX;",
+                "symbol": "ATELIER_REF_PREFIX"
             },
             "expect": {
                 "kind": "lane_local",
@@ -905,7 +960,8 @@
             "surface": "resolution",
             "from": {
                 "file": "crates/atelier-core/src/models/repair_order.rs",
-                "needle": "container.invoice_calculator().calculate(self)"
+                "needle": "container.invoice_calculator().calculate(self)",
+                "symbol": "calculate"
             },
             "expect": {
                 "kind": "lane_local",
@@ -921,7 +977,8 @@
             "surface": "resolution",
             "from": {
                 "file": "crates/atelier-app/src/state.rs",
-                "needle": "use atelier_core::billing::Formatter as MoneyFormatter;"
+                "needle": "use atelier_core::billing::Formatter as MoneyFormatter;",
+                "symbol": "Formatter"
             },
             "expect": {
                 "kind": "lane_local",
@@ -937,7 +994,8 @@
             "surface": "multi-parent",
             "from": {
                 "file": "crates/atelier-bench/src/contracts/composite_contract.rs",
-                "needle": "pub trait CompositeContract: ReportContract + CacheableContract + ScheduleContract {}"
+                "needle": "pub trait CompositeContract: ReportContract + CacheableContract + ScheduleContract {}",
+                "symbol": "CompositeContract"
             },
             "expect": {
                 "exact_count": 3,
@@ -962,7 +1020,8 @@
             "surface": "multi-parent",
             "from": {
                 "file": "crates/atelier-bench/src/contracts/report_contract.rs",
-                "needle": "pub trait ReportContract: Send + Sync {"
+                "needle": "pub trait ReportContract: Send + Sync {",
+                "symbol": "ReportContract"
             },
             "expect": {
                 "exact_count": 2,
@@ -975,7 +1034,9 @@
             "note": "struct Grid<const W, const H> plus its impl block; both must resolve, not just the struct.",
             "from": {
                 "file": "crates/atelier-bench/src/support/grid.rs",
-                "needle": "let mut grid: Grid<3, 4> = Grid::new();"
+                "needle": "let mut grid: Grid<3, 4> = Grid::new();",
+                "symbol": "Grid",
+                "occurrence": 1
             },
             "expect": {
                 "file": "crates/atelier-bench/src/support/grid.rs",
@@ -994,7 +1055,8 @@
             "note": "HasReference::PREFIX now has two overrides: Customer (existing) and Voucher (new).",
             "from": {
                 "file": "crates/atelier-core/src/concerns/has_reference.rs",
-                "needle": "const PREFIX: &'static str = ATELIER_REF_PREFIX;"
+                "needle": "const PREFIX: &'static str = ATELIER_REF_PREFIX;",
+                "symbol": "PREFIX"
             },
             "expect": {
                 "exact_count": 2,
@@ -1016,7 +1078,8 @@
             "note": "rules() returns impl Iterator<Item = &'static dyn RuleContract>; return-position impl Trait.",
             "from": {
                 "file": "crates/atelier-bench/src/rules/mod.rs",
-                "needle": "assert!(rules().all(|rule| rule.evaluate(&data)));"
+                "needle": "assert!(rules().all(|rule| rule.evaluate(&data)));",
+                "symbol": "rules"
             },
             "expect": {
                 "file": "crates/atelier-bench/src/rules/mod.rs",
@@ -1028,7 +1091,8 @@
             "surface": "definition",
             "from": {
                 "file": "crates/atelier-bench/src/support/closure_predicate.rs",
-                "needle": "(self.check)(data)"
+                "needle": "(self.check)(data)",
+                "symbol": "check"
             },
             "expect": {
                 "file": "crates/atelier-bench/src/support/closure_predicate.rs",
@@ -1053,7 +1117,8 @@
             "note": "Serialize for RuleSummary has no textual impl block; the derive attribute line is the implementation site.",
             "from": {
                 "file": "crates/atelier-bench/src/support/rule_summary.rs",
-                "needle": "pub struct RuleSummary {"
+                "needle": "pub struct RuleSummary {",
+                "symbol": "RuleSummary"
             },
             "expect": {
                 "kind": "derive_generated",
@@ -1069,7 +1134,8 @@
             "note": "Native async fn in a trait (stable since 1.75); one impl uses async fn, the other manually returns Pin<Box<dyn Future>>.",
             "from": {
                 "file": "crates/atelier-app/src/async_check.rs",
-                "needle": "async fn check(&self) -> bool;"
+                "needle": "async fn check(&self) -> bool;",
+                "symbol": "check"
             },
             "expect": {
                 "exact_count": 2,
@@ -1091,7 +1157,8 @@
             "note": "Two-level re-export chain: contracts::rule_contract::RuleContract -> prelude::RuleContract -> crate root. Definition must land on the declaring module, not either pub use line.",
             "from": {
                 "file": "crates/atelier-app/src/rules_probe.rs",
-                "needle": "use atelier_bench::RuleContract;"
+                "needle": "use atelier_bench::RuleContract;",
+                "symbol": "RuleContract"
             },
             "expect": {
                 "file": "crates/atelier-bench/src/contracts/rule_contract.rs",
@@ -1140,7 +1207,8 @@
             "surface": "resolution",
             "from": {
                 "file": "crates/atelier-bench/src/contracts/composite_contract.rs",
-                "needle": "pub fn as_report_contract(component: &dyn CompositeContract) -> &dyn ReportContract {"
+                "needle": "pub fn as_report_contract(component: &dyn CompositeContract) -> &dyn ReportContract {",
+                "symbol": "CompositeContract"
             },
             "expect": {
                 "kind": "dyn_upcast",
@@ -1156,7 +1224,8 @@
             "note": "DuplicateReferenceRule has no textual struct or impl line; both are produced by the define_rules! repetition below.",
             "from": {
                 "file": "crates/atelier-bench/src/rules/mod.rs",
-                "needle": "Box::new(generated::DuplicateReferenceRule),"
+                "needle": "Box::new(generated::DuplicateReferenceRule),",
+                "symbol": "DuplicateReferenceRule"
             },
             "expect": {
                 "file": "crates/atelier-bench/src/rules/generated.rs",
@@ -1169,7 +1238,8 @@
             "note": "Every RULES read is a consumption site of the registry, mirroring refs-report-contract-registry.",
             "from": {
                 "file": "crates/atelier-bench/src/rules/mod.rs",
-                "needle": "pub static RULES: Lazy<Vec<Box<dyn RuleContract>>> = Lazy::new(|| {"
+                "needle": "pub static RULES: Lazy<Vec<Box<dyn RuleContract>>> = Lazy::new(|| {",
+                "symbol": "RULES"
             },
             "expect": {
                 "min_references": 2,
@@ -1191,7 +1261,8 @@
             "note": "Build-script surface: generated_units() is written by build.rs into OUT_DIR and spliced in with include!; there is no textual definition under src/. The include! line is the in-tree anchor; build.rs holds the source text of the function.",
             "from": {
                 "file": "crates/atelier-core/src/support/generated_units.rs",
-                "needle": "generated_units().len()"
+                "needle": "generated_units().len()",
+                "symbol": "generated_units"
             },
             "expect": {
                 "kind": "build_generated",
@@ -1214,7 +1285,8 @@
             "note": "#[path] surface: support::ledger is declared with #[path = \"pathed/tally_sheet.rs\"], so the module name and the file name differ and there is no support/ledger.rs.",
             "from": {
                 "file": "crates/atelier-core/tests/wave5.rs",
-                "needle": "assert_eq!(ledger_lines(), 12);"
+                "needle": "assert_eq!(ledger_lines(), 12);",
+                "symbol": "ledger_lines"
             },
             "expect": {
                 "kind": "path_attribute",
@@ -1235,7 +1307,9 @@
             "note": "Struct with an explicit lifetime parameter; the use site names it as Borrowed<'_>.",
             "from": {
                 "file": "crates/atelier-core/src/support/borrowed.rs",
-                "needle": "let views: Vec<Borrowed<'_>> = labels.iter().map(|label| Borrowed::new(label)).collect();"
+                "needle": "let views: Vec<Borrowed<'_>> = labels.iter().map(|label| Borrowed::new(label)).collect();",
+                "symbol": "Borrowed",
+                "occurrence": 1
             },
             "expect": {
                 "file": "crates/atelier-core/src/support/borrowed.rs",
@@ -1248,7 +1322,8 @@
             "note": "Higher-ranked trait bound: the callee's where-clause is F: for<'x> Fn(&'x str) -> usize; the call passes str::len.",
             "from": {
                 "file": "crates/atelier-core/src/support/borrowed.rs",
-                "needle": "apply_all(&borrowed, str::len)"
+                "needle": "apply_all(&borrowed, str::len)",
+                "symbol": "apply_all"
             },
             "expect": {
                 "file": "crates/atelier-core/src/support/borrowed.rs",
@@ -1267,7 +1342,8 @@
             "note": "Generic associated type: Lender::Loan<'a> carries a lifetime; store.lend() resolves to the trait method whose return type is Self::Loan<'_>, and the impl pins it to Option<&'a str>.",
             "from": {
                 "file": "crates/atelier-core/src/support/lender.rs",
-                "needle": "store.lend()"
+                "needle": "store.lend()",
+                "symbol": "lend"
             },
             "expect": {
                 "kind": "gat",
@@ -1287,7 +1363,8 @@
             "note": "Rust has no subclassing: NotFoundError is its own type that converts into AtelierError through #[from]. The construction site must resolve to that type, not to the enum it converts into.",
             "from": {
                 "file": "crates/atelier-app/src/http/report.rs",
-                "needle": "NotFoundError::new(\"repair order\", reference.clone())"
+                "needle": "NotFoundError::new(\"repair order\", reference.clone())",
+                "symbol": "NotFoundError"
             },
             "expect": {
                 "file": "crates/atelier-core/src/errors.rs",
@@ -1300,7 +1377,8 @@
             "note": "`use ... Formatter as MoneyFormatter`: the alias resolves to the billing Formatter type, never to reporting::Formatter.",
             "from": {
                 "file": "crates/atelier-app/src/state.rs",
-                "needle": "use atelier_core::billing::Formatter as MoneyFormatter;"
+                "needle": "use atelier_core::billing::Formatter as MoneyFormatter;",
+                "symbol": "Formatter"
             },
             "expect": {
                 "file": "crates/atelier-core/src/billing/formatter.rs",
@@ -1313,7 +1391,8 @@
             "note": "Canonical id for the rust-local def-deref-forwarded-method: Technician declares no next_slot, the call resolves through the Deref impl in concerns/forwards_to_schedule.rs into Schedule.",
             "from": {
                 "file": "crates/atelier-bench/src/repositories/technician_repository.rs",
-                "needle": "technician.next_slot().is_some()"
+                "needle": "technician.next_slot().is_some()",
+                "symbol": "next_slot"
             },
             "expect": {
                 "kind": "deref_forward",
@@ -1336,7 +1415,8 @@
             "note": "Associated function used as an alternate constructor; the call site names the type, not the struct literal.",
             "from": {
                 "file": "crates/atelier-app/src/state.rs",
-                "needle": "container: Container::bind_default(),"
+                "needle": "container: Container::bind_default(),",
+                "symbol": "bind_default"
             },
             "expect": {
                 "file": "crates/atelier-core/src/container.rs",
@@ -1349,7 +1429,8 @@
             "note": "Canonical id for the rust-local hover-macro-generated: hover on the constructor must explain the Deref forwarding, not just the schedule field.",
             "from": {
                 "file": "crates/atelier-core/src/models/technician.rs",
-                "needle": "pub fn new(id: u32, name: impl Into<String>) -> Self {"
+                "needle": "pub fn new(id: u32, name: impl Into<String>) -> Self {",
+                "symbol": "new"
             },
             "expect": {
                 "contains": "forward to its Schedule"
@@ -1361,7 +1442,8 @@
             "note": "Customer imported through the atelier_core crate-root `pub use` barrel must resolve to models/customer.rs, not fan out to every other module that barrel re-exports.",
             "from": {
                 "file": "crates/atelier-bench/src/repositories/customer_repository.rs",
-                "needle": "use atelier_core::Customer;"
+                "needle": "use atelier_core::Customer;",
+                "symbol": "Customer"
             },
             "expect": {
                 "kind": "barrel",
@@ -1381,7 +1463,8 @@
             "note": "repair_order.rs names Container only in a type position (`&Container` in a signature) and never constructs one; state.rs imports the same Container and calls Container::bind_default(). The type-position site carries no value-level edge.",
             "from": {
                 "file": "crates/atelier-core/src/models/repair_order.rs",
-                "needle": "use crate::container::Container;"
+                "needle": "use crate::container::Container;",
+                "symbol": "Container"
             },
             "expect": {
                 "kind": "type_only",
@@ -1407,7 +1490,8 @@
             "note": "One trait named on the impl line (DigestContract) plus the two supertraits it drags in (HasAudit, HasMetadata): extends_count is the named trait, implements_count the inherited pair, exact_count their total. AuditDigest implements no report or rule contract, so card-report-contract stays 24 and card-rule-contract stays 48.",
             "from": {
                 "file": "crates/atelier-bench/src/support/audit_digest.rs",
-                "needle": "impl DigestContract for AuditDigest {}"
+                "needle": "impl DigestContract for AuditDigest {}",
+                "symbol": "AuditDigest"
             },
             "expect": {
                 "extends_count": 1,
@@ -1435,7 +1519,8 @@
             "note": "Canonical id for the rust-local refs-money-newtype: field types, signature types, constructor calls and `use` paths naming Money all count.",
             "from": {
                 "file": "crates/atelier-core/src/money.rs",
-                "needle": "pub struct Money(pub i64);"
+                "needle": "pub struct Money(pub i64);",
+                "symbol": "Money"
             },
             "expect": {
                 "min_references": 20,
@@ -1461,7 +1546,8 @@
             "note": "The registry itself has 4 read sites; its 24 `Box::new(XReport::new())` entries are construction sites of ReportContract implementors, not references to REPORTS. The rust-local refs-report-contract-registry counts those 24 instead.",
             "from": {
                 "file": "crates/atelier-bench/src/lib.rs",
-                "needle": "pub static REPORTS: Lazy<Vec<Box<dyn ReportContract>>>"
+                "needle": "pub static REPORTS: Lazy<Vec<Box<dyn ReportContract>>>",
+                "symbol": "REPORTS"
             },
             "expect": {
                 "min_references": 4,
@@ -1483,7 +1569,8 @@
             "note": "12 call lines across 9 report files at the pinned base; `use` lines do not count.",
             "from": {
                 "file": "crates/atelier-bench/src/contracts/report_contract.rs",
-                "needle": "pub fn from_cents(label: impl Into<String>, cents: i64) -> Self {"
+                "needle": "pub fn from_cents(label: impl Into<String>, cents: i64) -> Self {",
+                "symbol": "from_cents"
             },
             "expect": {
                 "min_references": 10,
@@ -1550,7 +1637,8 @@
             "note": "Outgoing edge inside the aggregate: complete() delegates to transition_to() in the same file.",
             "from": {
                 "file": "crates/atelier-core/src/models/repair_order.rs",
-                "needle": "pub fn complete(&mut self, changed_by: &str) -> Result<(), AtelierError> {"
+                "needle": "pub fn complete(&mut self, changed_by: &str) -> Result<(), AtelierError> {",
+                "symbol": "complete"
             },
             "expect": {
                 "outgoing_includes": [
@@ -1567,7 +1655,8 @@
             "note": "Incoming edges on the lifecycle hub: at least three callers of transition_to, spread over the core crate, the bench crate and the integration test.",
             "from": {
                 "file": "crates/atelier-core/src/models/repair_order.rs",
-                "needle": "pub fn transition_to(&mut self, next: RepairStatus, changed_by: &str) -> bool {"
+                "needle": "pub fn transition_to(&mut self, next: RepairStatus, changed_by: &str) -> bool {",
+                "symbol": "transition_to"
             },
             "expect": {
                 "min_incoming": 3,
@@ -1593,7 +1682,8 @@
             "note": "Package-boundary edge: the app crate's recalculate command calls Dispatcher::register, which is declared in the core crate. The outgoing edge must cross atelier-app -> atelier-core.",
             "from": {
                 "file": "crates/atelier-app/src/commands/recalculate_inventory.rs",
-                "needle": "pub fn run(state: &AppState) -> usize {"
+                "needle": "pub fn run(state: &AppState) -> usize {",
+                "symbol": "run"
             },
             "expect": {
                 "outgoing_includes": [
@@ -1610,7 +1700,8 @@
             "note": "One job, two entry points: run_with_callback takes the continuation as a parameter. The console command module exports a DIFFERENT function also called run; must_not_include keeps them apart.",
             "from": {
                 "file": "crates/atelier-app/tests/wave2_jobs.rs",
-                "needle": "job.run_with_callback(&state.data, &dispatcher, |announced| seen.push(announced));"
+                "needle": "job.run_with_callback(&state.data, &dispatcher, |announced| seen.push(announced));",
+                "symbol": "run_with_callback"
             },
             "expect": {
                 "file": "crates/atelier-app/src/jobs.rs",
@@ -1645,7 +1736,8 @@
             "note": "Customer declares no short_reference; it is promoted from the HasReference default body, the rust form of a mixin.",
             "from": {
                 "file": "crates/atelier-core/tests/wave2_parity.rs",
-                "needle": "assert_eq!(customer.short_reference(), \"CU7\");"
+                "needle": "assert_eq!(customer.short_reference(), \"CU7\");",
+                "symbol": "short_reference"
             },
             "expect": {
                 "file": "crates/atelier-core/src/concerns/has_reference.rs",
@@ -1661,7 +1753,8 @@
             "note": "Module-level constant aliasing the crate-wide one; the answer is the declaring module, not the alias line.",
             "from": {
                 "file": "crates/atelier-core/src/concerns/has_reference.rs",
-                "needle": "pub const DEFAULT_REFERENCE_PREFIX: &str = ATELIER_REF_PREFIX;"
+                "needle": "pub const DEFAULT_REFERENCE_PREFIX: &str = ATELIER_REF_PREFIX;",
+                "symbol": "ATELIER_REF_PREFIX"
             },
             "expect": {
                 "file": "crates/atelier-core/src/support/helpers.rs",
@@ -1674,7 +1767,8 @@
             "note": "`use crate::rules;` binds the module, not an item; only rules::RULES is read in this file, so the import must not fan out to the 24 rule submodules or to rules::generated.",
             "from": {
                 "file": "crates/atelier-bench/src/support/rule_namespace_user.rs",
-                "needle": "use crate::rules;"
+                "needle": "use crate::rules;",
+                "symbol": "rules"
             },
             "expect": {
                 "kind": "namespace_import",
@@ -1694,7 +1788,8 @@
             "note": "Rust parameterises this contract with associated types rather than type parameters: every implementor pins Id and Record. Eight concrete types satisfy it. The rust-local impl-repository-cross-crate asks where they live; this id counts them.",
             "from": {
                 "file": "crates/atelier-core/src/contracts/repository.rs",
-                "needle": "pub trait Repository {"
+                "needle": "pub trait Repository {",
+                "symbol": "Repository"
             },
             "expect": {
                 "min_implementations": 8,
@@ -1740,7 +1835,8 @@
             "note": "Nothing declares 'repair.completed' at the subscribe site: the literal is the whole link between it and the dispatch that reaches it. Five code sites carry the string; the floor counts the four outside the `from` site, matching the min_references convention of the sibling refs-* tasks.",
             "from": {
                 "file": "crates/atelier-core/tests/wave2_events.rs",
-                "needle": "dispatcher.on(\"repair.completed\", notice.clone());"
+                "needle": "dispatcher.on(\"repair.completed\", notice.clone());",
+                "symbol": "repair.completed"
             },
             "expect": {
                 "kind": "name_only",
@@ -1771,7 +1867,8 @@
             "note": "Two functions named run: the console command in commands/recalculate_inventory.rs and the job method in jobs.rs. The console entrypoint picks the command by module path, not by name.",
             "from": {
                 "file": "crates/atelier-app/src/main.rs",
-                "needle": "let touched = atelier_app::commands::recalculate_inventory::run(&state);"
+                "needle": "let touched = atelier_app::commands::recalculate_inventory::run(&state);",
+                "symbol": "run"
             },
             "expect": {
                 "kind": "same_name",
