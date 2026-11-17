@@ -990,7 +990,7 @@
         {
             "id": "refs-string-event-name",
             "surface": "references",
-            "note": "Nothing declares 'repair.completed'. The subscribe site and the emit path are connected by the literal alone. Five code sites carry it; exact_count counts the four outside the `from` site, one entry per line. The REPAIR_COMPLETED constant's uses (re-export, import, dispatch) link by identifier, not by the literal, and are optional_sites.",
+            "note": "Nothing declares 'repair.completed'. The subscribe site and the emit path are connected by the literal alone. Five code sites carry it; exact_count counts the four outside the `from` site, matching the sibling refs-* tasks.",
             "from": {
                 "file": "packages/core/src/events.js",
                 "needle": "dispatcher.on(\"repair.completed\", (payload) => this.handle(payload));",
