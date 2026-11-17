@@ -443,7 +443,27 @@
                     {"file": "atelier/reports/cash_flow.go", "needle": "var _ contracts.ReportContract = (*CashFlowReport)(nil)"},
                     {"file": "atelier/reports/gross_profit.go", "needle": "var _ contracts.ReportContract = (*GrossProfitReport)(nil)"},
                     {"file": "atelier/reports/monthly_revenue.go", "needle": "var _ contracts.ReportContract = (*MonthlyRevenueReport)(nil)"},
-                    {"file": "atelier/reports/weekly_revenue.go", "needle": "var _ contracts.ReportContract = (*WeeklyRevenueReport)(nil)"}
+                    {"file": "atelier/reports/weekly_revenue.go", "needle": "var _ contracts.ReportContract = (*WeeklyRevenueReport)(nil)"},
+                    {"file": "atelier/reports/churn_risk.go", "needle": "var _ contracts.ReportContract = (*ChurnRiskReport)(nil)"},
+                    {"file": "atelier/reports/customer_lifetime.go", "needle": "var _ contracts.ReportContract = (*CustomerLifetimeReport)(nil)"},
+                    {"file": "atelier/reports/customer_retention.go", "needle": "var _ contracts.ReportContract = (*CustomerRetentionReport)(nil)"},
+                    {"file": "atelier/reports/daily_revenue.go", "needle": "var _ contracts.ReportContract = (*DailyRevenueReport)(nil)"},
+                    {"file": "atelier/reports/inventory_turnover.go", "needle": "var _ contracts.ReportContract = (*InventoryTurnoverReport)(nil)"},
+                    {"file": "atelier/reports/net_margin.go", "needle": "var _ contracts.ReportContract = (*NetMarginReport)(nil)"},
+                    {"file": "atelier/reports/order_backlog.go", "needle": "var _ contracts.ReportContract = (*OrderBacklogReport)(nil)"},
+                    {"file": "atelier/reports/order_throughput.go", "needle": "var _ contracts.ReportContract = (*OrderThroughputReport)(nil)"},
+                    {"file": "atelier/reports/order_volume.go", "needle": "var _ contracts.ReportContract = (*OrderVolumeReport)(nil)"},
+                    {"file": "atelier/reports/part_shortage.go", "needle": "var _ contracts.ReportContract = (*PartShortageReport)(nil)"},
+                    {"file": "atelier/reports/part_usage.go", "needle": "var _ contracts.ReportContract = (*PartUsageReport)(nil)"},
+                    {"file": "atelier/reports/payment_default.go", "needle": "var _ contracts.ReportContract = (*PaymentDefaultReport)(nil)"},
+                    {"file": "atelier/reports/payment_latency.go", "needle": "var _ contracts.ReportContract = (*PaymentLatencyReport)(nil)"},
+                    {"file": "atelier/reports/profit_margin.go", "needle": "var _ contracts.ReportContract = (*ProfitMarginReport)(nil)"},
+                    {"file": "atelier/reports/technician_efficiency.go", "needle": "var _ contracts.ReportContract = (*TechnicianEfficiencyReport)(nil)"},
+                    {"file": "atelier/reports/technician_load.go", "needle": "var _ contracts.ReportContract = (*TechnicianLoadReport)(nil)"},
+                    {"file": "atelier/reports/technician_payroll.go", "needle": "var _ contracts.ReportContract = (*TechnicianPayrollReport)(nil)"},
+                    {"file": "atelier/reports/warranty_claim.go", "needle": "var _ contracts.ReportContract = (*WarrantyClaimReport)(nil)"},
+                    {"file": "atelier/reports/warranty_cost.go", "needle": "var _ contracts.ReportContract = (*WarrantyCostReport)(nil)"},
+                    {"file": "atelier/reports/warranty_trend.go", "needle": "var _ contracts.ReportContract = (*WarrantyTrendReport)(nil)"}
                 ]
             }
         },
@@ -457,7 +477,13 @@
                 "kind": "structural",
                 "implementations": [
                     {"file": "atelier/notifiers/discord_notifier.go", "needle": "var _ contracts.NotifierContract = (*DiscordNotifier)(nil)"},
-                    {"file": "atelier/notifiers/webhook_notifier.go", "needle": "var _ contracts.NotifierContract = (*WebhookNotifier)(nil)"}
+                    {"file": "atelier/notifiers/webhook_notifier.go", "needle": "var _ contracts.NotifierContract = (*WebhookNotifier)(nil)"},
+                    {"file": "atelier/notifiers/email_notifier.go", "needle": "var _ contracts.NotifierContract = (*EmailNotifier)(nil)"},
+                    {"file": "atelier/notifiers/pager_notifier.go", "needle": "var _ contracts.NotifierContract = (*PagerNotifier)(nil)"},
+                    {"file": "atelier/notifiers/push_notifier.go", "needle": "var _ contracts.NotifierContract = (*PushNotifier)(nil)"},
+                    {"file": "atelier/notifiers/slack_notifier.go", "needle": "var _ contracts.NotifierContract = (*SlackNotifier)(nil)"},
+                    {"file": "atelier/notifiers/sms_notifier.go", "needle": "var _ contracts.NotifierContract = (*SmsNotifier)(nil)"},
+                    {"file": "atelier/notifiers/teams_notifier.go", "needle": "var _ contracts.NotifierContract = (*TeamsNotifier)(nil)"}
                 ]
             }
         },
@@ -487,7 +513,12 @@
                 "implementations": [
                     {"file": "atelier/repositories/customer_repository.go", "needle": "var _ contracts.Repository[*models.Customer] = (*CustomerRepository)(nil)"},
                     {"file": "atelier/repositories/payment_repository.go", "needle": "var _ contracts.Repository[Payment] = (*PaymentRepository)(nil)"},
-                    {"file": "atelier/repositories/warranty_repository.go", "needle": "var _ contracts.Repository[Claim] = (*WarrantyRepository)(nil)"}
+                    {"file": "atelier/repositories/warranty_repository.go", "needle": "var _ contracts.Repository[Claim] = (*WarrantyRepository)(nil)"},
+                    {"file": "atelier/repositories/inventory_repository.go", "needle": "var _ contracts.Repository[Movement] = (*InventoryRepository)(nil)"},
+                    {"file": "atelier/repositories/invoice_repository.go", "needle": "var _ contracts.Repository[*models.Invoice] = (*InvoiceRepository)(nil)"},
+                    {"file": "atelier/repositories/order_repository.go", "needle": "var _ contracts.Repository[*models.RepairOrder] = (*OrderRepository)(nil)"},
+                    {"file": "atelier/repositories/part_repository.go", "needle": "var _ contracts.Repository[*models.Part] = (*PartRepository)(nil)"},
+                    {"file": "atelier/repositories/technician_repository.go", "needle": "var _ contracts.Repository[*models.Technician] = (*TechnicianRepository)(nil)"}
                 ]
             }
         },
@@ -500,8 +531,30 @@
                 "exact_count": 24,
                 "kind": "structural",
                 "implementations": [
-                    {"file": "atelier/rules/adhoc/adhoc.go", "needle": "type AdHocRule struct {"},
-                    {"file": "atelier/rules/adhoc/adhoc.go", "needle": "var Rules = []AdHocRule{"}
+                    {"file": "atelier/rules/adhoc/adhoc.go", "needle": "\t{key: \"duplicate-reference\", check: func(data *dataset.Dataset) bool {"},
+                    {"file": "atelier/rules/adhoc/adhoc.go", "needle": "\t{key: \"reference-prefix\", check: func(data *dataset.Dataset) bool {"},
+                    {"file": "atelier/rules/adhoc/adhoc.go", "needle": "\t{key: \"currency-consistency\", check: func(data *dataset.Dataset) bool {"},
+                    {"file": "atelier/rules/adhoc/adhoc.go", "needle": "\t{key: \"rounding\", check: func(data *dataset.Dataset) bool {"},
+                    {"file": "atelier/rules/adhoc/adhoc.go", "needle": "\t{key: \"tax-applied\", check: func(data *dataset.Dataset) bool {"},
+                    {"file": "atelier/rules/adhoc/adhoc.go", "needle": "\t{key: \"export-freshness\", check: func(data *dataset.Dataset) bool {"},
+                    {"file": "atelier/rules/adhoc/adhoc.go", "needle": "\t{key: \"notification-sent\", check: func(data *dataset.Dataset) bool {"},
+                    {"file": "atelier/rules/adhoc/adhoc.go", "needle": "\t{key: \"audit-trail\", check: func(data *dataset.Dataset) bool {"},
+                    {"file": "atelier/rules/adhoc/adhoc.go", "needle": "\t{key: \"cache-ttl\", check: func(data *dataset.Dataset) bool {"},
+                    {"file": "atelier/rules/adhoc/adhoc.go", "needle": "\t{key: \"report-coverage\", check: func(data *dataset.Dataset) bool {"},
+                    {"file": "atelier/rules/adhoc/adhoc.go", "needle": "\t{key: \"metric-range\", check: func(data *dataset.Dataset) bool {"},
+                    {"file": "atelier/rules/adhoc/adhoc.go", "needle": "\t{key: \"dataset-integrity\", check: func(data *dataset.Dataset) bool {"},
+                    {"file": "atelier/rules/adhoc/adhoc.go", "needle": "\t{key: \"seed-determinism\", check: func(data *dataset.Dataset) bool {"},
+                    {"file": "atelier/rules/adhoc/adhoc.go", "needle": "\t{key: \"order-count\", check: func(data *dataset.Dataset) bool {"},
+                    {"file": "atelier/rules/adhoc/adhoc.go", "needle": "\t{key: \"customer-count\", check: func(data *dataset.Dataset) bool {"},
+                    {"file": "atelier/rules/adhoc/adhoc.go", "needle": "\t{key: \"part-count\", check: func(data *dataset.Dataset) bool {"},
+                    {"file": "atelier/rules/adhoc/adhoc.go", "needle": "\t{key: \"invoice-count\", check: func(data *dataset.Dataset) bool {"},
+                    {"file": "atelier/rules/adhoc/adhoc.go", "needle": "\t{key: \"open-order-ratio\", check: func(data *dataset.Dataset) bool {"},
+                    {"file": "atelier/rules/adhoc/adhoc.go", "needle": "\t{key: \"completion-rate\", check: func(data *dataset.Dataset) bool {"},
+                    {"file": "atelier/rules/adhoc/adhoc.go", "needle": "\t{key: \"average-ticket\", check: func(data *dataset.Dataset) bool {"},
+                    {"file": "atelier/rules/adhoc/adhoc.go", "needle": "\t{key: \"parts-per-order\", check: func(data *dataset.Dataset) bool {"},
+                    {"file": "atelier/rules/adhoc/adhoc.go", "needle": "\t{key: \"repeat-customer\", check: func(data *dataset.Dataset) bool {"},
+                    {"file": "atelier/rules/adhoc/adhoc.go", "needle": "\t{key: \"device-category\", check: func(data *dataset.Dataset) bool {"},
+                    {"file": "atelier/rules/adhoc/adhoc.go", "needle": "\t{key: \"inventory-turnover\", check: func(data *dataset.Dataset) bool {"}
                 ],
                 "must_not_include": ["var _ contracts.RuleLike"]
             }
@@ -516,7 +569,17 @@
                 "kind": "structural",
                 "implementations": [
                     {"file": "atelier/services/backlog_service.go", "needle": "var _ contracts.ServiceContract = (*BacklogService)(nil)"},
-                    {"file": "atelier/services/revenue_service.go", "needle": "var _ contracts.ServiceContract = (*RevenueService)(nil)"}
+                    {"file": "atelier/services/revenue_service.go", "needle": "var _ contracts.ServiceContract = (*RevenueService)(nil)"},
+                    {"file": "atelier/services/churn_risk_service.go", "needle": "var _ contracts.ServiceContract = (*ChurnRiskService)(nil)"},
+                    {"file": "atelier/services/customer_retention_service.go", "needle": "var _ contracts.ServiceContract = (*CustomerRetentionService)(nil)"},
+                    {"file": "atelier/services/inventory_turnover_service.go", "needle": "var _ contracts.ServiceContract = (*InventoryTurnoverService)(nil)"},
+                    {"file": "atelier/services/order_volume_service.go", "needle": "var _ contracts.ServiceContract = (*OrderVolumeService)(nil)"},
+                    {"file": "atelier/services/part_usage_service.go", "needle": "var _ contracts.ServiceContract = (*PartUsageService)(nil)"},
+                    {"file": "atelier/services/payment_latency_service.go", "needle": "var _ contracts.ServiceContract = (*PaymentLatencyService)(nil)"},
+                    {"file": "atelier/services/profit_margin_service.go", "needle": "var _ contracts.ServiceContract = (*ProfitMarginService)(nil)"},
+                    {"file": "atelier/services/technician_load_service.go", "needle": "var _ contracts.ServiceContract = (*TechnicianLoadService)(nil)"},
+                    {"file": "atelier/services/throughput_service.go", "needle": "var _ contracts.ServiceContract = (*ThroughputService)(nil)"},
+                    {"file": "atelier/services/warranty_claim_service.go", "needle": "var _ contracts.ServiceContract = (*WarrantyClaimService)(nil)"}
                 ]
             }
         },
@@ -530,7 +593,13 @@
                 "kind": "structural",
                 "implementations": [
                     {"file": "atelier/exporters/csv_exporter.go", "needle": "var _ contracts.ExporterContract = (*CsvExporter)(nil)"},
-                    {"file": "atelier/exporters/yaml_exporter.go", "needle": "var _ contracts.ExporterContract = (*YamlExporter)(nil)"}
+                    {"file": "atelier/exporters/yaml_exporter.go", "needle": "var _ contracts.ExporterContract = (*YamlExporter)(nil)"},
+                    {"file": "atelier/exporters/html_exporter.go", "needle": "var _ contracts.ExporterContract = (*HtmlExporter)(nil)"},
+                    {"file": "atelier/exporters/json_exporter.go", "needle": "var _ contracts.ExporterContract = (*JsonExporter)(nil)"},
+                    {"file": "atelier/exporters/markdown_exporter.go", "needle": "var _ contracts.ExporterContract = (*MarkdownExporter)(nil)"},
+                    {"file": "atelier/exporters/pdf_exporter.go", "needle": "var _ contracts.ExporterContract = (*PdfExporter)(nil)"},
+                    {"file": "atelier/exporters/xlsx_exporter.go", "needle": "var _ contracts.ExporterContract = (*XlsxExporter)(nil)"},
+                    {"file": "atelier/exporters/xml_exporter.go", "needle": "var _ contracts.ExporterContract = (*XmlExporter)(nil)"}
                 ]
             }
         },
@@ -539,10 +608,12 @@
             "surface": "references",
             "from": {"file": "core/models/part.go", "needle": "func (p *Part) ConsumedQuantity() int {", "symbol": "ConsumedQuantity"},
             "expect": {
-                "min_references": 4,
+                "exact_count": 5,
                 "known_sites": [
-                    {"file": "atelier/reports/part_usage.go", "needle": "rows = append(rows, contracts.Row(part.Name, float64(part.ConsumedQuantity())))"},
-                    {"file": "atelier/reports/inventory_turnover.go", "needle": "turnover = float64(part.ConsumedQuantity()) / float64(part.Stock)"},
+                    {"file": "atelier/reports/inventory_turnover.go", "needle": "\t\t\tturnover = float64(part.ConsumedQuantity()) / float64(part.Stock)"},
+                    {"file": "atelier/reports/part_usage.go", "needle": "\t\trows = append(rows, contracts.Row(part.Name, float64(part.ConsumedQuantity())))"},
+                    {"file": "atelier/rules/adhoc/adhoc.go", "needle": "\t\t\tif part.ConsumedQuantity() >= 0 {"},
+                    {"file": "atelier/services/inventory_turnover_service.go", "needle": "\treturn float64(part.ConsumedQuantity()) / float64(part.Stock), true"},
                     {"file": "atelier/services/part_usage_service.go", "needle": "\t\tunits += part.ConsumedQuantity()"}
                 ]
             }
@@ -552,10 +623,16 @@
             "surface": "references",
             "from": {"file": "core/models/repairorder.go", "needle": "func (o *RepairOrder) TransitionTo(next support.RepairStatus, changedBy string) bool {", "symbol": "TransitionTo"},
             "expect": {
-                "min_references": 5,
+                "exact_count": 9,
                 "known_sites": [
-                    {"file": "core/models/repairorder.go", "needle": "\tif !o.TransitionTo(support.StatusCompleted, changedBy) {"},
+                    {"file": "atelier/dataset/dataset.go", "needle": "\torders[0].TransitionTo(support.StatusDiagnosing, \"seeder\")"},
+                    {"file": "atelier/dataset/dataset.go", "needle": "\torders[0].TransitionTo(support.StatusRepairing, \"seeder\")"},
                     {"file": "atelier/dataset/dataset.go", "needle": "\torders[0].TransitionTo(support.StatusCompleted, \"seeder\")"},
+                    {"file": "atelier/dataset/dataset.go", "needle": "\torders[1].TransitionTo(support.StatusDiagnosing, \"seeder\")"},
+                    {"file": "atelier/dataset/dataset.go", "needle": "\torders[1].TransitionTo(support.StatusAwaitingParts, \"seeder\")"},
+                    {"file": "atelier/dataset/dataset.go", "needle": "\torders[2].TransitionTo(support.StatusDiagnosing, \"seeder\")"},
+                    {"file": "atelier/dataset/dataset.go", "needle": "\torders[2].TransitionTo(support.StatusRepairing, \"seeder\")"},
+                    {"file": "core/models/repairorder.go", "needle": "\tif !o.TransitionTo(support.StatusCompleted, changedBy) {"},
                     {"file": "tests/promotion_test.go", "needle": "\tif !order.TransitionTo(support.StatusDiagnosing, \"tester\") {"}
                 ]
             }
@@ -565,10 +642,13 @@
             "surface": "references",
             "from": {"file": "atelier/dataset/dataset.go", "needle": "func Seeded() *Dataset {", "symbol": "Seeded"},
             "expect": {
-                "min_references": 3,
+                "exact_count": 5,
                 "known_sites": [
                     {"file": "app/state.go", "needle": "\t\tData:      dataset.Seeded(),"},
                     {"file": "tests/promotion_test.go", "needle": "\treturn dataset.Seeded()"}
+                ],
+                "repeated_sites": [
+                    {"file": "tests/seed_test.go", "needle": "data := dataset.Seeded()", "lines": 3}
                 ]
             }
         },
@@ -577,11 +657,52 @@
             "surface": "references",
             "from": {"file": "core/money/money.go", "needle": "type Money struct {", "symbol": "Money"},
             "expect": {
-                "min_references": 6,
+                "exact_count": 44,
                 "known_sites": [
+                    {"file": "core/billing/formatter.go", "needle": "func (f *Formatter) Money(amount money.Money) string {"},
+                    {"file": "core/billing/formatter.go", "needle": "func (f *Formatter) Line(quantity int, description string, amount money.Money) string {"},
+                    {"file": "core/contracts/invoicecalculator.go", "needle": "\tCalculate(order *models.RepairOrder) money.Money"},
+                    {"file": "core/contracts/invoicecalculator.go", "needle": "type CalculatorFunc func(order *models.RepairOrder) money.Money"},
+                    {"file": "core/contracts/invoicecalculator.go", "needle": "func (f CalculatorFunc) Calculate(order *models.RepairOrder) money.Money {"},
                     {"file": "core/models/invoice.go", "needle": "\tTotal         money.Money"},
+                    {"file": "core/models/invoice.go", "needle": "func NewInvoice(id int, repairOrderID int, total money.Money) *Invoice {"},
+                    {"file": "core/models/invoice.go", "needle": "func (i *Invoice) Outstanding() money.Money {"},
                     {"file": "core/models/part.go", "needle": "\tUnitPrice    money.Money"},
-                    {"file": "core/contracts/invoicecalculator.go", "needle": "\tCalculate(order *models.RepairOrder) money.Money"}
+                    {"file": "core/models/part.go", "needle": "func NewPart(id int, sku, name string, unitPrice money.Money, stock, reorderLevel int) *Part {"},
+                    {"file": "core/models/part.go", "needle": "func SeedPart(id int, sku string, name string, unitPrice money.Money, stock int) *Part {"},
+                    {"file": "core/models/part.go", "needle": "func (p *Part) LineTotal(quantity int) money.Money {"},
+                    {"file": "core/models/repairorder.go", "needle": "\tUnitPrice money.Money"},
+                    {"file": "core/models/repairorder.go", "needle": "\tCalculate(order *RepairOrder) money.Money"},
+                    {"file": "core/models/repairorder.go", "needle": "func (o *RepairOrder) PartsSubtotal() money.Money {"},
+                    {"file": "core/models/repairorder.go", "needle": "\tlines := make([]money.Money, 0, len(o.Parts))"},
+                    {"file": "core/models/repairorder.go", "needle": "func (o *RepairOrder) Total(calculator Calculator) money.Money {"},
+                    {"file": "core/money/money.go", "needle": "var Zero = Money{cents: 0}"},
+                    {"file": "core/money/money.go", "needle": "func FromCents(cents int64) Money {"},
+                    {"file": "core/money/money.go", "needle": "\treturn Money{cents: cents}"},
+                    {"file": "core/money/money.go", "needle": "func Parse(raw string) (Money, error) {"},
+                    {"file": "core/money/money.go", "needle": "\treturn Money{cents: units*100 + subunits}, nil"},
+                    {"file": "core/money/money.go", "needle": "func Sum(amounts []Money) Money {"},
+                    {"file": "core/money/money.go", "needle": "func (m Money) Cents() int64 {"},
+                    {"file": "core/money/money.go", "needle": "func (m Money) Euros() int64 {"},
+                    {"file": "core/money/money.go", "needle": "func (m Money) WithSurchargeBp(bp int64) Money {"},
+                    {"file": "core/money/money.go", "needle": "\treturn Money{cents: m.cents + (m.cents*bp+5000)/10000}"},
+                    {"file": "core/money/money.go", "needle": "func (m Money) Plus(other Money) Money {"},
+                    {"file": "core/money/money.go", "needle": "\treturn Money{cents: m.cents + other.cents}"},
+                    {"file": "core/money/money.go", "needle": "func (m Money) Minus(other Money) Money {"},
+                    {"file": "core/money/money.go", "needle": "\treturn Money{cents: m.cents - other.cents}"},
+                    {"file": "core/money/money.go", "needle": "func (m Money) Times(factor int64) Money {"},
+                    {"file": "core/money/money.go", "needle": "\treturn Money{cents: m.cents * factor}"},
+                    {"file": "core/money/money.go", "needle": "func (m Money) Negate() Money {"},
+                    {"file": "core/money/money.go", "needle": "\treturn Money{cents: -m.cents}"},
+                    {"file": "core/money/money.go", "needle": "func (m Money) IsZero() bool {"},
+                    {"file": "core/money/money.go", "needle": "func (m Money) LessThan(other Money) bool {"},
+                    {"file": "core/money/money.go", "needle": "func (m Money) String() string {"},
+                    {"file": "core/services/rush.go", "needle": "func (c *RushInvoiceCalculator) Calculate(order *models.RepairOrder) money.Money {"},
+                    {"file": "core/services/standard.go", "needle": "func (c *StandardInvoiceCalculator) Calculate(order *models.RepairOrder) money.Money {"},
+                    {"file": "core/services/standard.go", "needle": "func (c *StandardInvoiceCalculator) Labour(order *models.RepairOrder) money.Money {"},
+                    {"file": "tests/interfaces_test.go", "needle": "\tvar adapted corecontracts.InvoiceCalculator = corecontracts.CalculatorFunc(func(order *models.RepairOrder) money.Money {"},
+                    {"file": "tests/shadow_test.go", "needle": "func moneyFromCents(cents int64) money.Money {"},
+                    {"file": "tests/structure_test.go", "needle": "\tsum := money.Sum([]money.Money{money.FromCents(100), money.FromCents(250)})"}
                 ]
             }
         },
@@ -590,10 +711,21 @@
             "surface": "references",
             "from": {"file": "atelier/contracts/report.go", "needle": "func RowFromCents(label string, cents int64) ReportRow {", "symbol": "RowFromCents"},
             "expect": {
-                "min_references": 8,
+                "exact_count": 13,
                 "known_sites": [
+                    {"file": "atelier/reports/cash_flow.go", "needle": "\t\tcontracts.RowFromCents(\"paid\", paid),"},
+                    {"file": "atelier/reports/cash_flow.go", "needle": "\t\tcontracts.RowFromCents(\"outstanding\", outstanding),"},
+                    {"file": "atelier/reports/customer_lifetime.go", "needle": "\t\trows = append(rows, contracts.RowFromCents(customer.Name, total))"},
+                    {"file": "atelier/reports/daily_revenue.go", "needle": "\t\trows = append(rows, contracts.RowFromCents(fmt.Sprintf(\"order-%d\", order.ID), order.PartsSubtotal().Cents()))"},
+                    {"file": "atelier/reports/gross_profit.go", "needle": "\t\tcontracts.RowFromCents(\"revenue\", revenue),"},
+                    {"file": "atelier/reports/gross_profit.go", "needle": "\t\tcontracts.RowFromCents(\"part cost\", cost),"},
                     {"file": "atelier/reports/gross_profit.go", "needle": "\t\tcontracts.RowFromCents(\"gross profit\", revenue-cost),"},
-                    {"file": "atelier/reports/weekly_revenue.go", "needle": "\treturn []contracts.ReportRow{contracts.RowFromCents(\"week to date\", data.RevenueCents())}"}
+                    {"file": "atelier/reports/monthly_revenue.go", "needle": "\treturn []contracts.ReportRow{contracts.RowFromCents(\"month to date\", data.RevenueCents())}"},
+                    {"file": "atelier/reports/payment_default.go", "needle": "\t\trows = append(rows, contracts.RowFromCents(fmt.Sprintf(\"invoice-%d\", invoice.ID), invoice.Outstanding().Cents()))"},
+                    {"file": "atelier/reports/technician_payroll.go", "needle": "\t\trows = append(rows, contracts.RowFromCents(technician.Name, share))"},
+                    {"file": "atelier/reports/warranty_cost.go", "needle": "\t\trows = append(rows, contracts.RowFromCents(fmt.Sprintf(\"order-%d\", order.ID), order.PartsSubtotal().Cents()))"},
+                    {"file": "atelier/reports/weekly_revenue.go", "needle": "\treturn []contracts.ReportRow{contracts.RowFromCents(\"week to date\", data.RevenueCents())}"},
+                    {"file": "atelier/services/revenue_service.go", "needle": "\treturn []contracts.ReportRow{contracts.RowFromCents(\"revenue\", s.TotalCents(data))}"}
                 ]
             }
         },
@@ -602,11 +734,13 @@
             "surface": "references",
             "from": {"file": "atelier/reports/registry.go", "needle": "var registry = support.NewRegistry[contracts.ReportContract]()", "symbol": "registry"},
             "expect": {
-                "min_references": 4,
+                "exact_count": 5,
                 "known_sites": [
                     {"file": "atelier/reports/registry.go", "needle": "\tregistry.Add(report.Slug(), report)"},
                     {"file": "atelier/reports/registry.go", "needle": "\treturn registry.All()"},
-                    {"file": "tests/breadth_test.go", "needle": "\t\t{\"reports\", reports.Count(), 24},"}
+                    {"file": "atelier/reports/registry.go", "needle": "\treturn registry.Get(slug)"},
+                    {"file": "atelier/reports/registry.go", "needle": "\treturn registry.Keys()"},
+                    {"file": "atelier/reports/registry.go", "needle": "\treturn registry.Len()"}
                 ]
             }
         },
@@ -616,10 +750,32 @@
             "note": "Both rule families fan into one Register: 24 init calls plus one loop over the structural values.",
             "from": {"file": "atelier/rules/registry.go", "needle": "func Register(rule contracts.RuleContract) {", "symbol": "Register"},
             "expect": {
-                "min_references": 5,
+                "exact_count": 25,
                 "known_sites": [
-                    {"file": "atelier/rules/registry.go", "needle": "\t\tRegister(rule)"},
+                    {"file": "atelier/rules/customer_credit.go", "needle": "\tRegister(CustomerCreditRule{})"},
+                    {"file": "atelier/rules/deposit_required.go", "needle": "\tRegister(DepositRequiredRule{})"},
+                    {"file": "atelier/rules/device_age.go", "needle": "\tRegister(DeviceAgeRule{})"},
+                    {"file": "atelier/rules/discount_ceiling.go", "needle": "\tRegister(DiscountCeilingRule{})"},
+                    {"file": "atelier/rules/gross_profit.go", "needle": "\tRegister(GrossProfitRule{})"},
+                    {"file": "atelier/rules/idle_technician.go", "needle": "\tRegister(IdleTechnicianRule{})"},
+                    {"file": "atelier/rules/invoice_balance.go", "needle": "\tRegister(InvoiceBalanceRule{})"},
+                    {"file": "atelier/rules/label_presence.go", "needle": "\tRegister(LabelPresenceRule{})"},
+                    {"file": "atelier/rules/maximum_backlog.go", "needle": "\tRegister(MaximumBacklogRule{})"},
                     {"file": "atelier/rules/minimum_stock.go", "needle": "\tRegister(MinimumStockRule{})"},
+                    {"file": "atelier/rules/note_required.go", "needle": "\tRegister(NoteRequiredRule{})"},
+                    {"file": "atelier/rules/part_availability.go", "needle": "\tRegister(PartAvailabilityRule{})"},
+                    {"file": "atelier/rules/part_cost_margin.go", "needle": "\tRegister(PartCostMarginRule{})"},
+                    {"file": "atelier/rules/priority_escalation.go", "needle": "\tRegister(PriorityEscalationRule{})"},
+                    {"file": "atelier/rules/registry.go", "needle": "\t\tRegister(rule)"},
+                    {"file": "atelier/rules/repair_duration.go", "needle": "\tRegister(RepairDurationRule{})"},
+                    {"file": "atelier/rules/revenue_floor.go", "needle": "\tRegister(RevenueFloorRule{})"},
+                    {"file": "atelier/rules/rework_limit.go", "needle": "\tRegister(ReworkLimitRule{})"},
+                    {"file": "atelier/rules/rush_surcharge.go", "needle": "\tRegister(RushSurchargeRule{})"},
+                    {"file": "atelier/rules/schedule_gap.go", "needle": "\tRegister(ScheduleGapRule{})"},
+                    {"file": "atelier/rules/signature_required.go", "needle": "\tRegister(SignatureRequiredRule{})"},
+                    {"file": "atelier/rules/slot_overbooking.go", "needle": "\tRegister(SlotOverbookingRule{})"},
+                    {"file": "atelier/rules/status_sequence.go", "needle": "\tRegister(StatusSequenceRule{})"},
+                    {"file": "atelier/rules/technician_capacity.go", "needle": "\tRegister(TechnicianCapacityRule{})"},
                     {"file": "atelier/rules/warranty_window.go", "needle": "\tRegister(WarrantyWindowRule{})"}
                 ]
             }
@@ -629,10 +785,15 @@
             "surface": "references",
             "from": {"file": "core/events/events.go", "needle": "\tRepairCompleted = \"repair.completed\"", "symbol": "RepairCompleted"},
             "expect": {
-                "min_references": 3,
+                "exact_count": 4,
                 "known_sites": [
                     {"file": "core/events/events.go", "needle": "\tdispatcher.Listen(RepairCompleted, n)"},
-                    {"file": "tests/events_test.go", "needle": "\tif !dispatcher.Dispatch(events.RepairCompleted, events.Payload{\"reference\": \"AT-2026-000001\"}) {"}
+                    {"file": "core/events/events.go", "needle": "\tcase RepairCompleted:"},
+                    {"file": "tests/events_test.go", "needle": "\tif !dispatcher.Dispatch(events.RepairCompleted, events.Payload{\"reference\": \"AT-2026-000001\"}) {"},
+                    {"file": "tests/events_test.go", "needle": "\tif dispatcher.Dispatch(events.RepairCompleted, events.Payload{\"reference\": \"AT-2026-000001\"}) {"}
+                ],
+                "optional_sites": [
+                    {"file": "tests/events_test.go", "needle": "names[0] != \"repair.completed\""}
                 ]
             }
         },
@@ -642,11 +803,13 @@
             "note": "Two of the call sites reach it through embedding, on a *models.Technician receiver.",
             "from": {"file": "core/support/schedule.go", "needle": "func (s *Schedule) NextSlot() int {", "symbol": "NextSlot"},
             "expect": {
-                "min_references": 4,
+                "exact_count": 5,
                 "known_sites": [
-                    {"file": "core/support/schedule.go", "needle": "\tnext := s.NextSlot()"},
                     {"file": "atelier/repositories/technician_repository.go", "needle": "\t\tif record.NextSlot() >= 0 {"},
-                    {"file": "atelier/rules/schedule_gap.go", "needle": "\t\tif technician.NextSlot() < 0 {"}
+                    {"file": "atelier/rules/schedule_gap.go", "needle": "\t\tif technician.NextSlot() < 0 {"},
+                    {"file": "core/support/schedule.go", "needle": "\tnext := s.NextSlot()"},
+                    {"file": "tests/promotion_test.go", "needle": "\tif technician.NextSlot() != 0 {"},
+                    {"file": "tests/promotion_test.go", "needle": "\t\tt.Errorf(\"next slot = %d, want 0\", technician.NextSlot())"}
                 ]
             }
         },
@@ -893,7 +1056,27 @@
                     {"file": "atelier/reports/cash_flow.go", "needle": "type CashFlowReport struct {"},
                     {"file": "atelier/reports/churn_risk.go", "needle": "type ChurnRiskReport struct {"},
                     {"file": "atelier/reports/gross_profit.go", "needle": "type GrossProfitReport struct {"},
-                    {"file": "atelier/reports/weekly_revenue.go", "needle": "type WeeklyRevenueReport struct {"}
+                    {"file": "atelier/reports/weekly_revenue.go", "needle": "type WeeklyRevenueReport struct {"},
+                    {"file": "atelier/reports/customer_lifetime.go", "needle": "type CustomerLifetimeReport struct {"},
+                    {"file": "atelier/reports/customer_retention.go", "needle": "type CustomerRetentionReport struct {"},
+                    {"file": "atelier/reports/daily_revenue.go", "needle": "type DailyRevenueReport struct {"},
+                    {"file": "atelier/reports/inventory_turnover.go", "needle": "type InventoryTurnoverReport struct {"},
+                    {"file": "atelier/reports/monthly_revenue.go", "needle": "type MonthlyRevenueReport struct {"},
+                    {"file": "atelier/reports/net_margin.go", "needle": "type NetMarginReport struct {"},
+                    {"file": "atelier/reports/order_backlog.go", "needle": "type OrderBacklogReport struct {"},
+                    {"file": "atelier/reports/order_throughput.go", "needle": "type OrderThroughputReport struct {"},
+                    {"file": "atelier/reports/order_volume.go", "needle": "type OrderVolumeReport struct {"},
+                    {"file": "atelier/reports/part_shortage.go", "needle": "type PartShortageReport struct {"},
+                    {"file": "atelier/reports/part_usage.go", "needle": "type PartUsageReport struct {"},
+                    {"file": "atelier/reports/payment_default.go", "needle": "type PaymentDefaultReport struct {"},
+                    {"file": "atelier/reports/payment_latency.go", "needle": "type PaymentLatencyReport struct {"},
+                    {"file": "atelier/reports/profit_margin.go", "needle": "type ProfitMarginReport struct {"},
+                    {"file": "atelier/reports/technician_efficiency.go", "needle": "type TechnicianEfficiencyReport struct {"},
+                    {"file": "atelier/reports/technician_load.go", "needle": "type TechnicianLoadReport struct {"},
+                    {"file": "atelier/reports/technician_payroll.go", "needle": "type TechnicianPayrollReport struct {"},
+                    {"file": "atelier/reports/warranty_claim.go", "needle": "type WarrantyClaimReport struct {"},
+                    {"file": "atelier/reports/warranty_cost.go", "needle": "type WarrantyCostReport struct {"},
+                    {"file": "atelier/reports/warranty_trend.go", "needle": "type WarrantyTrendReport struct {"}
                 ],
                 "must_not_include": ["support.BaseReport", "support.PeriodicReport", "support.CompositeReport"]
             }
@@ -908,9 +1091,54 @@
                 "nominal_count": 24,
                 "structural_count": 24,
                 "implementations": [
+                    {"file": "atelier/rules/customer_credit.go", "needle": "var _ contracts.RuleContract = CustomerCreditRule{}"},
+                    {"file": "atelier/rules/deposit_required.go", "needle": "var _ contracts.RuleContract = DepositRequiredRule{}"},
+                    {"file": "atelier/rules/device_age.go", "needle": "var _ contracts.RuleContract = DeviceAgeRule{}"},
+                    {"file": "atelier/rules/discount_ceiling.go", "needle": "var _ contracts.RuleContract = DiscountCeilingRule{}"},
+                    {"file": "atelier/rules/gross_profit.go", "needle": "var _ contracts.RuleContract = GrossProfitRule{}"},
+                    {"file": "atelier/rules/idle_technician.go", "needle": "var _ contracts.RuleContract = IdleTechnicianRule{}"},
+                    {"file": "atelier/rules/invoice_balance.go", "needle": "var _ contracts.RuleContract = InvoiceBalanceRule{}"},
+                    {"file": "atelier/rules/label_presence.go", "needle": "var _ contracts.RuleContract = LabelPresenceRule{}"},
+                    {"file": "atelier/rules/maximum_backlog.go", "needle": "var _ contracts.RuleContract = MaximumBacklogRule{}"},
                     {"file": "atelier/rules/minimum_stock.go", "needle": "var _ contracts.RuleContract = MinimumStockRule{}"},
+                    {"file": "atelier/rules/note_required.go", "needle": "var _ contracts.RuleContract = NoteRequiredRule{}"},
+                    {"file": "atelier/rules/part_availability.go", "needle": "var _ contracts.RuleContract = PartAvailabilityRule{}"},
+                    {"file": "atelier/rules/part_cost_margin.go", "needle": "var _ contracts.RuleContract = PartCostMarginRule{}"},
+                    {"file": "atelier/rules/priority_escalation.go", "needle": "var _ contracts.RuleContract = PriorityEscalationRule{}"},
+                    {"file": "atelier/rules/repair_duration.go", "needle": "var _ contracts.RuleContract = RepairDurationRule{}"},
+                    {"file": "atelier/rules/revenue_floor.go", "needle": "var _ contracts.RuleContract = RevenueFloorRule{}"},
+                    {"file": "atelier/rules/rework_limit.go", "needle": "var _ contracts.RuleContract = ReworkLimitRule{}"},
+                    {"file": "atelier/rules/rush_surcharge.go", "needle": "var _ contracts.RuleContract = RushSurchargeRule{}"},
+                    {"file": "atelier/rules/schedule_gap.go", "needle": "var _ contracts.RuleContract = ScheduleGapRule{}"},
+                    {"file": "atelier/rules/signature_required.go", "needle": "var _ contracts.RuleContract = SignatureRequiredRule{}"},
+                    {"file": "atelier/rules/slot_overbooking.go", "needle": "var _ contracts.RuleContract = SlotOverbookingRule{}"},
+                    {"file": "atelier/rules/status_sequence.go", "needle": "var _ contracts.RuleContract = StatusSequenceRule{}"},
+                    {"file": "atelier/rules/technician_capacity.go", "needle": "var _ contracts.RuleContract = TechnicianCapacityRule{}"},
+                    {"file": "atelier/rules/warranty_window.go", "needle": "var _ contracts.RuleContract = WarrantyWindowRule{}"},
                     {"file": "atelier/rules/adhoc/adhoc.go", "needle": "\t{key: \"duplicate-reference\", check: func(data *dataset.Dataset) bool {"},
-                    {"file": "atelier/rules/registry.go", "needle": "\t\tRegister(rule)"}
+                    {"file": "atelier/rules/adhoc/adhoc.go", "needle": "\t{key: \"reference-prefix\", check: func(data *dataset.Dataset) bool {"},
+                    {"file": "atelier/rules/adhoc/adhoc.go", "needle": "\t{key: \"currency-consistency\", check: func(data *dataset.Dataset) bool {"},
+                    {"file": "atelier/rules/adhoc/adhoc.go", "needle": "\t{key: \"rounding\", check: func(data *dataset.Dataset) bool {"},
+                    {"file": "atelier/rules/adhoc/adhoc.go", "needle": "\t{key: \"tax-applied\", check: func(data *dataset.Dataset) bool {"},
+                    {"file": "atelier/rules/adhoc/adhoc.go", "needle": "\t{key: \"export-freshness\", check: func(data *dataset.Dataset) bool {"},
+                    {"file": "atelier/rules/adhoc/adhoc.go", "needle": "\t{key: \"notification-sent\", check: func(data *dataset.Dataset) bool {"},
+                    {"file": "atelier/rules/adhoc/adhoc.go", "needle": "\t{key: \"audit-trail\", check: func(data *dataset.Dataset) bool {"},
+                    {"file": "atelier/rules/adhoc/adhoc.go", "needle": "\t{key: \"cache-ttl\", check: func(data *dataset.Dataset) bool {"},
+                    {"file": "atelier/rules/adhoc/adhoc.go", "needle": "\t{key: \"report-coverage\", check: func(data *dataset.Dataset) bool {"},
+                    {"file": "atelier/rules/adhoc/adhoc.go", "needle": "\t{key: \"metric-range\", check: func(data *dataset.Dataset) bool {"},
+                    {"file": "atelier/rules/adhoc/adhoc.go", "needle": "\t{key: \"dataset-integrity\", check: func(data *dataset.Dataset) bool {"},
+                    {"file": "atelier/rules/adhoc/adhoc.go", "needle": "\t{key: \"seed-determinism\", check: func(data *dataset.Dataset) bool {"},
+                    {"file": "atelier/rules/adhoc/adhoc.go", "needle": "\t{key: \"order-count\", check: func(data *dataset.Dataset) bool {"},
+                    {"file": "atelier/rules/adhoc/adhoc.go", "needle": "\t{key: \"customer-count\", check: func(data *dataset.Dataset) bool {"},
+                    {"file": "atelier/rules/adhoc/adhoc.go", "needle": "\t{key: \"part-count\", check: func(data *dataset.Dataset) bool {"},
+                    {"file": "atelier/rules/adhoc/adhoc.go", "needle": "\t{key: \"invoice-count\", check: func(data *dataset.Dataset) bool {"},
+                    {"file": "atelier/rules/adhoc/adhoc.go", "needle": "\t{key: \"open-order-ratio\", check: func(data *dataset.Dataset) bool {"},
+                    {"file": "atelier/rules/adhoc/adhoc.go", "needle": "\t{key: \"completion-rate\", check: func(data *dataset.Dataset) bool {"},
+                    {"file": "atelier/rules/adhoc/adhoc.go", "needle": "\t{key: \"average-ticket\", check: func(data *dataset.Dataset) bool {"},
+                    {"file": "atelier/rules/adhoc/adhoc.go", "needle": "\t{key: \"parts-per-order\", check: func(data *dataset.Dataset) bool {"},
+                    {"file": "atelier/rules/adhoc/adhoc.go", "needle": "\t{key: \"repeat-customer\", check: func(data *dataset.Dataset) bool {"},
+                    {"file": "atelier/rules/adhoc/adhoc.go", "needle": "\t{key: \"device-category\", check: func(data *dataset.Dataset) bool {"},
+                    {"file": "atelier/rules/adhoc/adhoc.go", "needle": "\t{key: \"inventory-turnover\", check: func(data *dataset.Dataset) bool {"}
                 ],
                 "must_not_include": ["var _ contracts.RuleContract = AdHocRule"]
             }
@@ -922,6 +1150,12 @@
             "from": {"file": "atelier/support/report.go", "needle": "type BaseReport struct {", "symbol": "BaseReport"},
             "expect": {
                 "exact_count": 4,
+                "implementations": [
+                    {"file": "atelier/support/component.go", "needle": "func (c Component) Slug() string {"},
+                    {"file": "atelier/support/component.go", "needle": "func (c Component) Title() string {"},
+                    {"file": "atelier/concerns/cache.go", "needle": "func (h HasCache) CacheKey() string {"},
+                    {"file": "atelier/concerns/cache.go", "needle": "func (h HasCache) TTLSeconds() int {"}
+                ],
                 "must_include": ["Slug", "Title", "CacheKey", "TTLSeconds"],
                 "must_not_include": ["Rows"]
             }
@@ -1073,7 +1307,8 @@
             "from": {"file": "core/models/repairorder.go", "needle": "type RepairOrder struct {"},
             "expect": {
                 "min_symbols": 21,
-                "must_include": ["PartLine", "LogEntry", "Calculator", "RepairOrder", "SeedRepairOrder", "TransitionTo", "Complete", "AddPart", "PartsSubtotal", "Total", "IsOpen"]
+                "must_include": ["PartLine", "LogEntry", "Calculator", "RepairOrder", "SeedRepairOrder", "TransitionTo", "Complete", "AddPart", "PartsSubtotal", "Total", "IsOpen"],
+                "symbols": ["PartLine", "PartID", "SKU", "Quantity", "UnitPrice", "LogEntry", "From", "To", "ChangedBy", "Calculator", "Calculate", "RepairOrder", "HasReference", "ID", "CustomerID", "DeviceID", "Status", "Priority", "LaborMinutes", "Parts", "Log", "SeedRepairOrder", "TransitionTo", "Complete", "AddPart", "PartsSubtotal", "Total", "IsOpen"]
             }
         },
         {
@@ -1104,11 +1339,52 @@
             "note": "Canonical id for the go-local refs-money-type: field types, signature types, constructor calls and package-qualified money.Money mentions all count.",
             "from": {"file": "core/money/money.go", "needle": "type Money struct {", "symbol": "Money"},
             "expect": {
-                "min_references": 20,
+                "exact_count": 44,
                 "known_sites": [
-                    {"file": "core/models/part.go", "needle": "\tUnitPrice    money.Money"},
+                    {"file": "core/billing/formatter.go", "needle": "func (f *Formatter) Money(amount money.Money) string {"},
+                    {"file": "core/billing/formatter.go", "needle": "func (f *Formatter) Line(quantity int, description string, amount money.Money) string {"},
+                    {"file": "core/contracts/invoicecalculator.go", "needle": "\tCalculate(order *models.RepairOrder) money.Money"},
+                    {"file": "core/contracts/invoicecalculator.go", "needle": "type CalculatorFunc func(order *models.RepairOrder) money.Money"},
+                    {"file": "core/contracts/invoicecalculator.go", "needle": "func (f CalculatorFunc) Calculate(order *models.RepairOrder) money.Money {"},
                     {"file": "core/models/invoice.go", "needle": "\tTotal         money.Money"},
-                    {"file": "core/contracts/invoicecalculator.go", "needle": "\tCalculate(order *models.RepairOrder) money.Money"}
+                    {"file": "core/models/invoice.go", "needle": "func NewInvoice(id int, repairOrderID int, total money.Money) *Invoice {"},
+                    {"file": "core/models/invoice.go", "needle": "func (i *Invoice) Outstanding() money.Money {"},
+                    {"file": "core/models/part.go", "needle": "\tUnitPrice    money.Money"},
+                    {"file": "core/models/part.go", "needle": "func NewPart(id int, sku, name string, unitPrice money.Money, stock, reorderLevel int) *Part {"},
+                    {"file": "core/models/part.go", "needle": "func SeedPart(id int, sku string, name string, unitPrice money.Money, stock int) *Part {"},
+                    {"file": "core/models/part.go", "needle": "func (p *Part) LineTotal(quantity int) money.Money {"},
+                    {"file": "core/models/repairorder.go", "needle": "\tUnitPrice money.Money"},
+                    {"file": "core/models/repairorder.go", "needle": "\tCalculate(order *RepairOrder) money.Money"},
+                    {"file": "core/models/repairorder.go", "needle": "func (o *RepairOrder) PartsSubtotal() money.Money {"},
+                    {"file": "core/models/repairorder.go", "needle": "\tlines := make([]money.Money, 0, len(o.Parts))"},
+                    {"file": "core/models/repairorder.go", "needle": "func (o *RepairOrder) Total(calculator Calculator) money.Money {"},
+                    {"file": "core/money/money.go", "needle": "var Zero = Money{cents: 0}"},
+                    {"file": "core/money/money.go", "needle": "func FromCents(cents int64) Money {"},
+                    {"file": "core/money/money.go", "needle": "\treturn Money{cents: cents}"},
+                    {"file": "core/money/money.go", "needle": "func Parse(raw string) (Money, error) {"},
+                    {"file": "core/money/money.go", "needle": "\treturn Money{cents: units*100 + subunits}, nil"},
+                    {"file": "core/money/money.go", "needle": "func Sum(amounts []Money) Money {"},
+                    {"file": "core/money/money.go", "needle": "func (m Money) Cents() int64 {"},
+                    {"file": "core/money/money.go", "needle": "func (m Money) Euros() int64 {"},
+                    {"file": "core/money/money.go", "needle": "func (m Money) WithSurchargeBp(bp int64) Money {"},
+                    {"file": "core/money/money.go", "needle": "\treturn Money{cents: m.cents + (m.cents*bp+5000)/10000}"},
+                    {"file": "core/money/money.go", "needle": "func (m Money) Plus(other Money) Money {"},
+                    {"file": "core/money/money.go", "needle": "\treturn Money{cents: m.cents + other.cents}"},
+                    {"file": "core/money/money.go", "needle": "func (m Money) Minus(other Money) Money {"},
+                    {"file": "core/money/money.go", "needle": "\treturn Money{cents: m.cents - other.cents}"},
+                    {"file": "core/money/money.go", "needle": "func (m Money) Times(factor int64) Money {"},
+                    {"file": "core/money/money.go", "needle": "\treturn Money{cents: m.cents * factor}"},
+                    {"file": "core/money/money.go", "needle": "func (m Money) Negate() Money {"},
+                    {"file": "core/money/money.go", "needle": "\treturn Money{cents: -m.cents}"},
+                    {"file": "core/money/money.go", "needle": "func (m Money) IsZero() bool {"},
+                    {"file": "core/money/money.go", "needle": "func (m Money) LessThan(other Money) bool {"},
+                    {"file": "core/money/money.go", "needle": "func (m Money) String() string {"},
+                    {"file": "core/services/rush.go", "needle": "func (c *RushInvoiceCalculator) Calculate(order *models.RepairOrder) money.Money {"},
+                    {"file": "core/services/standard.go", "needle": "func (c *StandardInvoiceCalculator) Calculate(order *models.RepairOrder) money.Money {"},
+                    {"file": "core/services/standard.go", "needle": "func (c *StandardInvoiceCalculator) Labour(order *models.RepairOrder) money.Money {"},
+                    {"file": "tests/interfaces_test.go", "needle": "\tvar adapted corecontracts.InvoiceCalculator = corecontracts.CalculatorFunc(func(order *models.RepairOrder) money.Money {"},
+                    {"file": "tests/shadow_test.go", "needle": "func moneyFromCents(cents int64) money.Money {"},
+                    {"file": "tests/structure_test.go", "needle": "\tsum := money.Sum([]money.Money{money.FromCents(100), money.FromCents(250)})"}
                 ]
             }
         },
@@ -1133,7 +1409,8 @@
             "from": {"file": "atelier/reports/registry.go", "needle": "var registry = support.NewRegistry[contracts.ReportContract]()"},
             "expect": {
                 "min_symbols": 4,
-                "must_include": ["Register", "All", "BySlug", "Count"]
+                "must_include": ["Register", "All", "BySlug", "Count"],
+                "symbols": ["registry", "Register", "All", "BySlug", "Slugs", "Count"]
             }
         },
         {
