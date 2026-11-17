@@ -31,17 +31,18 @@ node bench/check-matrix.mjs          # expect: matrix: OK (<N> canonical ids, <k
 
 ## B. Cross-lane parity
 
-- [ ] Zero missing shared canonical ids: every id carried by three or more lanes is carried here.
+- [ ] Zero missing shared canonical ids: every id carried by three or more lanes is carried here, or the lane README maps it to a lane-local id that asks the same question for a construct this language lacks.
 - [ ] Every shared id keeps the same `surface` string as in the other lanes.
 - [ ] `cardinality` and `multi-parent` ids carry the same `exact_count` as every other lane.
 - [ ] The lane's `notes` states the counting rule and defines every `kind` string the lane introduces.
-- [ ] The domain matches: same seed numbers, same breadth counts, same HTTP routes, same command and
-      job set as the other lanes.
+- [ ] The domain matches: same breadth counts, and every HTTP route, command and job of the shared set is present. Seed numbers match too, unless the lane README records a framework-native seed. Lane-only extras are listed in the lane README.
+
+  Shared set: routes `GET /health`, `GET /report/{reference}`, `GET /api/orders`, `POST /api/orders/{key}/notes`, `GET /api/reports/{slug}`; commands export-report and recalculate-inventory; the recalculate-inventory job.
 - [ ] No tool name appears anywhere in `tasks.json`.
 
 ```bash
 python3 -c "import json;m=json.load(open('bench/matrix.json'));print([k for k,v in m['canonical'].items() if '<lane>' not in v['lanes'] and len(v['lanes'])>=3])"
-# expect: []
+# expect: [] or only ids the lane README maps to a lane-local id
 ```
 
 ## C. Answer-key truth (no gate checks any of this)

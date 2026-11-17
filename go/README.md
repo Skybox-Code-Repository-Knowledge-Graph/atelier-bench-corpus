@@ -68,6 +68,7 @@ import path disagrees with its declared name, and a package that shadows a stand
 | HTTP routes | `app/http/router.go`: `GET /report/{reference}`, `GET /api/orders`, `POST /api/orders/{id}/notes`, `GET /api/reports/{slug}`, `GET /health`; `RegisterDefault` also registers `/health` on the default mux |
 | Parameter groups vs arity | `core/models/part.go` `NewPart` takes six parameters in four groups |
 | Parse negatives | `fixtures/broken-syntax/` — two invalid files behind the `brokenfixtures` build tag, **DO NOT FIX** |
+| Shared-id mapping: `parse-negative-unclosed-class` | Go has no classes; the same question (a type body left open) is asked by lane-local `parse-negative-unclosed-struct` (`fixtures/broken-syntax/unclosed_struct.go`) |
 
 ## Consumption (runner)
 

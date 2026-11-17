@@ -55,6 +55,7 @@ Build from the **committed** `Cargo.lock` only (`cargo build --locked`). Do not 
 | `#[path]` module | `support/mod.rs`: `#[path = "pathed/tally_sheet.rs"] pub mod ledger;` — module name and file name differ |
 | Lifetimes, HRTB, GAT | `support/borrowed.rs` (`Borrowed<'a>`, `for<'x> Fn(&'x str)`), `support/lender.rs` (`type Loan<'a> where Self: 'a`) |
 | Broken-syntax fixtures | `fixtures/broken-syntax`, **DO NOT FIX** (negative cases; outside every crate, so cargo never sees them) |
+| Shared-id mapping: `parse-negative-unclosed-class` | Rust has no classes; the same question (a type body left open) is asked by lane-local `parse-negative-unclosed-impl` (`fixtures/broken-syntax/unclosed_impl.rs`) |
 | Cardinality: macro-generated half of a wide contract | `contracts/rule_contract.rs` + `rules/`: 48 `RuleContract` implementors, 24 textual (one file each) + 24 from `define_rules!` in `rules/generated.rs` |
 | Direction: parent/child/self-reference/inherent | `dir-contract-parent`/`dir-implementor-child` (`ReportContract` ↔ `CashFlowReport`), `support/expr.rs` (`Expr` self-reference), `money.rs` inherent `impl Money` |
 | Import-precision: one-of-siblings, cross-crate, glob | `support/pair.rs` (`Left`/`Right`, only `Left` imported), `dataset.rs` (`Money` without `ParseMoneyError`), `support/report_glob.rs` (`use ...report_contract::*;`) |
