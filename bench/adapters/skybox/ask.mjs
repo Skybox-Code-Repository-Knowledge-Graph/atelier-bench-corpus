@@ -369,8 +369,9 @@ async function askAnchored(question, call) {
         }
         if (question.surface === "references") {
             // skybox 0.9.0 records a use of a symbol as an edge into its node: CALLS (one per call
-            // site, with the site's line) and USES (go, without a line). A site with a line is that
-            // line; a USES row is the using declaration's range, which is what the tool returned.
+            // site, always with the site's line) and USES (php and go without a line, rust with one
+            // on about half). An edge with a line is answered at that line; one without, with the
+            // using declaration's range, which is what the tool returned.
             const edges = parseCypherRows(await ask(call, "cypher", {
                 query: `MATCH (c)-[r:CodeRelation]->(t) WHERE t.id = ${cypherString(id)} AND (r.type = 'CALLS' OR r.type = 'USES') RETURN c.filePath, r.callSiteLine, c.startLine, c.endLine`,
             }));
