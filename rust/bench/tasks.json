@@ -1174,8 +1174,9 @@
             "surface": "resolution",
             "note": "Blanket impl for a foreign generic: RuleContract is local, Vec<T> is foreign; the orphan rule permits it because the trait is local.",
             "from": {
-                "file": "crates/atelier-bench/src/contracts/rule_contract.rs",
-                "needle": "self.iter().all(|rule| rule.evaluate(data))"
+                "file": "crates/atelier-bench/tests/blanket_rules.rs",
+                "needle": "assert!(rules.evaluate(&data));",
+                "symbol": "evaluate"
             },
             "expect": {
                 "kind": "blanket_impl",
