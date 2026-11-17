@@ -51,7 +51,7 @@
       ]
     },
     "card-complete-hub": {
-      "surface": "symbol_card",
+      "surface": "call_hierarchy",
       "lanes": [
         "php"
       ]
@@ -63,7 +63,7 @@
       ]
     },
     "card-magic-forward": {
-      "surface": "symbol_card",
+      "surface": "resolution",
       "lanes": [
         "php"
       ]
