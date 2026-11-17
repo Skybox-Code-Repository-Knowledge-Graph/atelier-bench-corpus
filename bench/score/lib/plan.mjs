@@ -164,6 +164,21 @@ export const LIST_NOT_TYPES = {
 };
 
 /**
+ * document_symbol tasks whose lane's own language server does not pass them, although the key is
+ * right by the lane's counting rule (issue #208), keyed `lane:id`. The rule counts declarations; these
+ * servers also list what the rule leaves out. The key is not changed to fit the server, and a tool
+ * is not scored on a question its reference answers differently, so these tasks are UNSCORABLE.
+ * Decided before any tool under test was measured on document_symbol.
+ */
+export const DOCSYM_REFERENCE_DISAGREES = {
+    "typescript:docsym-repair-order": "typescript-language-server 6.1.0 also lists object-literal keys and a local, which the counting rule leaves out (#208)",
+    "javascript:docsym-repair-order": "typescript-language-server 6.1.0 also lists JSDoc @typedef properties and a local, which the counting rule leaves out (#208)",
+    "javascript:docsym-report-registry": "typescript-language-server 6.1.0 also lists require bindings and module.exports entries, which the counting rule leaves out (#208)",
+    "python:docsym-repair-order": "pyright 1.1.414 also lists parameters, instance attributes and locals, which the counting rule leaves out (#208)",
+    "python:docsym-report-registry": "pyright 1.1.414 also lists parameters, which the counting rule leaves out (#208)",
+};
+
+/**
  * The number of entries a list task states: `exact_count`, or `extends_count` plus
  * `implements_count` where a parents task splits it. null when it states none (the list is not
  * known to be complete); undefined when the two disagree.
@@ -230,6 +245,10 @@ export function planTask(task, lane = null) {
         if (rule.check === "names") {
             if (!Array.isArray(expect.symbols) || expect.symbols.length === 0 || !expect.symbols.every((name) => typeof name === "string" && name !== "")) {
                 return { scorable: false, reason: `${rule.name}: symbols is not a list of names` };
+            }
+            const disagreement = DOCSYM_REFERENCE_DISAGREES[`${lane}:${task.id}`];
+            if (disagreement !== undefined) {
+                return { scorable: false, reason: `${rule.name}: ${disagreement}` };
             }
             return { ...common, symbols: expect.symbols, allow: [] };
         }
