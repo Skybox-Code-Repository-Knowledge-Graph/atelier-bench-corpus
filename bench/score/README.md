@@ -105,7 +105,7 @@ stated wrongly, and counts the tasks that state none; it becomes strict once eve
 | `UNSUPPORTED` | The adapter says the tool cannot be asked this |
 | `UNANSWERED` | The answer file has no entry for the task |
 | `ERROR` | The tool or adapter failed, or the answer is malformed |
-| `UNSCORABLE` | No rule in this version of the scorer covers the task |
+| `UNSCORABLE` | No rule in this version of the scorer covers the task, or the task states no `from.symbol` (its lane is not annotated yet, or the task is a misfit), so no adapter can be asked it |
 | `UNRESOLVED` | An expected file is not in the checkout (the php lane's `vendor/` needles before `composer install`) |
 
 The report ends with three ratios. The headline is passed of scorable tasks. Passed of answered

@@ -17,17 +17,18 @@ s-invalid: ERROR (invalid answer: location line is not a positive integer in src
 s-unanswered: UNANSWERED
 s-unscorable-surface: UNSCORABLE (no rule for surface hover)
 s-unscorable-count: UNSCORABLE (target plus exact_count: meaning depends on kind)
+s-no-symbol: UNSCORABLE (task states no from.symbol)
 s-unresolved: UNRESOLVED (src/absent.txt: file missing)
 
 surface           pass  fail  unsupported  unanswered  error  unscorable  unresolved  total
-definition           5     5            1           1      2           1           1     16
+definition           5     5            1           1      2           2           1     17
 resolution           0     2            0           0      0           0           0      2
 import-precision     0     1            0           0      0           0           0      1
 hover                0     0            0           0      0           1           0      1
-all                  5     8            1           1      2           2           1     20
+all                  5     8            1           1      2           3           1     21
 
 tool: fixture-tool 0.0.0   lane: fixture   scope: repo
 answers for ids this lane does not have: 1 (s-renamed-id)
-scorable by this scorer: 17 of 20 tasks
+scorable by this scorer: 17 of 21 tasks
 passed: 5 of 17 scorable (29.4%)
-        5 of 13 answered (38.5%), 5 of 20 tasks (25.0%)
+        5 of 13 answered (38.5%), 5 of 21 tasks (23.8%)

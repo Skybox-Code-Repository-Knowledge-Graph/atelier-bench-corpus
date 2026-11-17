@@ -76,6 +76,7 @@ export const TARGET_INSIDE_SYMBOL = new Set([
     "python:def-super-cooperative",
     "go:imp-blank-import-side-effect",
     "go:def-type-switch",
+    "php:def-static-closure",
     "typescript:resolution-satisfies",
 ]);
 

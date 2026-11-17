@@ -6,6 +6,7 @@
 import { posix } from "node:path";
 import { fileLines, resolveNeedle } from "./resolve.mjs";
 import { LANES, planTask } from "./plan.mjs";
+import { FILE_LEVEL_SURFACES } from "./symbol.mjs";
 
 export const VERDICTS = ["PASS", "FAIL", "UNSUPPORTED", "UNANSWERED", "ERROR", "UNSCORABLE", "UNRESOLVED"];
 
@@ -257,7 +258,12 @@ export function scoreLane({ root, lane, tasks, answersDoc }) {
 
     for (const task of tasks) {
         const answer = Object.hasOwn(answersDoc.answers, task.id) ? answersDoc.answers[task.id] : undefined;
-        const outcome = scoreTask(task, answer, context);
+        // Every adapter asks by `from.symbol`. A task that states none cannot be asked honestly:
+        // its lane is not annotated yet, or it is a misfit. A null symbol is a statement, and is scored.
+        const asked = FILE_LEVEL_SURFACES.has(task.surface) || (task.from && Object.hasOwn(task.from, "symbol"));
+        const outcome = asked
+            ? scoreTask(task, answer, context)
+            : { verdict: "UNSCORABLE", detail: "task states no from.symbol" };
         results.push({ id: task.id, surface: task.surface, ...outcome });
     }
 
