@@ -104,6 +104,14 @@ test("an ambiguous reply returns every candidate, and counts the unlocated ones"
     ).replace("2 symbols", "3 symbols");
     const ordered = await askSkybox(question({ symbol: "Sum", text: "Sum(xs)" }), fake({ context: shuffled }).call);
     assert.deepEqual(ordered.locations.map((location) => location.file), ["a.go", "b.go"], "candidates are written in a stable order");
+
+    // Two candidates on one line, one with an end line and one without, in either reply order.
+    const sameLine = (first, second) => `Ambiguous: 2 symbols match. Candidates:\n${first}\n${second}`;
+    const withEnd = "Function:c.tsx:Card:1, Card, Function, c.tsx, 12, 20";
+    const withoutEnd = "Class:c.tsx:Card, Card, Class, c.tsx, 12, ";
+    const one = await askSkybox(question({ symbol: "Card", text: "<Card />" }), fake({ context: sameLine(withEnd, withoutEnd) }).call);
+    const two = await askSkybox(question({ symbol: "Card", text: "<Card />" }), fake({ context: sameLine(withoutEnd, withEnd) }).call);
+    assert.deepEqual(one, two, "ties on file and line are broken by end line");
 });
 
 test("not found is an answer with no location; a failed call is an error", async () => {
