@@ -66,9 +66,15 @@ export function isPathSegment(text, symbol, occurrence = 1) {
     return false;
 }
 
-/** Locations in a stable order, so two runs over the same index write the same answer file. */
+/**
+ * Locations in a total order, so two runs over the same index write the same answer file: by file,
+ * then line, then end line (a location without one sorts first).
+ */
 function byFileAndLine(left, right) {
-    return left.file < right.file ? -1 : left.file > right.file ? 1 : left.line - right.line;
+    if (left.file !== right.file) {
+        return left.file < right.file ? -1 : 1;
+    }
+    return left.line - right.line || (left.end_line ?? 0) - (right.end_line ?? 0);
 }
 
 /**
