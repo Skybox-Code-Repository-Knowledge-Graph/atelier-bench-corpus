@@ -1120,15 +1120,30 @@
                 "symbol": "seeded"
             },
             "expect": {
-                "min_references": 6,
+                "exact_count": 6,
                 "known_sites": [
                     {
-                        "file": "atelier_app/state.py",
-                        "needle": "data=Dataset.seeded(),"
+                        "file": "tests/test_lifecycle.py",
+                        "needle": "order = Dataset.seeded()"
+                    },
+                    {
+                        "file": "tests/test_breadth.py",
+                        "needle": "self.data = Dataset.seeded()"
                     },
                     {
                         "file": "tests/test_jobs.py",
                         "needle": "data = Dataset.seeded()"
+                    },
+                    {
+                        "file": "atelier_app/state.py",
+                        "needle": "data=Dataset.seeded(),"
+                    }
+                ],
+                "repeated_sites": [
+                    {
+                        "file": "tests/test_lifecycle.py",
+                        "needle": "data = Dataset.seeded()",
+                        "lines": 2
                     }
                 ]
             }
