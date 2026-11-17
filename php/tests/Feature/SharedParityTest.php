@@ -11,7 +11,7 @@ class SharedParityTest extends TestCase
 
     public function test_health_returns_json_status(): void
     {
-        $this->getJson('/health')->assertOk()->assertJson(['status' => 'ok']);
+        $this->getJson('/health')->assertOk()->assertJson(['status' => 'ok', 'orders' => 0]);
     }
 
     public function test_report_by_slug_returns_json(): void
@@ -19,7 +19,7 @@ class SharedParityTest extends TestCase
         $this->getJson('/api/reports/cash-flow')
             ->assertOk()
             ->assertJsonPath('slug', 'cash-flow')
-            ->assertJsonStructure(['slug', 'title', 'data']);
+            ->assertJsonStructure(['slug', 'title', 'rows']);
     }
 
     public function test_unknown_report_slug_is_404(): void

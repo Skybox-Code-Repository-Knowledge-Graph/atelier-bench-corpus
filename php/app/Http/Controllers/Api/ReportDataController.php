@@ -19,7 +19,7 @@ class ReportDataController extends Controller
         return response()->json([
             'slug' => $slug,
             'title' => $report->title(),
-            'data' => $report->generate(),
+            'rows' => $report->generate(),
         ]);
     }
 }
