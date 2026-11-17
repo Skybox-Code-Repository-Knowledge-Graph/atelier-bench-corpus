@@ -105,7 +105,7 @@ async function main(args) {
             tool: { name: "skybox", version },
             lane: options.lane,
             scope: "lane",
-            protocol: "raw",
+            protocol: { definition: "raw", resolution: "raw", "import-precision": "raw", hover: "anchored", call_hierarchy: "anchored" },
             run: { tool_calls: calls },
             answers,
         };

@@ -8,7 +8,7 @@ import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { questionOf } from "../../lib/question.mjs";
-import { askSkybox, isPathSegment, parseContextReply, parseCypherRow } from "../ask.mjs";
+import { askSkybox, isPathSegment, parseContextReply, parseCypherRow, parseCypherValue } from "../ask.mjs";
 
 const REPO_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..", "..", "..", "..");
 
@@ -43,7 +43,8 @@ function fake(replies) {
     const calls = [];
     const call = async (tool, args) => {
         calls.push({ tool, args });
-        const reply = replies[tool];
+        const stored = replies[tool];
+        const reply = typeof stored === "function" ? stored(args) : stored;
         if (reply instanceof Error) {
             throw reply;
         }
@@ -59,7 +60,12 @@ test("the question carries no part of the answer key", () => {
         if (asked === null) {
             continue;
         }
-        assert.deepEqual(Object.keys(asked).sort(), ["from", "id", "kind", "surface"], task.id);
+        assert.equal(asked.direction === null, task.surface !== "call_hierarchy", `${task.id}: direction only on call_hierarchy`);
+        if (task.surface === "call_hierarchy") {
+            const callers = Array.isArray(task.expect.incoming_includes) || task.expect.min_incoming !== undefined;
+            assert.notEqual(callers, Array.isArray(task.expect.outgoing_includes), `${task.id}: a key asks one direction, not both`);
+        }
+        assert.equal(asked.direction === null, task.surface !== "call_hierarchy", `${task.id}: direction only on call_hierarchy`);
         for (const key of Object.keys(asked.from)) {
             assert.ok(["file", "needle", "symbol", "occurrence", "line", "text"].includes(key), `${task.id}: ${key}`);
         }
@@ -133,7 +139,7 @@ test("skybox flags its negative answers as errors: those are answers, anything e
     // skybox 0.9.0 sets isError on "Symbol not found in index" and on an ambiguous candidate list.
     const flaggedMissing = await askSkybox(question({ symbol: "ErrNotFound", text: "ErrNotFound" }),
         fake({ context: { text: "Symbol not found in index", isError: true } }).call);
-    assert.deepEqual(flaggedMissing, { locations: [], text: "Symbol not found in index" });
+    assert.deepEqual(flaggedMissing, { locations: [], note: "Symbol not found in index" });
 
     const flaggedAmbiguous = await askSkybox(question({ symbol: "Sum", text: "Sum(xs)" }),
         fake({ context: { text: AMBIGUOUS, isError: true } }).call);
@@ -154,9 +160,89 @@ test("null symbols are unsupported; path segments, other surfaces and missing sy
     const { call, calls } = fake({});
     assert.equal((await askSkybox(question({ symbol: null }), call)).status, "unsupported");
     assert.equal(await askSkybox(question({ symbol: "models", text: '\t"atelier.example/lane/core/models"' }), call), undefined);
-    assert.equal(await askSkybox(question({ symbol: "Sum", text: "Sum" }, "hover"), call), undefined);
+    assert.equal(await askSkybox(question({ symbol: "Sum", text: "Sum" }, "references"), call), undefined);
     assert.equal(await askSkybox(question({ text: "Sum" }), call), undefined, "a task with no symbol is not asked");
     assert.equal(calls.length, 0);
+});
+
+/** A cypher reply in skybox 0.9.0's shape: header, separator, rows, two blank lines, row count, next-step footer. */
+const TABLE = (header, ...rows) => [`| ${header.join(" | ")} |`, `| ${header.map(() => "---").join(" | ")} |`, ...rows.map((row) => `| ${row.join(" | ")} |`), "", "", `*${rows.length} row(s)*`, "", "---", "**Next:** x"].join("\n");
+
+const anchored = (surface, extra = {}) => ({
+    id: "t", surface, kind: null, direction: null,
+    from: { file: "core/money/money.go", needle: "func Sum(", line: 56, text: "func Sum(amounts []Money) Money {", symbol: "Sum" },
+    ...extra,
+});
+
+test("anchored: skybox is asked within the from file, and the node at the from line is taken", async () => {
+    const description = TABLE(["n.description"], ["// Sum folds any sequence of amounts into one. | with a bar"]);
+    const signature = TABLE(["n.signature"], ["func Sum(amounts []Money) Money"]);
+    const located = TABLE(["n.filePath", "n.startLine", "n.endLine"], ["core/money/money.go", "56", "62"]);
+    const { call, calls } = fake({
+        context: RESOLVED,
+        cypher: (args) => (args.query.includes("n.description") ? description : args.query.includes("n.signature") ? signature : located),
+    });
+    const answer = await askSkybox(anchored("hover"), call);
+    assert.deepEqual(calls[0].args, { name: "Sum", file_path: "core/money/money.go" }, "the from file is part of the question here");
+    assert.equal(answer.text, "// Sum folds any sequence of amounts into one. | with a bar\nfunc Sum(amounts []Money) Money", "a | inside a value does not split it");
+    assert.equal(answer.locations, undefined);
+
+    // A use site: the from file declares no such name, so the name is resolved without the file.
+    const { call: useCall, calls: useCalls } = fake({
+        context: (args) => (args.file_path ? "Symbol not found in index" : RESOLVED),
+        cypher: (args) => (args.query.includes("n.description") ? description : signature),
+    });
+    const atUse = await askSkybox(anchored("hover", { from: { file: "core/models/order.go", needle: "money.Sum(", line: 12, text: "total := money.Sum(xs)", symbol: "Sum" } }), useCall);
+    assert.deepEqual(useCalls.slice(0, 2).map((entry) => entry.args), [{ name: "Sum", file_path: "core/models/order.go" }, { name: "Sum" }]);
+    assert.match(atUse.text, /Sum folds/);
+
+    // A use site whose name has several candidates elsewhere: no result, as under raw.
+    const twoElsewhere = `Ambiguous: 2 symbols match. Candidates:
+Function:a.go:Sum:1, Sum, Function, a.go, 3, 5
+Function:b.go:Sum:1, Sum, Function, b.go, 7, 9`;
+    const unclear = await askSkybox(anchored("hover"), fake({ context: (args) => (args.file_path ? "Symbol not found in index" : twoElsewhere) }).call);
+    assert.deepEqual(unclear, { text: "", note: "ambiguous: 2 candidates, none declared in core/money/money.go" });
+});
+
+test("anchored: among several candidates the one starting at the from line wins; none there means no result", async () => {
+    const twoInFile = `Ambiguous: 3 symbols match. Candidates:
+Method:A:Error:1:core/failure/errors.go, Error, Method, core/failure/errors.go, 24, 27
+Method:B:Error:1:core/failure/errors.go, Error, Method, core/failure/errors.go, 40, 43
+Method:C:Error:1:other.go, Error, Method, other.go, 40, 43`;
+    const question = { ...anchored("call_hierarchy", { direction: "callers" }), from: { file: "core/failure/errors.go", needle: "x", line: 40, text: "func (e *B) Error() string {", symbol: "Error" } };
+    const rows = TABLE(["c.filePath", "c.startLine", "c.endLine"], ["app/a.go", "10", "20"], ["app/a.go", "10", "20"], ["app/b.go", "null", "null"]);
+    const subject = TABLE(["n.filePath", "n.startLine", "n.endLine"], ["core/failure/errors.go", "40", "43"]);
+    const cypher = (args) => (args.query.includes("CALLS") ? rows : subject);
+    const { call, calls } = fake({ context: twoInFile, cypher });
+    const answer = await askSkybox(question, call);
+    assert.match(calls[2].args.query, /WHERE t\.id = 'Method:B:Error:1:core\/failure\/errors\.go' AND r\.type = 'CALLS'/, "callers: edges into the chosen node, CALLS only");
+    assert.deepEqual(answer.locations, [{ file: "app/a.go", line: 10, end_line: 20 }, { file: "app/a.go", line: 10, end_line: 20 }]);
+    assert.equal(answer.unlocated, 1);
+    assert.equal(answer.note, "anchored in core/failure/errors.go to Method:B:Error:1:core/failure/errors.go, callers");
+
+    const nowhere = await askSkybox({ ...question, from: { ...question.from, line: 99 } }, fake({ context: twoInFile }).call);
+    assert.deepEqual(nowhere.locations, []);
+    assert.match(nowhere.note, /none at core\/failure\/errors\.go:99/);
+
+    const callees = await askSkybox({ ...question, direction: "callees" }, fake({ context: twoInFile, cypher }).call);
+    assert.equal(callees.locations.length, 2);
+    assert.equal(await askSkybox({ ...question, direction: null }, fake({ context: twoInFile, cypher }).call), undefined, "no direction, not asked");
+
+    // call_hierarchy: a single node that does not cover the from line is another declaration.
+    const elsewhere = TABLE(["n.filePath", "n.startLine", "n.endLine"], ["core/failure/errors.go", "80", "90"]);
+    const moved = await askSkybox(question, fake({ context: RESOLVED, cypher: elsewhere }).call);
+    assert.deepEqual(moved.locations, []);
+    assert.match(moved.note, /which is not at core\/failure\/errors\.go:40$/);
+
+    const missing = await askSkybox(anchored("hover"), fake({ context: "Symbol not found in index" }).call);
+    assert.deepEqual(missing, { text: "", note: "Symbol not found in index" }, "not found in the file, then not found anywhere");
+    assert.equal(parseCypherValue(TABLE(["n.description"], ["null"])), null);
+});
+
+test("a cypher value that spans lines is read whole (recorded from skybox 0.9.0, atelier-rust)", () => {
+    const recorded = "| n.description |\n| --- |\n| /// Build a technician with an empty [`Schedule`]; slot lookups on the\n/// result forward to its Schedule through `Deref`. |\n\n\n*1 row(s)*\n\n---\n**Next:** To explore a result symbol, use context({name: \"<name>\", repo: \"atelier-rust\"}). For schema reference, READ skybox://repo/atelier-rust/schema.";
+    assert.equal(parseCypherValue(recorded), "/// Build a technician with an empty [`Schedule`]; slot lookups on the\n/// result forward to its Schedule through `Deref`.");
+    assert.equal(parseCypherValue("*(no rows returned)*\n\n---\n**Next:** x"), null);
 });
 
 test("a path segment is told apart from a string key and a plain identifier", () => {
@@ -177,7 +263,7 @@ test("a question whose answer is a relation is not asked under the raw protocol"
     // The same kind on a definition task is a definition question, and is asked.
     const definition = { ...question({ symbol: "label", text: "return f'{super().label()}'" }, "definition"), kind: "mro" };
     const answer = await askSkybox(definition, fake({ context: "Symbol not found in index" }).call);
-    assert.deepEqual(answer, { locations: [], text: "Symbol not found in index" });
+    assert.deepEqual(answer, { locations: [], note: "Symbol not found in index" });
 
     // A namespace import is answered by the member read through it, so it is not asked either.
     const namespace = { ...question({ symbol: "rules", text: "use crate::rules;" }, "import-precision"), kind: "namespace_import" };

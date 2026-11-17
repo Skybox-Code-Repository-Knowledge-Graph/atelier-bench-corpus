@@ -42,6 +42,7 @@ One JSON file per tool and lane.
 | `version` | `1` |
 | `tool.name`, `tool.version` | What was scored. Pin the version |
 | `scope` | `repo` when the tool indexed the whole checkout, `lane` when it indexed one lane directory. Default `lane` |
+| `protocol` | How the adapter asked (see `bench/adapters/README.md`): one name, or an object from surface to name when it differs by surface. Reported, never scored |
 | `answers` | Keyed by task id. A task with no entry is `UNANSWERED` |
 
 One answer:
@@ -50,7 +51,8 @@ One answer:
 | --- | --- |
 | `status` | `answered` (default), `unsupported` (the tool has no way to be asked this), or `error` (the tool or the adapter failed; say why in `detail`) |
 | `locations` | What the tool returned: `file`, `line`, optional `end_line`. Paths are relative to the lane directory, as in `tasks.json`. A location in another lane is written `../<lane>/...` |
-| `text` | Any free text the tool returned with the answer, such as a label, a qualified name or a relation. Optional |
+| `text` | Free text the tool returned with the answer, such as hover documentation, a label, a qualified name or a relation. Only the tool's own words: the `hover` rule reads it. Optional |
+| `note` | The adapter's own remark on the answer (which lookup found it, how many candidates came back). Never read by the scorer. Optional |
 | `names` | Symbol names the tool returned, when the answer is a list of names. Optional |
 | `unlocated` | How many further results the tool returned without a file and line. Optional, default 0. They count like unexpected locations, so an adapter can never improve a score by dropping them |
 
@@ -122,9 +124,10 @@ fails when one is stated wrongly or missing, so a new task must carry it.
 | `UNSCORABLE` | No rule in this version of the scorer covers the task, or the task states no `from.symbol` (its lane is not annotated yet, or the task is a misfit), so no adapter can be asked it |
 | `UNRESOLVED` | An expected file is not in the checkout (the php lane's `vendor/` needles before `composer install`) |
 
-The report ends with three ratios. The headline is passed of scorable tasks. Passed of answered
-tasks and passed of all tasks follow, so the scorer's own gaps and the tasks a tool skipped are
-both visible and neither is counted for or against the tool unnoticed.
+The report states how many tasks this scorer can score, then one line per rule class (see Rules):
+passed of scorable tasks, and passed of answered tasks. The second ratio keeps the tasks a tool
+was not asked visible without counting them for or against it. The classes are separate measures
+and are never summed.
 
 ## Rules in this version
 
@@ -152,10 +155,24 @@ For all four:
   reviewed against the lanes' `notes`. One, `build_generated`, is excluded (`KIND_UNSCORABLE` in
   `lib/plan.mjs`): its key names two places, so a tool that returns either one alone would fail.
 
+### Recall rules
+
+| Rule | Surface | Needs | Pass when |
+| --- | --- | --- | --- |
+| `hover/contains` | `hover` | `contains` | the answer's `text` contains the string |
+| `call_hierarchy/callees` | `call_hierarchy` | `outgoing_includes` | every listed callee declaration is returned, by exact line |
+| `call_hierarchy/callers` | `call_hierarchy` | `incoming_includes` | every listed call site is covered by a returned location (the caller's range) |
+
+The key lists part of these answers, not all of it, so anything else the answer holds is not
+judged, except `must_not_include` entries, which fail it as above. A tool that returns every
+function in the lane as a callee would pass, so these rules are a separate class: the report prints
+an `exact` line and a `recall-only` line, and the two are never added up. `min_incoming` is printed
+as `not scored`: tools count callers per call site or per calling function, and the key does not
+say which.
+
 Not covered yet, reported `UNSCORABLE`: `references`, `implementation`, `cardinality`,
-`multi-parent`, `direction`, `call_hierarchy`, `hover`, `document_symbol`, `parse-negative`,
-`diagnostics`, and tasks whose only expectation is a count, a `contains` string or a list of
-`known_sites`.
+`multi-parent`, `direction`, `document_symbol`, `parse-negative`, `diagnostics`, and tasks whose
+only expectation is a count or a list of `known_sites`.
 
 ### `must_not_include`
 
@@ -173,10 +190,13 @@ body cannot trip an exclusion.
 ## How "scorable" is established
 
 By test, not by claim. `test/oracle.test.mjs` runs over every lane and requires, for every task a
-rule covers, that the oracle answer passes, that two richer forms of it pass as well (the target
-with its full range, and the target with every known site), and that each mutation of it fails: no
-location, the line shifted by one, an enclosing range, an unexpected extra location, and one hit
-for every `must_not_include` entry.
+rule covers, that the oracle answer passes and that each mutation of it fails. For the exact rules:
+two richer forms pass as well (the target with its full range, and the target with every known
+site), and no location, the line shifted by one, an enclosing range, an unexpected extra location
+and one hit for every `must_not_include` entry each fail. For the recall rules: an empty answer,
+one listed entry missing, one moved by a line, a truncated `contains` string and one hit for every
+`must_not_include` entry each fail, and the known limit is pinned as passing (extra text, an extra
+location, one range per file over every call site), so a change that closes or widens it shows.
 `test/resolve.test.mjs` rebuilds the verifier report for `bench/conformance/` around the scorer's
 resolver and compares it byte for byte with `expected.txt`, so the scorer and the lane verifiers
 agree on what a needle resolves to. `test/fixture.test.mjs` pins the report format against a small

@@ -30,6 +30,11 @@ export function questionOf(task, laneRoot) {
         id: task.id,
         surface: task.surface,
         kind: typeof task.expect?.kind === "string" ? task.expect.kind : null,
+        // For call_hierarchy only: which way the question asks. It is read from the key's shape, but
+        // it is part of the question ("who calls this?" or "what does this call?"), not the answer.
+        direction: task.surface !== "call_hierarchy" ? null
+            : (Array.isArray(task.expect?.incoming_includes) || task.expect?.min_incoming !== undefined) ? "callers"
+                : Array.isArray(task.expect?.outgoing_includes) ? "callees" : null,
         from: Object.freeze({ ...from, line: resolved.line, text: fileLines(laneRoot, from.file)[resolved.line - 1] }),
     });
 }
