@@ -990,7 +990,7 @@
         {
             "id": "refs-string-event-name",
             "surface": "references",
-            "note": "Nothing declares 'repair.completed'. The subscribe site and the emit path are connected by the literal alone. Five code sites carry it; the floor counts the four outside the `from` site, matching the min_references convention of the sibling refs-* tasks.",
+            "note": "Nothing declares 'repair.completed'. The subscribe site and the emit path are connected by the literal alone. Five code sites carry it; exact_count counts the four outside the `from` site, one entry per line. The REPAIR_COMPLETED constant's uses (re-export, import, dispatch) link by identifier, not by the literal, and are optional_sites.",
             "from": {
                 "file": "packages/core/src/events.js",
                 "needle": "dispatcher.on(\"repair.completed\", (payload) => this.handle(payload));",
@@ -998,7 +998,7 @@
             },
             "expect": {
                 "kind": "name_only",
-                "min_references": 4,
+                "exact_count": 4,
                 "known_sites": [
                     {
                         "file": "packages/core/src/events.js",
@@ -1015,6 +1015,20 @@
                     {
                         "file": "packages/core/tests/events.test.js",
                         "needle": "assert.equal(channelFor(\"repair.completed\", { orderId: 4 }), \"orders.4\");"
+                    }
+                ],
+                "optional_sites": [
+                    {
+                        "file": "packages/core/src/index.js",
+                        "needle": "    REPAIR_COMPLETED,"
+                    },
+                    {
+                        "file": "packages/core/tests/events.test.js",
+                        "needle": "import { Dispatcher, REPAIR_COMPLETED, SendCompletionNotice, channelFor } from \"@atelier/core\";"
+                    },
+                    {
+                        "file": "packages/core/tests/events.test.js",
+                        "needle": "dispatcher.dispatch(REPAIR_COMPLETED, { orderId: 1, reference: \"AT-2026-000001\" });"
                     }
                 ]
             }
@@ -2051,7 +2065,7 @@
             },
             "expect": {
                 "kind": "structural",
-                "min_implementations": 2,
+                "exact_count": 2,
                 "implementations": [
                     {
                         "file": "packages/core/src/services/standardInvoiceCalculator.js",
@@ -2075,7 +2089,7 @@
             },
             "expect": {
                 "kind": "structural",
-                "min_implementations": 8,
+                "exact_count": 8,
                 "implementations": [
                     {
                         "file": "packages/bench/src/notifiers/discordNotifier.cjs",
@@ -2123,7 +2137,7 @@
             },
             "expect": {
                 "kind": "structural",
-                "min_implementations": 24,
+                "exact_count": 24,
                 "implementations": [
                     {
                         "file": "packages/bench/src/reports/cash-flow.cjs",
@@ -2474,7 +2488,7 @@
             },
             "expect": {
                 "kind": "structural",
-                "min_implementations": 8,
+                "exact_count": 8,
                 "implementations": [
                     {
                         "file": "packages/bench/src/repositories/customerRepository.cjs",
