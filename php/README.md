@@ -25,12 +25,12 @@ Install from the **committed** `composer.lock` only (`composer install`). Do not
 
 | Path | Role | .php files |
 | --- | --- | --- |
-| `app/` | Domain models, enums, concerns, services, events, policies, jobs, HTTP + Livewire + Filament surfaces | 278 |
+| `app/` | Domain models, enums, concerns, services, events, policies, jobs, HTTP + Livewire + Filament surfaces | 281 |
 | `app/Bench/` | Breadth subsystem: 11 contracts, 8 concerns, 7 abstract bases, 24 reports (+ `ReportRegistry` fan-in), 16 metrics, 8 exporters, 8 notifiers, 8 repositories, 12 services, 48 rules | 152 |
 | `database/` | Migrations, factories, deterministic `DatabaseSeeder`, delegating `CanonicalSeeder` | 41 |
 | `routes/` | `web.php`, `api.php`, `console.php` | 3 |
 | `resources/views/` | Report view, Blade components, Livewire SFC, Filament pages | 12 |
-| `tests/` | Feature suite (53 tests), Dusk scaffold | 18 |
+| `tests/` | Feature suite (58 tests), Dusk scaffold | 19 |
 | `bench/` | `tasks.json` + `verify_tasks.php` self-check; **zero composer dependencies** | 1 |
 | `fixtures/broken-syntax/` | Intentionally invalid PHP + Blade, **DO NOT FIX** | 2 |
 
@@ -96,7 +96,7 @@ cp .env.example .env   # if needed
 php artisan key:generate
 php artisan migrate --force
 php artisan db:seed    # DatabaseSeeder — deterministic
-php artisan test       # 53 tests, sqlite :memory:
+php artisan test       # 58 tests, sqlite :memory:
 ```
 
 Admin UI: `/admin` (Filament). Sample report path: `GET /report/{repairOrder:reference}` (see `ReportController`).
@@ -124,6 +124,17 @@ task-target paths must leave `php bench/verify_tasks.php` at **exit 0**. If need
 
 Broken fixtures under `fixtures/broken-syntax/` are out of scope for "fix until green" — they are
 negative cases on purpose.
+
+## Deliberate differences from the other lanes
+
+The shared set every lane carries is `GET /health`, `GET /report/{reference}`, `GET /api/orders`, `POST /api/orders/{key}/notes`, `GET /api/reports/{slug}`, the export-report and recalculate-inventory commands, and the recalculate-inventory job. This lane carries all of it. These differences are deliberate and stay:
+
+- **Seed.** `DatabaseSeeder` is framework-native and does not use the shared seed numbers (customers, order totals). Nine tasks anchor needles there, so it is not reseeded.
+- **Lane-only routes.** Order by reference (`GET /api/orders/{repairOrder:reference}`), `/board`, the two social-auth routes (`/auth/{provider}/redirect`, `/auth/{provider}/callback`) and the Volt route `/rush-counter`. Laravel's own `/up` health endpoint also stays beside `/health`.
+- **`atelier:prune-delivered`.** A prune command no other lane has.
+- **Notes bound by reference.** `POST /api/orders/{repairOrder:reference}/notes` binds the order by its `reference` key where the other lanes bind by id.
+
+Report slugs for `/api/reports/{slug}` and `atelier:export-report` are the kebab-cased class name without the `Report` suffix (`CashFlowReport` is `cash-flow`), resolved in `app/Support/ReportLookup.php`, not in `ReportRegistry`.
 
 ## License
 
