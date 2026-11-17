@@ -42,7 +42,7 @@ One JSON file per tool and lane.
 | `version` | `1` |
 | `tool.name`, `tool.version` | What was scored. Pin the version |
 | `scope` | `repo` when the tool indexed the whole checkout, `lane` when it indexed one lane directory. Default `lane` |
-| `protocol` | How the adapter asked (see `bench/adapters/README.md`): one name, or an object from surface to name when it differs by surface. Reported, never scored |
+| `protocol` | How the adapter asked (see `bench/adapters/README.md`): one name, or an object from surface to name when it differs by surface; a `surface:kind` key names the protocol of one kind of a surface. Reported, never scored |
 | `answers` | Keyed by task id. A task with no entry is `UNANSWERED` |
 
 One answer:

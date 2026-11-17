@@ -453,7 +453,8 @@ export function scoreLane({ root, lane, tasks, answersDoc }) {
         const outcome = asked
             ? scoreTask(task, answer, context)
             : { verdict: "UNSCORABLE", detail: "task states no from.symbol" };
-        results.push({ id: task.id, surface: task.surface, protocol: protocolOf(answersDoc, task.surface), ...outcome });
+        const kind = typeof task.expect?.kind === "string" ? task.expect.kind : null;
+        results.push({ id: task.id, surface: task.surface, protocol: protocolOf(answersDoc, task.surface, kind), ...outcome });
     }
 
     // An answer for an id the lane does not have is reported: a renamed id must not look UNANSWERED.
@@ -464,14 +465,18 @@ export function scoreLane({ root, lane, tasks, answersDoc }) {
 }
 
 /** The protocol an answer file states for a surface: one name, a map by surface, or none. */
-export function protocolOf(answersDoc, surface) {
+export function protocolOf(answersDoc, surface, kind = null) {
     const protocol = answersDoc?.protocol;
     if (typeof protocol === "string" && protocol !== "") {
         return protocol;
     }
     if (protocol && typeof protocol === "object") {
-        // A map that leaves a surface out: the adapter states no protocol for it, so its tasks are
-        // reported apart from every stated protocol, never folded into one.
+        // `surface:kind` names a protocol for one kind of a surface (a surface whose kinds are asked
+        // differently); otherwise the surface's. A map that leaves a surface out: the adapter states
+        // no protocol for it, so its tasks are reported apart from every stated protocol.
+        if (kind !== null && typeof protocol[`${surface}:${kind}`] === "string") {
+            return protocol[`${surface}:${kind}`];
+        }
         return typeof protocol[surface] === "string" ? protocol[surface] : "unstated";
     }
     return null;

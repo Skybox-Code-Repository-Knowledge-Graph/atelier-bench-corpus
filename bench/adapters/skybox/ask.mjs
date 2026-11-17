@@ -248,6 +248,9 @@ export async function askSkybox(question, call) {
         if (FILE_SURFACES.has(question.surface)) {
             return await askFile(question, call);
         }
+        if (question.surface === "direction" && Object.hasOwn(TWO_SIDED_KINDS, question.kind)) {
+            return await askAnchored(question, call);
+        }
         if (ANCHORED_SURFACES.has(question.surface)) {
             return await askAnchored(question, call);
         }
@@ -262,7 +265,8 @@ export async function askSkybox(question, call) {
  * `cypher` lookup by node id for the line of a resolved symbol.
  */
 async function askRaw(question, call) {
-    if (!ASKED_SURFACES.has(question.surface) || RELATION_QUESTIONS.has(`${question.surface}:${question.kind}`)) {
+    const rawDirection = question.surface === "direction" && RAW_DIRECTION_KINDS.has(question.kind);
+    if ((!ASKED_SURFACES.has(question.surface) && !rawDirection) || RELATION_QUESTIONS.has(`${question.surface}:${question.kind}`)) {
         return undefined;
     }
 
@@ -340,7 +344,12 @@ async function askAnchored(question, call) {
     if (question.surface === "call_hierarchy" && question.direction !== "callers" && question.direction !== "callees") {
         return undefined;
     }
-    const empty = question.surface === "hover" ? { text: "" } : { locations: [] };
+    if (question.surface === "direction" && !Object.hasOwn(TWO_SIDED_KINDS, question.kind)) {
+        return undefined;
+    }
+    const empty = question.surface === "hover" ? { text: "" }
+        : question.surface === "direction" ? { locations: [], reverse_locations: [] }
+            : { locations: [] };
 
     let reply = parseContextReply(await ask(call, "context", { name: nameInIndex(symbol), file_path: file }));
     let usedFile = true;
@@ -385,9 +394,11 @@ async function askAnchored(question, call) {
         return { text: parts.filter(Boolean).join("\n"), note: `${how} ${named}` };
     }
 
-    // Every call_hierarchy, references and implementation-family key is asked from its subject's
-    // declaration line, so a node that does not cover that line is another declaration of that name.
+    // Every call_hierarchy, references, implementation-family and direction key is asked from its
+    // subject's declaration line, so a node that does not cover that line is another declaration.
     const rows = [];
+    const reverseRows = [];
+    const twoSided = question.surface === "direction" ? TWO_SIDED_KINDS[question.kind] : undefined;
     for (const id of ids) {
         const row = parseCypherRow(await ask(call, "cypher", {
             query: `MATCH (n) WHERE n.id = ${cypherString(id)} RETURN n.filePath, n.startLine, n.endLine`,
@@ -395,9 +406,18 @@ async function askAnchored(question, call) {
         if (!row || row.file !== file || !row.startLine || line < row.startLine || line > (row.endLine ?? row.startLine)) {
             return { ...empty, note: `${how} ${id}, which is not at ${file}:${line}` };
         }
-        rows.push(...await edgeRows(question, id, call));
+        if (twoSided) {
+            rows.push(...await relationRows(twoSided.asked, id, call));
+            reverseRows.push(...await relationRows(twoSided.reverse, id, call));
+        } else {
+            rows.push(...await edgeRows(question, id, call));
+        }
     }
     const { locations, unlocated } = locationsOfRows(rows);
+    if (twoSided) {
+        const reverse = locationsOfRows(reverseRows);
+        return { locations, reverse_locations: reverse.locations, ...(unlocated > 0 ? { unlocated } : {}), note: `${how} ${named}; asked: ${twoSided.asked}; opposite: ${twoSided.reverse}` };
+    }
     return { locations, ...(unlocated > 0 ? { unlocated } : {}), note: `${how} ${named}, ${ASKED_EDGES[question.surface] ?? question.direction}` };
 }
 
@@ -424,38 +444,10 @@ async function edgeRows(question, id, call) {
             return edges.map(([path, site, start, end]) => (/^\d+$/.test(site ?? "") ? [path, site, ""] : [path, start, end]));
         }
         case "implementation":
-        case "cardinality": {
-            // Every implementor at any depth (the lane READMEs count concrete implementors through
-            // abstract bases), one step at a time: the nodes with an IMPLEMENTS or EXTENDS edge into
-            // the current step, until a step finds nothing new. A single recursive path query asks
-            // the same and timed out on the rust graph (60 s), which would have been a harness error.
-            const seen = new Set([id]);
-            const rows = [];
-            let frontier = [id];
-            for (let step = 0; frontier.length > 0; step += 1) {
-                if (step >= 50) {
-                    throw new Error("the implementor walk did not end after 50 steps");
-                }
-                const found = parseCypherRows(await ask(call, "cypher", {
-                    query: `MATCH (c)-[r:CodeRelation]->(t) WHERE t.id IN [${frontier.map(cypherString).join(", ")}] AND (r.type = 'IMPLEMENTS' OR r.type = 'EXTENDS') RETURN DISTINCT c.id, c.filePath, c.startLine, c.endLine`,
-                }));
-                frontier = [];
-                for (const [childId, ...location] of found) {
-                    if (childId && !seen.has(childId)) {
-                        seen.add(childId);
-                        frontier.push(childId);
-                        rows.push(location);
-                    }
-                }
-                frontier.sort();
-            }
-            return rows;
-        }
+        case "cardinality":
+            return implementorWalk(id, call);
         case "multi-parent":
-            // The direct parents: the subject's own IMPLEMENTS and EXTENDS edges.
-            return parseCypherRows(await ask(call, "cypher", {
-                query: `MATCH (s)-[r:CodeRelation]->(p) WHERE s.id = ${subject} AND (r.type = 'IMPLEMENTS' OR r.type = 'EXTENDS') RETURN p.filePath, p.startLine, p.endLine`,
-            }));
+            return relationRows("parents", id, call);
         default: {
             const query = question.direction === "callers"
                 ? `MATCH (c)-[r:CodeRelation]->(t) WHERE t.id = ${subject} AND r.type = 'CALLS' RETURN c.filePath, c.startLine, c.endLine`
@@ -464,3 +456,73 @@ async function edgeRows(question, id, call) {
         }
     }
 }
+
+/**
+ * Every implementor at any depth (the lane READMEs count concrete implementors through abstract
+ * bases), one step at a time: the nodes with an IMPLEMENTS or EXTENDS edge into the current step,
+ * until a step finds nothing new. A single recursive path query asks the same and timed out on the
+ * rust graph (60 s), which would have been a harness error.
+ */
+async function implementorWalk(id, call) {
+    const seen = new Set([id]);
+    const rows = [];
+    let frontier = [id];
+    for (let step = 0; frontier.length > 0; step += 1) {
+        if (step >= 50) {
+            throw new Error("the implementor walk did not end after 50 steps");
+        }
+        const found = parseCypherRows(await ask(call, "cypher", {
+            query: `MATCH (c)-[r:CodeRelation]->(t) WHERE t.id IN [${frontier.map(cypherString).join(", ")}] AND (r.type = 'IMPLEMENTS' OR r.type = 'EXTENDS') RETURN DISTINCT c.id, c.filePath, c.startLine, c.endLine`,
+        }));
+        frontier = [];
+        for (const [childId, ...location] of found) {
+            if (childId && !seen.has(childId)) {
+                seen.add(childId);
+                frontier.push(childId);
+                rows.push(location);
+            }
+        }
+        frontier.sort();
+    }
+    return rows;
+}
+
+/**
+ * One relation of a subject node, as [file, line, endLine] rows: "children" (implementors at any
+ * depth), "parents" (its own IMPLEMENTS and EXTENDS edges, one level up), "trait users" (classes
+ * with a USES_TRAIT edge into it) and "traits used" (its own USES_TRAIT edges).
+ */
+async function relationRows(relation, id, call) {
+    const subject = cypherString(id);
+    switch (relation) {
+        case "children":
+            return implementorWalk(id, call);
+        case "parents":
+            return parseCypherRows(await ask(call, "cypher", {
+                query: `MATCH (s)-[r:CodeRelation]->(p) WHERE s.id = ${subject} AND (r.type = 'IMPLEMENTS' OR r.type = 'EXTENDS') RETURN p.filePath, p.startLine, p.endLine`,
+            }));
+        case "trait users":
+            return parseCypherRows(await ask(call, "cypher", {
+                query: `MATCH (c)-[r:CodeRelation]->(t) WHERE t.id = ${subject} AND r.type = 'USES_TRAIT' RETURN c.filePath, c.startLine, c.endLine`,
+            }));
+        case "traits used":
+            return parseCypherRows(await ask(call, "cypher", {
+                query: `MATCH (s)-[r:CodeRelation]->(t) WHERE s.id = ${subject} AND r.type = 'USES_TRAIT' RETURN t.filePath, t.startLine, t.endLine`,
+            }));
+        default:
+            throw new Error(`unknown relation ${relation}`);
+    }
+}
+
+/**
+ * The two directions of each two-sided direction kind (bench/score README, Direction): the relation
+ * the question asks, and its opposite, asked too so the answer shows its direction.
+ */
+export const TWO_SIDED_KINDS = {
+    parent_of: { asked: "children", reverse: "parents" },
+    child_of: { asked: "parents", reverse: "children" },
+    used_by: { asked: "trait users", reverse: "traits used" },
+};
+
+/** Direction kinds that are definition lookups, asked under "raw". */
+export const RAW_DIRECTION_KINDS = new Set(["uses_self", "declaration_merge"]);
