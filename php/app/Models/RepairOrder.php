@@ -164,7 +164,7 @@ class RepairOrder extends Model
      * Finish the repair: transition, price via the bound InvoiceCalculator,
      * stamp completion, fire the event.
      *
-     * symbol_card / call-hierarchy hub: known callers are the Filament
+     * Call-hierarchy hub: known callers are the Filament
      * CompleteAction and the seeder; pricing routes through the
      * container-bound InvoiceCalculator implementation.
      */
