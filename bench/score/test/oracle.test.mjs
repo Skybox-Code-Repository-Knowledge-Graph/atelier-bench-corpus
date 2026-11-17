@@ -16,7 +16,7 @@ import { fileURLToPath } from "node:url";
 import { buildOracle } from "../oracle.mjs";
 import { LANES, planTask } from "../lib/plan.mjs";
 import { fileLines, resolveNeedle } from "../lib/resolve.mjs";
-import { classifyExclusion, resolveSites, scoreTask } from "../lib/score.mjs";
+import { classifyExclusion, declaredName, resolveSites, scoreTask } from "../lib/score.mjs";
 
 const REPO_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..", "..", "..");
 
@@ -85,6 +85,10 @@ for (const lane of LANES) {
             counts.byCheck[plan.check] = (counts.byCheck[plan.check] ?? 0) + 1;
             const label = `${lane}:${task.id}`;
 
+            if (plan.check === "names") {
+                checkNamesRule(task, plan, answer, context, label);
+                continue;
+            }
             if (plan.check === "sites") {
                 checkSitesRule(task, plan, answer, context, label, counts);
                 continue;
@@ -152,11 +156,28 @@ for (const lane of LANES) {
 }
 
 /**
- * The recall rules ("contains", "callees", "callers"): the oracle passes, a missing or moved entry
- * fails, and each excluded entry fails. Their known limit is pinned too: an answer that returns more
- * than the key lists (extra text, extra locations, one range over a whole file) passes, which is why
- * these rules are reported in their own column.
+ * The exact rule "names" (document_symbol): the oracle passes, and so does it in reverse order (order
+ * is not judged), with every label qualified the way a server may print it (`Owner.name`, `$name`),
+ * and with an unnamed container added (`impl X for Y`). One name missing, one extra name, one name
+ * returned twice, no names, and a location list without names each fail.
  */
+function checkNamesRule(task, plan, answer, context, label) {
+    const verdict = (candidate) => scoreTask(task, candidate, context).verdict;
+    const names = answer.names;
+    const first = names.findIndex((name) => !/\s/.test(declaredName(name)));
+    assert.ok(first >= 0, `${label}: the key names no identifier`);
+    assert.equal(verdict(answer), "PASS", `${label} oracle`);
+    assert.equal(verdict({ names: [...names].reverse() }), "PASS", `${label} order is not judged`);
+    assert.equal(verdict({ names: names.map((name) => (/\s/.test(name) ? name : `Owner.${declaredName(name)}`)) }), "PASS", `${label} qualified labels`);
+    assert.equal(verdict({ names: [...names, "impl Something for Other"] }), "PASS", `${label} an unnamed container is neutral`);
+    assert.equal(verdict({ names: names.filter((_, index) => index !== first) }), "FAIL", `${label} one name missing`);
+    assert.equal(verdict({ names: [...names, "zz_not_a_symbol_of_this_file"] }), "FAIL", `${label} one extra name`);
+    assert.equal(verdict({ names: [...names, names[first]] }), "FAIL", `${label} one name twice`);
+    assert.equal(verdict({ names: [] }), "FAIL", `${label} no names`);
+    assert.equal(verdict({ locations: [{ file: task.from.file, line: 1 }] }), "FAIL", `${label} locations without names`);
+    assert.equal(verdict({ names: [1, 2] }), "ERROR", `${label} names that are not strings`);
+}
+
 /**
  * The exact rule "sites" (references): the oracle passes, and so do the oracle plus the declaration
  * the question is asked from or any optional site. One site dropped, one moved by a line, a line
@@ -231,6 +252,12 @@ function checkSitesRule(task, plan, answer, context, label, counts) {
     }
 }
 
+/**
+ * The recall rules ("contains", "callees", "callers"): the oracle passes, a missing or moved entry
+ * fails, and each excluded entry fails. Their known limit is pinned too: an answer that returns more
+ * than the key lists (extra text, extra locations, one range over a whole file) passes, which is why
+ * these rules are reported in their own column.
+ */
 function checkRecallRule(task, plan, answer, context, label, counts) {
     const verdict = (candidate) => scoreTask(task, candidate, context);
     assert.equal(verdict(answer).verdict, "PASS", `${label} oracle: ${verdict(answer).detail ?? ""}`);

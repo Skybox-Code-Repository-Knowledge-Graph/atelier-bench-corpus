@@ -88,6 +88,25 @@ test("checkSiteCount accepts a consistent count and names each kind of mistake",
 });
 
 for (const lane of LANES) {
+    test(`every document_symbol list holds its must_include names and meets its floor: ${lane}`, () => {
+        const tasks = JSON.parse(readFileSync(join(REPO_ROOT, lane, "bench", "tasks.json"), "utf8")).tasks;
+        const problems = [];
+        for (const task of tasks.filter((candidate) => candidate.surface === "document_symbol" && Array.isArray(candidate.expect?.symbols))) {
+            const { symbols, must_include: required = [], min_symbols: floor } = task.expect;
+            for (const name of required) {
+                if (!symbols.includes(name)) {
+                    problems.push(`${task.id}: must_include ${JSON.stringify(name)} is not in symbols`);
+                }
+            }
+            if (Number.isInteger(floor) && floor > symbols.length) {
+                problems.push(`${task.id}: min_symbols ${floor} exceeds the ${symbols.length} listed symbols`);
+            }
+        }
+        assert.deepEqual(problems, []);
+    });
+}
+
+for (const lane of LANES) {
     test(`every list count equals its listed lines (references, implementation, cardinality, multi-parent): ${lane}`, (t) => {
         const root = join(REPO_ROOT, lane);
         const tasks = JSON.parse(readFileSync(join(root, "bench", "tasks.json"), "utf8")).tasks;

@@ -221,6 +221,26 @@ values (instances, object literals, macro arms); go `impl-structural-no-assertio
 values); and the method lists of go `card-embedded-promotion`, rust `def-async-trait-method` and
 php `impl-trait-abstract`.
 
+### Document symbols
+
+| Rule | Surface | Needs | Pass when |
+| --- | --- | --- | --- |
+| `document_symbol/names` | `document_symbol` | `symbols` | the answer's `names` are the file's symbol names, and nothing else |
+
+An exact rule. `symbols` lists every named symbol the file declares, at any nesting depth, as each
+lane's `notes` count them (#168). The answer's `names` must equal that list as a multiset: a name
+the file declares twice is returned twice, and the order is not judged, since tools nest containers
+and flatten them in different orders. `min_symbols` and `must_include` are reported as not scored;
+the lane notes' 25% margin for a listing that folds containers is dropped on purpose, since an exact
+rule must not pass a listing that misses symbols.
+
+Names are compared by the identifier each declares (`declaredName` in `lib/score.mjs`), on the key
+and the answer alike: the text after the last `.` or `::` and without a leading `$`, so a server's
+label convention (`(*RepairOrder).TransitionTo` from gopls, `$guarded` from a php server) does not
+decide the verdict. A label with no identifier of its own (whitespace remains, as in a rust
+`impl HasReference for RepairOrder` block) names a container, not a symbol, and is neutral on both
+sides. Checked against gopls v0.24.0, which passes both go tasks.
+
 ### Recall rules
 
 | Rule | Surface | Needs | Pass when |
@@ -236,8 +256,8 @@ an `exact` line and a `recall-only` line, and the two are never added up. `min_i
 as `not scored`: tools count callers per call site or per calling function, and the key does not
 say which.
 
-Not covered yet, reported `UNSCORABLE`: `direction`, `document_symbol`, `parse-negative`,
-`diagnostics`, and tasks whose only expectation is a count.
+Not covered yet, reported `UNSCORABLE`: `direction`, `parse-negative`, `diagnostics`, and tasks
+whose only expectation is a count.
 
 ### `must_not_include`
 
