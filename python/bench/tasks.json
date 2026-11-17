@@ -1158,6 +1158,12 @@
             },
             "expect": {
                 "exact_count": 67,
+                "optional_sites": [
+                    {
+                        "file": "atelier_core/__init__.py",
+                        "needle": "    \"Money\","
+                    }
+                ],
                 "known_sites": [
                     {
                         "file": "atelier_bench/contracts/formatter_contract.py",
@@ -1440,6 +1446,12 @@
             },
             "expect": {
                 "exact_count": 21,
+                "optional_sites": [
+                    {
+                        "file": "atelier_bench/__init__.py",
+                        "needle": "    \"row_from_cents\","
+                    }
+                ],
                 "known_sites": [
                     {
                         "file": "atelier_bench/__init__.py",
@@ -1538,6 +1550,12 @@
             },
             "expect": {
                 "exact_count": 5,
+                "optional_sites": [
+                    {
+                        "file": "atelier_bench/__init__.py",
+                        "needle": "    \"REPORTS\","
+                    }
+                ],
                 "known_sites": [
                     {
                         "file": "atelier_bench/__init__.py",
