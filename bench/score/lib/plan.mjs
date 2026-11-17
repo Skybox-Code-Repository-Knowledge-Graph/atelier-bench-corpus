@@ -27,11 +27,13 @@ const fileAndNeedle = (expect) => ({ file: expect.file, needle: expect.needle })
  *   surface   the task surface the rule serves
  *   requires  expect keys that must be present
  *   forbids   expect keys whose presence makes the target's meaning depend on `kind`
+ *   forbids   expect keys whose presence makes the target's meaning depend on `kind`
  *   check     how an answer is compared with the key:
  *               target    one declaration, by exact line (single-target rules)
  *               contains  the key's `contains` string appears in the answer's text
  *               callees   every listed callee declaration is returned, by exact line
  *               callers   every listed call site is covered by a returned caller's range
+ *               sites     every reference site is returned and nothing else, each by its line
  *   class     "exact": the key states the whole answer, so extras fail it.
  *             "recall": the key states part of the answer, so extras cannot be judged and do not
  *             fail it. A recall rule cannot catch a tool that returns everything; its results are
@@ -110,6 +112,16 @@ export const RULES = [
         list: "incoming_includes",
         uses: ["incoming_includes", "must_not_include"],
     },
+    {
+        name: "references/sites",
+        surface: "references",
+        requires: ["known_sites", "exact_count"],
+        forbids: ["min_references"],
+        forbidReason: "a floor beside a count, the list is not known to be complete",
+        check: "sites",
+        class: "exact",
+        uses: ["known_sites", "exact_count", "repeated_sites", "optional_sites", "must_not_include"],
+    },
 ];
 
 /**
@@ -144,7 +156,8 @@ export function planTask(task, lane = null) {
 
         const blocked = rule.forbids.filter((key) => key in expect);
         if (blocked.length > 0) {
-            return { scorable: false, reason: `target plus ${blocked.join(", ")}: meaning depends on kind` };
+            const why = rule.forbidReason ?? `target plus ${blocked.join(", ")}: meaning depends on kind`;
+            return { scorable: false, reason: rule.forbidReason ? `${blocked.join(", ")}: ${why}` : why };
         }
         if (typeof expect.kind === "string" && Object.hasOwn(KIND_UNSCORABLE, expect.kind)) {
             return { scorable: false, reason: `kind ${expect.kind}: ${KIND_UNSCORABLE[expect.kind]}` };
@@ -172,6 +185,29 @@ export function planTask(task, lane = null) {
                 return { scorable: false, reason: `${rule.name}: ${rule.list} is not a list of file and needle pairs` };
             }
             return { ...common, entries, allow: [] };
+        }
+
+        if (rule.check === "sites") {
+            const list = (key) => (Array.isArray(expect[key]) ? expect[key] : []);
+            const entries = list("known_sites");
+            const repeated = list("repeated_sites");
+            const optional = list("optional_sites");
+            const wellFormed = entries.every(isFileNeedle)
+                && repeated.every((group) => isFileNeedle(group) && Number.isInteger(group.lines))
+                && optional.every(isFileNeedle)
+                && Number.isInteger(expect.exact_count);
+            if (!wellFormed) {
+                return { scorable: false, reason: `${rule.name}: the site lists are not file and needle pairs, or exact_count is not an integer` };
+            }
+            return {
+                ...common,
+                entries,
+                repeated,
+                optional,
+                from: isFileNeedle(task.from) ? { file: task.from.file, needle: task.from.needle } : null,
+                exactCount: expect.exact_count,
+                allow: [],
+            };
         }
 
         const target = rule.target(expect);

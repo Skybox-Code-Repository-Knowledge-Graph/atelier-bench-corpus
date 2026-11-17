@@ -47,6 +47,21 @@ export function resolveNeedle(root, pair) {
     return { ok: true, line: hits[0] };
 }
 
+/** 1-based line numbers of every line of a file that contains the needle, or null when it is missing. */
+export function linesContaining(root, file, needle) {
+    const lines = fileLines(root, file);
+    if (lines === null) {
+        return null;
+    }
+    const hits = [];
+    lines.forEach((line, index) => {
+        if (line.includes(needle)) {
+            hits.push(index + 1);
+        }
+    });
+    return hits;
+}
+
 export function isFileNeedle(value) {
     return Boolean(value)
         && typeof value === "object"

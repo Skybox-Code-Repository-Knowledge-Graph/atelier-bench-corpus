@@ -19,23 +19,51 @@ import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { LANES } from "../lib/plan.mjs";
-import { fileLines, isFileNeedle, resolveNeedle } from "../lib/resolve.mjs";
+import { fileLines, isFileNeedle, linesContaining, resolveNeedle } from "../lib/resolve.mjs";
 
 const REPO_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..", "..", "..");
 
-/** 1-based line numbers of every line of a lane file that contains the needle. */
-export function linesContaining(root, file, needle) {
-    const lines = fileLines(root, file);
-    if (lines === null) {
-        return null;
+/**
+ * Problems with a references task's count, or an empty list: exact_count must equal its known
+ * sites plus every repeated line, and no two entries may name one line. The references rule
+ * requires both; checking every task here makes a lane PR that breaks them fail its own CI.
+ */
+export function checkSiteCount(task, root) {
+    const expect = task.expect ?? {};
+    if (task.surface !== "references" || !Object.hasOwn(expect, "exact_count")) {
+        return [];
     }
-    const hits = [];
-    lines.forEach((line, index) => {
-        if (line.includes(needle)) {
-            hits.push(index + 1);
+    const lines = [];
+    for (const site of Array.isArray(expect.known_sites) ? expect.known_sites : []) {
+        const resolved = isFileNeedle(site) ? resolveNeedle(root, site) : { ok: false };
+        if (resolved.ok) {
+            lines.push(`${site.file}:${resolved.line}`);
         }
+    }
+    for (const entry of Array.isArray(expect.repeated_sites) ? expect.repeated_sites : []) {
+        for (const line of (isFileNeedle(entry) ? linesContaining(root, entry.file, entry.needle) : null) ?? []) {
+            lines.push(`${entry.file}:${line}`);
+        }
+    }
+    const problems = [];
+    const twice = lines.filter((line, index) => lines.indexOf(line) !== index);
+    if (twice.length > 0) {
+        problems.push(`two entries name ${twice[0]}`);
+    }
+    if (expect.exact_count !== lines.length) {
+        problems.push(`exact_count is ${expect.exact_count}, the key lists ${lines.length} site line(s)`);
+    }
+    return problems;
+}
+
+for (const lane of LANES) {
+    test(`every references count equals its listed site lines: ${lane}`, (t) => {
+        const root = join(REPO_ROOT, lane);
+        const tasks = JSON.parse(readFileSync(join(root, "bench", "tasks.json"), "utf8")).tasks;
+        const problems = tasks.flatMap((task) => checkSiteCount(task, root).map((problem) => `${task.id}: ${problem}`));
+        t.diagnostic(`${lane}: ${tasks.filter((task) => task.surface === "references").length} references tasks`);
+        assert.deepEqual(problems, []);
     });
-    return hits;
 }
 
 /** Problems with one task's repeated_sites, or an empty list. */

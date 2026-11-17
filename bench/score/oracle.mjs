@@ -16,6 +16,7 @@ import process from "node:process";
 
 import { LANES, planTask } from "./lib/plan.mjs";
 import { resolveNeedle } from "./lib/resolve.mjs";
+import { resolveSites } from "./lib/score.mjs";
 
 const REPO_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..", "..");
 
@@ -31,6 +32,14 @@ export function buildOracle(root, tasks, lane = null) {
 
         if (plan.check === "contains") {
             answers[task.id] = { text: plan.contains };
+            continue;
+        }
+
+        if (plan.check === "sites") {
+            const sites = resolveSites(root, plan);
+            if (!sites.problem) {
+                answers[task.id] = { locations: sites.required.map((site) => ({ file: site.file, line: site.line })) };
+            }
             continue;
         }
 
