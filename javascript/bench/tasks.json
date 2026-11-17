@@ -2875,7 +2875,6 @@
             "expect": {
                 "kind": "structural",
                 "exact_count": 8,
-                "min_implementations": 8,
                 "implementations": [
                     {
                         "file": "packages/bench/src/exporters/csvExporter.cjs",
