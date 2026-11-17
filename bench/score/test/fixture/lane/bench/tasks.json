@@ -239,6 +239,13 @@
             "expect": { "exact_count": 1, "min_references": 1, "known_sites": [ { "file": "src/app.txt", "needle": "gamma uses alpha" } ] }
         },
         {
+            "id": "s-refs-miscount",
+            "surface": "references",
+            "note": "exact_count disagrees with the listed lines: the key, not the answer, is wrong.",
+            "from": { "file": "src/app.txt", "needle": "alpha declaration", "symbol": "alpha" },
+            "expect": { "exact_count": 3, "known_sites": [ { "file": "src/app.txt", "needle": "gamma uses alpha" }, { "file": "src/app.txt", "needle": "delta site" } ] }
+        },
+        {
             "id": "s-unscorable-count",
             "surface": "definition",
             "note": "A target with exact_count: what the count means depends on kind, so no rule scores it.",

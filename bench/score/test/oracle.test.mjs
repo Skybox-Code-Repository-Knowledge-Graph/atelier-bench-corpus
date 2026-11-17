@@ -197,6 +197,13 @@ function checkSitesRule(task, plan, answer, context, label, counts) {
             });
             assert.equal(verdict({ locations: wide }).verdict, "FAIL", `${label} one range per file`);
         }
+        if (plan.repeated.length > 0) {
+            const group = plan.repeated[0];
+            const lines = new Set((fileLines(context.root, group.file) ?? []).flatMap((text, index) => (text.includes(group.needle) ? [index + 1] : [])));
+            const lastOfGroup = listed.findLastIndex((location) => location.file === group.file && lines.has(location.line));
+            const withoutOne = listed.filter((_, index) => index !== lastOfGroup);
+            assert.equal(verdict({ locations: withoutOne }).verdict, "FAIL", `${label} one line of a repeated group missing`);
+        }
     }
     const anchorFile = plan.from?.file ?? listed[0]?.file;
     if (anchorFile !== undefined) {

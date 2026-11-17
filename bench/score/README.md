@@ -97,7 +97,8 @@ lines. The lane verifiers ignore this key; `test/sites.test.mjs` checks it.
 
 Some lines link to a task's symbol in a way a tool may or may not report, and no `kind` on the task
 says that this link is the one asked about: an export list entry (python `__all__ = ["Money"]`), a
-type-literal key that names an export by structure, a code span in a doc comment. Such lines go in
+type-literal key that names an export by structure, a use of the constant whose value is the event
+name a `name_only` task asks about. Such lines go in
 `optional_sites`:
 
 ```json

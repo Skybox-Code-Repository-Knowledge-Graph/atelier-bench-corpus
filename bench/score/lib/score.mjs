@@ -416,7 +416,7 @@ export function summarize(results) {
     const ratios = (counts) => ({
         pass: counts.PASS,
         answered: counts.PASS + counts.FAIL,
-        scorable: counts.total - counts.UNRESOLVED,
+        scorable: counts.total - counts.UNRESOLVED - counts.UNSCORABLE,
         asked: counts.PASS + counts.FAIL + counts.UNSUPPORTED + counts.ERROR,
         notAsked: counts.UNANSWERED,
     });

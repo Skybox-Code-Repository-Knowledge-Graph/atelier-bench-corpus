@@ -60,7 +60,7 @@ test("the oracle passes every scorable fixture task", () => {
     const oracle = buildOracle(LANE, tasks());
     const scored = scoreLane({ root: LANE, lane: "lane", tasks: tasks(), answersDoc: oracle });
     const scorable = tasks().filter((candidate) => planTask(candidate).scorable
-        && !["s-unresolved", "s-no-symbol"].includes(candidate.id));
+        && !["s-unresolved", "s-no-symbol", "s-refs-miscount"].includes(candidate.id));
     assert.equal(scored.summary.total.PASS, scorable.length);
     assert.equal(scored.summary.total.FAIL, 0);
 });

@@ -56,6 +56,22 @@ export function checkSiteCount(task, root) {
     return problems;
 }
 
+test("checkSiteCount accepts a consistent count and names each kind of mistake", () => {
+    const root = join(dirname(fileURLToPath(import.meta.url)), "fixture", "lane");
+    const task = (expect) => ({ id: "t", surface: "references", expect });
+    const gamma = { file: "src/app.txt", needle: "gamma uses alpha" };
+    const delta = { file: "src/app.txt", needle: "delta site" };
+    const twice = { file: "src/app.txt", needle: "declaration", lines: 2 };
+
+    assert.deepEqual(checkSiteCount(task({ exact_count: 2, known_sites: [gamma, delta] }), root), []);
+    assert.deepEqual(checkSiteCount(task({ exact_count: 3, known_sites: [gamma], repeated_sites: [twice] }), root), [], "repeated lines count");
+    assert.equal(checkSiteCount(task({ exact_count: 3, known_sites: [gamma, delta] }), root).length, 1, "count above the list");
+    assert.equal(checkSiteCount(task({ exact_count: 1, known_sites: [gamma, delta] }), root).length, 1, "count below the list");
+    assert.equal(checkSiteCount(task({ exact_count: 3, known_sites: [gamma, { file: "src/app.txt", needle: "alpha declaration" }], repeated_sites: [twice] }), root).length >= 1, true, "a known site that is also a repeated line");
+    assert.deepEqual(checkSiteCount({ id: "t", surface: "implementation", expect: { exact_count: 9 } }, root), [], "only references");
+    assert.deepEqual(checkSiteCount(task({ min_references: 1, known_sites: [gamma] }), root), [], "no count, nothing to check");
+});
+
 for (const lane of LANES) {
     test(`every references count equals its listed site lines: ${lane}`, (t) => {
         const root = join(REPO_ROOT, lane);
