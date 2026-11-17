@@ -85,6 +85,10 @@ for (const lane of LANES) {
             counts.byCheck[plan.check] = (counts.byCheck[plan.check] ?? 0) + 1;
             const label = `${lane}:${task.id}`;
 
+            if (plan.check === "parse") {
+                checkParseRule(task, plan, answer, context, label);
+                continue;
+            }
             if (plan.check === "twoSided") {
                 checkTwoSidedRule(task, plan, answer, context, label, counts);
                 continue;
@@ -170,6 +174,19 @@ for (const lane of LANES) {
  * asked direction (recall: not judged); the candidate missing, moved by a line, also returned in the
  * opposite direction, or no opposite direction asked each fail, as does each exclusion.
  */
+/**
+ * The behaviour rule (parse-negative, diagnostics): the oracle passes; no parse error, or one for
+ * another file only, fails; parse_errors that is not a list is an ERROR.
+ */
+function checkParseRule(task, plan, answer, context, label) {
+    const verdict = (candidate) => scoreTask(task, candidate, context).verdict;
+    assert.equal(verdict(answer), "PASS", `${label} oracle`);
+    assert.equal(verdict({ parse_errors: [] }), "FAIL", `${label} silently empty`);
+    assert.equal(verdict({ locations: [] }), "FAIL", `${label} no parse_errors at all`);
+    assert.equal(verdict({ parse_errors: [{ file: "some/other/file.txt", message: "syntax error" }] }), "FAIL", `${label} an error for another file`);
+    assert.equal(verdict({ parse_errors: "syntax error" }), "ERROR", `${label} parse_errors not a list`);
+}
+
 function checkTwoSidedRule(task, plan, answer, context, label, counts) {
     const verdict = (candidate) => scoreTask(task, candidate, context).verdict;
     const [candidate] = answer.locations;

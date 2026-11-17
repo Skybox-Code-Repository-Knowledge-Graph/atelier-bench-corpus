@@ -264,6 +264,20 @@ locations in the asked direction are not judged, which is why the rule is recall
 answer is an order) and `inherent_impl` (the key requires nothing) are `UNSCORABLE` on this surface
 (`SURFACE_KIND_UNSCORABLE`); they are not excluded on other surfaces.
 
+### Behaviour
+
+| Rule | Surface | Pass when | Class |
+| --- | --- | --- | --- |
+| `parse-negative/reported` | `parse-negative` (kind `syntax_error`) | the answer's `parse_errors` holds an entry for the asked file | behaviour |
+| `diagnostics/loud` | `diagnostics` (`behavior: loud_degradation`) | the same: the failure is reported, not hidden | behaviour |
+
+The fixtures under `fixtures/broken-syntax/` are broken on purpose. Asked about one, a tool must
+say that parsing it failed: `parse_errors` is a list of `{ file, line?, message }`, and an entry
+whose `file` is the asked file passes. No entry, or entries only for other files, fails as silently
+empty; a tool that crashes is a harness `ERROR`. This is stricter than the key's `must_include`
+(a fragment of the file name), which is reported as not scored. The answer is yes or no, so it is
+its own class and line.
+
 ### Recall rules
 
 | Rule | Surface | Needs | Pass when |
@@ -279,8 +293,8 @@ an `exact` line and a `recall-only` line, and the two are never added up. `min_i
 as `not scored`: tools count callers per call site or per calling function, and the key does not
 say which.
 
-Not covered yet, reported `UNSCORABLE`: `parse-negative`, `diagnostics`, and tasks whose only
-expectation is a count.
+Every surface now has a rule. Tasks no rule covers are `UNSCORABLE` with the reason printed (a
+floor, a kind listed above, a key that names no single place, a task without `from.symbol`).
 
 ### `must_not_include`
 

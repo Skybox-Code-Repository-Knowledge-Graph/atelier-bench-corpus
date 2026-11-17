@@ -163,9 +163,9 @@
         },
         {
             "id": "s-unscorable-surface",
-            "surface": "parse-negative",
-            "note": "No rule serves this surface yet.",
-            "from": { "file": "src/app.txt", "needle": "gamma uses alpha" },
+            "surface": "rename",
+            "note": "No rule serves this surface.",
+            "from": { "file": "src/app.txt", "needle": "gamma uses alpha", "symbol": "alpha" },
             "expect": { "kind": "syntax_error", "must_include": "alpha" }
         },
         {

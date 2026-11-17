@@ -145,6 +145,28 @@ export const RULES = [
         noun: "site",
         uses: ["known_sites", "exact_count", "repeated_sites", "optional_sites", "must_not_include"],
     },
+    {
+        // A fixture broken on purpose: asked about it, the tool must report that parsing it failed.
+        name: "parse-negative/reported",
+        surface: "parse-negative",
+        kinds: ["syntax_error"],
+        requires: [],
+        forbids: [],
+        check: "parse",
+        class: "behaviour",
+        uses: [],
+    },
+    {
+        // Asked about a broken file, the tool must degrade loudly: report the parse failure, never
+        // crash (a harness ERROR) and never answer silently empty.
+        name: "diagnostics/loud",
+        surface: "diagnostics",
+        requires: ["behavior"],
+        forbids: [],
+        check: "parse",
+        class: "behaviour",
+        uses: ["behavior"],
+    },
     ...["implementation", "cardinality", "multi-parent"].map((surface) => ({
         name: `${surface}/list`,
         surface,
@@ -301,6 +323,13 @@ export function planTask(task, lane = null) {
                 return { scorable: false, reason: `${rule.name}: contains is not a non-empty string` };
             }
             return { ...common, contains: expect.contains, allow: [] };
+        }
+
+        if (rule.check === "parse") {
+            if (!isFileNeedle(task.from)) {
+                return { scorable: false, reason: `${rule.name}: the task names no file` };
+            }
+            return { ...common, file: task.from.file, allow: [] };
         }
 
         if (rule.check === "twoSided") {

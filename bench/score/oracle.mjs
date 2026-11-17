@@ -35,6 +35,11 @@ export function buildOracle(root, tasks, lane = null) {
             continue;
         }
 
+        if (plan.check === "parse") {
+            answers[task.id] = { parse_errors: [{ file: plan.file, message: "syntax error" }] };
+            continue;
+        }
+
         if (plan.check === "names") {
             answers[task.id] = { names: [...plan.symbols] };
             continue;
