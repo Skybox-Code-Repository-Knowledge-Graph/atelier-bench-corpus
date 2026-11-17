@@ -1,19 +1,28 @@
 // How one corpus question is put to skybox, and how its reply becomes an answer. Pure: the tool
 // call is passed in, so tests replay recorded replies without skybox.
 //
-// Protocol "raw": exactly one `context(name)` call per question, plus one `cypher` lookup by node id
-// to read the line of a resolved symbol (the resolved reply carries no line). Nothing else: no file
-// hint, no kind filter, no second guess. What skybox returns is what is scored.
+// Two protocols, reported in separate columns:
 //
-// The raw protocol answers a question with the definition skybox resolves for the symbol. A
-// question whose answer is a relation instead (which contract a type satisfies by shape, which
-// impl block supplies a method) is not asked: the definition of the symbol cannot answer it, and
-// claiming skybox cannot be asked would be false. Those tasks stay unanswered.
+// "raw" (definition, resolution, import-precision): exactly one `context(name)` call per question,
+// plus one `cypher` lookup by node id to read the line of a resolved symbol (the resolved reply
+// carries no line). No file hint, no kind filter, no second guess. It answers a question with the
+// definition skybox resolves for the bare name. A question whose answer is a relation instead (which
+// contract a type satisfies by shape, which impl block supplies a method) is not asked: the
+// definition of the symbol cannot answer it, and claiming skybox cannot be asked would be false.
+//
+// "anchored" (hover, call_hierarchy): the `from` line is the declaration the question is about, so
+// skybox is asked within that file and the node at that line is taken. See askAnchored.
+//
+// The adapter's own remarks go in `note`, which the scorer never reads; `text` is only what the
+// tool returned as text (hover documentation and signature).
 
 import { symbolColumns } from "../../score/lib/symbol.mjs";
 
-/** Surfaces this adapter asks. Every other surface is left unanswered. */
+/** Surfaces asked under "raw". */
 export const ASKED_SURFACES = new Set(["definition", "resolution", "import-precision"]);
+
+/** Surfaces asked under "anchored". */
+export const ANCHORED_SURFACES = new Set(["hover", "call_hierarchy"]);
 
 /** Kinds whose answer is a relation of the symbol, not its definition. Not asked under "raw". */
 /**
@@ -125,29 +134,99 @@ export function parseContextReply(text) {
 
 /** Parse the one-row markdown table a `cypher` lookup by id returns into { file, startLine, endLine }. */
 export function parseCypherRow(text) {
-    const rows = text.split("\n").filter((line) => line.startsWith("|") && !line.startsWith("| ---"));
-    if (rows.length < 2) {
+    const rows = parseCypherRows(text);
+    if (rows.length === 0) {
         return null;
     }
-    const cells = rows[1].split("|").slice(1, -1).map((cell) => cell.trim());
-    const [file, start, end] = cells;
+    const [file, start, end] = rows[0];
     const startLine = /^\d+$/.test(start ?? "") ? Number(start) : null;
     const endLine = /^\d+$/.test(end ?? "") ? Number(end) : null;
     return { file: file || null, startLine, endLine };
+}
+
+/** Every data row of a `cypher` markdown table, as arrays of trimmed cells (header row dropped). */
+export function parseCypherRows(text) {
+    const rows = text.split("\n").filter((line) => line.startsWith("|") && !line.startsWith("| ---"));
+    return rows.slice(1).map((row) => row.split("|").slice(1, -1).map((cell) => cell.trim()));
+}
+
+/** The value of a one-column `cypher` result, read whole so a `|` inside it does not split it. */
+export function parseCypherValue(text) {
+    // A cell can span lines (a doc comment keeps its newlines), so the value runs from the row after
+    // the separator to the "*n row(s)*" footer, not to the end of one line.
+    const lines = text.split("\n");
+    const separator = lines.findIndex((entry) => entry.startsWith("| ---"));
+    if (separator < 0) {
+        return null;
+    }
+    const footer = lines.findIndex((entry, index) => index > separator && /^\*\d+ row\(s\)\*$/.test(entry));
+    const body = lines.slice(separator + 1, footer < 0 ? lines.length : footer);
+    while (body.length > 0 && body[body.length - 1].trim() === "") {
+        body.pop();
+    }
+    if (body.length === 0) {
+        return null;
+    }
+    const value = body.join("\n").replace(/^\|\s?/, "").replace(/\s?\|$/, "").trim();
+    return value === "" || value === "null" ? null : value;
 }
 
 function cypherString(value) {
     return `'${value.replaceAll("\\", "\\\\").replaceAll("'", "\\'")}'`;
 }
 
+function locationOf(file, startLine, endLine) {
+    return { file, line: startLine, ...(endLine && endLine >= startLine ? { end_line: endLine } : {}) };
+}
+
+/** Locations from `cypher` rows of [file, startLine, endLine]; rows without a line are counted. */
+function locationsOfRows(rows) {
+    const located = [];
+    let unlocated = 0;
+    for (const [file, start, end] of rows) {
+        const startLine = /^\d+$/.test(start ?? "") ? Number(start) : null;
+        const endLine = /^\d+$/.test(end ?? "") ? Number(end) : null;
+        if (file && file !== "null" && startLine) {
+            located.push(locationOf(file, startLine, endLine));
+        } else {
+            unlocated += 1;
+        }
+    }
+    return { locations: located.sort(byFileAndLine), unlocated };
+}
+
+/** Run one tool call; a flagged result that is not one of skybox's negative answers becomes an error. */
+async function ask(call, tool, args) {
+    const result = await call(tool, args);
+    if (result.isError && !(tool === "context" && isNegativeAnswer(result.text))) {
+        throw new Error(`${tool} reported an error: ${result.text.slice(0, 300)}`);
+    }
+    return result.text;
+}
+
 /**
  * Ask skybox one question. `call(tool, args)` returns `{ text, isError }` as the server sent it, or
  * throws on a transport failure. skybox flags its negative answers ("not found", "ambiguous") as
- * errors; this function decides what a flagged result means, so the rule is tested here.
+ * errors; this module decides what a flagged result means, so the rule is tested here.
  * Returns an answer in the corpus answer format, or undefined when this adapter does not ask the
  * question (the task is then left unanswered, which is the honest record).
  */
 export async function askSkybox(question, call) {
+    try {
+        if (ANCHORED_SURFACES.has(question.surface)) {
+            return await askAnchored(question, call);
+        }
+        return await askRaw(question, call);
+    } catch (error) {
+        return { status: "error", detail: error.message };
+    }
+}
+
+/**
+ * Protocol "raw" (definition, resolution, import-precision): one `context(name)` by bare name, plus one
+ * `cypher` lookup by node id for the line of a resolved symbol.
+ */
+async function askRaw(question, call) {
     if (!ASKED_SURFACES.has(question.surface) || RELATION_QUESTIONS.has(`${question.surface}:${question.kind}`)) {
         return undefined;
     }
@@ -165,19 +244,10 @@ export async function askSkybox(question, call) {
         return undefined;
     }
 
-    let reply;
-    try {
-        const result = await call("context", { name: symbol });
-        if (result.isError && !isNegativeAnswer(result.text)) {
-            return { status: "error", detail: `context reported an error: ${result.text.slice(0, 300)}` };
-        }
-        reply = parseContextReply(result.text);
-    } catch (error) {
-        return { status: "error", detail: `context: ${error.message}` };
-    }
+    const reply = parseContextReply(await ask(call, "context", { name: symbol }));
 
     if (reply.kind === "not-found") {
-        return { locations: [], text: "Symbol not found in index" };
+        return { locations: [], note: "Symbol not found in index" };
     }
 
     if (reply.kind === "ambiguous") {
@@ -186,37 +256,102 @@ export async function askSkybox(question, call) {
         }
         const located = reply.candidates.filter((candidate) => candidate.file && candidate.startLine);
         return {
-            locations: located.map((candidate) => ({
-                file: candidate.file,
-                line: candidate.startLine,
-                ...(candidate.endLine && candidate.endLine >= candidate.startLine ? { end_line: candidate.endLine } : {}),
-            })).sort(byFileAndLine),
+            locations: located.map((candidate) => locationOf(candidate.file, candidate.startLine, candidate.endLine)).sort(byFileAndLine),
             unlocated: reply.candidates.length - located.length,
-            text: `ambiguous: ${reply.candidates.length} candidates`,
+            note: `ambiguous: ${reply.candidates.length} candidates`,
         };
     }
 
     if (reply.kind === "resolved") {
-        let row;
-        try {
-            const result = await call("cypher", {
-                query: `MATCH (n) WHERE n.id = ${cypherString(reply.id)} RETURN n.filePath, n.startLine, n.endLine`,
-            });
-            if (result.isError) {
-                return { status: "error", detail: `cypher reported an error: ${result.text.slice(0, 300)}` };
-            }
-            row = parseCypherRow(result.text);
-        } catch (error) {
-            return { status: "error", detail: `cypher: ${error.message}` };
-        }
+        const row = parseCypherRow(await ask(call, "cypher", {
+            query: `MATCH (n) WHERE n.id = ${cypherString(reply.id)} RETURN n.filePath, n.startLine, n.endLine`,
+        }));
         if (!row || !row.file || !row.startLine) {
-            return { locations: [], unlocated: 1, text: `resolved to ${reply.id}, which has no file and line` };
+            return { locations: [], unlocated: 1, note: `resolved to ${reply.id}, which has no file and line` };
         }
-        return {
-            locations: [{ file: row.file, line: row.startLine, ...(row.endLine && row.endLine >= row.startLine ? { end_line: row.endLine } : {}) }],
-            text: `resolved to ${reply.id}`,
-        };
+        return { locations: [locationOf(row.file, row.startLine, row.endLine)], note: `resolved to ${reply.id}` };
     }
 
     return { status: "error", detail: `unrecognised context reply: ${reply.text}` };
+}
+
+/**
+ * Protocol "anchored" (hover, call_hierarchy). The question is asked from a line in a file, and both
+ * are part of the question, not the answer:
+ *
+ *   1. `context(name, file_path: from.file)`. If one node comes back, it is the subject. If several
+ *      come back, the one that starts at the `from` line (or, failing that, the smallest whose range
+ *      covers it) is the subject; none there means no result.
+ *   2. If the file declares no such name, the `from` line is a use site of something declared
+ *      elsewhere: `context(name)` without the file. One node is the subject; several mean no
+ *      result, as under "raw".
+ *
+ * Then one `cypher` call per needed fact, by node id: the documentation and the signature for hover;
+ * for call_hierarchy the subject's own range (it must cover the `from` line, which every key puts on
+ * the subject's declaration) and then the CALLS edges in the asked direction, each with its node's
+ * range. The note says which step found the subject.
+ */
+async function askAnchored(question, call) {
+    const { symbol, file, line } = question.from;
+    if (symbol === null) {
+        return { status: "unsupported", detail: "the question has no single identifier, and skybox is asked by name" };
+    }
+    if (typeof symbol !== "string") {
+        return undefined;
+    }
+    if (question.surface === "call_hierarchy" && question.direction !== "callers" && question.direction !== "callees") {
+        return undefined;
+    }
+    const empty = question.surface === "hover" ? { text: "" } : { locations: [] };
+
+    let reply = parseContextReply(await ask(call, "context", { name: symbol, file_path: file }));
+    let usedFile = true;
+    if (reply.kind === "not-found") {
+        reply = parseContextReply(await ask(call, "context", { name: symbol }));
+        usedFile = false;
+        if (reply.kind === "not-found") {
+            return { ...empty, note: "Symbol not found in index" };
+        }
+    }
+
+    const how = usedFile ? `anchored in ${file} to` : `${file} declares no ${symbol}; resolved by name to`;
+    let id = null;
+    if (reply.kind === "ambiguous") {
+        if (!usedFile) {
+            return { ...empty, note: `ambiguous: ${reply.candidates.length} candidates, none declared in ${file}` };
+        }
+        const inFile = reply.candidates.filter((candidate) => candidate.file === file && candidate.startLine);
+        const starting = inFile.find((candidate) => candidate.startLine === line);
+        const covering = inFile
+            .filter((candidate) => candidate.startLine <= line && line <= (candidate.endLine ?? candidate.startLine))
+            .sort((left, right) => ((left.endLine ?? left.startLine) - left.startLine) - ((right.endLine ?? right.startLine) - right.startLine))[0];
+        id = (starting ?? covering)?.id ?? null;
+        if (id === null) {
+            return { ...empty, note: `ambiguous: ${reply.candidates.length} candidates, none at ${file}:${line}` };
+        }
+    } else if (reply.kind === "resolved") {
+        id = reply.id;
+    } else {
+        return { status: "error", detail: `unrecognised context reply: ${reply.text}` };
+    }
+
+    if (question.surface === "hover") {
+        const description = parseCypherValue(await ask(call, "cypher", { query: `MATCH (n) WHERE n.id = ${cypherString(id)} RETURN n.description` }));
+        const signature = parseCypherValue(await ask(call, "cypher", { query: `MATCH (n) WHERE n.id = ${cypherString(id)} RETURN n.signature` }));
+        return { text: [description, signature].filter(Boolean).join("\n"), note: `${how} ${id}` };
+    }
+
+    // Every call_hierarchy key is asked from its subject's declaration line, so a node that does not
+    // cover that line is a different declaration with the same name, not the subject.
+    const row = parseCypherRow(await ask(call, "cypher", {
+        query: `MATCH (n) WHERE n.id = ${cypherString(id)} RETURN n.filePath, n.startLine, n.endLine`,
+    }));
+    if (!row || row.file !== file || !row.startLine || line < row.startLine || line > (row.endLine ?? row.startLine)) {
+        return { ...empty, note: `${how} ${id}, which is not at ${file}:${line}` };
+    }
+    const query = question.direction === "callers"
+        ? `MATCH (c)-[r:CodeRelation]->(t) WHERE t.id = ${cypherString(id)} AND r.type = 'CALLS' RETURN c.filePath, c.startLine, c.endLine`
+        : `MATCH (s)-[r:CodeRelation]->(c) WHERE s.id = ${cypherString(id)} AND r.type = 'CALLS' RETURN c.filePath, c.startLine, c.endLine`;
+    const { locations, unlocated } = locationsOfRows(parseCypherRows(await ask(call, "cypher", { query })));
+    return { locations, ...(unlocated > 0 ? { unlocated } : {}), note: `${how} ${id}, ${question.direction}` };
 }

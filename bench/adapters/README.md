@@ -17,9 +17,11 @@ Only the question side of a task, built by [`lib/question.mjs`](lib/question.mjs
 | `surface`, `kind` | what sort of question it is, to decide whether and how to ask |
 | `from.file`, `from.needle`, `from.line`, `from.text` | where the question is asked from |
 | `from.symbol`, `from.occurrence` | which identifier on that line is asked about (issue #145) |
+| `direction` | `call_hierarchy` only: `callers` or `callees`, which way the question asks; `null` elsewhere |
 
 An adapter never reads `expect`, `note` or any other part of the answer key, and never passes
-`kind` or a definition file to the tool. `kind` may decide whether a question is asked; it must
+`kind` or a file taken from the key to the tool (`from.file` is the question's own file, not the
+key's). `kind` may decide whether a question is asked; it must
 never be used to filter or reorder what the tool returned.
 
 ## What an adapter writes
@@ -45,8 +47,17 @@ in separate columns, never blended.
   number from the tool itself. No second guess, no disambiguation by the adapter. A `raw` score for
   a name-based tool therefore measures lookup by bare name: the tool never sees the `from` line, so
   every name that is not unique in the lane is answered with all its candidates and fails.
-- Assisted protocols (the adapter narrows candidates with the tool's own graph, for example) may
-  come later, each with its own name and its own call budget, written here first.
+- **`anchored`**: for surfaces whose question is asked at a declaration or a use site (`hover`,
+  `call_hierarchy`), the `from` file and line are part of the question: a person hovering a name
+  is looking at that line. The adapter may pass the file to the tool and take the tool's own node
+  at that line; it may not pick among nodes by anything the key states. The adapter's choices
+  (which step found the subject) go in `note`.
+- Other assisted protocols (the adapter narrows candidates with the tool's own graph, for example)
+  may come later, each with its own name and its own call budget, written here first.
+
+An answer file states its protocol per surface when it uses more than one
+(`"protocol": { "definition": "raw", "hover": "anchored", … }`). `note` is the adapter's remark on
+an answer; the scorer never reads it. `text` holds only text the tool returned.
 
 ## Scope
 
@@ -64,7 +75,7 @@ An adapter's tests replay recorded tool replies (`bench/adapters/<tool>/test/`).
 
 | Tool | Protocol | Notes |
 | --- | --- | --- |
-| [skybox](skybox/) | `raw`: one `context(name)`, plus one `cypher` lookup by node id for the line of a resolved symbol | Asked: `definition`, `resolution`, `import-precision`. Not asked under `raw`: a symbol that is a segment of a quoted import path; the `resolution` kinds whose answer is a relation rather than the symbol's definition (`structural`, `init_order`, `mro`, `derive_generated`, `dyn_upcast`, `blanket_impl`); and the `import-precision` kinds that bind a namespace or a whole package, whose answer is the member reached through it (`namespace_import`, `namespace_prefix`, `one_member`, `dot_import`, `side_effect_only`, `no_fanout`). A `null` symbol is `unsupported`: skybox is asked by name. php: the three tasks whose targets are under `vendor/` are `UNRESOLVED`, since neither the scorer's checkout nor the adapter's copy has the Composer packages |
+| [skybox](skybox/) | `raw` (definition, resolution, import-precision): one `context(name)`, plus one `cypher` lookup by node id for the line of a resolved symbol. `anchored` (hover, call_hierarchy): `context(name, file_path)` and the node at the `from` line, falling back to `context(name)` when the file declares no such name; then `cypher` by node id for `description` and `signature` (hover) or for the subject's range and its `CALLS` edges (call_hierarchy) | Not asked under `raw`: a symbol that is a segment of a quoted import path; the `resolution` kinds whose answer is a relation rather than the symbol's definition (`structural`, `init_order`, `mro`, `derive_generated`, `dyn_upcast`, `blanket_impl`); and the `import-precision` kinds that bind a namespace or a whole package, whose answer is the member reached through it (`namespace_import`, `namespace_prefix`, `one_member`, `dot_import`, `side_effect_only`, `no_fanout`). A `null` symbol is `unsupported`: skybox is asked by name. Hover text comes from `description` and `signature` only, never from the node's `content`, which is the source itself; skybox 0.9.0 leaves both empty on typescript, javascript and python nodes (a python docstring is only inside `content`), so hover answers there are empty. php: the tasks whose targets are under `vendor/` are `UNRESOLVED` for the exact rules and unanswerable for hover (`rel-ofmany-builder`), since neither the scorer's checkout nor the adapter's copy has the Composer packages; and a `$property` symbol is asked with its `$`, while skybox names the node without it (`lw-url-attribute`, `int-folio-filename-binding`), which is a known adapter gap to be ruled on separately. Its ambiguous reply lists at most 10 candidates; when a name has more, which 10 depends on index order, so the answer bytes for such a name can differ between runs (php `def-nullsafe-chain`: 12 nodes named `label`) |
 
 To run one locally:
 

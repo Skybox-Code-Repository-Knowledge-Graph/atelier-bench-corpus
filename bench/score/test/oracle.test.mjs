@@ -62,12 +62,12 @@ for (const lane of LANES) {
     test(`oracle passes and every mutation fails: ${lane}`, (t) => {
         const root = join(REPO_ROOT, lane);
         const tasks = JSON.parse(readFileSync(join(root, "bench", "tasks.json"), "utf8")).tasks;
-        const oracle = buildOracle(root, tasks);
+        const oracle = buildOracle(root, tasks, lane);
         const context = { root, lane, scope: "repo" };
-        const counts = { scorable: 0, unresolved: 0, unscorable: 0, exclusions: 0, insideSymbol: 0, untrippable: [] };
+        const counts = { scorable: 0, unresolved: 0, unscorable: 0, exclusions: 0, insideSymbol: 0, untrippable: [], byCheck: {} };
 
         for (const task of tasks) {
-            const plan = planTask(task);
+            const plan = planTask(task, lane);
             if (!plan.scorable) {
                 counts.unscorable += 1;
                 assert.equal(scoreTask(task, undefined, context).verdict, "UNSCORABLE", `${lane}:${task.id}`);
@@ -82,8 +82,14 @@ for (const lane of LANES) {
             }
 
             counts.scorable += 1;
-            const [target] = answer.locations;
+            counts.byCheck[plan.check] = (counts.byCheck[plan.check] ?? 0) + 1;
             const label = `${lane}:${task.id}`;
+
+            if (plan.check !== "target") {
+                checkRecallRule(task, plan, answer, context, label, counts);
+                continue;
+            }
+            const [target] = answer.locations;
 
             const perfect = scoreTask(task, answer, context);
             assert.equal(perfect.verdict, "PASS", `${label} oracle: ${perfect.detail ?? ""}`);
@@ -128,9 +134,60 @@ for (const lane of LANES) {
         }
 
         assert.ok(counts.scorable > 0, `${lane}: no task is scorable`);
-        t.diagnostic(`${lane}: ${counts.scorable} scorable, ${counts.unresolved} unresolved, ${counts.unscorable} unscorable of ${tasks.length}; ${counts.exclusions} exclusions tripped; ${counts.insideSymbol} target(s) matched by containment`);
+        t.diagnostic(`${lane}: ${counts.scorable} scorable (${Object.entries(counts.byCheck).map(([check, n]) => `${check} ${n}`).join(", ")}), ${counts.unresolved} unresolved, ${counts.unscorable} unscorable of ${tasks.length}; ${counts.exclusions} exclusions tripped; ${counts.insideSymbol} target(s) matched by containment`);
         if (counts.untrippable.length > 0) {
             t.diagnostic(`${lane}: exclusions no mutation could trip: ${counts.untrippable.join(" | ")}`);
         }
     });
+}
+
+/**
+ * The recall rules ("contains", "callees", "callers"): the oracle passes, a missing or moved entry
+ * fails, and each excluded entry fails. Their known limit is pinned too: an answer that returns more
+ * than the key lists (extra text, extra locations, one range over a whole file) passes, which is why
+ * these rules are reported in their own column.
+ */
+function checkRecallRule(task, plan, answer, context, label, counts) {
+    const verdict = (candidate) => scoreTask(task, candidate, context);
+    assert.equal(verdict(answer).verdict, "PASS", `${label} oracle: ${verdict(answer).detail ?? ""}`);
+
+    if (plan.check === "contains") {
+        assert.equal(verdict({ text: "" }).verdict, "FAIL", `${label} no text`);
+        assert.equal(verdict({ text: plan.contains.slice(0, -1) }).verdict, "FAIL", `${label} truncated text`);
+        assert.equal(verdict({ locations: [] }).verdict, "FAIL", `${label} locations only`);
+        assert.equal(verdict({ text: `before ${plan.contains} after` }).verdict, "PASS", `${label} recall limit: surrounding text is not judged`);
+        return;
+    }
+
+    const listed = answer.locations;
+    assert.equal(verdict({ locations: [] }).verdict, "FAIL", `${label} no location`);
+    assert.equal(verdict({ locations: listed.slice(1) }).verdict, "FAIL", `${label} one listed entry missing`);
+    const moved = [{ ...listed[0], line: listed[0].line > 1 ? listed[0].line - 1 : listed[0].line + 1 }, ...listed.slice(1)];
+    assert.equal(verdict({ locations: moved }).verdict, "FAIL", `${label} one listed entry moved by a line`);
+    assert.equal(verdict({ locations: [...listed, { file: "no/such/file.txt", line: 1 }] }).verdict, "PASS", `${label} recall limit: an extra location is not judged`);
+
+    if (plan.check === "callees") {
+        // A callee is a declaration: a range that starts above it does not stand for it.
+        const enclosing = [{ file: listed[0].file, line: listed[0].line > 1 ? listed[0].line - 1 : listed[0].line, end_line: listed[0].line + 40 }, ...listed.slice(1)];
+        if (listed[0].line > 1) {
+            assert.equal(verdict({ locations: enclosing }).verdict, "FAIL", `${label} callee by an enclosing range`);
+        }
+    } else {
+        // A caller is the range of the calling declaration: one range over each file covers every site.
+        const files = [...new Set(listed.map((location) => location.file))];
+        const wide = files.map((file) => ({ file, line: 1, end_line: Math.max(...listed.filter((l) => l.file === file).map((l) => l.line)) + 10 }));
+        assert.equal(verdict({ locations: wide }).verdict, "PASS", `${label} recall limit: one range per file covers every call site`);
+    }
+
+    for (const entry of plan.exclude) {
+        const tripped = tripExclusion(entry, answer, context.root, context.lane);
+        if (tripped === null) {
+            counts.untrippable.push(`${task.id}: ${entry}`);
+            continue;
+        }
+        counts.exclusions += 1;
+        const outcome = verdict(tripped);
+        assert.equal(outcome.verdict, "FAIL", `${label} exclusion ${JSON.stringify(entry)}`);
+        assert.match(outcome.detail, /excluded/, `${label} exclusion ${JSON.stringify(entry)} named in the reason`);
+    }
 }

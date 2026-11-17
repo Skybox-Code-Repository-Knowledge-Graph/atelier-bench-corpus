@@ -15,7 +15,13 @@ s-unsupported: UNSUPPORTED
 s-error: ERROR (timed out after 60s)
 s-invalid: ERROR (invalid answer: location line is not a positive integer in src/app.txt)
 s-unanswered: UNANSWERED
-s-unscorable-surface: UNSCORABLE (no rule for surface hover)
+s-unscorable-surface: UNSCORABLE (no rule for surface parse-negative)
+s-hover-pass: PASS
+s-hover-miss: FAIL (text does not contain "beta declaration")
+s-callees: PASS
+s-callees-missing: FAIL (1 of 2 listed callee(s) not returned, first src/app.txt:2)
+s-callers: PASS [not scored: min_incoming]
+s-callers-missing: FAIL (1 of 2 listed call site(s) not returned, first src/app.txt:7)
 s-unscorable-count: UNSCORABLE (target plus exact_count: meaning depends on kind)
 s-no-symbol: UNSCORABLE (task states no from.symbol)
 s-unresolved: UNRESOLVED (src/absent.txt: file missing)
@@ -24,11 +30,13 @@ surface           pass  fail  unsupported  unanswered  error  unscorable  unreso
 definition           5     5            1           1      2           2           1     17
 resolution           0     2            0           0      0           0           0      2
 import-precision     0     1            0           0      0           0           0      1
-hover                0     0            0           0      0           1           0      1
-all                  5     8            1           1      2           3           1     21
+parse-negative       0     0            0           0      0           1           0      1
+hover                1     1            0           0      0           0           0      2
+call_hierarchy       2     2            0           0      0           0           0      4
+all                  8    11            1           1      2           3           1     27
 
 tool: fixture-tool 0.0.0   lane: fixture   scope: repo
 answers for ids this lane does not have: 1 (s-renamed-id)
-scorable by this scorer: 17 of 21 tasks
-passed: 5 of 17 scorable (29.4%)
-        5 of 13 answered (38.5%), 5 of 21 tasks (23.8%)
+scorable by this scorer: 23 of 27 tasks
+exact        passed 5 of 17 scorable (29.4%), 5 of 13 answered (38.5%)
+recall-only  passed 3 of 6 scorable (50.0%), 3 of 6 answered (50.0%)

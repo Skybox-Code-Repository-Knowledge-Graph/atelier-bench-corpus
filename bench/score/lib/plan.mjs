@@ -22,12 +22,22 @@ const candidate = (expect) => expect.candidate;
 const fileAndNeedle = (expect) => ({ file: expect.file, needle: expect.needle });
 
 /**
- * Single-target rules: the answer is one declaration.
+ * The rules.
  *
  *   surface   the task surface the rule serves
  *   requires  expect keys that must be present
  *   forbids   expect keys whose presence makes the target's meaning depend on `kind`
- *   target    where the expected declaration is
+ *   check     how an answer is compared with the key:
+ *               target    one declaration, by exact line (single-target rules)
+ *               contains  the key's `contains` string appears in the answer's text
+ *               callees   every listed callee declaration is returned, by exact line
+ *               callers   every listed call site is covered by a returned caller's range
+ *   class     "exact": the key states the whole answer, so extras fail it.
+ *             "recall": the key states part of the answer, so extras cannot be judged and do not
+ *             fail it. A recall rule cannot catch a tool that returns everything; its results are
+ *             reported in their own column and never added to the exact one.
+ *   target    for check "target": where the expected declaration is
+ *   list      for checks "callees" and "callers": the expect key holding the listed entries
  *   uses      expect keys the rule reads (everything else is "not scored")
  */
 export const RULES = [
@@ -36,6 +46,8 @@ export const RULES = [
         surface: "definition",
         requires: ["file", "needle"],
         forbids: ["exact_count"],
+        check: "target",
+        class: "exact",
         target: fileAndNeedle,
         uses: ["file", "needle", "known_sites", "must_not_include"],
     },
@@ -44,6 +56,8 @@ export const RULES = [
         surface: "definition",
         requires: ["candidate"],
         forbids: ["exact_count"],
+        check: "target",
+        class: "exact",
         target: candidate,
         uses: ["candidate", "known_sites", "must_not_include"],
     },
@@ -52,6 +66,8 @@ export const RULES = [
         surface: "resolution",
         requires: ["candidate"],
         forbids: ["exact_count"],
+        check: "target",
+        class: "exact",
         target: candidate,
         uses: ["candidate", "known_sites", "must_not_include"],
     },
@@ -60,8 +76,39 @@ export const RULES = [
         surface: "import-precision",
         requires: ["candidate"],
         forbids: ["exact_count"],
+        check: "target",
+        class: "exact",
         target: candidate,
         uses: ["candidate", "known_sites", "must_not_include"],
+    },
+    {
+        name: "hover/contains",
+        surface: "hover",
+        requires: ["contains"],
+        forbids: [],
+        check: "contains",
+        class: "recall",
+        uses: ["contains"],
+    },
+    {
+        name: "call_hierarchy/callees",
+        surface: "call_hierarchy",
+        requires: ["outgoing_includes"],
+        forbids: [],
+        check: "callees",
+        class: "recall",
+        list: "outgoing_includes",
+        uses: ["outgoing_includes", "must_not_include"],
+    },
+    {
+        name: "call_hierarchy/callers",
+        surface: "call_hierarchy",
+        requires: ["incoming_includes"],
+        forbids: [],
+        check: "callers",
+        class: "recall",
+        list: "incoming_includes",
+        uses: ["incoming_includes", "must_not_include"],
     },
 ];
 
@@ -103,19 +150,40 @@ export function planTask(task, lane = null) {
             return { scorable: false, reason: `kind ${expect.kind}: ${KIND_UNSCORABLE[expect.kind]}` };
         }
 
+        const common = {
+            scorable: true,
+            rule: rule.name,
+            check: rule.check,
+            class: rule.class,
+            exclude: [].concat(expect.must_not_include ?? []).filter((entry) => typeof entry === "string"),
+            notScored: keys.filter((key) => !rule.uses.includes(key) && !LABEL_KEYS.has(key)),
+        };
+
+        if (rule.check === "contains") {
+            if (typeof expect.contains !== "string" || expect.contains === "") {
+                return { scorable: false, reason: `${rule.name}: contains is not a non-empty string` };
+            }
+            return { ...common, contains: expect.contains, allow: [] };
+        }
+
+        if (rule.check === "callees" || rule.check === "callers") {
+            const entries = Array.isArray(expect[rule.list]) ? expect[rule.list] : [];
+            if (entries.length === 0 || !entries.every(isFileNeedle)) {
+                return { scorable: false, reason: `${rule.name}: ${rule.list} is not a list of file and needle pairs` };
+            }
+            return { ...common, entries, allow: [] };
+        }
+
         const target = rule.target(expect);
         if (!isFileNeedle(target)) {
             return { scorable: false, reason: `${rule.name}: target is not a file and needle pair` };
         }
 
         return {
-            scorable: true,
-            rule: rule.name,
+            ...common,
             target,
             targetInsideSymbol: TARGET_INSIDE_SYMBOL.has(`${lane}:${task.id}`),
             allow: Array.isArray(expect.known_sites) ? expect.known_sites.filter(isFileNeedle) : [],
-            exclude: [].concat(expect.must_not_include ?? []).filter((entry) => typeof entry === "string"),
-            notScored: keys.filter((key) => !rule.uses.includes(key) && !LABEL_KEYS.has(key)),
         };
     }
 

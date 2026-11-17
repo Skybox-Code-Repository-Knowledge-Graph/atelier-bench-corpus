@@ -20,19 +20,28 @@ import { resolveNeedle } from "./lib/resolve.mjs";
 const REPO_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..", "..");
 
 /** Perfect answers for every task that has a rule and whose target resolves in this checkout. */
-export function buildOracle(root, tasks) {
+export function buildOracle(root, tasks, lane = null) {
     const answers = {};
 
     for (const task of tasks) {
-        const plan = planTask(task);
+        const plan = planTask(task, lane);
         if (!plan.scorable) {
             continue;
         }
-        const target = resolveNeedle(root, plan.target);
-        if (!target.ok) {
+
+        if (plan.check === "contains") {
+            answers[task.id] = { text: plan.contains };
             continue;
         }
-        answers[task.id] = { locations: [{ file: plan.target.file, line: target.line }] };
+
+        const wanted = plan.check === "target" ? [plan.target] : plan.entries;
+        const resolved = wanted.map((pair) => ({ file: pair.file, result: resolveNeedle(root, pair) }));
+        if (resolved.some((entry) => !entry.result.ok)) {
+            continue;
+        }
+        // The key's own lines: a declaration for "target" and "callees", a call site for "callers"
+        // (a one-line range covers itself).
+        answers[task.id] = { locations: resolved.map((entry) => ({ file: entry.file, line: entry.result.line })) };
     }
 
     return { version: 1, tool: { name: "oracle", version: "1" }, scope: "repo", answers };

@@ -21,6 +21,12 @@
         "s-known-site-excluded-path": { "locations": [ { "file": "src/app.txt", "line": 1 }, { "file": "src/other.txt", "line": 1 } ] },
         "s-range-over-excluded-text": { "locations": [ { "file": "src/app.txt", "line": 4, "end_line": 7 } ] },
         "s-renamed-id": { "locations": [ { "file": "src/app.txt", "line": 1 } ] },
-        "s-no-symbol": { "locations": [ { "file": "src/app.txt", "line": 1 } ] }
+        "s-no-symbol": { "locations": [ { "file": "src/app.txt", "line": 1 } ] },
+        "s-hover-pass": { "text": "doc: the alpha declaration, with more text around it" },
+        "s-hover-miss": { "text": "doc: nothing useful" },
+        "s-callees": { "locations": [ { "file": "src/app.txt", "line": 1 }, { "file": "src/app.txt", "line": 2 }, { "file": "src/app.txt", "line": 7 } ] },
+        "s-callees-missing": { "locations": [ { "file": "src/app.txt", "line": 1 } ] },
+        "s-callers": { "locations": [ { "file": "src/app.txt", "line": 2, "end_line": 5 } ] },
+        "s-callers-missing": { "locations": [ { "file": "src/app.txt", "line": 2, "end_line": 5 } ] }
     }
 }
