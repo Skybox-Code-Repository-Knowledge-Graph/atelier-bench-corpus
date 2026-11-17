@@ -230,10 +230,16 @@ php `impl-trait-abstract`.
 An exact rule. `symbols` lists every named symbol the file declares, at any nesting depth, as each
 lane's `notes` count them (#168). The answer's `names` must equal that list as a multiset: a name
 the file declares twice is returned twice, and the order is not judged, since tools nest containers
-and flatten them in different orders. `min_symbols` and `must_include` are reported as not scored.
-The names are compared as written, so a container a tool labels differently from the key fails:
-rust impl blocks are keyed with rust-analyzer's labels (`impl RepairOrder`,
-`impl HasReference for RepairOrder`).
+and flatten them in different orders. `min_symbols` and `must_include` are reported as not scored;
+the lane notes' 25% margin for a listing that folds containers is dropped on purpose, since an exact
+rule must not pass a listing that misses symbols.
+
+Names are compared by the identifier each declares (`declaredName` in `lib/score.mjs`), on the key
+and the answer alike: the text after the last `.` or `::` and without a leading `$`, so a server's
+label convention (`(*RepairOrder).TransitionTo` from gopls, `$guarded` from a php server) does not
+decide the verdict. A label with no identifier of its own (whitespace remains, as in a rust
+`impl HasReference for RepairOrder` block) names a container, not a symbol, and is neutral on both
+sides. Checked against gopls v0.24.0, which passes both go tasks.
 
 ### Recall rules
 

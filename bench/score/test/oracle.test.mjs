@@ -16,7 +16,7 @@ import { fileURLToPath } from "node:url";
 import { buildOracle } from "../oracle.mjs";
 import { LANES, planTask } from "../lib/plan.mjs";
 import { fileLines, resolveNeedle } from "../lib/resolve.mjs";
-import { classifyExclusion, resolveSites, scoreTask } from "../lib/score.mjs";
+import { classifyExclusion, declaredName, resolveSites, scoreTask } from "../lib/score.mjs";
 
 const REPO_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..", "..", "..");
 
@@ -157,17 +157,22 @@ for (const lane of LANES) {
 
 /**
  * The exact rule "names" (document_symbol): the oracle passes, and so does it in reverse order (order
- * is not judged); one name missing, one extra name, one name returned twice, no names, and a location
- * list without names each fail.
+ * is not judged), with every label qualified the way a server may print it (`Owner.name`, `$name`),
+ * and with an unnamed container added (`impl X for Y`). One name missing, one extra name, one name
+ * returned twice, no names, and a location list without names each fail.
  */
 function checkNamesRule(task, plan, answer, context, label) {
     const verdict = (candidate) => scoreTask(task, candidate, context).verdict;
     const names = answer.names;
+    const first = names.findIndex((name) => !/\s/.test(declaredName(name)));
+    assert.ok(first >= 0, `${label}: the key names no identifier`);
     assert.equal(verdict(answer), "PASS", `${label} oracle`);
     assert.equal(verdict({ names: [...names].reverse() }), "PASS", `${label} order is not judged`);
-    assert.equal(verdict({ names: names.slice(1) }), "FAIL", `${label} one name missing`);
-    assert.equal(verdict({ names: [...names, "zz-not-a-symbol-of-this-file"] }), "FAIL", `${label} one extra name`);
-    assert.equal(verdict({ names: [...names, names[0]] }), "FAIL", `${label} one name twice`);
+    assert.equal(verdict({ names: names.map((name) => (/\s/.test(name) ? name : `Owner.${declaredName(name)}`)) }), "PASS", `${label} qualified labels`);
+    assert.equal(verdict({ names: [...names, "impl Something for Other"] }), "PASS", `${label} an unnamed container is neutral`);
+    assert.equal(verdict({ names: names.filter((_, index) => index !== first) }), "FAIL", `${label} one name missing`);
+    assert.equal(verdict({ names: [...names, "zz_not_a_symbol_of_this_file"] }), "FAIL", `${label} one extra name`);
+    assert.equal(verdict({ names: [...names, names[first]] }), "FAIL", `${label} one name twice`);
     assert.equal(verdict({ names: [] }), "FAIL", `${label} no names`);
     assert.equal(verdict({ locations: [{ file: task.from.file, line: 1 }] }), "FAIL", `${label} locations without names`);
     assert.equal(verdict({ names: [1, 2] }), "ERROR", `${label} names that are not strings`);
