@@ -140,7 +140,8 @@
             "from": { "file": "app/Models/RepairOrder.php", "needle": "class RepairOrder extends Model" },
             "expect": {
                 "min_symbols": 13,
-                "must_include": ["complete", "transitionTo", "scopeOpen", "scopeRush", "parts", "casts"]
+                "must_include": ["complete", "transitionTo", "scopeOpen", "scopeRush", "parts", "casts"],
+                "symbols": ["RepairOrder", "$guarded", "$attributes", "casts", "customer", "device", "technician", "parts", "notes", "statusLogs", "invoice", "signature", "latestNote", "labels", "scopeOpen", "scopeRush", "transitionTo", "complete"]
             }
         },
         {
@@ -994,7 +995,8 @@
             "from": { "file": "app/Bench/Reports/ReportRegistry.php", "needle": "public const array REPORTS = [" },
             "expect": {
                 "min_symbols": 3,
-                "must_include": ["REPORTS", "all", "count"]
+                "must_include": ["REPORTS", "all", "count"],
+                "symbols": ["ReportRegistry", "REPORTS", "all", "count"]
             }
         },
         {
