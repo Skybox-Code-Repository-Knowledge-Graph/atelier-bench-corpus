@@ -2676,6 +2676,16 @@
                         "file": "packages/core/tests/events.test.ts",
                         "needle": "expect(REPAIR_COMPLETED).toBe(\"repair.completed\");"
                     }
+                ],
+                "optional_sites": [
+                    {
+                        "file": "packages/core/src/index.ts",
+                        "needle": "    REPAIR_COMPLETED,"
+                    },
+                    {
+                        "file": "packages/core/tests/events.test.ts",
+                        "needle": "import { REPAIR_COMPLETED, SendCompletionNotice, StringBus } from \"@atelier/core\";"
+                    }
                 ]
             }
         },
