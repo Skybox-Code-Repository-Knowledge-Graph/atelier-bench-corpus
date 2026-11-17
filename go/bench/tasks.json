@@ -716,7 +716,7 @@
             "id": "resolution-same-name-package-support",
             "surface": "resolution",
             "note": "Two packages are named support; the file imports the core one under an alias and the bench one not at all.",
-            "from": {"file": "atelier/services/warranty_claim_service.go", "needle": "\t\tif order.Priority == coresupport.PriorityWarranty {", "symbol": "coresupport"},
+            "from": {"file": "atelier/services/warranty_claim_service.go", "needle": "\t\tif order.Priority == coresupport.PriorityWarranty {", "symbol": "PriorityWarranty"},
             "expect": {
                 "kind": "shadow_alias",
                 "resolution": "atelier.example/lane/core/support#Priority",
