@@ -42,7 +42,7 @@ One JSON file per tool and lane.
 | `version` | `1` |
 | `tool.name`, `tool.version` | What was scored. Pin the version |
 | `scope` | `repo` when the tool indexed the whole checkout, `lane` when it indexed one lane directory. Default `lane` |
-| `protocol` | How the adapter asked (see `bench/adapters/README.md`): one name, or an object from surface to name when it differs by surface. Reported, never scored |
+| `protocol` | How the adapter asked (see `bench/adapters/README.md`): one name, or an object from surface to name when it differs by surface; a `surface:kind` key names the protocol of one kind of a surface. Reported, never scored |
 | `answers` | Keyed by task id. A task with no entry is `UNANSWERED` |
 
 One answer:
@@ -251,13 +251,13 @@ bindings), the key is not changed to fit it and the task is `UNSCORABLE`
 
 | Rule | Kinds | Pass when | Class |
 | --- | --- | --- | --- |
-| `direction/self` | `uses_self` | the candidate (the type's own declaration) is returned, and nothing else | exact |
-| `direction/two-sided` | `parent_of`, `child_of`, `used_by` | the candidate is among the locations for the asked direction, and absent from `reverse_locations`, the locations for the opposite direction | recall-only |
+| `direction/two-sided` | `parent_of`, `child_of`, `used_by`, `uses_self` | the candidate is among the locations for the asked direction, and absent from `reverse_locations`, the locations for the opposite direction | recall-only |
 | `direction/list` | `declaration_merge` | the listed declarations are returned, and nothing else | exact |
 
 The lane notes define the kinds: `child_of` asks for a direct parent, `parent_of` for a child, `used_by`
-for a user of a trait, `uses_self` for a type that refers to itself, which a definition lookup
-answers with the type's own declaration. The two-sided key names one member of a set it does not
+for a user of a trait, `uses_self` for a type that refers to itself through a uses edge (never
+extends, implements or embedding), so its candidate, the type's own declaration, must come back as
+a use and not as a parent. The two-sided key names one member of a set it does not
 list, so the answer is asked both ways: a tool with the edge backwards, or in both directions,
 fails, and an answer without `reverse_locations` fails, since nothing shows its direction. Other
 locations in the asked direction are not judged, which is why the rule is recall-only. `mro` (the

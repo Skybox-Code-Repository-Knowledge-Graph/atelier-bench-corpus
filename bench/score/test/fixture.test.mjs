@@ -112,6 +112,8 @@ test("results asked under different protocols are reported on separate lines, ne
     assert.equal(summary.columns.filter((c) => c.protocol === null).length, 0, "with a protocol map, nothing is reported without one");
     const single = scoreLane({ root: LANE, lane: "lane", tasks: tasks(), answersDoc: { ...answers, protocol: "raw" } }).summary.columns;
     assert.deepEqual(single.map(key).sort(), ["exact/raw", "recall/raw"], "one protocol: one line per class");
+    const byKind = scoreLane({ root: LANE, lane: "lane", tasks: tasks(), answersDoc: { ...answers, protocol: { definition: "raw", direction: "anchored", "direction:parent_of": "special" } } }).summary.columns;
+    assert.ok(byKind.some((c) => c.class === "recall" && c.protocol === "special"), "a surface:kind protocol takes its own line");
 });
 
 test("an answer for an id the lane does not have is reported, not dropped", () => {

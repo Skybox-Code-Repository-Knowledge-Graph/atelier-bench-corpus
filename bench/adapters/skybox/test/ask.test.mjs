@@ -330,6 +330,44 @@ test("file protocol (document_symbol): every node with a position in the file, a
     assert.deepEqual(empty.names, [], "no node: an empty answer, not unsupported");
 });
 
+test("direction: two-sided kinds ask the relation and its opposite; definition kinds are asked by bare name", async () => {
+    const from = { file: "contracts/report.go", needle: "type ReportContract interface {", line: 37, text: "type ReportContract interface {", symbol: "ReportContract" };
+    const subject = TABLE(["n.filePath", "n.startLine", "n.endLine"], ["contracts/report.go", "37", "45"]);
+    const children = TABLE(["c.id", "c.filePath", "c.startLine", "c.endLine"], ["Struct:a", "reports/a.go", "12", "20"]);
+    const parents = TABLE(["p.filePath", "p.startLine", "p.endLine"], ["contracts/base.go", "3", "9"]);
+    const cypher = (args) => {
+        if (args.query.includes("t.id IN [") && args.query.includes("'Struct:a'")) {
+            return TABLE(["c.id", "c.filePath", "c.startLine", "c.endLine"]);
+        }
+        if (args.query.includes("t.id IN [")) {
+            return children;
+        }
+        if (args.query.includes("(p)")) {
+            return parents;
+        }
+        return subject;
+    };
+    const parentOf = await askSkybox({ id: "t", surface: "direction", kind: "parent_of", direction: null, from }, fake({ context: RESOLVED, cypher }).call);
+    assert.deepEqual(parentOf.locations, [{ file: "reports/a.go", line: 12, end_line: 20 }], "parent_of asks the children");
+    assert.deepEqual(parentOf.reverse_locations, [{ file: "contracts/base.go", line: 3, end_line: 9 }], "and the parents, the opposite");
+    const childOf = await askSkybox({ id: "t", surface: "direction", kind: "child_of", direction: null, from }, fake({ context: RESOLVED, cypher }).call);
+    assert.deepEqual(childOf.locations, parentOf.reverse_locations, "child_of asks the parents");
+    assert.deepEqual(childOf.reverse_locations, parentOf.locations, "and the children, the opposite");
+
+    const uses = TABLE(["t.filePath", "t.startLine", "t.endLine"], ["contracts/report.go", "37", "45"]);
+    const selfCalls = fake({ context: RESOLVED, cypher: (args) => (args.query.includes("r.type = 'USES'") ? uses : cypher(args)) });
+    const self = await askSkybox({ id: "t", surface: "direction", kind: "uses_self", direction: null, from }, selfCalls.call);
+    assert.ok(selfCalls.calls.some((entry) => /WHERE s\.id = '[^']+' AND r\.type = 'USES'/.test(entry.args.query ?? "")), "uses_self asks the subject's own USES edges");
+    assert.deepEqual(self.locations, [{ file: "contracts/report.go", line: 37, end_line: 45 }]);
+    assert.deepEqual(self.reverse_locations, parentOf.reverse_locations, "and its parents, the opposite");
+
+    const { call, calls } = fake({ context: "Symbol not found in index" });
+    const merged = await askSkybox({ id: "t", surface: "direction", kind: "declaration_merge", direction: null, from: { ...from, text: "export enum RepairStatus {", symbol: "RepairStatus" } }, call);
+    assert.deepEqual(calls[0].args, { name: "RepairStatus" }, "declaration_merge is a definition lookup by bare name (raw)");
+    assert.deepEqual(merged.locations, []);
+    assert.equal(await askSkybox({ id: "t", surface: "direction", kind: "inherent_impl", direction: null, from }, fake({}).call), undefined, "an unscored kind is not asked");
+});
+
 test("a php sigil is dropped from the name skybox is asked, and only there", async () => {
     assert.equal(nameInIndex("$statusFilter"), "statusFilter");
     assert.equal(nameInIndex("statusFilter"), "statusFilter");
