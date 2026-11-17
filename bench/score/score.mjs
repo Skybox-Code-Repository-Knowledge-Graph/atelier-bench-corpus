@@ -142,11 +142,13 @@ function renderText({ results, summary, unknownIds }, { lane, tool, scope }) {
         out.push(formatRow(row));
     }
 
-    // Two columns, never added together. "exact": the key states the whole answer, so an extra
-    // result fails. "recall-only": the key states part of the answer, so extras are not judged and a
-    // tool that returns everything is not caught. For each: passed of scorable is the headline;
-    // passed of answered shows what the tool did with the questions it was asked.
-    const { total, scorable, classes } = summary;
+    // One line per rule class and adapter protocol, never added together. "exact": the key states
+    // the whole answer, so an extra result fails. "recall-only": the key states part of the answer,
+    // so extras are not judged and a tool that returns everything is not caught. A protocol is how
+    // the adapter asked (adapters README); different protocols measure different things. For each
+    // line: passed of scorable is the headline; passed of answered shows what the tool did with the
+    // questions it was asked.
+    const { total, scorable, columns } = summary;
     const version = typeof tool.version === "string" && tool.version !== "" ? ` ${tool.version}` : "";
     out.push("");
     out.push(`tool: ${tool.name}${version}   lane: ${lane}   scope: ${scope}`);
@@ -154,11 +156,12 @@ function renderText({ results, summary, unknownIds }, { lane, tool, scope }) {
         out.push(`answers for ids this lane does not have: ${unknownIds.length} (${unknownIds.join(", ")})`);
     }
     out.push(`scorable by this scorer: ${scorable} of ${total.total} tasks`);
-    for (const [name, label] of [["exact", "exact      "], ["recall", "recall-only"]]) {
-        const c = classes[name];
+    for (const c of columns) {
         if (c.scorable === 0) {
             continue;
         }
+        const name = c.class === "exact" ? "exact      " : "recall-only";
+        const label = c.protocol ? `${name.trim()}, ${c.protocol}`.padEnd(22) : name;
         out.push(`${label}  passed ${c.pass} of ${c.scorable} scorable (${percent(c.pass, c.scorable)}), ${c.pass} of ${c.answered} answered (${percent(c.pass, c.answered)})`);
     }
 

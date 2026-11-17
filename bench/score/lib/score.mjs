@@ -382,7 +382,7 @@ export function scoreLane({ root, lane, tasks, answersDoc }) {
         const outcome = asked
             ? scoreTask(task, answer, context)
             : { verdict: "UNSCORABLE", detail: "task states no from.symbol" };
-        results.push({ id: task.id, surface: task.surface, ...outcome });
+        results.push({ id: task.id, surface: task.surface, protocol: protocolOf(answersDoc, task.surface), ...outcome });
     }
 
     // An answer for an id the lane does not have is reported: a renamed id must not look UNANSWERED.
@@ -392,12 +392,26 @@ export function scoreLane({ root, lane, tasks, answersDoc }) {
     return { results, summary: summarize(results), unknownIds };
 }
 
-/** Counts per surface and overall, plus the denominators the report's three ratios use. */
+/** The protocol an answer file states for a surface: one name, a map by surface, or none. */
+export function protocolOf(answersDoc, surface) {
+    const protocol = answersDoc?.protocol;
+    if (typeof protocol === "string" && protocol !== "") {
+        return protocol;
+    }
+    if (protocol && typeof protocol === "object") {
+        // A map that leaves a surface out: the adapter states no protocol for it, so its tasks are
+        // reported apart from every stated protocol, never folded into one.
+        return typeof protocol[surface] === "string" ? protocol[surface] : "unstated";
+    }
+    return null;
+}
+
+/** Counts per surface and overall, plus one column per rule class and protocol. */
 export function summarize(results) {
     const blank = () => Object.fromEntries([...VERDICTS.map((verdict) => [verdict, 0]), ["total", 0]]);
     const bySurface = {};
     const total = blank();
-    const byClass = { exact: blank(), recall: blank() };
+    const byColumn = new Map();
 
     for (const result of results) {
         const row = (bySurface[result.surface] ??= blank());
@@ -405,14 +419,20 @@ export function summarize(results) {
         row.total += 1;
         total[result.verdict] += 1;
         total.total += 1;
-        if (result.class && byClass[result.class]) {
-            byClass[result.class][result.verdict] += 1;
-            byClass[result.class].total += 1;
+        if (result.class === "exact" || result.class === "recall") {
+            const key = `${result.class}\u0000${result.protocol ?? ""}`;
+            if (!byColumn.has(key)) {
+                byColumn.set(key, { class: result.class, protocol: result.protocol ?? null, counts: blank() });
+            }
+            const column = byColumn.get(key);
+            column.counts[result.verdict] += 1;
+            column.counts.total += 1;
         }
     }
 
-    // The two classes are reported side by side and never added together: a recall rule cannot
-    // fail a tool that returns everything, so its passes do not mean what an exact pass means.
+    // One column per rule class and adapter protocol, never added together. A recall rule cannot
+    // fail a tool that returns everything, so its passes do not mean what an exact pass means; and
+    // answers asked under different protocols measure different things (adapters README).
     const ratios = (counts) => ({
         pass: counts.PASS,
         answered: counts.PASS + counts.FAIL,
@@ -420,9 +440,12 @@ export function summarize(results) {
         asked: counts.PASS + counts.FAIL + counts.UNSUPPORTED + counts.ERROR,
         notAsked: counts.UNANSWERED,
     });
-    const classes = { exact: ratios(byClass.exact), recall: ratios(byClass.recall) };
+    const order = { exact: 0, recall: 1 };
+    const columns = [...byColumn.values()]
+        .sort((left, right) => order[left.class] - order[right.class] || String(left.protocol ?? "").localeCompare(String(right.protocol ?? "")))
+        .map((column) => ({ class: column.class, protocol: column.protocol, ...ratios(column.counts) }));
 
     const answered = total.PASS + total.FAIL;
     const scorable = total.total - total.UNSCORABLE - total.UNRESOLVED;
-    return { bySurface, total, answered, scorable, classes };
+    return { bySurface, total, answered, scorable, columns };
 }

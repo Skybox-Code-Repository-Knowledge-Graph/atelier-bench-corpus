@@ -143,10 +143,12 @@ fails when one is stated wrongly or missing, so a new task must carry it.
 | `UNSCORABLE` | No rule in this version of the scorer covers the task, or the task states no `from.symbol` (its lane is not annotated yet, or the task is a misfit), so no adapter can be asked it |
 | `UNRESOLVED` | An expected file is not in the checkout (the php lane's `vendor/` needles before `composer install`) |
 
-The report states how many tasks this scorer can score, then one line per rule class (see Rules):
-passed of scorable tasks, and passed of answered tasks. The second ratio keeps the tasks a tool
-was not asked visible without counting them for or against it. The classes are separate measures
-and are never summed.
+The report states how many tasks this scorer can score, then one line per rule class (see Rules)
+and adapter protocol (the answer file's `protocol`, per surface where it differs): passed of
+scorable tasks, and passed of answered tasks. The second ratio keeps the tasks a tool was not asked
+visible without counting them for or against it. The lines are separate measures and are never
+summed: an exact pass under one protocol does not mean what it means under another, and a
+recall-only pass means less than either. The JSON report carries them as `summary.columns`.
 
 ## Rules in this version
 

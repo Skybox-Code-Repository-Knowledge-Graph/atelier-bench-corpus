@@ -398,13 +398,33 @@ async function edgeRows(question, id, call) {
             return edges.map(([path, site, start, end]) => (/^\d+$/.test(site ?? "") ? [path, site, ""] : [path, start, end]));
         }
         case "implementation":
-        case "cardinality":
+        case "cardinality": {
             // Every implementor at any depth (the lane READMEs count concrete implementors through
-            // abstract bases): nodes that reach the subject by IMPLEMENTS or EXTENDS edges only, up
-            // to 10 steps, each at its own declaration.
-            return parseCypherRows(await ask(call, "cypher", {
-                query: `MATCH (c)-[r:CodeRelation*1..10 (e, n | WHERE e.type = 'IMPLEMENTS' OR e.type = 'EXTENDS')]->(t) WHERE t.id = ${subject} RETURN DISTINCT c.filePath, c.startLine, c.endLine`,
-            }));
+            // abstract bases), one step at a time: the nodes with an IMPLEMENTS or EXTENDS edge into
+            // the current step, until a step finds nothing new. A single recursive path query asks
+            // the same and timed out on the rust graph (60 s), which would have been a harness error.
+            const seen = new Set([id]);
+            const rows = [];
+            let frontier = [id];
+            for (let step = 0; frontier.length > 0; step += 1) {
+                if (step >= 50) {
+                    throw new Error("the implementor walk did not end after 50 steps");
+                }
+                const found = parseCypherRows(await ask(call, "cypher", {
+                    query: `MATCH (c)-[r:CodeRelation]->(t) WHERE t.id IN [${frontier.map(cypherString).join(", ")}] AND (r.type = 'IMPLEMENTS' OR r.type = 'EXTENDS') RETURN DISTINCT c.id, c.filePath, c.startLine, c.endLine`,
+                }));
+                frontier = [];
+                for (const [childId, ...location] of found) {
+                    if (childId && !seen.has(childId)) {
+                        seen.add(childId);
+                        frontier.push(childId);
+                        rows.push(location);
+                    }
+                }
+                frontier.sort();
+            }
+            return rows;
+        }
         case "multi-parent":
             // The direct parents: the subject's own IMPLEMENTS and EXTENDS edges.
             return parseCypherRows(await ask(call, "cypher", {

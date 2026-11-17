@@ -95,6 +95,21 @@ test("a declaration never passes by range, a known site does", () => {
     assert.equal(scoreTask(task("s-known-site"), withSite, context).verdict, "PASS");
 });
 
+test("results asked under different protocols are reported on separate lines, never summed", () => {
+    const answers = JSON.parse(readFileSync(join(HERE, "fixture", "answers-mixed.json"), "utf8"));
+    const doc = { ...answers, protocol: { definition: "raw", references: "anchored" } };
+    const { summary } = scoreLane({ root: LANE, lane: "lane", tasks: tasks(), answersDoc: doc });
+    const key = (c) => `${c.class}/${c.protocol}`;
+    const columns = Object.fromEntries(summary.columns.map((c) => [key(c), c]));
+    assert.ok(columns["exact/raw"] && columns["exact/anchored"], "one exact line per protocol");
+    assert.ok(columns["recall/unstated"], "a surface the map leaves out is its own line, not folded into a stated one");
+    const refs = tasks().filter((t) => t.surface === "references" && planTask(t).scorable).length;
+    assert.equal(columns["exact/anchored"].scorable, refs - 1, "references only (one miscounted key is UNSCORABLE)");
+    assert.equal(summary.columns.filter((c) => c.protocol === null).length, 0, "with a protocol map, nothing is reported without one");
+    const single = scoreLane({ root: LANE, lane: "lane", tasks: tasks(), answersDoc: { ...answers, protocol: "raw" } }).summary.columns;
+    assert.deepEqual(single.map(key).sort(), ["exact/raw", "recall/raw"], "one protocol: one line per class");
+});
+
 test("an answer for an id the lane does not have is reported, not dropped", () => {
     const result = run("--root", LANE, "--answers", join(FIXTURE, "answers-mixed.json"), "--format", "json");
     assert.deepEqual(JSON.parse(result.stdout).unknownIds, ["s-renamed-id"]);
