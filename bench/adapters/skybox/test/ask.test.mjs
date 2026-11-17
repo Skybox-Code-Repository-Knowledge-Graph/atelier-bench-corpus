@@ -160,7 +160,7 @@ test("null symbols are unsupported; path segments, other surfaces and missing sy
     const { call, calls } = fake({});
     assert.equal((await askSkybox(question({ symbol: null }), call)).status, "unsupported");
     assert.equal(await askSkybox(question({ symbol: "models", text: '\t"atelier.example/lane/core/models"' }), call), undefined);
-    assert.equal(await askSkybox(question({ symbol: "Sum", text: "Sum" }, "references"), call), undefined);
+    assert.equal(await askSkybox(question({ symbol: "Sum", text: "Sum" }, "document_symbol"), call), undefined);
     assert.equal(await askSkybox(question({ text: "Sum" }), call), undefined, "a task with no symbol is not asked");
     assert.equal(calls.length, 0);
 });
@@ -237,6 +237,48 @@ Method:C:Error:1:other.go, Error, Method, other.go, 40, 43`;
     const missing = await askSkybox(anchored("hover"), fake({ context: "Symbol not found in index" }).call);
     assert.deepEqual(missing, { text: "", note: "Symbol not found in index" }, "not found in the file, then not found anywhere");
     assert.equal(parseCypherValue(TABLE(["n.description"], ["null"])), null);
+});
+
+test("anchored: every node that starts at the from line is the subject, in id order, whatever order skybox lists them", async () => {
+    const rowsOf = (lines) => TABLE(["c.filePath", "r.callSiteLine", "c.startLine", "c.endLine"], ...lines.map((at) => ["app/page.tsx", String(at), "1", "40"]));
+    const subject = TABLE(["n.filePath", "n.startLine", "n.endLine"], ["views/card.tsx", "3", "9"]);
+    const cypher = (args) => (args.query.includes("'Component:views/card.tsx:Card'") && args.query.includes("CALLS") ? rowsOf([])
+        : args.query.includes("'Function:views/card.tsx:Card:1'") && args.query.includes("CALLS") ? rowsOf([12, 20])
+            : subject);
+    const question = { id: "t", surface: "references", kind: null, direction: null, from: { file: "views/card.tsx", needle: "x", line: 3, text: "export function Card() {", symbol: "Card" } };
+    const listed = (first, second) => `Ambiguous: 2 symbols match. Candidates:\n${first}\n${second}`;
+    const component = "Component:views/card.tsx:Card, Card, Component, views/card.tsx, 3, 9";
+    const fn = "Function:views/card.tsx:Card:1, Card, Function, views/card.tsx, 3, 9";
+
+    const one = await askSkybox(question, fake({ context: listed(component, fn), cypher }).call);
+    const other = await askSkybox(question, fake({ context: listed(fn, component), cypher }).call);
+    assert.deepEqual(one, other, "the reply order does not change the answer");
+    assert.deepEqual(one.locations, [{ file: "app/page.tsx", line: 12 }, { file: "app/page.tsx", line: 20 }]);
+    assert.match(one.note, /Component:views\/card\.tsx:Card \+ Function:views\/card\.tsx:Card:1/);
+});
+
+test("anchored references: CALLS and USES edges into the node at the from line, a site at its call-site line", async () => {
+    const question = { id: "t", surface: "references", kind: null, direction: null, from: { file: "core/money/money.go", needle: "type Money struct {", line: 10, text: "type Money struct {", symbol: "Money" } };
+    const subject = TABLE(["n.filePath", "n.startLine", "n.endLine"], ["core/money/money.go", "10", "14"]);
+    const edges = TABLE(["c.filePath", "r.callSiteLine", "c.startLine", "c.endLine"],
+        ["core/billing/formatter.go", "", "20", "24"],
+        ["app/a.go", "57", "26", "89"],
+        ["app/a.go", "57", "26", "89"],
+        ["", "", "", ""]);
+    const { call, calls } = fake({ context: RESOLVED, cypher: (args) => (args.query.includes("CALLS") ? edges : subject) });
+    const answer = await askSkybox(question, call);
+    assert.deepEqual(calls[0].args, { name: "Money", file_path: "core/money/money.go" });
+    assert.match(calls[2].args.query, /WHERE t\.id = '[^']+' AND \(r\.type = 'CALLS' OR r\.type = 'USES'\) RETURN c\.filePath, r\.callSiteLine, c\.startLine, c\.endLine/);
+    assert.deepEqual(answer.locations, [
+        { file: "app/a.go", line: 57 },
+        { file: "app/a.go", line: 57 },
+        { file: "core/billing/formatter.go", line: 20, end_line: 24 },
+    ], "a call site at its line; a USES row as the user's range");
+    assert.equal(answer.unlocated, 1);
+
+    const elsewhere = TABLE(["n.filePath", "n.startLine", "n.endLine"], ["core/money/money.go", "80", "90"]);
+    const moved = await askSkybox(question, fake({ context: RESOLVED, cypher: elsewhere }).call);
+    assert.deepEqual(moved.locations, [], "a same-named node elsewhere does not lend its sites");
 });
 
 test("a php sigil is dropped from the name skybox is asked, and only there", async () => {
