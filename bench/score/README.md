@@ -52,6 +52,7 @@ One answer:
 | `locations` | What the tool returned: `file`, `line`, optional `end_line`. Paths are relative to the lane directory, as in `tasks.json`. A location in another lane is written `../<lane>/...` |
 | `text` | Any free text the tool returned with the answer, such as a label, a qualified name or a relation. Optional |
 | `names` | Symbol names the tool returned, when the answer is a list of names. Optional |
+| `unlocated` | How many further results the tool returned without a file and line. Optional, default 0. They count like unexpected locations, so an adapter can never improve a score by dropping them |
 
 ### What a line means
 

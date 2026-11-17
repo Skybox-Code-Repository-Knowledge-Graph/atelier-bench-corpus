@@ -206,6 +206,12 @@ export function scoreTask(task, answer, context) {
     if (read.problem) {
         return { ...base, verdict: "ERROR", detail: `invalid answer: ${read.problem}` };
     }
+    // Results the tool returned without a file and line. They cannot match the target, but they
+    // were returned, so they count like unexpected locations: dropping them must never help.
+    const unlocated = answer.unlocated ?? 0;
+    if (!Number.isInteger(unlocated) || unlocated < 0) {
+        return { ...base, verdict: "ERROR", detail: "invalid answer: unlocated is not a non-negative integer" };
+    }
 
     const expected = target.resolved[0];
     const reasons = [];
@@ -225,6 +231,8 @@ export function scoreTask(task, answer, context) {
         reasons.push(`target not returned: expected ${expected.file}:${expected.line}, got ${got.file}:${got.line}${more}${covered}`);
     } else if (unexpected.length > 0) {
         reasons.push(`ambiguous: target returned with ${unexpected.length} unexpected location(s), first ${unexpected[0].file}:${unexpected[0].line}`);
+    } else if (unlocated > 0) {
+        reasons.push(`ambiguous: target returned with ${unlocated} result(s) that have no file and line`);
     }
 
     // A known site is listed by the key itself, so it is never an excluded hit.
