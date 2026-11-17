@@ -370,7 +370,7 @@
             "from": {"file": "tests/interfaces_test.go", "needle": "if got := support.DescribeChoice(support.RightOf(7)); got != \"right:7\" {", "symbol": "DescribeChoice"},
             "expect": {
                 "file": "core/support/pick.go",
-                "needle": "\tswitch narrowed := choice.(type) {",
+                "needle": "func DescribeChoice(choice Choice) string {",
                 "known_sites": [
                     {"file": "core/support/pick.go", "needle": "\tcase Right:"}
                 ]
