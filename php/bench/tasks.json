@@ -636,7 +636,7 @@
             "surface": "definition",
             "note": "The closure's match expression has no default arm.",
             "from": { "file": "app/Support/Edge/PriorityMatcher.php", "needle": "return ($this->resolver())($level);", "symbol": "resolver" },
-            "expect": { "file": "app/Support/Edge/PriorityMatcher.php", "needle": "return static function (string $level): int {" }
+            "expect": { "file": "app/Support/Edge/PriorityMatcher.php", "needle": "public function resolver(): \\Closure" }
         },
         {
             "id": "def-named-args",

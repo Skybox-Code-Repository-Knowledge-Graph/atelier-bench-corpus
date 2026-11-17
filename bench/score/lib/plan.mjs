@@ -181,7 +181,6 @@ export function listCount(expect) {
 export const TARGET_INSIDE_SYMBOL = new Set([
     "python:def-super-cooperative",
     "go:imp-blank-import-side-effect",
-    "php:def-static-closure",
     "typescript:resolution-satisfies",
 ]);
 
