@@ -2,8 +2,8 @@
 // which read `file` and `needle` only.
 //
 // A symbol that is stated wrongly fails at once: not on the `from` line, a bad occurrence, or stated
-// on a task that asks about a file. A symbol that is missing is only counted while the lanes are
-// being annotated; set STRICT to true once every lane states it, and a missing one fails as well.
+// on a task that asks about a file. A symbol-level task that states no symbol fails too: every lane
+// states one on every such task (issues #145 and #157), and a new task must as well.
 
 import test from "node:test";
 import assert from "node:assert/strict";
@@ -15,7 +15,7 @@ import { LANES } from "../lib/plan.mjs";
 import { fileLines, isFileNeedle, resolveNeedle } from "../lib/resolve.mjs";
 import { FILE_LEVEL_SURFACES, checkSymbol, symbolColumn, symbolColumns } from "../lib/symbol.mjs";
 
-const STRICT = false;
+const STRICT = true;
 const REPO_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..", "..", "..");
 
 test("occurrences are whole identifiers", () => {

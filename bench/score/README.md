@@ -94,8 +94,8 @@ import { symbolColumn } from "./lib/symbol.mjs";
 const column = symbolColumn(lineText, task.from);   // 0-based, or -1 when no symbol is stated
 ```
 
-The lanes are being annotated (issue #145). `test/symbol.test.mjs` fails on any symbol that is
-stated wrongly, and counts the tasks that state none; it becomes strict once every lane has them.
+Every lane states the symbol on every symbol-level task (issues #145 and #157). `test/symbol.test.mjs`
+fails when one is stated wrongly or missing, so a new task must carry it.
 
 ## Verdicts
 
