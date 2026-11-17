@@ -366,11 +366,11 @@
         {
             "id": "def-type-switch",
             "surface": "definition",
-            "note": "Type switch narrowing an interface to its two concrete types plus a default arm.",
+            "note": "Definition of a function whose body narrows an interface with a type switch (two concrete arms plus a default); the answer is the function declaration line, the switch is inside it.",
             "from": {"file": "tests/interfaces_test.go", "needle": "if got := support.DescribeChoice(support.RightOf(7)); got != \"right:7\" {", "symbol": "DescribeChoice"},
             "expect": {
                 "file": "core/support/pick.go",
-                "needle": "\tswitch narrowed := choice.(type) {",
+                "needle": "func DescribeChoice(choice Choice) string {",
                 "known_sites": [
                     {"file": "core/support/pick.go", "needle": "\tcase Right:"}
                 ]
@@ -1236,7 +1236,7 @@
         {
             "id": "imp-blank-import-side-effect",
             "surface": "import-precision",
-            "note": "Blank import: no identifier is bound, and the only effect is the package's init.",
+            "note": "Blank import: no identifier is bound, and the only effect is the package's init. Left unscorable: a definition query on the blank import returns the package clause (audit.go:4-12 `package audit`), not init, and the answer is a statement (RegisterSink, audit.go:49), so no definition query returns the answer line.",
             "from": {"file": "cmd/atelier/main.go", "needle": "\t_ \"atelier.example/lane/internal/audit\"", "symbol": "audit"},
             "expect": {
                 "kind": "side_effect_only",

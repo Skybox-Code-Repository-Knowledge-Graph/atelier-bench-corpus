@@ -774,7 +774,7 @@
         {
             "id": "def-super-cooperative",
             "surface": "definition",
-            "note": "super().label() in Laptop resolves to Device.label through the MRO.",
+            "note": "super().label() in Laptop resolves to Device.label through the MRO. Left unscorable: the declaration line `def label(self) -> str:` appears twice in device.py (Device.label and Laptop.label), so no needle keys Device.label's declaration.",
             "from": {
                 "file": "atelier_core/models/device.py",
                 "needle": "return f'{super().label()} {self.screen_inches}\"'",

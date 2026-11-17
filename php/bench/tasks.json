@@ -634,7 +634,7 @@
         {
             "id": "def-static-closure",
             "surface": "definition",
-            "note": "The closure's match expression has no default arm.",
+            "note": "The closure's match expression has no default arm. Left unscorable: the construct asked about (the static closure) has no identifier, and a definition query on the named symbol (resolver) answers the method, so no definition query returns the closure line.",
             "from": { "file": "app/Support/Edge/PriorityMatcher.php", "needle": "return ($this->resolver())($level);", "symbol": "resolver" },
             "expect": { "file": "app/Support/Edge/PriorityMatcher.php", "needle": "return static function (string $level): int {" }
         },
