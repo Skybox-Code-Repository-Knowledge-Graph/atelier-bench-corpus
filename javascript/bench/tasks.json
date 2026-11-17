@@ -871,7 +871,8 @@
             "note": "children and parent are both TreeNode: the reference points back at the declaring class.",
             "from": {
                 "file": "packages/core/src/support/treeNode.js",
-                "needle": "return this.children.reduce((all, child) => all.concat(child.flatten()), [this]);"
+                "needle": "/** @type {TreeNode[]} */",
+                "symbol": "TreeNode"
             },
             "expect": {
                 "kind": "uses_self",
@@ -970,8 +971,9 @@
             "surface": "resolution",
             "note": "Customer is declared once per lane, under an identical name.",
             "from": {
-                "file": "packages/bench/src/reports/churn-risk.cjs",
-                "needle": ".map((customer) => reportRow(customer.name, 1));"
+                "file": "packages/bench/src/dataset.cjs",
+                "needle": "Customer.seed(1, \"Ada Byron\", \"ada@example.test\", \"+32 470 00 00 01\"),",
+                "symbol": "Customer"
             },
             "expect": {
                 "kind": "lane_local",
@@ -1057,8 +1059,9 @@
             "surface": "resolution",
             "note": "The billing Formatter is declared once per lane, under an identical name (each lane also carries a same-name reporting Formatter -- see resolution-shadow-type-billing).",
             "from": {
-                "file": "packages/app/src/http/report.js",
-                "needle": "total: state.money.money(order.total(state.container), \"EUR\"),"
+                "file": "packages/app/src/state.js",
+                "needle": "import { Formatter as MoneyFormatter } from \"@atelier/core/billing\";",
+                "symbol": "Formatter"
             },
             "expect": {
                 "kind": "lane_local",
@@ -1893,7 +1896,8 @@
             "note": "The method key is the BOARD_REFRESH constant, so neither the declaration nor the call site spells a literal `refresh` token.",
             "from": {
                 "file": "packages/core/tests/board.test.js",
-                "needle": "assert.deepEqual(board[BOARD_REFRESH]([2, 1]).booked, [1, 2]);"
+                "needle": "assert.deepEqual(board[BOARD_REFRESH]([2, 1]).booked, [1, 2]);",
+                "symbol": "BOARD_REFRESH"
             },
             "expect": {
                 "file": "packages/core/src/support/slotBoard.js",
