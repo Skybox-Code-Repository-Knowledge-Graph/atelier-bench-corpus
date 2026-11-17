@@ -366,7 +366,7 @@
             "id": "dir-self-reference",
             "surface": "direction",
             "note": "children/parent() on TreeNode is a USES edge, never inheritance.",
-            "from": { "file": "app/Support/TreeNode.php", "needle": "public array $children = [];", "symbol": "$children" },
+            "from": { "file": "app/Support/TreeNode.php", "needle": "public array $children = [];" },
             "expect": {
                 "kind": "uses_self",
                 "candidate": { "file": "app/Support/TreeNode.php", "needle": "final class TreeNode" },
@@ -427,7 +427,7 @@
             "id": "lane-local-dataset",
             "surface": "resolution",
             "note": "php has no Dataset class: targets DatabaseSeeder, the lane's Dataset equivalent.",
-            "from": { "file": "database/seeders/DatabaseSeeder.php", "needle": "Collision-surface anchor: this is the php lane's \"Dataset\" equivalent (the", "symbol": null },
+            "from": { "file": "database/seeders/DatabaseSeeder.php", "needle": "Collision-surface anchor: this is the php lane's \"Dataset\" equivalent (the" },
             "expect": {
                 "kind": "lane_local",
                 "candidate": { "file": "database/seeders/DatabaseSeeder.php", "needle": "class DatabaseSeeder extends Seeder" },
