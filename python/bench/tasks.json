@@ -615,7 +615,7 @@
         {
             "id": "def-dynamic-import-module",
             "surface": "definition",
-            "note": "importlib.import_module with an f-string: the target module is not knowable statically (the python analogue of javascript's def-dynamic-require).",
+            "note": "importlib.import_module with an f-string: the target module is not knowable statically from the call, so the answer is the 24 report modules it can load, each keyed by its SLUG line (the python analogue of javascript's def-dynamic-require).",
             "from": {
                 "file": "atelier_bench/__init__.py",
                 "needle": "return importlib.import_module(f\"atelier_bench.reports.{slug.replace('-', '_')}\")",
