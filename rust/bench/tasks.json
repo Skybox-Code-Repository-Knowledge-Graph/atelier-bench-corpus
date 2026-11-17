@@ -345,6 +345,12 @@
             },
             "expect": {
                 "exact_count": 24,
+                "optional_sites": [
+                    {
+                        "file": "crates/atelier-bench/src/contracts/composite_contract.rs",
+                        "needle": "pub trait CompositeContract: ReportContract + CacheableContract + ScheduleContract {}"
+                    }
+                ],
                 "implementations": [
                     {
                         "file": "crates/atelier-bench/src/reports/cash_flow_report.rs",
@@ -1498,6 +1504,12 @@
             },
             "expect": {
                 "exact_count": 24,
+                "optional_sites": [
+                    {
+                        "file": "crates/atelier-bench/src/contracts/composite_contract.rs",
+                        "needle": "pub trait CompositeContract: ReportContract + CacheableContract + ScheduleContract {}"
+                    }
+                ],
                 "implementations": [
                     {
                         "file": "crates/atelier-bench/src/reports/cash_flow_report.rs",
