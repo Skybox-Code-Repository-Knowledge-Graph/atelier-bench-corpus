@@ -630,6 +630,94 @@
                         "needle": "SLUG = \"cash-flow\""
                     },
                     {
+                        "file": "atelier_bench/reports/churn_risk.py",
+                        "needle": "SLUG = \"churn-risk\""
+                    },
+                    {
+                        "file": "atelier_bench/reports/customer_lifetime.py",
+                        "needle": "SLUG = \"customer-lifetime\""
+                    },
+                    {
+                        "file": "atelier_bench/reports/customer_retention.py",
+                        "needle": "SLUG = \"customer-retention\""
+                    },
+                    {
+                        "file": "atelier_bench/reports/daily_revenue.py",
+                        "needle": "SLUG = \"daily-revenue\""
+                    },
+                    {
+                        "file": "atelier_bench/reports/gross_profit.py",
+                        "needle": "SLUG = \"gross-profit\""
+                    },
+                    {
+                        "file": "atelier_bench/reports/inventory_turnover.py",
+                        "needle": "SLUG = \"inventory-turnover\""
+                    },
+                    {
+                        "file": "atelier_bench/reports/monthly_revenue.py",
+                        "needle": "SLUG = \"monthly-revenue\""
+                    },
+                    {
+                        "file": "atelier_bench/reports/net_margin.py",
+                        "needle": "SLUG = \"net-margin\""
+                    },
+                    {
+                        "file": "atelier_bench/reports/order_backlog.py",
+                        "needle": "SLUG = \"order-backlog\""
+                    },
+                    {
+                        "file": "atelier_bench/reports/order_throughput.py",
+                        "needle": "SLUG = \"order-throughput\""
+                    },
+                    {
+                        "file": "atelier_bench/reports/order_volume.py",
+                        "needle": "SLUG = \"order-volume\""
+                    },
+                    {
+                        "file": "atelier_bench/reports/part_shortage.py",
+                        "needle": "SLUG = \"part-shortage\""
+                    },
+                    {
+                        "file": "atelier_bench/reports/part_usage.py",
+                        "needle": "SLUG = \"part-usage\""
+                    },
+                    {
+                        "file": "atelier_bench/reports/payment_default.py",
+                        "needle": "SLUG = \"payment-default\""
+                    },
+                    {
+                        "file": "atelier_bench/reports/payment_latency.py",
+                        "needle": "SLUG = \"payment-latency\""
+                    },
+                    {
+                        "file": "atelier_bench/reports/profit_margin.py",
+                        "needle": "SLUG = \"profit-margin\""
+                    },
+                    {
+                        "file": "atelier_bench/reports/technician_efficiency.py",
+                        "needle": "SLUG = \"technician-efficiency\""
+                    },
+                    {
+                        "file": "atelier_bench/reports/technician_load.py",
+                        "needle": "SLUG = \"technician-load\""
+                    },
+                    {
+                        "file": "atelier_bench/reports/technician_payroll.py",
+                        "needle": "SLUG = \"technician-payroll\""
+                    },
+                    {
+                        "file": "atelier_bench/reports/warranty_claim.py",
+                        "needle": "SLUG = \"warranty-claim\""
+                    },
+                    {
+                        "file": "atelier_bench/reports/warranty_cost.py",
+                        "needle": "SLUG = \"warranty-cost\""
+                    },
+                    {
+                        "file": "atelier_bench/reports/warranty_trend.py",
+                        "needle": "SLUG = \"warranty-trend\""
+                    },
+                    {
                         "file": "atelier_bench/reports/weekly_revenue.py",
                         "needle": "SLUG = \"weekly-revenue\""
                     }
@@ -1669,16 +1757,196 @@
                 "structural_count": 24,
                 "implementations": [
                     {
+                        "file": "atelier_bench/rules/customer_credit.py",
+                        "needle": "class CustomerCreditRule(RuleContract):"
+                    },
+                    {
+                        "file": "atelier_bench/rules/deposit_required.py",
+                        "needle": "class DepositRequiredRule(RuleContract):"
+                    },
+                    {
+                        "file": "atelier_bench/rules/device_age.py",
+                        "needle": "class DeviceAgeRule(RuleContract):"
+                    },
+                    {
+                        "file": "atelier_bench/rules/discount_ceiling.py",
+                        "needle": "class DiscountCeilingRule(RuleContract):"
+                    },
+                    {
+                        "file": "atelier_bench/rules/gross_profit.py",
+                        "needle": "class GrossProfitRule(RuleContract):"
+                    },
+                    {
+                        "file": "atelier_bench/rules/idle_technician.py",
+                        "needle": "class IdleTechnicianRule(RuleContract):"
+                    },
+                    {
+                        "file": "atelier_bench/rules/invoice_balance.py",
+                        "needle": "class InvoiceBalanceRule(RuleContract):"
+                    },
+                    {
+                        "file": "atelier_bench/rules/label_presence.py",
+                        "needle": "class LabelPresenceRule(RuleContract):"
+                    },
+                    {
+                        "file": "atelier_bench/rules/maximum_backlog.py",
+                        "needle": "class MaximumBacklogRule(RuleContract):"
+                    },
+                    {
                         "file": "atelier_bench/rules/minimum_stock.py",
                         "needle": "class MinimumStockRule(RuleContract):"
+                    },
+                    {
+                        "file": "atelier_bench/rules/note_required.py",
+                        "needle": "class NoteRequiredRule(RuleContract):"
+                    },
+                    {
+                        "file": "atelier_bench/rules/part_availability.py",
+                        "needle": "class PartAvailabilityRule(RuleContract):"
+                    },
+                    {
+                        "file": "atelier_bench/rules/part_cost_margin.py",
+                        "needle": "class PartCostMarginRule(RuleContract):"
+                    },
+                    {
+                        "file": "atelier_bench/rules/priority_escalation.py",
+                        "needle": "class PriorityEscalationRule(RuleContract):"
+                    },
+                    {
+                        "file": "atelier_bench/rules/repair_duration.py",
+                        "needle": "class RepairDurationRule(RuleContract):"
+                    },
+                    {
+                        "file": "atelier_bench/rules/revenue_floor.py",
+                        "needle": "class RevenueFloorRule(RuleContract):"
+                    },
+                    {
+                        "file": "atelier_bench/rules/rework_limit.py",
+                        "needle": "class ReworkLimitRule(RuleContract):"
+                    },
+                    {
+                        "file": "atelier_bench/rules/rush_surcharge.py",
+                        "needle": "class RushSurchargeRule(RuleContract):"
+                    },
+                    {
+                        "file": "atelier_bench/rules/schedule_gap.py",
+                        "needle": "class ScheduleGapRule(RuleContract):"
+                    },
+                    {
+                        "file": "atelier_bench/rules/signature_required.py",
+                        "needle": "class SignatureRequiredRule(RuleContract):"
+                    },
+                    {
+                        "file": "atelier_bench/rules/slot_overbooking.py",
+                        "needle": "class SlotOverbookingRule(RuleContract):"
+                    },
+                    {
+                        "file": "atelier_bench/rules/status_sequence.py",
+                        "needle": "class StatusSequenceRule(RuleContract):"
+                    },
+                    {
+                        "file": "atelier_bench/rules/technician_capacity.py",
+                        "needle": "class TechnicianCapacityRule(RuleContract):"
+                    },
+                    {
+                        "file": "atelier_bench/rules/warranty_window.py",
+                        "needle": "class WarrantyWindowRule(RuleContract):"
                     },
                     {
                         "file": "atelier_bench/rules/structural.py",
                         "needle": "AdHocRule(\"duplicate-reference\""
                     },
                     {
-                        "file": "atelier_bench/rules/__init__.py",
-                        "needle": "RULES.extend(STRUCTURAL_RULES)"
+                        "file": "atelier_bench/rules/structural.py",
+                        "needle": "AdHocRule(\"reference-prefix\""
+                    },
+                    {
+                        "file": "atelier_bench/rules/structural.py",
+                        "needle": "AdHocRule(\"currency-consistency\""
+                    },
+                    {
+                        "file": "atelier_bench/rules/structural.py",
+                        "needle": "AdHocRule(\"rounding\""
+                    },
+                    {
+                        "file": "atelier_bench/rules/structural.py",
+                        "needle": "AdHocRule(\"tax-applied\""
+                    },
+                    {
+                        "file": "atelier_bench/rules/structural.py",
+                        "needle": "AdHocRule(\"export-freshness\""
+                    },
+                    {
+                        "file": "atelier_bench/rules/structural.py",
+                        "needle": "AdHocRule(\"notification-sent\""
+                    },
+                    {
+                        "file": "atelier_bench/rules/structural.py",
+                        "needle": "AdHocRule(\"audit-trail\""
+                    },
+                    {
+                        "file": "atelier_bench/rules/structural.py",
+                        "needle": "AdHocRule(\"cache-ttl\""
+                    },
+                    {
+                        "file": "atelier_bench/rules/structural.py",
+                        "needle": "AdHocRule(\"report-coverage\""
+                    },
+                    {
+                        "file": "atelier_bench/rules/structural.py",
+                        "needle": "AdHocRule(\"metric-range\""
+                    },
+                    {
+                        "file": "atelier_bench/rules/structural.py",
+                        "needle": "AdHocRule(\"dataset-integrity\""
+                    },
+                    {
+                        "file": "atelier_bench/rules/structural.py",
+                        "needle": "AdHocRule(\"seed-determinism\""
+                    },
+                    {
+                        "file": "atelier_bench/rules/structural.py",
+                        "needle": "AdHocRule(\"order-count\""
+                    },
+                    {
+                        "file": "atelier_bench/rules/structural.py",
+                        "needle": "AdHocRule(\"customer-count\""
+                    },
+                    {
+                        "file": "atelier_bench/rules/structural.py",
+                        "needle": "AdHocRule(\"part-count\""
+                    },
+                    {
+                        "file": "atelier_bench/rules/structural.py",
+                        "needle": "AdHocRule(\"invoice-count\""
+                    },
+                    {
+                        "file": "atelier_bench/rules/structural.py",
+                        "needle": "AdHocRule(\"open-order-ratio\""
+                    },
+                    {
+                        "file": "atelier_bench/rules/structural.py",
+                        "needle": "AdHocRule(\"completion-rate\""
+                    },
+                    {
+                        "file": "atelier_bench/rules/structural.py",
+                        "needle": "AdHocRule(\"average-ticket\""
+                    },
+                    {
+                        "file": "atelier_bench/rules/structural.py",
+                        "needle": "AdHocRule(\"parts-per-order\""
+                    },
+                    {
+                        "file": "atelier_bench/rules/structural.py",
+                        "needle": "AdHocRule(\"repeat-customer\""
+                    },
+                    {
+                        "file": "atelier_bench/rules/structural.py",
+                        "needle": "AdHocRule(\"device-category\""
+                    },
+                    {
+                        "file": "atelier_bench/rules/structural.py",
+                        "needle": "AdHocRule(\"inventory-turnover\""
                     }
                 ],
                 "must_not_include": [
@@ -1918,11 +2186,67 @@
                 "known_sites": [
                     {
                         "file": "atelier_bench/metrics/__init__.py",
+                        "needle": "from .average_ticket import AverageTicketMetric"
+                    },
+                    {
+                        "file": "atelier_bench/metrics/__init__.py",
+                        "needle": "from .first_fix_rate import FirstFixRateMetric"
+                    },
+                    {
+                        "file": "atelier_bench/metrics/__init__.py",
+                        "needle": "from .inventory_age import InventoryAgeMetric"
+                    },
+                    {
+                        "file": "atelier_bench/metrics/__init__.py",
+                        "needle": "from .labor_cost import LaborCostMetric"
+                    },
+                    {
+                        "file": "atelier_bench/metrics/__init__.py",
                         "needle": "from .margin import MarginMetric"
                     },
                     {
                         "file": "atelier_bench/metrics/__init__.py",
                         "needle": "from .nps import NpsMetric"
+                    },
+                    {
+                        "file": "atelier_bench/metrics/__init__.py",
+                        "needle": "from .orders_per_day import OrdersPerDayMetric"
+                    },
+                    {
+                        "file": "atelier_bench/metrics/__init__.py",
+                        "needle": "from .overhead import OverheadMetric"
+                    },
+                    {
+                        "file": "atelier_bench/metrics/__init__.py",
+                        "needle": "from .part_cost import PartCostMetric"
+                    },
+                    {
+                        "file": "atelier_bench/metrics/__init__.py",
+                        "needle": "from .parts_per_order import PartsPerOrderMetric"
+                    },
+                    {
+                        "file": "atelier_bench/metrics/__init__.py",
+                        "needle": "from .payment_delay import PaymentDelayMetric"
+                    },
+                    {
+                        "file": "atelier_bench/metrics/__init__.py",
+                        "needle": "from .repeat_customer import RepeatCustomerMetric"
+                    },
+                    {
+                        "file": "atelier_bench/metrics/__init__.py",
+                        "needle": "from .return_rate import ReturnRateMetric"
+                    },
+                    {
+                        "file": "atelier_bench/metrics/__init__.py",
+                        "needle": "from .technician_utilization import TechnicianUtilizationMetric"
+                    },
+                    {
+                        "file": "atelier_bench/metrics/__init__.py",
+                        "needle": "from .upsell_rate import UpsellRateMetric"
+                    },
+                    {
+                        "file": "atelier_bench/metrics/__init__.py",
+                        "needle": "from .warranty_rate import WarrantyRateMetric"
                     }
                 ],
                 "must_include": [
