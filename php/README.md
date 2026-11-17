@@ -133,6 +133,7 @@ The shared set every lane carries is `GET /health`, `GET /report/{reference}`, `
 - **Lane-only routes.** Order by reference (`GET /api/orders/{repairOrder:reference}`), `/board`, the two social-auth routes (`/auth/{provider}/redirect`, `/auth/{provider}/callback`) and the Volt route `/rush-counter`. Laravel's own `/up` health endpoint also stays beside `/health`.
 - **`atelier:prune-delivered`.** A prune command no other lane has.
 - **Notes bound by reference.** `POST /api/orders/{repairOrder:reference}/notes` binds the order by its `reference` key where the other lanes bind by id.
+- **Report payload.** `GET /api/reports/{slug}` returns the report's own `generate()` array as `rows`, a title derived from `name()` and Laravel's standard 404 body, where the other lanes return a row list, a human title and `{error, key}`.
 
 Report slugs for `/api/reports/{slug}` and `atelier:export-report` are the kebab-cased class name without the `Report` suffix (`CashFlowReport` is `cash-flow`), resolved in `app/Support/ReportLookup.php`, not in `ReportRegistry`.
 
