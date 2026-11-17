@@ -44,6 +44,21 @@ class SharedParityTest extends TestCase
             ->assertJsonStructure(['slug', 'title', 'rows']);
     }
 
+    public function test_slug_set_is_the_24_shared_slugs(): void
+    {
+        $expected = [
+            'cash-flow', 'churn-risk', 'customer-lifetime', 'customer-retention', 'daily-revenue',
+            'gross-profit', 'inventory-turnover', 'monthly-revenue', 'net-margin', 'order-backlog',
+            'order-throughput', 'order-volume', 'part-shortage', 'part-usage', 'payment-default',
+            'payment-latency', 'profit-margin', 'technician-efficiency', 'technician-load',
+            'technician-payroll', 'warranty-claim', 'warranty-cost', 'warranty-trend', 'weekly-revenue',
+        ];
+        $actual = array_keys(self::slugs());
+        sort($actual);
+        $this->assertCount(24, $actual);
+        $this->assertSame($expected, $actual);
+    }
+
     public function test_export_report_command_accepts_md(): void
     {
         $this->artisan('atelier:export-report', ['report' => 'cash-flow', 'exporter' => 'md'])->assertExitCode(0);
