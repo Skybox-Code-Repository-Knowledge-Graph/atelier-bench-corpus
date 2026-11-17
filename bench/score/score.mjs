@@ -158,7 +158,7 @@ function renderText({ results, summary, unknownIds }, { lane, tool, scope }) {
         if (c.scorable === 0) {
             continue;
         }
-        const name = c.class === "exact" ? "exact      " : "recall-only";
+        const name = { exact: "exact      ", recall: "recall-only", behaviour: "behaviour  " }[c.class];
         const label = c.protocol ? `${name.trim()}, ${c.protocol}`.padEnd(22) : name;
         out.push(`${label}  passed ${c.pass} of ${c.scorable} scorable (${percent(c.pass, c.scorable)}); ${c.pass} of ${c.asked} asked (${percent(c.pass, c.asked)}); ${c.notAsked} not asked`);
     }

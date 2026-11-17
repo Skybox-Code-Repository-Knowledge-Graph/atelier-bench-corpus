@@ -357,6 +357,22 @@ export function scoreTask(task, answer, context) {
         return finish();
     }
 
+    if (plan.check === "parse") {
+        // Behaviour: the tool must report a parse failure attributed to the asked file. An error for
+        // some other file, or none at all (silently empty), fails; a crash is a harness ERROR.
+        if (answer.parse_errors !== undefined && !Array.isArray(answer.parse_errors)) {
+            return { ...base, verdict: "ERROR", detail: "invalid answer: parse_errors is not a list" };
+        }
+        const errors = (answer.parse_errors ?? []).filter((entry) => entry && typeof entry === "object" && typeof entry.file === "string");
+        const forFile = errors.filter((entry) => normalizeFile(entry.file) === normalizeFile(plan.file));
+        if (errors.length === 0) {
+            reasons.push("no parse error reported (silently empty)");
+        } else if (forFile.length === 0) {
+            reasons.push(`${errors.length} parse error(s) reported, none for ${plan.file}`);
+        }
+        return finish();
+    }
+
     if (plan.check === "twoSided") {
         // The key names one member of a set it does not list. The candidate must be among the
         // locations returned for the asked direction, and absent from those returned when the
@@ -495,7 +511,7 @@ export function summarize(results) {
         row.total += 1;
         total[result.verdict] += 1;
         total.total += 1;
-        if (result.class === "exact" || result.class === "recall") {
+        if (result.class === "exact" || result.class === "recall" || result.class === "behaviour") {
             const key = `${result.class}\u0000${result.protocol ?? ""}`;
             if (!byColumn.has(key)) {
                 byColumn.set(key, { class: result.class, protocol: result.protocol ?? null, counts: blank() });
@@ -520,7 +536,7 @@ export function summarize(results) {
         errors: counts.ERROR,
         unsupported: counts.UNSUPPORTED,
     });
-    const order = { exact: 0, recall: 1 };
+    const order = { exact: 0, recall: 1, behaviour: 2 };
     const columns = [...byColumn.values()]
         .sort((left, right) => order[left.class] - order[right.class] || String(left.protocol ?? "").localeCompare(String(right.protocol ?? "")))
         .map((column) => ({ class: column.class, protocol: column.protocol, ...ratios(column.counts) }));

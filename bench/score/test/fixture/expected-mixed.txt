@@ -15,7 +15,7 @@ s-unsupported: UNSUPPORTED
 s-error: ERROR (timed out after 60s)
 s-invalid: ERROR (invalid answer: location line is not a positive integer in src/app.txt)
 s-unanswered: UNANSWERED
-s-unscorable-surface: UNSCORABLE (no rule for surface parse-negative)
+s-unscorable-surface: UNSCORABLE (no rule for surface rename)
 s-hover-pass: PASS
 s-hover-miss: FAIL (text does not contain "beta declaration")
 s-callees: PASS
@@ -44,7 +44,7 @@ surface           pass  fail  unsupported  unanswered  error  unscorable  unreso
 definition           4     6            1           1      2           2           1     17
 resolution           0     2            0           0      0           0           0      2
 import-precision     0     1            0           0      0           0           0      1
-parse-negative       0     0            0           0      0           1           0      1
+rename               0     0            0           0      0           1           0      1
 hover                1     1            0           0      0           0           0      2
 call_hierarchy       2     2            0           0      0           0           0      4
 references           1     2            0           0      0           2           0      5
