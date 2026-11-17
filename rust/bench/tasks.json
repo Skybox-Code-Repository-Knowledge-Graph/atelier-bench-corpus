@@ -2701,7 +2701,7 @@
         {
             "id": "refs-report-registry",
             "surface": "references",
-            "note": "The registry itself has 4 read sites; its 24 `Box::new(XReport::new())` entries are construction sites of ReportContract implementors, not references to REPORTS. The rust-local refs-report-contract-registry counts those 24 instead.",
+            "note": "The registry itself has 4 read sites; its 24 `Box::new(XReport::new())` entries are construction sites of ReportContract implementors, not references to REPORTS.",
             "from": {
                 "file": "crates/atelier-bench/src/lib.rs",
                 "needle": "pub static REPORTS: Lazy<Vec<Box<dyn ReportContract>>>",
