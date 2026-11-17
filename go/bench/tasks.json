@@ -1161,7 +1161,8 @@
             "from": {"file": "core/models/repairorder.go", "needle": "type RepairOrder struct {"},
             "expect": {
                 "min_symbols": 21,
-                "must_include": ["PartLine", "LogEntry", "Calculator", "RepairOrder", "SeedRepairOrder", "TransitionTo", "Complete", "AddPart", "PartsSubtotal", "Total", "IsOpen"]
+                "must_include": ["PartLine", "LogEntry", "Calculator", "RepairOrder", "SeedRepairOrder", "TransitionTo", "Complete", "AddPart", "PartsSubtotal", "Total", "IsOpen"],
+                "symbols": ["PartLine", "PartID", "SKU", "Quantity", "UnitPrice", "LogEntry", "From", "To", "ChangedBy", "Calculator", "Calculate", "RepairOrder", "HasReference", "ID", "CustomerID", "DeviceID", "Status", "Priority", "LaborMinutes", "Parts", "Log", "SeedRepairOrder", "TransitionTo", "Complete", "AddPart", "PartsSubtotal", "Total", "IsOpen"]
             }
         },
         {
@@ -1262,7 +1263,8 @@
             "from": {"file": "atelier/reports/registry.go", "needle": "var registry = support.NewRegistry[contracts.ReportContract]()"},
             "expect": {
                 "min_symbols": 4,
-                "must_include": ["Register", "All", "BySlug", "Count"]
+                "must_include": ["Register", "All", "BySlug", "Count"],
+                "symbols": ["registry", "Register", "All", "BySlug", "Slugs", "Count"]
             }
         },
         {
