@@ -366,7 +366,7 @@
         {
             "id": "def-type-switch",
             "surface": "definition",
-            "note": "Type switch narrowing an interface to its two concrete types plus a default arm.",
+            "note": "Definition of a function whose body narrows an interface with a type switch (two concrete arms plus a default); the answer is the function declaration line, the switch is inside it.",
             "from": {"file": "tests/interfaces_test.go", "needle": "if got := support.DescribeChoice(support.RightOf(7)); got != \"right:7\" {", "symbol": "DescribeChoice"},
             "expect": {
                 "file": "core/support/pick.go",
