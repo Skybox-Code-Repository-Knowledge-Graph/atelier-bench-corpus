@@ -246,6 +246,34 @@
             "expect": { "exact_count": 3, "known_sites": [ { "file": "src/app.txt", "needle": "gamma uses alpha" }, { "file": "src/app.txt", "needle": "delta site" } ] }
         },
         {
+            "id": "s-impl",
+            "surface": "implementation",
+            "note": "Every implementor by its declaration line; an optional one (an abstract intermediate) may be returned too.",
+            "from": { "file": "src/app.txt", "needle": "alpha declaration", "symbol": "alpha" },
+            "expect": { "exact_count": 2, "implementations": [ { "file": "src/app.txt", "needle": "beta declaration" }, { "file": "src/app.txt", "needle": "class Right sibling" } ], "optional_sites": [ { "file": "src/app.txt", "needle": "epsilon target" } ] }
+        },
+        {
+            "id": "s-impl-missing",
+            "surface": "implementation",
+            "note": "One implementor missing.",
+            "from": { "file": "src/app.txt", "needle": "alpha declaration", "symbol": "alpha" },
+            "expect": { "exact_count": 2, "implementations": [ { "file": "src/app.txt", "needle": "beta declaration" }, { "file": "src/app.txt", "needle": "class Right sibling" } ] }
+        },
+        {
+            "id": "s-parents-split",
+            "surface": "multi-parent",
+            "note": "A parents list counted as extends plus implements.",
+            "from": { "file": "src/app.txt", "needle": "class Right sibling", "symbol": "Right" },
+            "expect": { "extends_count": 1, "implements_count": 1, "implementations": [ { "file": "src/app.txt", "needle": "alpha declaration" }, { "file": "src/app.txt", "needle": "beta declaration" } ] }
+        },
+        {
+            "id": "s-impl-no-count",
+            "surface": "implementation",
+            "note": "A list with no count is not known to be complete.",
+            "from": { "file": "src/app.txt", "needle": "alpha declaration", "symbol": "alpha" },
+            "expect": { "implementations": [ { "file": "src/app.txt", "needle": "beta declaration" } ] }
+        },
+        {
             "id": "s-unscorable-count",
             "surface": "definition",
             "note": "A target with exact_count: what the count means depends on kind, so no rule scores it.",

@@ -18,29 +18,38 @@ import { readFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
-import { LANES } from "../lib/plan.mjs";
+import { LANES, listCount } from "../lib/plan.mjs";
 import { fileLines, isFileNeedle, linesContaining, resolveNeedle } from "../lib/resolve.mjs";
 
 const REPO_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..", "..", "..");
 
+/** The list each list surface states its answer in. */
+const LIST_KEY = { references: "known_sites", implementation: "implementations", cardinality: "implementations", "multi-parent": "implementations" };
+
 /**
- * Problems with a references task's count, or an empty list: exact_count must equal its known
- * sites plus every repeated line, and no two entries may name one line. The references rule
- * requires both; checking every task here makes a lane PR that breaks them fail its own CI.
+ * Problems with a list task's count, or an empty list: the count (`exact_count`, or
+ * `extends_count` plus `implements_count`) must equal the listed lines, repeated lines included,
+ * and no two entries may name one line. The list rules require both; checking every task here
+ * makes a lane PR that breaks them fail its own CI.
  */
 export function checkSiteCount(task, root) {
     const expect = task.expect ?? {};
-    if (task.surface !== "references" || !Object.hasOwn(expect, "exact_count")) {
+    const key = LIST_KEY[task.surface];
+    const count = key === undefined || !Array.isArray(expect[key]) ? null : listCount(expect);
+    if (count === null) {
         return [];
     }
+    if (count === undefined) {
+        return ["exact_count disagrees with extends_count plus implements_count"];
+    }
     const lines = [];
-    for (const site of Array.isArray(expect.known_sites) ? expect.known_sites : []) {
+    for (const site of Array.isArray(expect[key]) ? expect[key] : []) {
         const resolved = isFileNeedle(site) ? resolveNeedle(root, site) : { ok: false };
         if (resolved.ok) {
             lines.push(`${site.file}:${resolved.line}`);
         }
     }
-    for (const entry of Array.isArray(expect.repeated_sites) ? expect.repeated_sites : []) {
+    for (const entry of key === "known_sites" && Array.isArray(expect.repeated_sites) ? expect.repeated_sites : []) {
         for (const line of (isFileNeedle(entry) ? linesContaining(root, entry.file, entry.needle) : null) ?? []) {
             lines.push(`${entry.file}:${line}`);
         }
@@ -50,8 +59,8 @@ export function checkSiteCount(task, root) {
     if (twice.length > 0) {
         problems.push(`two entries name ${twice[0]}`);
     }
-    if (expect.exact_count !== lines.length) {
-        problems.push(`exact_count is ${expect.exact_count}, the key lists ${lines.length} site line(s)`);
+    if (count !== lines.length) {
+        problems.push(`the count is ${count}, the key lists ${lines.length} line(s)`);
     }
     return problems;
 }
@@ -68,16 +77,22 @@ test("checkSiteCount accepts a consistent count and names each kind of mistake",
     assert.equal(checkSiteCount(task({ exact_count: 3, known_sites: [gamma, delta] }), root).length, 1, "count above the list");
     assert.equal(checkSiteCount(task({ exact_count: 1, known_sites: [gamma, delta] }), root).length, 1, "count below the list");
     assert.equal(checkSiteCount(task({ exact_count: 3, known_sites: [gamma, { file: "src/app.txt", needle: "alpha declaration" }], repeated_sites: [twice] }), root).length >= 1, true, "a known site that is also a repeated line");
-    assert.deepEqual(checkSiteCount({ id: "t", surface: "implementation", expect: { exact_count: 9 } }, root), [], "only references");
+    assert.deepEqual(checkSiteCount({ id: "t", surface: "definition", expect: { exact_count: 9 } }, root), [], "only list surfaces");
     assert.deepEqual(checkSiteCount(task({ min_references: 1, known_sites: [gamma] }), root), [], "no count, nothing to check");
+    const parents = (expect) => ({ id: "t", surface: "multi-parent", expect });
+    assert.deepEqual(checkSiteCount(parents({ extends_count: 1, implements_count: 1, implementations: [gamma, delta] }), root), [], "a split count");
+    assert.equal(checkSiteCount(parents({ extends_count: 1, implements_count: 2, implementations: [gamma, delta] }), root).length, 1, "a split count above the list");
+    assert.equal(checkSiteCount(parents({ exact_count: 2, extends_count: 2, implements_count: 1, implementations: [gamma, delta] }), root).length, 1, "the two counts disagree");
+    assert.equal(checkSiteCount({ id: "t", surface: "implementation", expect: { exact_count: 2, implementations: [gamma, gamma] } }, root).length, 1, "one line listed twice");
+    assert.deepEqual(checkSiteCount(parents({ exact_count: 2, must_include: ["Send", "Sync"] }), root), [], "no list, nothing to check (the rule needs one)");
 });
 
 for (const lane of LANES) {
-    test(`every references count equals its listed site lines: ${lane}`, (t) => {
+    test(`every list count equals its listed lines (references, implementation, cardinality, multi-parent): ${lane}`, (t) => {
         const root = join(REPO_ROOT, lane);
         const tasks = JSON.parse(readFileSync(join(root, "bench", "tasks.json"), "utf8")).tasks;
         const problems = tasks.flatMap((task) => checkSiteCount(task, root).map((problem) => `${task.id}: ${problem}`));
-        t.diagnostic(`${lane}: ${tasks.filter((task) => task.surface === "references").length} references tasks`);
+        t.diagnostic(`${lane}: ${tasks.filter((task) => Object.hasOwn(LIST_KEY, task.surface)).length} list tasks`);
         assert.deepEqual(problems, []);
     });
 }

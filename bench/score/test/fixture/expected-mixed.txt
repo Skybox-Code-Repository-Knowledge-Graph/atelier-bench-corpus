@@ -23,10 +23,14 @@ s-callees-missing: FAIL (1 of 2 listed callee(s) not returned, first src/app.txt
 s-callers: PASS [not scored: min_incoming]
 s-callers-missing: FAIL (1 of 2 listed call site(s) not returned, first src/app.txt:7)
 s-refs: PASS
-s-refs-extra: FAIL (1 location(s) that are not sites, first src/app.txt:5)
-s-refs-range: FAIL (2 of 2 site(s) not returned, first src/app.txt:3; a returned range covers a missing site, but a site is matched by its line; 1 location(s) that are not sites, first src/app.txt:2)
+s-refs-extra: FAIL (1 location(s) that are not listed sites, first src/app.txt:5)
+s-refs-range: FAIL (2 of 2 site(s) not returned, first src/app.txt:3; a returned range covers a missing site, but a site is matched by its line; 1 location(s) that are not listed sites, first src/app.txt:2)
 s-refs-floor: UNSCORABLE (min_references: a floor beside a count, the list is not known to be complete)
 s-refs-miscount: UNSCORABLE (the key lists 2 site line(s), 2 distinct, for exact_count 3)
+s-impl: PASS
+s-impl-missing: FAIL (1 of 2 declaration(s) not returned, first src/app.txt:5)
+s-parents-split: PASS
+s-impl-no-count: UNSCORABLE (implementation/list: no count states the list is complete)
 s-unscorable-count: UNSCORABLE (target plus exact_count: meaning depends on kind)
 s-no-symbol: UNSCORABLE (task states no from.symbol)
 s-unresolved: UNRESOLVED (src/absent.txt: file missing)
@@ -39,10 +43,12 @@ parse-negative       0     0            0           0      0           1        
 hover                1     1            0           0      0           0           0      2
 call_hierarchy       2     2            0           0      0           0           0      4
 references           1     2            0           0      0           2           0      5
-all                  9    13            1           1      2           5           1     32
+implementation       1     1            0           0      0           1           0      3
+multi-parent         1     0            0           0      0           0           0      1
+all                 11    14            1           1      2           6           1     36
 
 tool: fixture-tool 0.0.0   lane: fixture   scope: repo
 answers for ids this lane does not have: 1 (s-renamed-id)
-scorable by this scorer: 26 of 32 tasks
-exact        passed 6 of 20 scorable (30.0%), 6 of 16 answered (37.5%)
+scorable by this scorer: 29 of 36 tasks
+exact        passed 8 of 23 scorable (34.8%), 8 of 19 answered (42.1%)
 recall-only  passed 3 of 6 scorable (50.0%), 3 of 6 answered (50.0%)

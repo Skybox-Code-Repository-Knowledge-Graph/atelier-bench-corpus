@@ -330,12 +330,12 @@ export function scoreTask(task, answer, context) {
             reasons.push("no location returned");
         } else if (missing.length > 0) {
             const covered = missing.some((site) => read.locations.some((location) => coversSite(location, site)))
-                ? "; a returned range covers a missing site, but a site is matched by its line"
+                ? `; a returned range covers a missing ${plan.noun}, but a ${plan.noun} is matched by its line`
                 : "";
-            reasons.push(`${missing.length} of ${required.size} site(s) not returned, first ${missing[0].file}:${missing[0].line}${covered}`);
+            reasons.push(`${missing.length} of ${required.size} ${plan.noun}(s) not returned, first ${missing[0].file}:${missing[0].line}${covered}`);
         }
         if (extra.length > 0) {
-            reasons.push(`${extra.length} location(s) that are not sites, first ${extra[0].file}:${extra[0].line}`);
+            reasons.push(`${extra.length} location(s) that are not listed ${plan.noun}s, first ${extra[0].file}:${extra[0].line}`);
         }
         if (unlocated > 0) {
             reasons.push(`${unlocated} result(s) without a file and line`);
