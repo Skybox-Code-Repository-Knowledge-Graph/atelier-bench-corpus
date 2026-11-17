@@ -4,24 +4,37 @@
 // Protocol "raw": exactly one `context(name)` call per question, plus one `cypher` lookup by node id
 // to read the line of a resolved symbol (the resolved reply carries no line). Nothing else: no file
 // hint, no kind filter, no second guess. What skybox returns is what is scored.
+//
+// The raw protocol answers a question with the definition skybox resolves for the symbol. A
+// question whose answer is a relation instead (which contract a type satisfies by shape, which
+// impl block supplies a method) is not asked: the definition of the symbol cannot answer it, and
+// claiming skybox cannot be asked would be false. Those tasks stay unanswered.
+
+import { symbolColumns } from "../../score/lib/symbol.mjs";
 
 /** Surfaces this adapter asks. Every other surface is left unanswered. */
 export const ASKED_SURFACES = new Set(["definition", "resolution", "import-precision"]);
 
+/** Kinds whose answer is a relation of the symbol, not its definition. Not asked under "raw". */
+export const RELATION_KINDS = new Set(["structural", "init_order", "mro", "derive_generated", "dyn_upcast", "blanket_impl"]);
+
 const NOT_FOUND = /^Symbol not found in index/m;
 const AMBIGUOUS = /^Ambiguous: (\d+) symbols? match\. Candidates:\s*$/m;
+
+/** Is this tool text one of skybox's negative answers, which it flags as errors? */
+export function isNegativeAnswer(text) {
+    return NOT_FOUND.test(text) || AMBIGUOUS.test(text);
+}
 
 /**
  * Is the symbol, at its stated occurrence, inside a quoted string that holds a path? Then it is a
  * path segment of an import (go `"atelier.example/lane/core/models"`), which no name lookup can take.
+ * Occurrences are whole identifiers, as `from.occurrence` counts them.
  */
 export function isPathSegment(text, symbol, occurrence = 1) {
-    let at = -1;
-    for (let seen = 0; seen < occurrence; seen += 1) {
-        at = text.indexOf(symbol, at + 1);
-        if (at === -1) {
-            return false;
-        }
+    const at = symbolColumns(text, symbol)[occurrence - 1];
+    if (at === undefined) {
+        return false;
     }
     for (const quote of ['"', "'", "`"]) {
         const open = text.lastIndexOf(quote, at);
@@ -31,6 +44,11 @@ export function isPathSegment(text, symbol, occurrence = 1) {
         }
     }
     return false;
+}
+
+/** Locations in a stable order, so two runs over the same index write the same answer file. */
+function byFileAndLine(left, right) {
+    return left.file < right.file ? -1 : left.file > right.file ? 1 : left.line - right.line;
 }
 
 /**
@@ -97,12 +115,14 @@ function cypherString(value) {
 }
 
 /**
- * Ask skybox one question. `call(tool, args)` returns the tool's text or throws.
+ * Ask skybox one question. `call(tool, args)` returns `{ text, isError }` as the server sent it, or
+ * throws on a transport failure. skybox flags its negative answers ("not found", "ambiguous") as
+ * errors; this function decides what a flagged result means, so the rule is tested here.
  * Returns an answer in the corpus answer format, or undefined when this adapter does not ask the
  * question (the task is then left unanswered, which is the honest record).
  */
 export async function askSkybox(question, call) {
-    if (!ASKED_SURFACES.has(question.surface)) {
+    if (!ASKED_SURFACES.has(question.surface) || RELATION_KINDS.has(question.kind)) {
         return undefined;
     }
 
@@ -113,13 +133,19 @@ export async function askSkybox(question, call) {
     if (typeof symbol !== "string") {
         return undefined;
     }
+    // An import path segment is not asked under "raw": a name lookup cannot take a path, but skybox
+    // has import edges, so calling it unsupported would be false.
     if (isPathSegment(question.from.text, symbol, occurrence ?? 1)) {
-        return { status: "unsupported", detail: "the symbol is a segment of an import path, which a name lookup cannot take" };
+        return undefined;
     }
 
     let reply;
     try {
-        reply = parseContextReply(await call("context", { name: symbol }));
+        const result = await call("context", { name: symbol });
+        if (result.isError && !isNegativeAnswer(result.text)) {
+            return { status: "error", detail: `context reported an error: ${result.text.slice(0, 300)}` };
+        }
+        reply = parseContextReply(result.text);
     } catch (error) {
         return { status: "error", detail: `context: ${error.message}` };
     }
@@ -138,7 +164,7 @@ export async function askSkybox(question, call) {
                 file: candidate.file,
                 line: candidate.startLine,
                 ...(candidate.endLine && candidate.endLine >= candidate.startLine ? { end_line: candidate.endLine } : {}),
-            })),
+            })).sort(byFileAndLine),
             unlocated: reply.candidates.length - located.length,
             text: `ambiguous: ${reply.candidates.length} candidates`,
         };
@@ -147,9 +173,13 @@ export async function askSkybox(question, call) {
     if (reply.kind === "resolved") {
         let row;
         try {
-            row = parseCypherRow(await call("cypher", {
+            const result = await call("cypher", {
                 query: `MATCH (n) WHERE n.id = ${cypherString(reply.id)} RETURN n.filePath, n.startLine, n.endLine`,
-            }));
+            });
+            if (result.isError) {
+                return { status: "error", detail: `cypher reported an error: ${result.text.slice(0, 300)}` };
+            }
+            row = parseCypherRow(result.text);
         } catch (error) {
             return { status: "error", detail: `cypher: ${error.message}` };
         }

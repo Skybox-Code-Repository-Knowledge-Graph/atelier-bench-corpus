@@ -76,14 +76,15 @@ export class McpStdioClient {
         this.child.stdin.write(`${JSON.stringify({ jsonrpc: "2.0", method, params })}\n`);
     }
 
-    /** Call a tool and return its text content joined, or throw when the call reports an error. */
+    /**
+     * Call a tool. Returns { text, isError }: the text content joined, and whether the server flagged
+     * the result as an error. Some servers flag ordinary negative answers ("not found") that way, so
+     * the caller decides what a flagged result means. Transport and JSON-RPC failures throw.
+     */
     async callTool(name, args) {
         const result = await this.request("tools/call", { name, arguments: args });
         const text = (result?.content ?? []).map((part) => (typeof part.text === "string" ? part.text : "")).join("\n");
-        if (result?.isError) {
-            throw new Error(`tool ${name} reported an error: ${text.slice(0, 300)}`);
-        }
-        return text;
+        return { text, isError: result?.isError === true };
     }
 
     close() {

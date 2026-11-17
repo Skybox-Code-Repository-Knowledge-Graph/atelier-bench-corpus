@@ -1,9 +1,9 @@
 // The question side of a task: everything an adapter may know before it asks a tool.
 //
-// An adapter never sees `expect`, `kind`, `note` or any other part of the answer key. It gets the
-// task id (to file the answer under), the surface (to pick which tool call to make), and the
-// `from` block with the resolved text of the `from` line. That is all.
-
+// An adapter gets the task id (to file the answer under), the surface and the kind (what sort of
+// question it is, to pick which tool call to make), and the `from` block with the resolved text of
+// the `from` line. It never sees `expect`, `note` or any other part of the answer key, and it must
+// not pass `kind` on to the tool.
 import { fileLines, resolveNeedle } from "../../score/lib/resolve.mjs";
 
 const FROM_KEYS = ["file", "needle", "symbol", "occurrence"];
@@ -29,6 +29,7 @@ export function questionOf(task, laneRoot) {
     return Object.freeze({
         id: task.id,
         surface: task.surface,
+        kind: typeof task.expect?.kind === "string" ? task.expect.kind : null,
         from: Object.freeze({ ...from, line: resolved.line, text: fileLines(laneRoot, from.file)[resolved.line - 1] }),
     });
 }

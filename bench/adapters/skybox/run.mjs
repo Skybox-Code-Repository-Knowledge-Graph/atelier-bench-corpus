@@ -77,7 +77,7 @@ async function main(args) {
         const answers = {};
         let calls = 0;
         try {
-            const guide = await client.callTool("skybox_guide", {});
+            const guide = (await client.callTool("skybox_guide", {})).text;
             const guideAck = guide.match(/gack_[0-9a-f]+/)?.[0];
             const call = async (tool, args) => {
                 calls += 1;
@@ -98,13 +98,15 @@ async function main(args) {
             client.close();
         }
 
+        // Nothing time-dependent goes into the answer file: two runs over the same lane and the
+        // same skybox must write the same bytes.
         const document = {
             version: 1,
             tool: { name: "skybox", version },
             lane: options.lane,
             scope: "lane",
             protocol: "raw",
-            run: { index_seconds: indexSeconds, tool_calls: calls },
+            run: { tool_calls: calls },
             answers,
         };
         writeFileSync(resolve(options.out), `${JSON.stringify(document, null, 2)}\n`);
