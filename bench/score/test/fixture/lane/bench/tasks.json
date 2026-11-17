@@ -37,6 +37,29 @@
             }
         },
         {
+            "id": "s-known-site-excluded-path",
+            "surface": "definition",
+            "note": "A known site sits in a file the task also excludes: the key lists it, so it is not an excluded hit.",
+            "from": { "file": "src/app.txt", "needle": "gamma uses alpha" },
+            "expect": {
+                "file": "src/app.txt",
+                "needle": "alpha declaration",
+                "known_sites": [ { "file": "src/other.txt", "needle": "other file line" } ],
+                "must_not_include": [ "src/other.txt" ]
+            }
+        },
+        {
+            "id": "s-range-over-excluded-text",
+            "surface": "definition",
+            "note": "The target is returned with a range whose body contains excluded text: only the reported line is searched.",
+            "from": { "file": "src/app.txt", "needle": "gamma uses alpha" },
+            "expect": {
+                "file": "src/app.txt",
+                "needle": "delta site",
+                "must_not_include": [ "impl .* for Money", "Right" ]
+            }
+        },
+        {
             "id": "s-lane-prefix",
             "surface": "resolution",
             "note": "Exclusion written as a lane prefix: a location in another lane.",

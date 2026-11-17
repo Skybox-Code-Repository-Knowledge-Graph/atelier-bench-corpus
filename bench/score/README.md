@@ -13,8 +13,11 @@ node bench/score/oracle.mjs --lane go > go.oracle.json     # a perfect answer fi
 node --test 'bench/score/test/*.test.mjs'                  # the scorer's own checks
 ```
 
-Node built-ins only. `score.mjs` exits 0 whenever scoring completed, whatever the tool scored, and
-2 when an input could not be read. A tool that fails every task is a result, not an error.
+Node built-ins only. `score.mjs` exits 0 whenever scoring completed, whatever the tool scored. A
+tool that fails every task is a result, not an error. It exits 2 when an input cannot be used: a
+file is unreadable, the answer file is malformed, or its `lane` names a different lane from the one
+being scored. Answers for ids the lane does not have are listed in the report, so a renamed id
+never passes for an unanswered one.
 
 ## Answer format
 
@@ -60,6 +63,11 @@ One answer:
 - **A site** (a use, a call site) is matched by containment. `line` to `end_line` may be the range
   of the function the tool reported as the caller; it covers the site when the site's line is
   inside it.
+- **A few targets are anchored inside their declaration**, because the declaration line is not
+  unique in its file or because the answer is a statement. They are listed by lane and id in
+  `TARGET_INSIDE_SYMBOL` in `lib/plan.mjs` and matched by containment, like a site. The list was
+  found by reading the targets, so a target missing from it fails a tool that returns the
+  declaration line; report one when you find it.
 
 ### Scope
 
@@ -79,8 +87,9 @@ and reported as not exercised for `scope: lane`.
 | `UNSCORABLE` | No rule in this version of the scorer covers the task |
 | `UNRESOLVED` | An expected file is not in the checkout (the php lane's `vendor/` needles before `composer install`) |
 
-The report ends with two ratios, passed of all tasks and passed of answered tasks, so a tool is
-neither flattered for skipping tasks nor marked wrong on surfaces it does not offer.
+The report ends with three ratios. The headline is passed of scorable tasks. Passed of answered
+tasks and passed of all tasks follow, so the scorer's own gaps and the tasks a tool skipped are
+both visible and neither is counted for or against the tool unnoticed.
 
 ## Rules in this version
 
@@ -100,10 +109,13 @@ For all four:
 - The answer must contain the target, by exact line.
 - It may also contain the task's `known_sites`. Any other location makes the answer ambiguous,
   and an ambiguous answer fails.
-- Nothing in `must_not_include` may be returned.
+- Nothing in `must_not_include` may be returned. A known site is never an excluded hit, since the
+  key itself lists it.
 - A task that carries `exact_count` beside a target is `UNSCORABLE`: the count is an overload
   count in one task and a parameter count in another.
-- `kind` and `resolution` are labels and are never scored.
+- `kind` and `resolution` are labels and are never scored. Every `kind` these four rules cover was
+  read against its definition in the lane's `notes`: in each, the target is the answer the key
+  states.
 
 Not covered yet, reported `UNSCORABLE`: `references`, `implementation`, `cardinality`,
 `multi-parent`, `direction`, `call_hierarchy`, `hover`, `document_symbol`, `parse-negative`,
@@ -112,20 +124,24 @@ Not covered yet, reported `UNSCORABLE`: `references`, `implementation`, `cardina
 
 ### `must_not_include`
 
-The corpus writes these entries in several forms. Each form has one matching rule.
+The corpus writes these entries in several forms. Each form has one matching rule. Source text is
+matched on the line a location reports and never on the rest of its range, so a declaration's own
+body cannot trip an exclusion.
 
 | Form | Example | Hit when |
 | --- | --- | --- |
 | lane prefix | `php/` | a returned location is under that lane (`scope: repo` only) |
-| pattern | `impl .* for Money` | a returned source line, or `text`, contains the literal parts in order |
-| path and symbol | `app/http#NewServeMux` | a returned location is under the path and its source line contains the symbol |
-| anything else | `models/device.ts`, `BOARD_REFRESH`, `ATELIER_UNIT_SUFFIX = 'u'` | a returned path contains it, a returned source line contains it, `names` has it, or `text` contains it |
+| pattern | `impl .* for Money` | a reported line, or `text`, contains the literal parts in order |
+| path and symbol | `app/http#NewServeMux` | a returned location is under the path and its reported line contains the symbol |
+| anything else | `models/device.ts`, `BOARD_REFRESH`, `ATELIER_UNIT_SUFFIX = 'u'` | a returned path contains it, a reported line contains it, `names` has it, or `text` contains it |
 
 ## How "scorable" is established
 
 By test, not by claim. `test/oracle.test.mjs` runs over every lane and requires, for every task a
-rule covers, that the oracle answer passes and that each mutation of it fails: no location, the
-line shifted by one, an unexpected extra location, and one hit for every `must_not_include` entry.
+rule covers, that the oracle answer passes, that two richer forms of it pass as well (the target
+with its full range, and the target with every known site), and that each mutation of it fails: no
+location, the line shifted by one, an enclosing range, an unexpected extra location, and one hit
+for every `must_not_include` entry.
 `test/resolve.test.mjs` rebuilds the verifier report for `bench/conformance/` around the scorer's
 resolver and compares it byte for byte with `expected.txt`, so the scorer and the lane verifiers
 agree on what a needle resolves to. `test/fixture.test.mjs` pins the report format against a small

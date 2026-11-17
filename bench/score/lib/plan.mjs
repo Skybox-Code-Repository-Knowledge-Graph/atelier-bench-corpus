@@ -60,8 +60,21 @@ export const RULES = [
     },
 ];
 
-/** Decide how one task is scored, or why it is not. */
-export function planTask(task) {
+/**
+ * Targets anchored on a line INSIDE the declaration they stand for, keyed `lane:id`. The needle sits
+ * in the body because the declaration line is not unique in its file, or because the answer is a
+ * statement (a blank import's effect is a call inside init). A tool returns the declaration, so
+ * these targets are matched by containment: the returned range must cover the anchored line.
+ * Every other target is matched by its exact line.
+ */
+export const TARGET_INSIDE_SYMBOL = new Set([
+    "python:def-super-cooperative",
+    "go:imp-blank-import-side-effect",
+    "typescript:resolution-satisfies",
+]);
+
+/** Decide how one task is scored, or why it is not. `lane` selects the per-lane exceptions above. */
+export function planTask(task, lane = null) {
     const expect = task && typeof task.expect === "object" && task.expect !== null ? task.expect : {};
     const keys = Object.keys(expect);
     const candidates = RULES.filter((rule) => rule.surface === task.surface);
@@ -89,6 +102,7 @@ export function planTask(task) {
             scorable: true,
             rule: rule.name,
             target,
+            targetInsideSymbol: TARGET_INSIDE_SYMBOL.has(`${lane}:${task.id}`),
             allow: Array.isArray(expect.known_sites) ? expect.known_sites.filter(isFileNeedle) : [],
             exclude: [].concat(expect.must_not_include ?? []).filter((entry) => typeof entry === "string"),
             notScored: keys.filter((key) => !rule.uses.includes(key) && !LABEL_KEYS.has(key)),

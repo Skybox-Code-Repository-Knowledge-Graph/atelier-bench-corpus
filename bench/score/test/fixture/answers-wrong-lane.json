@@ -1,0 +1,9 @@
+{
+    "version": 1,
+    "tool": { "name": "fixture-tool", "version": "0.0.0" },
+    "lane": "go",
+    "scope": "lane",
+    "answers": {
+        "s-pass": { "locations": [ { "file": "src/app.txt", "line": 1 } ] }
+    }
+}

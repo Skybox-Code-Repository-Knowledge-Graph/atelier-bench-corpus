@@ -15,7 +15,7 @@ import { fileURLToPath } from "node:url";
 
 import { buildOracle } from "../oracle.mjs";
 import { LANES, planTask } from "../lib/plan.mjs";
-import { fileLines } from "../lib/resolve.mjs";
+import { fileLines, resolveNeedle } from "../lib/resolve.mjs";
 import { classifyExclusion, scoreTask } from "../lib/score.mjs";
 
 const REPO_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..", "..", "..");
@@ -64,7 +64,7 @@ for (const lane of LANES) {
         const tasks = JSON.parse(readFileSync(join(root, "bench", "tasks.json"), "utf8")).tasks;
         const oracle = buildOracle(root, tasks);
         const context = { root, lane, scope: "repo" };
-        const counts = { scorable: 0, unresolved: 0, unscorable: 0, exclusions: 0, untrippable: [] };
+        const counts = { scorable: 0, unresolved: 0, unscorable: 0, exclusions: 0, insideSymbol: 0, untrippable: [] };
 
         for (const task of tasks) {
             const plan = planTask(task);
@@ -88,6 +88,24 @@ for (const lane of LANES) {
             const perfect = scoreTask(task, answer, context);
             assert.equal(perfect.verdict, "PASS", `${label} oracle: ${perfect.detail ?? ""}`);
 
+            // Two richer answers a real tool gives must pass as well: the target with its full
+            // range, and the target together with every site the key lists.
+            const ranged = scoreTask(task, { locations: [{ ...target, end_line: target.line + 40 }] }, context);
+            assert.equal(ranged.verdict, "PASS", `${label} target with a range: ${ranged.detail ?? ""}`);
+
+            const sites = plan.allow.map((site) => ({ file: site.file, line: resolveNeedle(root, site).line }));
+            const withSites = scoreTask(task, { locations: [target, ...sites] }, context);
+            assert.equal(withSites.verdict, "PASS", `${label} target with known sites: ${withSites.detail ?? ""}`);
+
+            // A range that starts above the target and covers it is an enclosing scope. It passes
+            // only for the few targets anchored inside their declaration.
+            if (target.line > 1) {
+                const enclosing = scoreTask(task, { locations: [{ file: target.file, line: target.line - 1, end_line: target.line + 40 }] }, context);
+                const inside = planTask(task, lane).targetInsideSymbol;
+                assert.equal(enclosing.verdict, inside ? "PASS" : "FAIL", `${label} enclosing range`);
+                counts.insideSymbol += inside ? 1 : 0;
+            }
+
             assert.equal(scoreTask(task, { locations: [] }, context).verdict, "FAIL", `${label} no location`);
 
             const shifted = { file: target.file, line: target.line > 1 ? target.line - 1 : target.line + 1 };
@@ -110,7 +128,7 @@ for (const lane of LANES) {
         }
 
         assert.ok(counts.scorable > 0, `${lane}: no task is scorable`);
-        t.diagnostic(`${lane}: ${counts.scorable} scorable, ${counts.unresolved} unresolved, ${counts.unscorable} unscorable of ${tasks.length}; ${counts.exclusions} exclusions tripped`);
+        t.diagnostic(`${lane}: ${counts.scorable} scorable, ${counts.unresolved} unresolved, ${counts.unscorable} unscorable of ${tasks.length}; ${counts.exclusions} exclusions tripped; ${counts.insideSymbol} target(s) matched by containment`);
         if (counts.untrippable.length > 0) {
             t.diagnostic(`${lane}: exclusions no mutation could trip: ${counts.untrippable.join(" | ")}`);
         }

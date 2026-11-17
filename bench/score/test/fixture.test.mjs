@@ -45,6 +45,10 @@ test("unreadable or malformed inputs exit 2 and score nothing", () => {
     assert.equal(run("--root", join(FIXTURE, "no-such-lane"), "--answers", join(FIXTURE, "answers-mixed.json")).status, 2);
     assert.equal(run("--lane", "cobol", "--answers", join(FIXTURE, "answers-mixed.json")).status, 2);
     assert.equal(run("--root", LANE).status, 2);
+
+    const wrongLane = run("--root", LANE, "--answers", join(FIXTURE, "answers-wrong-lane.json"));
+    assert.equal(wrongLane.status, 2);
+    assert.match(wrongLane.stderr, /is for lane go, but the lane being scored is fixture/);
     assert.deepEqual(validateAnswers({ version: 2, tool: {}, scope: "world", answers: [] }).length, 4);
 });
 
@@ -74,6 +78,37 @@ test("a declaration never passes by range, a known site does", () => {
 
     const withSite = { locations: [{ file: "src/app.txt", line: 1 }, { file: "src/app.txt", line: 3, end_line: 5 }] };
     assert.equal(scoreTask(task("s-known-site"), withSite, context).verdict, "PASS");
+});
+
+test("an answer for an id the lane does not have is reported, not dropped", () => {
+    const result = run("--root", LANE, "--answers", join(FIXTURE, "answers-mixed.json"), "--format", "json");
+    assert.deepEqual(JSON.parse(result.stdout).unknownIds, ["s-renamed-id"]);
+});
+
+test("an exclusion is matched on the reported line, and a known site is never an excluded hit", () => {
+    const context = { root: LANE, lane: "lane", scope: "repo" };
+
+    const ranged = { locations: [{ file: "src/app.txt", line: 4, end_line: 7 }] };
+    assert.equal(scoreTask(task("s-range-over-excluded-text"), ranged, context).verdict, "PASS");
+    const onTheLine = { locations: [{ file: "src/app.txt", line: 4 }, { file: "src/app.txt", line: 5 }] };
+    assert.match(scoreTask(task("s-range-over-excluded-text"), onTheLine, context).detail, /excluded "Right" returned/);
+
+    const knownSite = { locations: [{ file: "src/app.txt", line: 1 }, { file: "src/other.txt", line: 1 }] };
+    assert.equal(scoreTask(task("s-known-site-excluded-path"), knownSite, context).verdict, "PASS");
+});
+
+test("a target anchored inside its declaration matches by containment, in that lane only", () => {
+    const repo = resolve(HERE, "..", "..", "..");
+    const python = JSON.parse(readFileSync(join(repo, "python", "bench", "tasks.json"), "utf8")).tasks;
+    const anchored = python.find((candidate) => candidate.id === "def-super-cooperative");
+    assert.equal(planTask(anchored, "python").targetInsideSymbol, true);
+    assert.equal(planTask(anchored, "go").targetInsideSymbol, false);
+
+    const root = join(repo, "python");
+    const { line } = buildOracle(root, [anchored]).answers[anchored.id].locations[0];
+    const method = { locations: [{ file: anchored.expect.file, line: line - 1, end_line: line }] };
+    assert.equal(scoreTask(anchored, method, { root, lane: "python", scope: "repo" }).verdict, "PASS");
+    assert.equal(scoreTask(anchored, method, { root, lane: "go", scope: "repo" }).verdict, "FAIL");
 });
 
 test("must_not_include entries are classified by form", () => {

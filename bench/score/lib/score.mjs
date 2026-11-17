@@ -81,9 +81,10 @@ function coversSite(location, expected) {
     return location.file === expected.file && location.line <= expected.line && expected.line <= location.endLine;
 }
 
-function sourceLines(root, location) {
+/** The source text of the line a location reports. Exclusions never search the rest of its range. */
+function sourceLine(root, location) {
     const lines = fileLines(root, location.file);
-    return lines === null ? [] : lines.slice(location.line - 1, location.endLine);
+    return lines === null ? "" : lines[location.line - 1] ?? "";
 }
 
 function matchesPattern(line, parts) {
@@ -115,11 +116,13 @@ export function classifyExclusion(entry) {
     return "text";
 }
 
-/** Does this answer contain something the task excludes? Returns true, false, or "not-exercised". */
-export function exclusionHit(entry, answer, context) {
-    const { locations } = answer;
-    const text = typeof answer.text === "string" ? answer.text : "";
-    const names = Array.isArray(answer.names) ? answer.names.filter((name) => typeof name === "string") : [];
+/**
+ * Does this answer contain something the task excludes? Returns true, false, or "not-exercised".
+ * `locations` are the returned locations the exclusion applies to: known sites are left out by the
+ * caller, because the key itself lists them. Text is matched on the reported line only, never on
+ * the rest of a range, so a declaration's body cannot trip an exclusion.
+ */
+export function exclusionHit(entry, { locations, text = "", names = [] }, context) {
     const kind = classifyExclusion(entry);
 
     if (kind === "lane-prefix") {
@@ -132,7 +135,7 @@ export function exclusionHit(entry, answer, context) {
     if (kind === "pattern") {
         const parts = entry.split(".*");
         return matchesPattern(text, parts)
-            || locations.some((location) => sourceLines(context.root, location).some((line) => matchesPattern(line, parts)));
+            || locations.some((location) => matchesPattern(sourceLine(context.root, location), parts));
     }
 
     if (kind === "path#symbol") {
@@ -140,13 +143,13 @@ export function exclusionHit(entry, answer, context) {
         const path = entry.slice(0, at);
         const symbol = entry.slice(at + 1);
         return locations.some((location) => location.file.startsWith(path)
-            && sourceLines(context.root, location).some((line) => line.includes(symbol)));
+            && sourceLine(context.root, location).includes(symbol));
     }
 
     return text.includes(entry)
         || names.includes(entry)
         || locations.some((location) => location.file.includes(entry)
-            || sourceLines(context.root, location).some((line) => line.includes(entry)));
+            || sourceLine(context.root, location).includes(entry));
 }
 
 function resolveAll(root, pairs) {
@@ -163,12 +166,13 @@ function resolveAll(root, pairs) {
 
 /** Score one task. Returns { verdict, detail, rule, notScored, notes }. */
 export function scoreTask(task, answer, context) {
-    const plan = planTask(task);
+    const plan = planTask(task, context.lane);
     if (!plan.scorable) {
         return { verdict: "UNSCORABLE", detail: plan.reason };
     }
 
     const base = { rule: plan.rule, notScored: plan.notScored };
+    const isTarget = plan.targetInsideSymbol ? coversSite : isDeclaration;
 
     const target = resolveAll(context.root, [plan.target]);
     if (target.problem) {
@@ -206,12 +210,12 @@ export function scoreTask(task, answer, context) {
     const reasons = [];
     const notes = [];
 
-    const unexpected = read.locations.filter((location) => !isDeclaration(location, expected)
-        && !allowed.resolved.some((site) => coversSite(location, site)));
+    const isKnownSite = (location) => allowed.resolved.some((site) => coversSite(location, site));
+    const unexpected = read.locations.filter((location) => !isTarget(location, expected) && !isKnownSite(location));
 
     if (read.locations.length === 0) {
         reasons.push("no location returned");
-    } else if (!read.locations.some((location) => isDeclaration(location, expected))) {
+    } else if (!read.locations.some((location) => isTarget(location, expected))) {
         const got = read.locations[0];
         const more = read.locations.length > 1 ? ` and ${read.locations.length - 1} more` : "";
         reasons.push(`target not returned: expected ${expected.file}:${expected.line}, got ${got.file}:${got.line}${more}`);
@@ -219,9 +223,15 @@ export function scoreTask(task, answer, context) {
         reasons.push(`ambiguous: target returned with ${unexpected.length} unexpected location(s), first ${unexpected[0].file}:${unexpected[0].line}`);
     }
 
+    // A known site is listed by the key itself, so it is never an excluded hit.
+    const subject = {
+        locations: read.locations.filter((location) => !isKnownSite(location)),
+        text: typeof answer.text === "string" ? answer.text : "",
+        names: Array.isArray(answer.names) ? answer.names.filter((name) => typeof name === "string") : [],
+    };
     let notExercised = 0;
     for (const entry of plan.exclude) {
-        const hit = exclusionHit(entry, { ...answer, locations: read.locations }, context);
+        const hit = exclusionHit(entry, subject, context);
         if (hit === "not-exercised") {
             notExercised += 1;
         } else if (hit) {
@@ -248,10 +258,14 @@ export function scoreLane({ root, lane, tasks, answersDoc }) {
         results.push({ id: task.id, surface: task.surface, ...outcome });
     }
 
-    return { results, summary: summarize(results) };
+    // An answer for an id the lane does not have is reported: a renamed id must not look UNANSWERED.
+    const known = new Set(tasks.map((task) => task.id));
+    const unknownIds = Object.keys(answersDoc.answers).filter((id) => !known.has(id));
+
+    return { results, summary: summarize(results), unknownIds };
 }
 
-/** Counts per surface and overall. Both ratios are reported: of all tasks, and of answered tasks. */
+/** Counts per surface and overall, plus the denominators the report's three ratios use. */
 export function summarize(results) {
     const blank = () => Object.fromEntries([...VERDICTS.map((verdict) => [verdict, 0]), ["total", 0]]);
     const bySurface = {};

@@ -27,8 +27,10 @@ function main(args) {
         return fail(options.problem);
     }
 
+    // `laneDir` is the directory name, which places the lane in the repository for path checks.
+    // `laneName` is what the lane calls itself, which an answer file must agree with.
     const root = options.root ? resolve(options.root) : join(REPO_ROOT, options.lane);
-    const lane = options.lane ?? basename(root);
+    const laneDir = options.lane ?? basename(root);
 
     const manifest = readJson(join(root, "bench", "tasks.json"));
     if (manifest.problem) {
@@ -38,6 +40,8 @@ function main(args) {
         return fail(`${join(root, "bench", "tasks.json")} has no tasks array`);
     }
 
+    const laneName = typeof manifest.value.lane === "string" ? manifest.value.lane : laneDir;
+
     const answers = readJson(resolve(options.answers));
     if (answers.problem) {
         return fail(answers.problem);
@@ -46,19 +50,17 @@ function main(args) {
     if (problems.length > 0) {
         return fail(`${options.answers}: ${problems.join("; ")}`);
     }
+    if (typeof answers.value.lane === "string" && answers.value.lane !== laneName) {
+        return fail(`${options.answers} is for lane ${answers.value.lane}, but the lane being scored is ${laneName}`);
+    }
 
-    const scored = scoreLane({ root, lane, tasks: manifest.value.tasks, answersDoc: answers.value });
+    const scored = scoreLane({ root, lane: laneDir, tasks: manifest.value.tasks, answersDoc: answers.value });
+    const scope = answers.value.scope ?? "lane";
 
     if (options.format === "json") {
-        process.stdout.write(`${JSON.stringify({
-            version: 1,
-            tool: answers.value.tool,
-            lane,
-            scope: answers.value.scope ?? "lane",
-            ...scored,
-        }, null, 2)}\n`);
+        process.stdout.write(`${JSON.stringify({ version: 1, tool: answers.value.tool, lane: laneName, scope, ...scored }, null, 2)}\n`);
     } else {
-        process.stdout.write(renderText(scored, { lane, tool: answers.value.tool, scope: answers.value.scope ?? "lane" }));
+        process.stdout.write(renderText(scored, { lane: laneName, tool: answers.value.tool, scope }));
     }
 
     return 0;
@@ -110,7 +112,7 @@ function readJson(path) {
 }
 
 /** One line per task in manifest order, then the per-surface table, then the two ratios. */
-function renderText({ results, summary }, { lane, tool, scope }) {
+function renderText({ results, summary, unknownIds }, { lane, tool, scope }) {
     const out = [];
 
     for (const result of results) {
@@ -140,12 +142,18 @@ function renderText({ results, summary }, { lane, tool, scope }) {
         out.push(formatRow(row));
     }
 
+    // Three ratios. The first is the headline: the others count the scorer's own gaps, or the
+    // tasks a tool skipped, against or for the tool.
     const { total, answered, scorable } = summary;
     const version = typeof tool.version === "string" && tool.version !== "" ? ` ${tool.version}` : "";
     out.push("");
     out.push(`tool: ${tool.name}${version}   lane: ${lane}   scope: ${scope}`);
+    if (unknownIds.length > 0) {
+        out.push(`answers for ids this lane does not have: ${unknownIds.length} (${unknownIds.join(", ")})`);
+    }
     out.push(`scorable by this scorer: ${scorable} of ${total.total} tasks`);
-    out.push(`passed: ${total.PASS} of ${total.total} tasks (${percent(total.PASS, total.total)}), ${total.PASS} of ${answered} answered (${percent(total.PASS, answered)})`);
+    out.push(`passed: ${total.PASS} of ${scorable} scorable (${percent(total.PASS, scorable)})`);
+    out.push(`        ${total.PASS} of ${answered} answered (${percent(total.PASS, answered)}), ${total.PASS} of ${total.total} tasks (${percent(total.PASS, total.total)})`);
 
     return `${out.join("\n")}\n`;
 }

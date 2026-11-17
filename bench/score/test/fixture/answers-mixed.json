@@ -17,6 +17,9 @@
         "s-empty": { "locations": [] },
         "s-unsupported": { "status": "unsupported" },
         "s-error": { "status": "error", "detail": "timed out after 60s" },
-        "s-invalid": { "locations": [ { "file": "src/app.txt", "line": 0 } ] }
+        "s-invalid": { "locations": [ { "file": "src/app.txt", "line": 0 } ] },
+        "s-known-site-excluded-path": { "locations": [ { "file": "src/app.txt", "line": 1 }, { "file": "src/other.txt", "line": 1 } ] },
+        "s-range-over-excluded-text": { "locations": [ { "file": "src/app.txt", "line": 4, "end_line": 7 } ] },
+        "s-renamed-id": { "locations": [ { "file": "src/app.txt", "line": 1 } ] }
     }
 }
