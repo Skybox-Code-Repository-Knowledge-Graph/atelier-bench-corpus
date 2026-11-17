@@ -38,6 +38,9 @@
         "s-parents-split": { "locations": [ { "file": "src/app.txt", "line": 1 }, { "file": "src/app.txt", "line": 2 } ] },
         "s-impl-no-count": { "locations": [ { "file": "src/app.txt", "line": 2 } ] },
         "s-docsym": { "names": [ "beta", "alpha", "beta" ] },
-        "s-docsym-extra": { "names": [ "alpha", "beta", "gamma" ] }
+        "s-docsym-extra": { "names": [ "alpha", "beta", "gamma" ] },
+        "s-dir": { "locations": [ { "file": "src/app.txt", "line": 2 }, { "file": "src/app.txt", "line": 5 } ], "reverse_locations": [ { "file": "src/app.txt", "line": 7 } ] },
+        "s-dir-both-ways": { "locations": [ { "file": "src/app.txt", "line": 2 } ], "reverse_locations": [ { "file": "src/app.txt", "line": 2 } ] },
+        "s-dir-mro": { "locations": [ { "file": "src/app.txt", "line": 2 } ] }
     }
 }

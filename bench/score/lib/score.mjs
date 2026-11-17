@@ -357,6 +357,32 @@ export function scoreTask(task, answer, context) {
         return finish();
     }
 
+    if (plan.check === "twoSided") {
+        // The key names one member of a set it does not list. The candidate must be among the
+        // locations returned for the asked direction, and absent from those returned when the
+        // opposite direction is asked (`reverse_locations`): a tool with the edge backwards, or in
+        // both directions, fails. Other locations in the asked direction are not judged (recall).
+        const expected = needed.resolved[0];
+        if (answer.reverse_locations === undefined) {
+            reasons.push("the opposite direction was not asked (no reverse_locations), so the direction is not shown");
+        }
+        const reverse = readLocations({ locations: answer.reverse_locations ?? [] });
+        if (reverse.problem) {
+            return { ...base, verdict: "ERROR", detail: `invalid answer: reverse_locations: ${reverse.problem}` };
+        }
+        if (read.locations.length === 0) {
+            reasons.push("no location returned");
+        } else if (!read.locations.some((location) => isDeclaration(location, expected))) {
+            reasons.push(`candidate not returned: expected ${expected.file}:${expected.line}`);
+        }
+        if (reverse.locations.some((location) => isDeclaration(location, expected))) {
+            reasons.push(`the candidate ${expected.file}:${expected.line} is also returned in the opposite direction`);
+        }
+        const others = read.locations.filter((location) => !isDeclaration(location, expected));
+        checkExclusions(plan, answer, others, context, reasons, notes);
+        return finish();
+    }
+
     if (plan.check === "sites") {
         // Exact: a reference site is a line, so a location is matched by its `line` alone. A range
         // stands for its first line; one range over a whole file is not an answer of every site.

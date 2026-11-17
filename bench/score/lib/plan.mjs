@@ -18,6 +18,15 @@ export const KIND_UNSCORABLE = {
     build_generated: "the key names two places, the include! line and the build.rs function",
 };
 
+/**
+ * Kinds that are UNSCORABLE on one surface only, keyed `surface:kind`. The same kind may be scored
+ * (or asked) on another surface, so it is not in KIND_UNSCORABLE.
+ */
+export const SURFACE_KIND_UNSCORABLE = {
+    "direction:mro": "the answer is an order (the method resolution order), which no list rule judges",
+    "direction:inherent_impl": "the key requires nothing, it only excludes; a tool that returns nothing would pass",
+};
+
 const candidate = (expect) => expect.candidate;
 const fileAndNeedle = (expect) => ({ file: expect.file, needle: expect.needle });
 
@@ -149,6 +158,45 @@ export const RULES = [
         noun: "declaration",
         uses: ["implementations", "exact_count", "extends_count", "implements_count", "optional_sites", "known_sites", "must_not_include"],
     })),
+    {
+        // A use of a type inside its own declaration: the answer is that declaration (a definition
+        // lookup), so the exact single-target rule applies.
+        name: "direction/self",
+        surface: "direction",
+        kinds: ["uses_self"],
+        requires: ["candidate"],
+        forbids: ["exact_count"],
+        check: "target",
+        class: "exact",
+        target: candidate,
+        uses: ["candidate", "known_sites", "must_not_include"],
+    },
+    {
+        // The key names one member of a set it does not list: the candidate must be returned when
+        // the asked direction is asked, and must not be when the opposite direction is asked.
+        name: "direction/two-sided",
+        surface: "direction",
+        kinds: ["parent_of", "child_of", "used_by"],
+        requires: [],
+        forbids: [],
+        check: "twoSided",
+        class: "recall",
+        target: (expect) => expect.candidate ?? (expect.file !== undefined ? fileAndNeedle(expect) : undefined),
+        uses: ["candidate", "file", "needle", "must_not_include"],
+    },
+    {
+        name: "direction/list",
+        surface: "direction",
+        kinds: ["declaration_merge"],
+        requires: ["known_sites", "exact_count"],
+        forbids: [],
+        check: "sites",
+        class: "exact",
+        list: "known_sites",
+        neutralLists: ["optional_sites"],
+        noun: "declaration",
+        uses: ["known_sites", "exact_count", "optional_sites", "must_not_include"],
+    },
 ];
 
 /**
@@ -219,7 +267,18 @@ export function planTask(task, lane = null) {
         return { scorable: false, reason: `no rule for surface ${task.surface}` };
     }
 
+    if (typeof expect.kind === "string" && Object.hasOwn(KIND_UNSCORABLE, expect.kind)) {
+        return { scorable: false, reason: `kind ${expect.kind}: ${KIND_UNSCORABLE[expect.kind]}` };
+    }
+    const surfaceKind = `${task.surface}:${expect.kind}`;
+    if (Object.hasOwn(SURFACE_KIND_UNSCORABLE, surfaceKind)) {
+        return { scorable: false, reason: `kind ${expect.kind}: ${SURFACE_KIND_UNSCORABLE[surfaceKind]}` };
+    }
+
     for (const rule of candidates) {
+        if (Array.isArray(rule.kinds) && !rule.kinds.includes(expect.kind)) {
+            continue;
+        }
         if (!rule.requires.every((key) => key in expect)) {
             continue;
         }
@@ -228,9 +287,6 @@ export function planTask(task, lane = null) {
         if (blocked.length > 0) {
             const why = rule.forbidReason ?? `target plus ${blocked.join(", ")}: meaning depends on kind`;
             return { scorable: false, reason: rule.forbidReason ? `${blocked.join(", ")}: ${why}` : why };
-        }
-        if (typeof expect.kind === "string" && Object.hasOwn(KIND_UNSCORABLE, expect.kind)) {
-            return { scorable: false, reason: `kind ${expect.kind}: ${KIND_UNSCORABLE[expect.kind]}` };
         }
 
         const common = {
@@ -258,6 +314,14 @@ export function planTask(task, lane = null) {
                 return { scorable: false, reason: `${rule.name}: contains is not a non-empty string` };
             }
             return { ...common, contains: expect.contains, allow: [] };
+        }
+
+        if (rule.check === "twoSided") {
+            const target = rule.target(expect);
+            if (!isFileNeedle(target)) {
+                return { scorable: false, reason: `${rule.name}: no candidate file and needle pair` };
+            }
+            return { ...common, target, entries: [target], allow: [] };
         }
 
         if (rule.check === "callees" || rule.check === "callers") {

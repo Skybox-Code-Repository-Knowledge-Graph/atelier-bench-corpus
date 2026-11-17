@@ -31,6 +31,9 @@ s-impl: PASS
 s-impl-missing: FAIL (1 of 2 declaration(s) not returned, first src/app.txt:5)
 s-parents-split: PASS
 s-impl-no-count: UNSCORABLE (implementation/list: no count states the list is complete)
+s-dir: PASS
+s-dir-both-ways: FAIL (the candidate src/app.txt:2 is also returned in the opposite direction)
+s-dir-mro: UNSCORABLE (kind mro: the answer is an order (the method resolution order), which no list rule judges)
 s-docsym: PASS [not scored: min_symbols]
 s-docsym-extra: FAIL (1 name(s) beyond the file's symbols, first "gamma")
 s-unscorable-count: UNSCORABLE (target plus exact_count: meaning depends on kind)
@@ -47,10 +50,11 @@ call_hierarchy       2     2            0           0      0           0        
 references           1     2            0           0      0           2           0      5
 implementation       1     1            0           0      0           1           0      3
 multi-parent         1     0            0           0      0           0           0      1
+direction            1     1            0           0      0           1           0      3
 document_symbol      1     1            0           0      0           0           0      2
 
 tool: fixture-tool 0.0.0   lane: fixture   scope: repo
 answers for ids this lane does not have: 1 (s-renamed-id)
-scorable by this scorer: 31 of 38 tasks
+scorable by this scorer: 33 of 41 tasks
 exact        passed 8 of 25 scorable (32.0%); 8 of 24 asked (33.3%); 1 not asked
-recall-only  passed 3 of 6 scorable (50.0%); 3 of 6 asked (50.0%); 0 not asked
+recall-only  passed 4 of 8 scorable (50.0%); 4 of 8 asked (50.0%); 0 not asked
