@@ -87,6 +87,33 @@ test("checkSiteCount accepts a consistent count and names each kind of mistake",
     assert.deepEqual(checkSiteCount(parents({ exact_count: 2, must_include: ["Send", "Sync"] }), root), [], "no list, nothing to check (the rule needs one)");
 });
 
+test("a document_symbol key entry becomes neutral only where it is a rust impl block, so a mistyped name cannot", async () => {
+    const { declaredName } = await import("../lib/score.mjs");
+    const neutral = [];
+    for (const lane of LANES) {
+        const tasks = JSON.parse(readFileSync(join(REPO_ROOT, lane, "bench", "tasks.json"), "utf8")).tasks;
+        for (const task of tasks.filter((candidate) => candidate.surface === "document_symbol" && Array.isArray(candidate.expect?.symbols))) {
+            for (const name of task.expect.symbols.filter((entry) => /\s/.test(declaredName(entry)))) {
+                neutral.push(`${lane}:${task.id}:${name}`);
+            }
+        }
+    }
+    for (const entry of neutral) {
+        assert.match(entry, /^rust:[^:]+:impl /, `${entry}: only rust impl blocks are neutral`);
+    }
+});
+
+test("every document_symbol reference disagreement names a document_symbol task that exists", async () => {
+    const { DOCSYM_REFERENCE_DISAGREES, planTask } = await import("../lib/plan.mjs");
+    for (const key of Object.keys(DOCSYM_REFERENCE_DISAGREES)) {
+        const [lane, id] = key.split(":");
+        assert.ok(LANES.includes(lane), `${key}: unknown lane`);
+        const task = JSON.parse(readFileSync(join(REPO_ROOT, lane, "bench", "tasks.json"), "utf8")).tasks.find((candidate) => candidate.id === id);
+        assert.ok(task && task.surface === "document_symbol", `${key}: no such document_symbol task`);
+        assert.equal(planTask(task, lane).scorable, false, `${key}: should be UNSCORABLE`);
+    }
+});
+
 for (const lane of LANES) {
     test(`every document_symbol list holds its must_include names and meets its floor: ${lane}`, () => {
         const tasks = JSON.parse(readFileSync(join(REPO_ROOT, lane, "bench", "tasks.json"), "utf8")).tasks;
