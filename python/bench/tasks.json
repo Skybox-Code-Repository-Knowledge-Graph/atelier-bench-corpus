@@ -390,7 +390,8 @@
             "note": "TypedDict: the dict literal is checked against class-body annotations; there is no constructor.",
             "from": {
                 "file": "atelier_bench/support/abstract_notifier.py",
-                "needle": "return {\"channel\": self.channel, \"reference\": f\"{self.channel}:{subject}\"}"
+                "needle": "def deliver(self, subject: str) -> Delivery:",
+                "symbol": "Delivery"
             },
             "expect": {
                 "file": "atelier_bench/contracts/notifier_contract.py",
@@ -402,8 +403,9 @@
             "surface": "definition",
             "note": "__init_subclass__ runs at class-creation time and registers each concrete report; REPORT_CLASSES is that registry, not a hand-written list.",
             "from": {
-                "file": "atelier_bench/__init__.py",
-                "needle": "REPORTS: list[AbstractReport] = [report_class() for report_class in REPORT_CLASSES.values()]"
+                "file": "atelier_bench/reports/technician_load.py",
+                "needle": "class TechnicianLoadReport(AbstractReport):",
+                "symbol": "AbstractReport"
             },
             "expect": {
                 "kind": "class_creation_hook",
@@ -1719,8 +1721,9 @@
             "id": "lane-local-formatter-billing",
             "surface": "resolution",
             "from": {
-                "file": "atelier_app/http/report.py",
-                "needle": "\"total\": state.money.money(order.total(state.container), \"EUR\"),"
+                "file": "atelier_app/state.py",
+                "needle": "money: MoneyFormatter",
+                "symbol": "MoneyFormatter"
             },
             "expect": {
                 "kind": "lane_local",
