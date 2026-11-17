@@ -1,0 +1,33 @@
+s-pass: PASS
+s-wrong-line: FAIL (target not returned: expected src/app.txt:2, got src/app.txt:1)
+s-ambiguous: FAIL (ambiguous: target returned with 1 unexpected location(s), first src/app.txt:4)
+s-known-site: PASS
+s-known-site-excluded-path: PASS
+s-range-over-excluded-text: PASS
+s-lane-prefix: FAIL (ambiguous: target returned with 1 unexpected location(s), first ../php/app/Models/Customer.php:18; excluded "php/" returned)
+s-path: FAIL (ambiguous: target returned with 1 unexpected location(s), first src/other.txt:1; excluded "src/other.txt" returned)
+s-path-symbol: FAIL (ambiguous: target returned with 1 unexpected location(s), first src/app.txt:5; excluded "src/app.txt#Right" returned)
+s-pattern: FAIL (ambiguous: target returned with 1 unexpected location(s), first src/app.txt:6; excluded "impl .* for Money" returned)
+s-text: FAIL (excluded "forbidden phrase" returned)
+s-not-scored: PASS [not scored: must_include]
+s-empty: FAIL (no location returned)
+s-unsupported: UNSUPPORTED
+s-error: ERROR (timed out after 60s)
+s-invalid: ERROR (invalid answer: location line is not a positive integer in src/app.txt)
+s-unanswered: UNANSWERED
+s-unscorable-surface: UNSCORABLE (no rule for surface hover)
+s-unscorable-count: UNSCORABLE (target plus exact_count: meaning depends on kind)
+s-unresolved: UNRESOLVED (src/absent.txt: file missing)
+
+surface           pass  fail  unsupported  unanswered  error  unscorable  unresolved  total
+definition           5     5            1           1      2           1           1     16
+resolution           0     2            0           0      0           0           0      2
+import-precision     0     1            0           0      0           0           0      1
+hover                0     0            0           0      0           1           0      1
+all                  5     8            1           1      2           2           1     20
+
+tool: fixture-tool 0.0.0   lane: fixture   scope: repo
+answers for ids this lane does not have: 1 (s-renamed-id)
+scorable by this scorer: 17 of 20 tasks
+passed: 5 of 17 scorable (29.4%)
+        5 of 13 answered (38.5%), 5 of 20 tasks (25.0%)

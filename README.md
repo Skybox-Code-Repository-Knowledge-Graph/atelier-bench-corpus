@@ -62,6 +62,18 @@ from a lane without check-matrix failing, and diffs every lane verifier's output
 `node bench/check-matrix.mjs --write` to regenerate it after adding or renaming a task id, then
 review the diff like code. CI runs the default (read-only) mode.
 
+## Scoring a tool
+
+```
+node bench/score/score.mjs --lane go --answers go.answers.json
+```
+
+`bench/score/` compares one tool's answers for one lane with that lane's `bench/tasks.json` and
+reports a verdict per task. It is tool-agnostic: an adapter writes the tool's replies in the answer
+format, and the scorer only reads that file and the answer key. The format, the verdicts and the
+rules this version scores are in [`bench/score/README.md`](bench/score/README.md). The scorer's own
+checks run in the `score` workflow, which is separate from the corpus checks above.
+
 ## Negative cases
 
 Each lane carries a `fixtures/broken-syntax/` directory of intentionally invalid source.
