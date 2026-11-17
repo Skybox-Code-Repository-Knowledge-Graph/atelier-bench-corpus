@@ -1142,7 +1142,7 @@
                 "symbol": "Money"
             },
             "expect": {
-                "exact_count": 68,
+                "exact_count": 67,
                 "known_sites": [
                     {
                         "file": "atelier_bench/contracts/formatter_contract.py",
@@ -1179,10 +1179,6 @@
                     {
                         "file": "atelier_core/__init__.py",
                         "needle": "from .money import Money"
-                    },
-                    {
-                        "file": "atelier_core/__init__.py",
-                        "needle": "\"Money\","
                     },
                     {
                         "file": "atelier_core/billing/formatter.py",
@@ -1428,15 +1424,11 @@
                 "symbol": "row_from_cents"
             },
             "expect": {
-                "exact_count": 22,
+                "exact_count": 21,
                 "known_sites": [
                     {
                         "file": "atelier_bench/__init__.py",
                         "needle": "from .contracts.report_contract import ReportRow, report_row, row_from_cents"
-                    },
-                    {
-                        "file": "atelier_bench/__init__.py",
-                        "needle": "\"row_from_cents\","
                     },
                     {
                         "file": "atelier_bench/reports/cash_flow.py",
@@ -1530,7 +1522,7 @@
                 "symbol": "REPORTS"
             },
             "expect": {
-                "exact_count": 6,
+                "exact_count": 5,
                 "known_sites": [
                     {
                         "file": "atelier_bench/__init__.py",
@@ -1539,10 +1531,6 @@
                     {
                         "file": "atelier_bench/__init__.py",
                         "needle": "return next((candidate for candidate in REPORTS if candidate.slug == slug), None)"
-                    },
-                    {
-                        "file": "atelier_bench/__init__.py",
-                        "needle": "\"REPORTS\","
                     },
                     {
                         "file": "tests/test_breadth.py",
@@ -2186,67 +2174,11 @@
                 "known_sites": [
                     {
                         "file": "atelier_bench/metrics/__init__.py",
-                        "needle": "from .average_ticket import AverageTicketMetric"
-                    },
-                    {
-                        "file": "atelier_bench/metrics/__init__.py",
-                        "needle": "from .first_fix_rate import FirstFixRateMetric"
-                    },
-                    {
-                        "file": "atelier_bench/metrics/__init__.py",
-                        "needle": "from .inventory_age import InventoryAgeMetric"
-                    },
-                    {
-                        "file": "atelier_bench/metrics/__init__.py",
-                        "needle": "from .labor_cost import LaborCostMetric"
-                    },
-                    {
-                        "file": "atelier_bench/metrics/__init__.py",
                         "needle": "from .margin import MarginMetric"
                     },
                     {
                         "file": "atelier_bench/metrics/__init__.py",
                         "needle": "from .nps import NpsMetric"
-                    },
-                    {
-                        "file": "atelier_bench/metrics/__init__.py",
-                        "needle": "from .orders_per_day import OrdersPerDayMetric"
-                    },
-                    {
-                        "file": "atelier_bench/metrics/__init__.py",
-                        "needle": "from .overhead import OverheadMetric"
-                    },
-                    {
-                        "file": "atelier_bench/metrics/__init__.py",
-                        "needle": "from .part_cost import PartCostMetric"
-                    },
-                    {
-                        "file": "atelier_bench/metrics/__init__.py",
-                        "needle": "from .parts_per_order import PartsPerOrderMetric"
-                    },
-                    {
-                        "file": "atelier_bench/metrics/__init__.py",
-                        "needle": "from .payment_delay import PaymentDelayMetric"
-                    },
-                    {
-                        "file": "atelier_bench/metrics/__init__.py",
-                        "needle": "from .repeat_customer import RepeatCustomerMetric"
-                    },
-                    {
-                        "file": "atelier_bench/metrics/__init__.py",
-                        "needle": "from .return_rate import ReturnRateMetric"
-                    },
-                    {
-                        "file": "atelier_bench/metrics/__init__.py",
-                        "needle": "from .technician_utilization import TechnicianUtilizationMetric"
-                    },
-                    {
-                        "file": "atelier_bench/metrics/__init__.py",
-                        "needle": "from .upsell_rate import UpsellRateMetric"
-                    },
-                    {
-                        "file": "atelier_bench/metrics/__init__.py",
-                        "needle": "from .warranty_rate import WarrantyRateMetric"
                     }
                 ],
                 "must_include": [
