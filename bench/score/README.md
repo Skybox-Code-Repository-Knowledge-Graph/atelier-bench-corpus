@@ -239,7 +239,13 @@ and the answer alike: the text after the last `.` or `::` and without a leading 
 label convention (`(*RepairOrder).TransitionTo` from gopls, `$guarded` from a php server) does not
 decide the verdict. A label with no identifier of its own (whitespace remains, as in a rust
 `impl HasReference for RepairOrder` block) names a container, not a symbol, and is neutral on both
-sides. Checked against gopls v0.24.0, which passes both go tasks.
+sides. Each lane's own language server was run on its tasks before any tool under test (#208):
+gopls, rust-analyzer, phpactor and typescript-language-server (on `docsym-report-registry`) pass.
+Where the server also lists what the lane's counting rule leaves out (pyright lists parameters and
+locals; typescript-language-server lists object-literal keys, typedef properties and `require`
+bindings), the key is not changed to fit it and the task is `UNSCORABLE`
+(`DOCSYM_REFERENCE_DISAGREES` in `lib/plan.mjs`): python and javascript both tasks, typescript
+`docsym-repair-order`. Seven tasks are scored.
 
 ### Recall rules
 
