@@ -642,10 +642,13 @@
             "surface": "references",
             "from": {"file": "atelier/dataset/dataset.go", "needle": "func Seeded() *Dataset {", "symbol": "Seeded"},
             "expect": {
-                "min_references": 3,
+                "exact_count": 5,
                 "known_sites": [
                     {"file": "app/state.go", "needle": "\t\tData:      dataset.Seeded(),"},
                     {"file": "tests/promotion_test.go", "needle": "\treturn dataset.Seeded()"}
+                ],
+                "repeated_sites": [
+                    {"file": "tests/seed_test.go", "needle": "data := dataset.Seeded()", "lines": 3}
                 ]
             }
         },
@@ -788,6 +791,9 @@
                     {"file": "core/events/events.go", "needle": "\tcase RepairCompleted:"},
                     {"file": "tests/events_test.go", "needle": "\tif !dispatcher.Dispatch(events.RepairCompleted, events.Payload{\"reference\": \"AT-2026-000001\"}) {"},
                     {"file": "tests/events_test.go", "needle": "\tif dispatcher.Dispatch(events.RepairCompleted, events.Payload{\"reference\": \"AT-2026-000001\"}) {"}
+                ],
+                "optional_sites": [
+                    {"file": "tests/events_test.go", "needle": "names[0] != \"repair.completed\""}
                 ]
             }
         },
