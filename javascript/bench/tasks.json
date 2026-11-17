@@ -1078,6 +1078,186 @@
                     {
                         "file": "packages/bench/src/rules/structural.cjs",
                         "needle": "key: \"invoice-count\","
+                    },
+                    {
+                        "file": "packages/bench/src/rules/customer-credit.cjs",
+                        "needle": "module.exports = class CustomerCreditRule {"
+                    },
+                    {
+                        "file": "packages/bench/src/rules/deposit-required.cjs",
+                        "needle": "module.exports = class DepositRequiredRule {"
+                    },
+                    {
+                        "file": "packages/bench/src/rules/device-age.cjs",
+                        "needle": "module.exports = class DeviceAgeRule {"
+                    },
+                    {
+                        "file": "packages/bench/src/rules/discount-ceiling.cjs",
+                        "needle": "module.exports = class DiscountCeilingRule {"
+                    },
+                    {
+                        "file": "packages/bench/src/rules/gross-profit.cjs",
+                        "needle": "module.exports = class GrossProfitRule {"
+                    },
+                    {
+                        "file": "packages/bench/src/rules/idle-technician.cjs",
+                        "needle": "module.exports = class IdleTechnicianRule {"
+                    },
+                    {
+                        "file": "packages/bench/src/rules/invoice-balance.cjs",
+                        "needle": "module.exports = class InvoiceBalanceRule {"
+                    },
+                    {
+                        "file": "packages/bench/src/rules/label-presence.cjs",
+                        "needle": "module.exports = class LabelPresenceRule {"
+                    },
+                    {
+                        "file": "packages/bench/src/rules/maximum-backlog.cjs",
+                        "needle": "module.exports = class MaximumBacklogRule {"
+                    },
+                    {
+                        "file": "packages/bench/src/rules/note-required.cjs",
+                        "needle": "module.exports = class NoteRequiredRule {"
+                    },
+                    {
+                        "file": "packages/bench/src/rules/part-availability.cjs",
+                        "needle": "module.exports = class PartAvailabilityRule {"
+                    },
+                    {
+                        "file": "packages/bench/src/rules/part-cost-margin.cjs",
+                        "needle": "module.exports = class PartCostMarginRule {"
+                    },
+                    {
+                        "file": "packages/bench/src/rules/priority-escalation.cjs",
+                        "needle": "module.exports = class PriorityEscalationRule {"
+                    },
+                    {
+                        "file": "packages/bench/src/rules/repair-duration.cjs",
+                        "needle": "module.exports = class RepairDurationRule {"
+                    },
+                    {
+                        "file": "packages/bench/src/rules/revenue-floor.cjs",
+                        "needle": "module.exports = class RevenueFloorRule {"
+                    },
+                    {
+                        "file": "packages/bench/src/rules/rework-limit.cjs",
+                        "needle": "module.exports = class ReworkLimitRule {"
+                    },
+                    {
+                        "file": "packages/bench/src/rules/rush-surcharge.cjs",
+                        "needle": "module.exports = class RushSurchargeRule {"
+                    },
+                    {
+                        "file": "packages/bench/src/rules/schedule-gap.cjs",
+                        "needle": "module.exports = class ScheduleGapRule {"
+                    },
+                    {
+                        "file": "packages/bench/src/rules/signature-required.cjs",
+                        "needle": "module.exports = class SignatureRequiredRule {"
+                    },
+                    {
+                        "file": "packages/bench/src/rules/slot-overbooking.cjs",
+                        "needle": "module.exports = class SlotOverbookingRule {"
+                    },
+                    {
+                        "file": "packages/bench/src/rules/status-sequence.cjs",
+                        "needle": "module.exports = class StatusSequenceRule {"
+                    },
+                    {
+                        "file": "packages/bench/src/rules/technician-capacity.cjs",
+                        "needle": "module.exports = class TechnicianCapacityRule {"
+                    },
+                    {
+                        "file": "packages/bench/src/rules/warranty-window.cjs",
+                        "needle": "module.exports = class WarrantyWindowRule {"
+                    },
+                    {
+                        "file": "packages/bench/src/rules/structural.cjs",
+                        "needle": "key: \"reference-prefix\","
+                    },
+                    {
+                        "file": "packages/bench/src/rules/structural.cjs",
+                        "needle": "key: \"currency-consistency\","
+                    },
+                    {
+                        "file": "packages/bench/src/rules/structural.cjs",
+                        "needle": "key: \"rounding\","
+                    },
+                    {
+                        "file": "packages/bench/src/rules/structural.cjs",
+                        "needle": "key: \"tax-applied\","
+                    },
+                    {
+                        "file": "packages/bench/src/rules/structural.cjs",
+                        "needle": "key: \"export-freshness\","
+                    },
+                    {
+                        "file": "packages/bench/src/rules/structural.cjs",
+                        "needle": "key: \"notification-sent\","
+                    },
+                    {
+                        "file": "packages/bench/src/rules/structural.cjs",
+                        "needle": "key: \"audit-trail\","
+                    },
+                    {
+                        "file": "packages/bench/src/rules/structural.cjs",
+                        "needle": "key: \"cache-ttl\","
+                    },
+                    {
+                        "file": "packages/bench/src/rules/structural.cjs",
+                        "needle": "key: \"report-coverage\","
+                    },
+                    {
+                        "file": "packages/bench/src/rules/structural.cjs",
+                        "needle": "key: \"metric-range\","
+                    },
+                    {
+                        "file": "packages/bench/src/rules/structural.cjs",
+                        "needle": "key: \"dataset-integrity\","
+                    },
+                    {
+                        "file": "packages/bench/src/rules/structural.cjs",
+                        "needle": "key: \"seed-determinism\","
+                    },
+                    {
+                        "file": "packages/bench/src/rules/structural.cjs",
+                        "needle": "key: \"order-count\","
+                    },
+                    {
+                        "file": "packages/bench/src/rules/structural.cjs",
+                        "needle": "key: \"customer-count\","
+                    },
+                    {
+                        "file": "packages/bench/src/rules/structural.cjs",
+                        "needle": "key: \"part-count\","
+                    },
+                    {
+                        "file": "packages/bench/src/rules/structural.cjs",
+                        "needle": "key: \"open-order-ratio\","
+                    },
+                    {
+                        "file": "packages/bench/src/rules/structural.cjs",
+                        "needle": "key: \"completion-rate\","
+                    },
+                    {
+                        "file": "packages/bench/src/rules/structural.cjs",
+                        "needle": "key: \"average-ticket\","
+                    },
+                    {
+                        "file": "packages/bench/src/rules/structural.cjs",
+                        "needle": "key: \"parts-per-order\","
+                    },
+                    {
+                        "file": "packages/bench/src/rules/structural.cjs",
+                        "needle": "key: \"repeat-customer\","
+                    },
+                    {
+                        "file": "packages/bench/src/rules/structural.cjs",
+                        "needle": "key: \"device-category\","
+                    },
+                    {
+                        "file": "packages/bench/src/rules/structural.cjs",
+                        "needle": "key: \"inventory-turnover\","
                     }
                 ],
                 "known_sites": [
@@ -2048,7 +2228,8 @@
             },
             "expect": {
                 "min_symbols": 6,
-                "must_include": ["transitionTo", "complete", "partsSubtotal", "addPart", "isOpen", "seed"]
+                "must_include": ["transitionTo", "complete", "partsSubtotal", "addPart", "isOpen", "seed"],
+                "symbols": ["RepairOrder", "constructor", "transitionTo", "complete", "partsSubtotal", "total", "addPart", "isOpen", "seed"]
             }
         },
         {
@@ -2061,7 +2242,8 @@
             },
             "expect": {
                 "min_symbols": 4,
-                "must_include": ["REPORTS", "METRICS", "REPORT_SLUGS", "loadReport"]
+                "must_include": ["REPORTS", "METRICS", "REPORT_SLUGS", "loadReport"],
+                "symbols": ["REPORTS", "METRICS", "REPORT_SLUGS", "loadReport", "report", "metric"]
             }
         },
         {
@@ -2175,6 +2357,10 @@
                     {
                         "file": "packages/core/src/support/helpers.js",
                         "needle": "export const ATELIER_REF_WIDTH = 6;"
+                    },
+                    {
+                        "file": "packages/core/src/support/helpers.js",
+                        "needle": "export function atelierFormatReference(prefix, num, year = Reference.DEFAULT_YEAR) {"
                     },
                     {
                         "file": "packages/core/src/support/helpers.js",
