@@ -635,15 +635,51 @@
                 "symbol": "seeded"
             },
             "expect": {
-                "min_references": 12,
+                "exact_count": 16,
                 "known_sites": [
                     {
                         "file": "crates/atelier-app/src/state.rs",
-                        "needle": "Arc::new(Dataset::seeded())"
+                        "needle": "data: Arc::new(Dataset::seeded()),"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/dataset.rs",
+                        "needle": "let data = Dataset::seeded();"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/rules/cfg_gated.rs",
+                        "needle": "assert!(AlwaysTrueRule.evaluate(&Dataset::seeded()));"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/rules/mod.rs",
+                        "needle": "let data = Dataset::seeded();"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/support/closure_predicate.rs",
+                        "needle": "assert!(predicate.matches(&Dataset::seeded()));"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/support/rule_summary.rs",
+                        "needle": "let summary = RuleSummary::compute(&Dataset::seeded());"
+                    },
+                    {
+                        "file": "crates/atelier-bench/tests/blanket_rules.rs",
+                        "needle": "let data = Dataset::seeded();"
                     },
                     {
                         "file": "crates/atelier-bench/tests/breadth.rs",
-                        "needle": "OrderRepository::new(Dataset::seeded().orders)"
+                        "needle": "let repo = OrderRepository::new(Dataset::seeded().orders);"
+                    }
+                ],
+                "repeated_sites": [
+                    {
+                        "file": "crates/atelier-bench/tests/breadth.rs",
+                        "needle": "let data = Dataset::seeded();",
+                        "lines": 6
+                    },
+                    {
+                        "file": "crates/atelier-bench/tests/wave2_iteration.rs",
+                        "needle": "let data = Dataset::seeded();",
+                        "lines": 2
                     }
                 ]
             }
@@ -657,19 +693,332 @@
                 "symbol": "Money"
             },
             "expect": {
-                "min_references": 20,
+                "exact_count": 81,
                 "known_sites": [
                     {
-                        "file": "crates/atelier-core/src/models/part.rs",
-                        "needle": "pub unit_price: Money,"
+                        "file": "crates/atelier-bench/src/dataset.rs",
+                        "needle": "use atelier_core::money::Money;"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/dataset.rs",
+                        "needle": "Part::new(1, \"SCR-13\", \"Screen 13\\\"\", Money(19_900)).with_stock(4),"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/dataset.rs",
+                        "needle": "Part::new(2, \"BAT-55\", \"Battery 55Wh\", Money(8_900)).with_stock(1),"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/dataset.rs",
+                        "needle": "Part::new(3, \"KBD-EU\", \"Keyboard EU\", Money(6_400)).with_stock(7),"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/dataset.rs",
+                        "needle": "Part::new(4, \"FAN-A1\", \"Cooling fan\", Money(2_200)).with_stock(2),"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/dataset.rs",
+                        "needle": "Invoice::new(1, 1, Money(34_900)),"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/dataset.rs",
+                        "needle": "Invoice::new(2, 2, Money(23_425)),"
+                    },
+                    {
+                        "file": "crates/atelier-core/src/billing/formatter.rs",
+                        "needle": "use crate::money::Money;"
+                    },
+                    {
+                        "file": "crates/atelier-core/src/billing/formatter.rs",
+                        "needle": "pub fn money(&self, amount: Money, currency: &str) -> String {"
+                    },
+                    {
+                        "file": "crates/atelier-core/src/billing/formatter.rs",
+                        "needle": "pub fn line(&self, quantity: u32, description: &str, amount: Money) -> String {"
+                    },
+                    {
+                        "file": "crates/atelier-core/src/contracts/invoice_calculator.rs",
+                        "needle": "use crate::money::Money;"
+                    },
+                    {
+                        "file": "crates/atelier-core/src/contracts/invoice_calculator.rs",
+                        "needle": "fn calculate(&self, order: &RepairOrder) -> Money;"
+                    },
+                    {
+                        "file": "crates/atelier-core/src/lib.rs",
+                        "needle": "pub use crate::money::Money;"
+                    },
+                    {
+                        "file": "crates/atelier-core/src/models/invoice.rs",
+                        "needle": "use crate::money::Money;"
                     },
                     {
                         "file": "crates/atelier-core/src/models/invoice.rs",
                         "needle": "pub total: Money,"
                     },
                     {
-                        "file": "crates/atelier-core/src/contracts/invoice_calculator.rs",
-                        "needle": "fn calculate(&self, order: &RepairOrder) -> Money;"
+                        "file": "crates/atelier-core/src/models/invoice.rs",
+                        "needle": "pub fn new(id: u32, repair_order_id: u32, total: Money) -> Self {"
+                    },
+                    {
+                        "file": "crates/atelier-core/src/models/invoice.rs",
+                        "needle": "pub fn outstanding(&self) -> Money {"
+                    },
+                    {
+                        "file": "crates/atelier-core/src/models/invoice.rs",
+                        "needle": "if self.paid { Money::ZERO } else { self.total }"
+                    },
+                    {
+                        "file": "crates/atelier-core/src/models/part.rs",
+                        "needle": "use crate::money::Money;"
+                    },
+                    {
+                        "file": "crates/atelier-core/src/models/part.rs",
+                        "needle": "pub unit_price: Money,"
+                    },
+                    {
+                        "file": "crates/atelier-core/src/models/part.rs",
+                        "needle": "        unit_price: Money,"
+                    },
+                    {
+                        "file": "crates/atelier-core/src/models/part.rs",
+                        "needle": "pub fn extended_price(&self, quantity: u32) -> Money {"
+                    },
+                    {
+                        "file": "crates/atelier-core/src/models/repair_order.rs",
+                        "needle": "use crate::money::Money;"
+                    },
+                    {
+                        "file": "crates/atelier-core/src/models/repair_order.rs",
+                        "needle": "pub unit_price: Money,"
+                    },
+                    {
+                        "file": "crates/atelier-core/src/models/repair_order.rs",
+                        "needle": "pub fn parts_subtotal(&self) -> Money {"
+                    },
+                    {
+                        "file": "crates/atelier-core/src/models/repair_order.rs",
+                        "needle": "pub fn total(&self, container: &Container) -> Money {"
+                    },
+                    {
+                        "file": "crates/atelier-core/src/money.rs",
+                        "needle": "impl Money {"
+                    },
+                    {
+                        "file": "crates/atelier-core/src/money.rs",
+                        "needle": "pub const ZERO: Money = Money(0);"
+                    },
+                    {
+                        "file": "crates/atelier-core/src/money.rs",
+                        "needle": "Money(cents)"
+                    },
+                    {
+                        "file": "crates/atelier-core/src/money.rs",
+                        "needle": "pub fn with_surcharge_bp(&self, bp: u32) -> Money {"
+                    },
+                    {
+                        "file": "crates/atelier-core/src/money.rs",
+                        "needle": "Money(self.0 + extra)"
+                    },
+                    {
+                        "file": "crates/atelier-core/src/money.rs",
+                        "needle": "impl Add for Money {"
+                    },
+                    {
+                        "file": "crates/atelier-core/src/money.rs",
+                        "needle": "fn add(self, rhs: Money) -> Money {"
+                    },
+                    {
+                        "file": "crates/atelier-core/src/money.rs",
+                        "needle": "Money(self.0 + rhs.0)"
+                    },
+                    {
+                        "file": "crates/atelier-core/src/money.rs",
+                        "needle": "impl AddAssign for Money {"
+                    },
+                    {
+                        "file": "crates/atelier-core/src/money.rs",
+                        "needle": "fn add_assign(&mut self, rhs: Money) {"
+                    },
+                    {
+                        "file": "crates/atelier-core/src/money.rs",
+                        "needle": "impl Sub for Money {"
+                    },
+                    {
+                        "file": "crates/atelier-core/src/money.rs",
+                        "needle": "fn sub(self, rhs: Money) -> Money {"
+                    },
+                    {
+                        "file": "crates/atelier-core/src/money.rs",
+                        "needle": "Money(self.0 - rhs.0)"
+                    },
+                    {
+                        "file": "crates/atelier-core/src/money.rs",
+                        "needle": "impl Mul<i64> for Money {"
+                    },
+                    {
+                        "file": "crates/atelier-core/src/money.rs",
+                        "needle": "fn mul(self, rhs: i64) -> Money {"
+                    },
+                    {
+                        "file": "crates/atelier-core/src/money.rs",
+                        "needle": "Money(self.0 * rhs)"
+                    },
+                    {
+                        "file": "crates/atelier-core/src/money.rs",
+                        "needle": "impl Sum for Money {"
+                    },
+                    {
+                        "file": "crates/atelier-core/src/money.rs",
+                        "needle": "fn sum<I: Iterator<Item = Money>>(iter: I) -> Money {"
+                    },
+                    {
+                        "file": "crates/atelier-core/src/money.rs",
+                        "needle": "iter.fold(Money::ZERO, Money::add)"
+                    },
+                    {
+                        "file": "crates/atelier-core/src/money.rs",
+                        "needle": "impl fmt::Display for Money {"
+                    },
+                    {
+                        "file": "crates/atelier-core/src/money.rs",
+                        "needle": "impl FromStr for Money {"
+                    },
+                    {
+                        "file": "crates/atelier-core/src/money.rs",
+                        "needle": "Ok(Money(whole * 100 + fraction))"
+                    },
+                    {
+                        "file": "crates/atelier-core/src/money.rs",
+                        "needle": "fn cents(self) -> Money;"
+                    },
+                    {
+                        "file": "crates/atelier-core/src/money.rs",
+                        "needle": "fn cents(self) -> Money {"
+                    },
+                    {
+                        "file": "crates/atelier-core/src/money.rs",
+                        "needle": "Money(self)"
+                    },
+                    {
+                        "file": "crates/atelier-core/src/money.rs",
+                        "needle": "assert_eq!(Money(10_000).with_surcharge_bp(2_500), Money(12_500));"
+                    },
+                    {
+                        "file": "crates/atelier-core/src/money.rs",
+                        "needle": "let parsed: Money = \"12.34\".parse().expect(\"parses\");"
+                    },
+                    {
+                        "file": "crates/atelier-core/src/money.rs",
+                        "needle": "assert_eq!(parsed, Money(1_234));"
+                    },
+                    {
+                        "file": "crates/atelier-core/src/money.rs",
+                        "needle": "assert_eq!(1_500_i64.cents(), Money(1_500));"
+                    },
+                    {
+                        "file": "crates/atelier-core/src/services/rush_invoice_calculator.rs",
+                        "needle": "use crate::money::Money;"
+                    },
+                    {
+                        "file": "crates/atelier-core/src/services/rush_invoice_calculator.rs",
+                        "needle": "fn calculate(&self, order: &RepairOrder) -> Money {"
+                    },
+                    {
+                        "file": "crates/atelier-core/src/services/standard_invoice_calculator.rs",
+                        "needle": "use crate::money::Money;"
+                    },
+                    {
+                        "file": "crates/atelier-core/src/services/standard_invoice_calculator.rs",
+                        "needle": "fn labour(&self, order: &RepairOrder) -> Money {"
+                    },
+                    {
+                        "file": "crates/atelier-core/src/services/standard_invoice_calculator.rs",
+                        "needle": "Money(rate * i64::from(order.labor_minutes) / 60)"
+                    },
+                    {
+                        "file": "crates/atelier-core/src/services/standard_invoice_calculator.rs",
+                        "needle": "fn calculate(&self, order: &RepairOrder) -> Money {"
+                    },
+                    {
+                        "file": "crates/atelier-core/src/support/expr.rs",
+                        "needle": "use crate::money::Money;"
+                    },
+                    {
+                        "file": "crates/atelier-core/src/support/expr.rs",
+                        "needle": "/// A tiny arithmetic AST over [`Money`] literals."
+                    },
+                    {
+                        "file": "crates/atelier-core/src/support/expr.rs",
+                        "needle": "Lit(Money),"
+                    },
+                    {
+                        "file": "crates/atelier-core/src/support/expr.rs",
+                        "needle": "/// Fold the tree down to one [`Money`] value."
+                    },
+                    {
+                        "file": "crates/atelier-core/src/support/expr.rs",
+                        "needle": "pub fn eval(&self) -> Money {"
+                    },
+                    {
+                        "file": "crates/atelier-core/src/support/expr.rs",
+                        "needle": "Box::new(Expr::Lit(Money::from_cents(100))),"
+                    },
+                    {
+                        "file": "crates/atelier-core/src/support/expr.rs",
+                        "needle": "Box::new(Expr::Lit(Money::from_cents(200))),"
+                    },
+                    {
+                        "file": "crates/atelier-core/src/support/expr.rs",
+                        "needle": "Box::new(Expr::Lit(Money::from_cents(300))),"
+                    },
+                    {
+                        "file": "crates/atelier-core/src/support/expr.rs",
+                        "needle": "assert_eq!(tree.eval(), Money::from_cents(600));"
+                    },
+                    {
+                        "file": "crates/atelier-core/tests/lifecycle.rs",
+                        "needle": "use atelier_core::money::Money;"
+                    },
+                    {
+                        "file": "crates/atelier-core/tests/lifecycle.rs",
+                        "needle": "let part = Part::new(1, \"SCR-13\", \"Screen 13\\\"\", Money(19_900)).with_stock(4);"
+                    },
+                    {
+                        "file": "crates/atelier-core/tests/lifecycle.rs",
+                        "needle": "assert_eq!(order.parts_subtotal(), Money(19_900));"
+                    },
+                    {
+                        "file": "crates/atelier-core/tests/lifecycle.rs",
+                        "needle": "assert_eq!(order.total(&container), Money(19_900 + 15_000));"
+                    },
+                    {
+                        "file": "crates/atelier-core/tests/lifecycle.rs",
+                        "needle": "assert_eq!(order.total(&container), Money(43_625));"
+                    },
+                    {
+                        "file": "crates/atelier-core/tests/lifecycle.rs",
+                        "needle": "assert_eq!(order.total(&container), Money(34_900));"
+                    },
+                    {
+                        "file": "crates/atelier-core/tests/shadow_pair.rs",
+                        "needle": "use atelier_core::money::Money;"
+                    },
+                    {
+                        "file": "crates/atelier-core/tests/shadow_pair.rs",
+                        "needle": "assert_eq!(money.money(Money(1_234), \"\"), \"12.34 EUR\");"
+                    }
+                ],
+                "repeated_sites": [
+                    {
+                        "file": "crates/atelier-core/src/money.rs",
+                        "needle": "type Output = Money;",
+                        "lines": 3
+                    }
+                ],
+                "optional_sites": [
+                    {
+                        "file": "crates/atelier-core/src/money.rs",
+                        "needle": "parse::<Money>()"
                     }
                 ]
             }
@@ -2011,19 +2360,332 @@
                 "symbol": "Money"
             },
             "expect": {
-                "min_references": 20,
+                "exact_count": 81,
                 "known_sites": [
                     {
-                        "file": "crates/atelier-core/src/models/part.rs",
-                        "needle": "pub unit_price: Money,"
+                        "file": "crates/atelier-bench/src/dataset.rs",
+                        "needle": "use atelier_core::money::Money;"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/dataset.rs",
+                        "needle": "Part::new(1, \"SCR-13\", \"Screen 13\\\"\", Money(19_900)).with_stock(4),"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/dataset.rs",
+                        "needle": "Part::new(2, \"BAT-55\", \"Battery 55Wh\", Money(8_900)).with_stock(1),"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/dataset.rs",
+                        "needle": "Part::new(3, \"KBD-EU\", \"Keyboard EU\", Money(6_400)).with_stock(7),"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/dataset.rs",
+                        "needle": "Part::new(4, \"FAN-A1\", \"Cooling fan\", Money(2_200)).with_stock(2),"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/dataset.rs",
+                        "needle": "Invoice::new(1, 1, Money(34_900)),"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/dataset.rs",
+                        "needle": "Invoice::new(2, 2, Money(23_425)),"
+                    },
+                    {
+                        "file": "crates/atelier-core/src/billing/formatter.rs",
+                        "needle": "use crate::money::Money;"
+                    },
+                    {
+                        "file": "crates/atelier-core/src/billing/formatter.rs",
+                        "needle": "pub fn money(&self, amount: Money, currency: &str) -> String {"
+                    },
+                    {
+                        "file": "crates/atelier-core/src/billing/formatter.rs",
+                        "needle": "pub fn line(&self, quantity: u32, description: &str, amount: Money) -> String {"
+                    },
+                    {
+                        "file": "crates/atelier-core/src/contracts/invoice_calculator.rs",
+                        "needle": "use crate::money::Money;"
+                    },
+                    {
+                        "file": "crates/atelier-core/src/contracts/invoice_calculator.rs",
+                        "needle": "fn calculate(&self, order: &RepairOrder) -> Money;"
+                    },
+                    {
+                        "file": "crates/atelier-core/src/lib.rs",
+                        "needle": "pub use crate::money::Money;"
+                    },
+                    {
+                        "file": "crates/atelier-core/src/models/invoice.rs",
+                        "needle": "use crate::money::Money;"
                     },
                     {
                         "file": "crates/atelier-core/src/models/invoice.rs",
                         "needle": "pub total: Money,"
                     },
                     {
-                        "file": "crates/atelier-core/src/contracts/invoice_calculator.rs",
-                        "needle": "fn calculate(&self, order: &RepairOrder) -> Money;"
+                        "file": "crates/atelier-core/src/models/invoice.rs",
+                        "needle": "pub fn new(id: u32, repair_order_id: u32, total: Money) -> Self {"
+                    },
+                    {
+                        "file": "crates/atelier-core/src/models/invoice.rs",
+                        "needle": "pub fn outstanding(&self) -> Money {"
+                    },
+                    {
+                        "file": "crates/atelier-core/src/models/invoice.rs",
+                        "needle": "if self.paid { Money::ZERO } else { self.total }"
+                    },
+                    {
+                        "file": "crates/atelier-core/src/models/part.rs",
+                        "needle": "use crate::money::Money;"
+                    },
+                    {
+                        "file": "crates/atelier-core/src/models/part.rs",
+                        "needle": "pub unit_price: Money,"
+                    },
+                    {
+                        "file": "crates/atelier-core/src/models/part.rs",
+                        "needle": "        unit_price: Money,"
+                    },
+                    {
+                        "file": "crates/atelier-core/src/models/part.rs",
+                        "needle": "pub fn extended_price(&self, quantity: u32) -> Money {"
+                    },
+                    {
+                        "file": "crates/atelier-core/src/models/repair_order.rs",
+                        "needle": "use crate::money::Money;"
+                    },
+                    {
+                        "file": "crates/atelier-core/src/models/repair_order.rs",
+                        "needle": "pub unit_price: Money,"
+                    },
+                    {
+                        "file": "crates/atelier-core/src/models/repair_order.rs",
+                        "needle": "pub fn parts_subtotal(&self) -> Money {"
+                    },
+                    {
+                        "file": "crates/atelier-core/src/models/repair_order.rs",
+                        "needle": "pub fn total(&self, container: &Container) -> Money {"
+                    },
+                    {
+                        "file": "crates/atelier-core/src/money.rs",
+                        "needle": "impl Money {"
+                    },
+                    {
+                        "file": "crates/atelier-core/src/money.rs",
+                        "needle": "pub const ZERO: Money = Money(0);"
+                    },
+                    {
+                        "file": "crates/atelier-core/src/money.rs",
+                        "needle": "Money(cents)"
+                    },
+                    {
+                        "file": "crates/atelier-core/src/money.rs",
+                        "needle": "pub fn with_surcharge_bp(&self, bp: u32) -> Money {"
+                    },
+                    {
+                        "file": "crates/atelier-core/src/money.rs",
+                        "needle": "Money(self.0 + extra)"
+                    },
+                    {
+                        "file": "crates/atelier-core/src/money.rs",
+                        "needle": "impl Add for Money {"
+                    },
+                    {
+                        "file": "crates/atelier-core/src/money.rs",
+                        "needle": "fn add(self, rhs: Money) -> Money {"
+                    },
+                    {
+                        "file": "crates/atelier-core/src/money.rs",
+                        "needle": "Money(self.0 + rhs.0)"
+                    },
+                    {
+                        "file": "crates/atelier-core/src/money.rs",
+                        "needle": "impl AddAssign for Money {"
+                    },
+                    {
+                        "file": "crates/atelier-core/src/money.rs",
+                        "needle": "fn add_assign(&mut self, rhs: Money) {"
+                    },
+                    {
+                        "file": "crates/atelier-core/src/money.rs",
+                        "needle": "impl Sub for Money {"
+                    },
+                    {
+                        "file": "crates/atelier-core/src/money.rs",
+                        "needle": "fn sub(self, rhs: Money) -> Money {"
+                    },
+                    {
+                        "file": "crates/atelier-core/src/money.rs",
+                        "needle": "Money(self.0 - rhs.0)"
+                    },
+                    {
+                        "file": "crates/atelier-core/src/money.rs",
+                        "needle": "impl Mul<i64> for Money {"
+                    },
+                    {
+                        "file": "crates/atelier-core/src/money.rs",
+                        "needle": "fn mul(self, rhs: i64) -> Money {"
+                    },
+                    {
+                        "file": "crates/atelier-core/src/money.rs",
+                        "needle": "Money(self.0 * rhs)"
+                    },
+                    {
+                        "file": "crates/atelier-core/src/money.rs",
+                        "needle": "impl Sum for Money {"
+                    },
+                    {
+                        "file": "crates/atelier-core/src/money.rs",
+                        "needle": "fn sum<I: Iterator<Item = Money>>(iter: I) -> Money {"
+                    },
+                    {
+                        "file": "crates/atelier-core/src/money.rs",
+                        "needle": "iter.fold(Money::ZERO, Money::add)"
+                    },
+                    {
+                        "file": "crates/atelier-core/src/money.rs",
+                        "needle": "impl fmt::Display for Money {"
+                    },
+                    {
+                        "file": "crates/atelier-core/src/money.rs",
+                        "needle": "impl FromStr for Money {"
+                    },
+                    {
+                        "file": "crates/atelier-core/src/money.rs",
+                        "needle": "Ok(Money(whole * 100 + fraction))"
+                    },
+                    {
+                        "file": "crates/atelier-core/src/money.rs",
+                        "needle": "fn cents(self) -> Money;"
+                    },
+                    {
+                        "file": "crates/atelier-core/src/money.rs",
+                        "needle": "fn cents(self) -> Money {"
+                    },
+                    {
+                        "file": "crates/atelier-core/src/money.rs",
+                        "needle": "Money(self)"
+                    },
+                    {
+                        "file": "crates/atelier-core/src/money.rs",
+                        "needle": "assert_eq!(Money(10_000).with_surcharge_bp(2_500), Money(12_500));"
+                    },
+                    {
+                        "file": "crates/atelier-core/src/money.rs",
+                        "needle": "let parsed: Money = \"12.34\".parse().expect(\"parses\");"
+                    },
+                    {
+                        "file": "crates/atelier-core/src/money.rs",
+                        "needle": "assert_eq!(parsed, Money(1_234));"
+                    },
+                    {
+                        "file": "crates/atelier-core/src/money.rs",
+                        "needle": "assert_eq!(1_500_i64.cents(), Money(1_500));"
+                    },
+                    {
+                        "file": "crates/atelier-core/src/services/rush_invoice_calculator.rs",
+                        "needle": "use crate::money::Money;"
+                    },
+                    {
+                        "file": "crates/atelier-core/src/services/rush_invoice_calculator.rs",
+                        "needle": "fn calculate(&self, order: &RepairOrder) -> Money {"
+                    },
+                    {
+                        "file": "crates/atelier-core/src/services/standard_invoice_calculator.rs",
+                        "needle": "use crate::money::Money;"
+                    },
+                    {
+                        "file": "crates/atelier-core/src/services/standard_invoice_calculator.rs",
+                        "needle": "fn labour(&self, order: &RepairOrder) -> Money {"
+                    },
+                    {
+                        "file": "crates/atelier-core/src/services/standard_invoice_calculator.rs",
+                        "needle": "Money(rate * i64::from(order.labor_minutes) / 60)"
+                    },
+                    {
+                        "file": "crates/atelier-core/src/services/standard_invoice_calculator.rs",
+                        "needle": "fn calculate(&self, order: &RepairOrder) -> Money {"
+                    },
+                    {
+                        "file": "crates/atelier-core/src/support/expr.rs",
+                        "needle": "use crate::money::Money;"
+                    },
+                    {
+                        "file": "crates/atelier-core/src/support/expr.rs",
+                        "needle": "/// A tiny arithmetic AST over [`Money`] literals."
+                    },
+                    {
+                        "file": "crates/atelier-core/src/support/expr.rs",
+                        "needle": "Lit(Money),"
+                    },
+                    {
+                        "file": "crates/atelier-core/src/support/expr.rs",
+                        "needle": "/// Fold the tree down to one [`Money`] value."
+                    },
+                    {
+                        "file": "crates/atelier-core/src/support/expr.rs",
+                        "needle": "pub fn eval(&self) -> Money {"
+                    },
+                    {
+                        "file": "crates/atelier-core/src/support/expr.rs",
+                        "needle": "Box::new(Expr::Lit(Money::from_cents(100))),"
+                    },
+                    {
+                        "file": "crates/atelier-core/src/support/expr.rs",
+                        "needle": "Box::new(Expr::Lit(Money::from_cents(200))),"
+                    },
+                    {
+                        "file": "crates/atelier-core/src/support/expr.rs",
+                        "needle": "Box::new(Expr::Lit(Money::from_cents(300))),"
+                    },
+                    {
+                        "file": "crates/atelier-core/src/support/expr.rs",
+                        "needle": "assert_eq!(tree.eval(), Money::from_cents(600));"
+                    },
+                    {
+                        "file": "crates/atelier-core/tests/lifecycle.rs",
+                        "needle": "use atelier_core::money::Money;"
+                    },
+                    {
+                        "file": "crates/atelier-core/tests/lifecycle.rs",
+                        "needle": "let part = Part::new(1, \"SCR-13\", \"Screen 13\\\"\", Money(19_900)).with_stock(4);"
+                    },
+                    {
+                        "file": "crates/atelier-core/tests/lifecycle.rs",
+                        "needle": "assert_eq!(order.parts_subtotal(), Money(19_900));"
+                    },
+                    {
+                        "file": "crates/atelier-core/tests/lifecycle.rs",
+                        "needle": "assert_eq!(order.total(&container), Money(19_900 + 15_000));"
+                    },
+                    {
+                        "file": "crates/atelier-core/tests/lifecycle.rs",
+                        "needle": "assert_eq!(order.total(&container), Money(43_625));"
+                    },
+                    {
+                        "file": "crates/atelier-core/tests/lifecycle.rs",
+                        "needle": "assert_eq!(order.total(&container), Money(34_900));"
+                    },
+                    {
+                        "file": "crates/atelier-core/tests/shadow_pair.rs",
+                        "needle": "use atelier_core::money::Money;"
+                    },
+                    {
+                        "file": "crates/atelier-core/tests/shadow_pair.rs",
+                        "needle": "assert_eq!(money.money(Money(1_234), \"\"), \"12.34 EUR\");"
+                    }
+                ],
+                "repeated_sites": [
+                    {
+                        "file": "crates/atelier-core/src/money.rs",
+                        "needle": "type Output = Money;",
+                        "lines": 3
+                    }
+                ],
+                "optional_sites": [
+                    {
+                        "file": "crates/atelier-core/src/money.rs",
+                        "needle": "parse::<Money>()"
                     }
                 ]
             }
