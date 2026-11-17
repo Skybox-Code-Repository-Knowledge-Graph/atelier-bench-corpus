@@ -22,7 +22,7 @@ import { symbolColumns } from "../../score/lib/symbol.mjs";
 export const ASKED_SURFACES = new Set(["definition", "resolution", "import-precision"]);
 
 /** Surfaces asked under "anchored". */
-export const ANCHORED_SURFACES = new Set(["hover", "call_hierarchy", "references"]);
+export const ANCHORED_SURFACES = new Set(["hover", "call_hierarchy", "references", "implementation", "cardinality", "multi-parent"]);
 
 /** Kinds whose answer is a relation of the symbol, not its definition. Not asked under "raw". */
 /**
@@ -296,10 +296,12 @@ async function askRaw(question, call) {
  *      result, as under "raw".
  *
  * Then one `cypher` call per needed fact, by node id: the documentation and the signature for hover;
- * for call_hierarchy and references the subject's own range (it must cover the `from` line, which
- * those keys put on the subject's declaration), then its edges: CALLS in the asked direction for
+ * for the other surfaces the subject's own range (it must cover the `from` line, which those keys
+ * put on the subject's declaration), then its edges: CALLS in the asked direction for
  * call_hierarchy, each with its node's range; CALLS and USES into it for references, each at its
- * call-site line when the edge has one. The note says which step found the subject.
+ * call-site line when the edge has one; IMPLEMENTS and EXTENDS into it at any depth for
+ * implementation and cardinality, and out of it for multi-parent, each at its node's declaration.
+ * The note says which step found the subject.
  */
 async function askAnchored(question, call) {
     const { symbol, file, line } = question.from;
@@ -357,8 +359,8 @@ async function askAnchored(question, call) {
         return { text: parts.filter(Boolean).join("\n"), note: `${how} ${named}` };
     }
 
-    // Every call_hierarchy and references key is asked from its subject's declaration line, so a
-    // node that does not cover that line is a different declaration with the same name.
+    // Every call_hierarchy, references and implementation-family key is asked from its subject's
+    // declaration line, so a node that does not cover that line is another declaration of that name.
     const rows = [];
     for (const id of ids) {
         const row = parseCypherRow(await ask(call, "cypher", {
@@ -367,23 +369,52 @@ async function askAnchored(question, call) {
         if (!row || row.file !== file || !row.startLine || line < row.startLine || line > (row.endLine ?? row.startLine)) {
             return { ...empty, note: `${how} ${id}, which is not at ${file}:${line}` };
         }
-        if (question.surface === "references") {
+        rows.push(...await edgeRows(question, id, call));
+    }
+    const { locations, unlocated } = locationsOfRows(rows);
+    return { locations, ...(unlocated > 0 ? { unlocated } : {}), note: `${how} ${named}, ${ASKED_EDGES[question.surface] ?? question.direction}` };
+}
+
+/** What each anchored list surface asks of the subject's edges, for the note. */
+const ASKED_EDGES = {
+    references: "CALLS and USES edges",
+    implementation: "IMPLEMENTS and EXTENDS edges into it at any depth",
+    cardinality: "IMPLEMENTS and EXTENDS edges into it at any depth",
+    "multi-parent": "its own IMPLEMENTS and EXTENDS edges",
+};
+
+/** The [file, line, endLine] rows one subject node answers with, by surface. */
+async function edgeRows(question, id, call) {
+    const subject = cypherString(id);
+    switch (question.surface) {
+        case "references": {
             // skybox 0.9.0 records a use of a symbol as an edge into its node: CALLS (one per call
             // site, always with the site's line) and USES (php and go without a line, rust with one
             // on about half). An edge with a line is answered at that line; one without, with the
             // using declaration's range, which is what the tool returned.
             const edges = parseCypherRows(await ask(call, "cypher", {
-                query: `MATCH (c)-[r:CodeRelation]->(t) WHERE t.id = ${cypherString(id)} AND (r.type = 'CALLS' OR r.type = 'USES') RETURN c.filePath, r.callSiteLine, c.startLine, c.endLine`,
+                query: `MATCH (c)-[r:CodeRelation]->(t) WHERE t.id = ${subject} AND (r.type = 'CALLS' OR r.type = 'USES') RETURN c.filePath, r.callSiteLine, c.startLine, c.endLine`,
             }));
-            rows.push(...edges.map(([path, site, start, end]) => (/^\d+$/.test(site ?? "") ? [path, site, ""] : [path, start, end])));
-        } else {
+            return edges.map(([path, site, start, end]) => (/^\d+$/.test(site ?? "") ? [path, site, ""] : [path, start, end]));
+        }
+        case "implementation":
+        case "cardinality":
+            // Every implementor at any depth (the lane READMEs count concrete implementors through
+            // abstract bases): nodes that reach the subject by IMPLEMENTS or EXTENDS edges only, up
+            // to 10 steps, each at its own declaration.
+            return parseCypherRows(await ask(call, "cypher", {
+                query: `MATCH (c)-[r:CodeRelation*1..10 (e, n | WHERE e.type = 'IMPLEMENTS' OR e.type = 'EXTENDS')]->(t) WHERE t.id = ${subject} RETURN DISTINCT c.filePath, c.startLine, c.endLine`,
+            }));
+        case "multi-parent":
+            // The direct parents: the subject's own IMPLEMENTS and EXTENDS edges.
+            return parseCypherRows(await ask(call, "cypher", {
+                query: `MATCH (s)-[r:CodeRelation]->(p) WHERE s.id = ${subject} AND (r.type = 'IMPLEMENTS' OR r.type = 'EXTENDS') RETURN p.filePath, p.startLine, p.endLine`,
+            }));
+        default: {
             const query = question.direction === "callers"
-                ? `MATCH (c)-[r:CodeRelation]->(t) WHERE t.id = ${cypherString(id)} AND r.type = 'CALLS' RETURN c.filePath, c.startLine, c.endLine`
-                : `MATCH (s)-[r:CodeRelation]->(c) WHERE s.id = ${cypherString(id)} AND r.type = 'CALLS' RETURN c.filePath, c.startLine, c.endLine`;
-            rows.push(...parseCypherRows(await ask(call, "cypher", { query })));
+                ? `MATCH (c)-[r:CodeRelation]->(t) WHERE t.id = ${subject} AND r.type = 'CALLS' RETURN c.filePath, c.startLine, c.endLine`
+                : `MATCH (s)-[r:CodeRelation]->(c) WHERE s.id = ${subject} AND r.type = 'CALLS' RETURN c.filePath, c.startLine, c.endLine`;
+            return parseCypherRows(await ask(call, "cypher", { query }));
         }
     }
-    const { locations, unlocated } = locationsOfRows(rows);
-    const what = question.surface === "references" ? "CALLS and USES edges" : question.direction;
-    return { locations, ...(unlocated > 0 ? { unlocated } : {}), note: `${how} ${named}, ${what}` };
 }

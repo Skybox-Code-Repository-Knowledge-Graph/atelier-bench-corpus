@@ -281,6 +281,23 @@ test("anchored references: CALLS and USES edges into the node at the from line, 
     assert.deepEqual(moved.locations, [], "a same-named node elsewhere does not lend its sites");
 });
 
+test("anchored implementation lists: implementors at any depth into the subject; parents out of it", async () => {
+    const from = { file: "contracts/report.go", needle: "type ReportContract interface {", line: 37, text: "type ReportContract interface {", symbol: "ReportContract" };
+    const subject = TABLE(["n.filePath", "n.startLine", "n.endLine"], ["contracts/report.go", "37", "45"]);
+    const found = TABLE(["c.filePath", "c.startLine", "c.endLine"], ["reports/b.go", "19", "30"], ["reports/a.go", "12", "20"]);
+    for (const surface of ["implementation", "cardinality"]) {
+        const { call, calls } = fake({ context: RESOLVED, cypher: (args) => (args.query.includes("*1..10") ? found : subject) });
+        const answer = await askSkybox({ id: "t", surface, kind: null, direction: null, from }, call);
+        assert.match(calls[2].args.query, /\[r:CodeRelation\*1\.\.10 \(e, n \| WHERE e\.type = 'IMPLEMENTS' OR e\.type = 'EXTENDS'\)\]->\(t\) WHERE t\.id = '[^']+' RETURN DISTINCT/, `${surface}: any depth, IMPLEMENTS and EXTENDS only`);
+        assert.deepEqual(answer.locations, [{ file: "reports/a.go", line: 12, end_line: 20 }, { file: "reports/b.go", line: 19, end_line: 30 }]);
+    }
+    const { call, calls } = fake({ context: RESOLVED, cypher: (args) => (args.query.includes("(p)") ? found : subject) });
+    const parents = await askSkybox({ id: "t", surface: "multi-parent", kind: null, direction: null, from }, call);
+    assert.match(calls[2].args.query, /MATCH \(s\)-\[r:CodeRelation\]->\(p\) WHERE s\.id = '[^']+' AND \(r\.type = 'IMPLEMENTS' OR r\.type = 'EXTENDS'\)/, "multi-parent: the direct parents");
+    assert.equal(parents.locations.length, 2);
+    assert.match(parents.note, /its own IMPLEMENTS and EXTENDS edges$/);
+});
+
 test("a php sigil is dropped from the name skybox is asked, and only there", async () => {
     assert.equal(nameInIndex("$statusFilter"), "statusFilter");
     assert.equal(nameInIndex("statusFilter"), "statusFilter");
