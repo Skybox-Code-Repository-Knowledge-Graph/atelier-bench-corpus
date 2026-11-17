@@ -1014,12 +1014,6 @@
                         "needle": "type Output = Money;",
                         "lines": 3
                     }
-                ],
-                "optional_sites": [
-                    {
-                        "file": "crates/atelier-core/src/money.rs",
-                        "needle": "parse::<Money>()"
-                    }
                 ]
             }
         },
@@ -2704,12 +2698,6 @@
                         "file": "crates/atelier-core/src/money.rs",
                         "needle": "type Output = Money;",
                         "lines": 3
-                    }
-                ],
-                "optional_sites": [
-                    {
-                        "file": "crates/atelier-core/src/money.rs",
-                        "needle": "parse::<Money>()"
                     }
                 ]
             }
