@@ -88,9 +88,14 @@ export function checkSymbol(task, line) {
         problems.push(`from.symbol must be one identifier or null, got ${JSON.stringify(from.symbol)}`);
         return { state: "symbol", problems };
     }
+    // A qualifier is never part of the symbol: Sum, not money::Sum or $money->sum or App\Money.
+    // A dot is allowed, because a string key such as record.visit is written with one.
+    if (/::|->|\\/.test(from.symbol)) {
+        problems.push(`from.symbol must carry no qualifier, got ${JSON.stringify(from.symbol)}`);
+        return { state: "symbol", problems };
+    }
 
-    const occurrence = hasOccurrence ? from.occurrence : 1;
-    if (!Number.isInteger(occurrence) || occurrence < 1) {
+    if (hasOccurrence && (!Number.isInteger(from.occurrence) || from.occurrence < 1)) {
         problems.push(`from.occurrence must be a positive integer, got ${JSON.stringify(from.occurrence)}`);
         return { state: "symbol", problems };
     }
@@ -98,8 +103,11 @@ export function checkSymbol(task, line) {
     const found = symbolColumns(line, from.symbol).length;
     if (found === 0) {
         problems.push(`from.symbol ${JSON.stringify(from.symbol)} does not occur on the from line`);
-    } else if (occurrence > found) {
-        problems.push(`from.occurrence is ${occurrence} but ${JSON.stringify(from.symbol)} occurs ${found} time(s) on the from line`);
+    } else if (found > 1 && !hasOccurrence) {
+        // Never default silently: two occurrences on a line are often two different symbols.
+        problems.push(`from.occurrence is required: ${JSON.stringify(from.symbol)} occurs ${found} times on the from line`);
+    } else if (hasOccurrence && from.occurrence > found) {
+        problems.push(`from.occurrence is ${from.occurrence} but ${JSON.stringify(from.symbol)} occurs ${found} time(s) on the from line`);
     }
 
     return { state: "symbol", problems };

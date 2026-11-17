@@ -53,6 +53,10 @@ test("checkSymbol accepts what is consistent and names what is not", () => {
     assert.equal(bad({ symbol: "two words" }), 1, "not one identifier");
     assert.equal(bad({ symbol: "" }), 1, "empty");
     assert.equal(bad({ symbol: "FromCents", occurrence: 3 }), 1, "occurrence past the last");
+    assert.equal(bad({ symbol: "FromCents" }), 1, "occurrence is required when the symbol repeats on the line");
+    assert.equal(bad({ symbol: "money::Sum" }), 1, "a :: qualifier");
+    assert.equal(bad({ symbol: "$order->total" }), 1, "a -> qualifier");
+    assert.equal(bad({ symbol: "App\\Money" }), 1, "a namespace qualifier");
     assert.equal(bad({ symbol: "FromCents", occurrence: 0 }), 1, "occurrence below one");
     assert.equal(bad({ symbol: "Sum", occurrence: 1 }), 0, "a redundant occurrence of 1 is allowed");
     assert.equal(bad({ symbol: null, occurrence: 1 }), 1, "occurrence beside null");
