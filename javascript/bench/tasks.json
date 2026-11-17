@@ -525,14 +525,13 @@
         {
             "id": "refs-dataset-seeded",
             "surface": "references",
-            "note": "Not counted: 6 reference lines whose text is identical to another line of the same file, so no needle can key them (packages/bench/tests/breadth.test.cjs lines 33, 49, 57, 70; packages/bench/tests/interop.test.cjs lines 15, 33).",
             "from": {
                 "file": "packages/bench/src/dataset.cjs",
                 "needle": "    static seeded() {",
                 "symbol": "seeded"
             },
             "expect": {
-                "exact_count": 10,
+                "exact_count": 16,
                 "known_sites": [
                     {
                         "file": "packages/app/src/state.js",
@@ -574,20 +573,36 @@
                         "file": "packages/bench/tests/rules.test.cjs",
                         "needle": "        assert.ok(RuleRegistry.rule(\"gross-profit\").evaluate(Dataset.seeded()));"
                     }
+                ],
+                "repeated_sites": [
+                    {
+                        "file": "packages/bench/tests/breadth.test.cjs",
+                        "needle": "const data = Dataset.seeded();",
+                        "lines": 2
+                    },
+                    {
+                        "file": "packages/bench/tests/breadth.test.cjs",
+                        "needle": "const rows = new GrossProfitReport().rows(Dataset.seeded());",
+                        "lines": 2
+                    },
+                    {
+                        "file": "packages/bench/tests/interop.test.cjs",
+                        "needle": "const data = Dataset.seeded();",
+                        "lines": 2
+                    }
                 ]
             }
         },
         {
             "id": "refs-money-class",
             "surface": "references",
-            "note": "Not counted: 15 reference lines whose text is identical to another line of the same file, so no needle can key them (packages/core/src/billing/formatter.js lines 17, 30; packages/core/src/models/repairOrder.js lines 87, 97; packages/core/src/money.js lines 52, 59, 60, 67, 68, 76, 101, 111, 126; packages/core/src/services/standardInvoiceCalculator.js lines 23, 31).",
             "from": {
                 "file": "packages/core/src/money.js",
                 "needle": "export class Money {",
                 "symbol": "Money"
             },
             "expect": {
-                "exact_count": 48,
+                "exact_count": 63,
                 "known_sites": [
                     {
                         "file": "packages/core/src/models/invoice.js",
@@ -780,6 +795,33 @@
                     {
                         "file": "packages/core/tests/shadowPair.test.js",
                         "needle": "        assert.equal(money.line(2, \"Battery\", new Money(17800)), \"2 x Battery = 178.00 EUR\");"
+                    }
+                ],
+                "repeated_sites": [
+                    {
+                        "file": "packages/core/src/billing/formatter.js",
+                        "needle": "* @param {import(\"../money.js\").Money} amount",
+                        "lines": 2
+                    },
+                    {
+                        "file": "packages/core/src/models/repairOrder.js",
+                        "needle": "* @returns {Money}",
+                        "lines": 2
+                    },
+                    {
+                        "file": "packages/core/src/money.js",
+                        "needle": "* @returns {Money}",
+                        "lines": 7
+                    },
+                    {
+                        "file": "packages/core/src/money.js",
+                        "needle": "* @param {Money} other",
+                        "lines": 2
+                    },
+                    {
+                        "file": "packages/core/src/services/standardInvoiceCalculator.js",
+                        "needle": "* @returns {Money}",
+                        "lines": 2
                     }
                 ]
             }
@@ -2228,8 +2270,25 @@
             },
             "expect": {
                 "min_symbols": 6,
-                "must_include": ["transitionTo", "complete", "partsSubtotal", "addPart", "isOpen", "seed"],
-                "symbols": ["RepairOrder", "constructor", "transitionTo", "complete", "partsSubtotal", "total", "addPart", "isOpen", "seed"]
+                "must_include": [
+                    "transitionTo",
+                    "complete",
+                    "partsSubtotal",
+                    "addPart",
+                    "isOpen",
+                    "seed"
+                ],
+                "symbols": [
+                    "RepairOrder",
+                    "constructor",
+                    "transitionTo",
+                    "complete",
+                    "partsSubtotal",
+                    "total",
+                    "addPart",
+                    "isOpen",
+                    "seed"
+                ]
             }
         },
         {
@@ -2242,8 +2301,20 @@
             },
             "expect": {
                 "min_symbols": 4,
-                "must_include": ["REPORTS", "METRICS", "REPORT_SLUGS", "loadReport"],
-                "symbols": ["REPORTS", "METRICS", "REPORT_SLUGS", "loadReport", "report", "metric"]
+                "must_include": [
+                    "REPORTS",
+                    "METRICS",
+                    "REPORT_SLUGS",
+                    "loadReport"
+                ],
+                "symbols": [
+                    "REPORTS",
+                    "METRICS",
+                    "REPORT_SLUGS",
+                    "loadReport",
+                    "report",
+                    "metric"
+                ]
             }
         },
         {
