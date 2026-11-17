@@ -2166,6 +2166,7 @@
             },
             "expect": {
                 "min_symbols": 18,
+                "symbols": ["OrderPart", "partId", "sku", "quantity", "unitPrice", "StatusChange", "from", "to", "changedBy", "RepairOrderBase", "status", "priority", "laborMinutes", "parts", "log", "constructor", "RepairOrder", "transitionTo", "complete", "partsSubtotal", "total", "addPart", "isOpen", "seed"],
                 "must_include": ["transitionTo", "complete", "partsSubtotal", "addPart", "isOpen", "seed"]
             }
         },
@@ -2179,6 +2180,7 @@
             },
             "expect": {
                 "min_symbols": 3,
+                "symbols": ["REPORTS", "METRICS", "report", "metric"],
                 "must_include": ["REPORTS", "METRICS", "report"]
             }
         },
