@@ -1746,7 +1746,40 @@
             },
             "expect": {
                 "min_symbols": 23,
-                "must_include": ["transition_to", "complete", "parts_subtotal", "add_part", "is_open", "with_priority"]
+                "must_include": ["transition_to", "complete", "parts_subtotal", "add_part", "is_open", "with_priority"],
+                "symbols": [
+                    "OrderPart",
+                    "part_id",
+                    "sku",
+                    "quantity",
+                    "unit_price",
+                    "StatusChange",
+                    "from",
+                    "to",
+                    "changed_by",
+                    "RepairOrder",
+                    "id",
+                    "customer_id",
+                    "device_id",
+                    "status",
+                    "priority",
+                    "labor_minutes",
+                    "parts",
+                    "log",
+                    "reference_number",
+                    "impl RepairOrder",
+                    "new",
+                    "with_priority",
+                    "with_labor",
+                    "transition_to",
+                    "complete",
+                    "parts_subtotal",
+                    "total",
+                    "add_part",
+                    "is_open",
+                    "impl HasReference for RepairOrder",
+                    "reference_number"
+                ]
             }
         },
         {
@@ -1759,7 +1792,25 @@
             },
             "expect": {
                 "min_symbols": 12,
-                "must_include": ["REPORTS", "METRICS", "report", "metric", "reports", "metrics"]
+                "must_include": ["REPORTS", "METRICS", "report", "metric", "reports", "metrics"],
+                "symbols": [
+                    "concerns",
+                    "contracts",
+                    "dataset",
+                    "exporters",
+                    "metrics",
+                    "notifiers",
+                    "prelude",
+                    "reports",
+                    "repositories",
+                    "rules",
+                    "services",
+                    "support",
+                    "REPORTS",
+                    "METRICS",
+                    "report",
+                    "metric"
+                ]
             }
         },
         {
