@@ -89,11 +89,13 @@
             "surface": "references",
             "from": { "file": "app/Models/RepairOrder.php", "needle": "public function transitionTo(RepairStatus $next, string $changedBy): bool", "symbol": "transitionTo" },
             "expect": {
-                "min_references": 3,
+                "exact_count": 5,
                 "known_sites": [
                     { "file": "app/Models/RepairOrder.php", "needle": "if (! $this->transitionTo(RepairStatus::Completed, $changedBy))" },
                     { "file": "database/seeders/DatabaseSeeder.php", "needle": "$order->transitionTo(RepairStatus::Diagnosing, 'seeder');" },
-                    { "file": "database/seeders/DatabaseSeeder.php", "needle": "$order->transitionTo(RepairStatus::Repairing, 'seeder');" }
+                    { "file": "database/seeders/DatabaseSeeder.php", "needle": "$order->transitionTo(RepairStatus::Repairing, 'seeder');" },
+                    { "file": "tests/Feature/RepairLifecycleTest.php", "needle": "$this->assertFalse($order->transitionTo(RepairStatus::Completed, 'tester'));" },
+                    { "file": "tests/Feature/RepairLifecycleTest.php", "needle": "$this->assertTrue($order->transitionTo(RepairStatus::Diagnosing, 'tester'));" }
                 ]
             }
         },
@@ -102,7 +104,7 @@
             "surface": "references",
             "from": { "file": "app/Models/Part.php", "needle": "public function consumedQuantity(): int", "symbol": "consumedQuantity" },
             "expect": {
-                "min_references": 2,
+                "exact_count": 2,
                 "known_sites": [
                     { "file": "app/Jobs/RecalculateInventory.php", "needle": "$consumed = $part->consumedQuantity();" },
                     { "file": "app/Filament/Widgets/RepairStats.php", "needle": "->sum(fn (Part $part): int => $part->consumedQuantity());" }
@@ -114,10 +116,12 @@
             "surface": "references",
             "from": { "file": "app/Concerns/HasReference.php", "needle": "trait HasReference", "symbol": "HasReference" },
             "expect": {
-                "min_references": 2,
+                "exact_count": 4,
                 "known_sites": [
                     { "file": "app/Models/Customer.php", "needle": "use HasReference;" },
-                    { "file": "app/Models/RepairOrder.php", "needle": "use HasReference;" }
+                    { "file": "app/Models/RepairOrder.php", "needle": "use HasReference;" },
+                    { "file": "app/Models/Customer.php", "needle": "use App\\Concerns\\HasReference;" },
+                    { "file": "app/Models/RepairOrder.php", "needle": "use App\\Concerns\\HasReference;" }
                 ]
             }
         },
@@ -217,9 +221,10 @@
             "note": "Event edge: dispatch('part-added') in the child must connect to the #[On('part-added')] listener on the parent.",
             "from": { "file": "app/Livewire/StatusBoard.php", "needle": "#[On('part-added')]", "symbol": "part-added" },
             "expect": {
-                "min_references": 1,
+                "exact_count": 2,
                 "known_sites": [
-                    { "file": "app/Livewire/PartsPicker.php", "needle": "$this->dispatch('part-added', orderId: $this->order->id);" }
+                    { "file": "app/Livewire/PartsPicker.php", "needle": "$this->dispatch('part-added', orderId: $this->order->id);" },
+                    { "file": "tests/Feature/PartsPickerTest.php", "needle": "->assertDispatched('part-added', orderId: $order->id);" }
                 ]
             }
         },
@@ -270,9 +275,12 @@
             "note": "First-party polymorphic pivot: Label's MorphedByMany answers who carries the label.",
             "from": { "file": "app/Models/Label.php", "needle": "public function repairOrders(): MorphToMany", "symbol": "repairOrders" },
             "expect": {
-                "min_references": 1,
+                "exact_count": 1,
                 "known_sites": [
                     { "file": "tests/Feature/RelationshipsTest.php", "needle": "$this->assertInstanceOf(MorphToMany::class, $label->repairOrders());" }
+                ],
+                "optional_sites": [
+                    { "file": "tests/Feature/RelationshipsTest.php", "needle": "$this->assertTrue($label->repairOrders->contains($order));" }
                 ]
             }
         },
@@ -296,9 +304,11 @@
             "note": "Pennant facade edge: the flag consumed in RushInvoiceCalculator is defined in AppServiceProvider.",
             "from": { "file": "app/Providers/AppServiceProvider.php", "needle": "Feature::define('rush-surcharge'", "symbol": "rush-surcharge" },
             "expect": {
-                "min_references": 1,
+                "exact_count": 3,
                 "known_sites": [
-                    { "file": "app/Services/RushInvoiceCalculator.php", "needle": "if (! Feature::active('rush-surcharge')) {" }
+                    { "file": "app/Services/RushInvoiceCalculator.php", "needle": "if (! Feature::active('rush-surcharge')) {" },
+                    { "file": "tests/Feature/IntegrationsTest.php", "needle": "$this->assertTrue(Feature::active('rush-surcharge'));" },
+                    { "file": "tests/Feature/IntegrationsTest.php", "needle": "Feature::deactivate('rush-surcharge');" }
                 ]
             }
         },
@@ -602,10 +612,11 @@
             "surface": "references",
             "from": { "file": "app/Support/Edge/Trackable.php", "needle": "final class Trackable", "symbol": "Trackable" },
             "expect": {
-                "min_references": 2,
+                "exact_count": 3,
                 "known_sites": [
                     { "file": "app/Support/Edge/Trackable.php", "needle": "#[Trackable('probe-heartbeat')]" },
-                    { "file": "app/Support/Edge/Trackable.php", "needle": "$attrs = $method->getAttributes(Trackable::class);" }
+                    { "file": "app/Support/Edge/Trackable.php", "needle": "$attrs = $method->getAttributes(Trackable::class);" },
+                    { "file": "app/Support/Edge/Trackable.php", "needle": "public static function readTrackable(): ?Trackable" }
                 ]
             }
         },
@@ -854,7 +865,7 @@
             "note": "Canonical mirror of the php-local impl-interface id. php is nominal: both implementors write `implements InvoiceCalculator`, unlike the python lane's structural Protocol.",
             "from": { "file": "app/Contracts/InvoiceCalculator.php", "needle": "interface InvoiceCalculator", "symbol": "InvoiceCalculator" },
             "expect": {
-                "min_implementations": 2,
+                "exact_count": 2,
                 "implementations": [
                     { "file": "app/Services/StandardInvoiceCalculator.php", "needle": "class StandardInvoiceCalculator implements InvoiceCalculator" },
                     { "file": "app/Services/RushInvoiceCalculator.php", "needle": "class RushInvoiceCalculator implements InvoiceCalculator" }
@@ -867,7 +878,7 @@
             "note": "8 concrete implementors, all reaching the contract through AbstractNotifier; the abstract base itself is excluded by the counting rule in notes.",
             "from": { "file": "app/Bench/Contracts/NotifierContract.php", "needle": "interface NotifierContract", "symbol": "NotifierContract" },
             "expect": {
-                "min_implementations": 8,
+                "exact_count": 8,
                 "implementations": [
                     { "file": "app/Bench/Notifiers/DiscordNotifier.php", "needle": "class DiscordNotifier extends AbstractNotifier" },
                     { "file": "app/Bench/Notifiers/EmailNotifier.php", "needle": "class EmailNotifier extends AbstractNotifier" },
@@ -886,7 +897,7 @@
             "note": "24 concrete implementors through AbstractReport / AbstractPeriodicReport. Same counting rule and the same 24 as card-report-contract: abstract bases excluded, ReportRegistry is a fan-in holder and not an implementor.",
             "from": { "file": "app/Bench/Contracts/ReportContract.php", "needle": "interface ReportContract", "symbol": "ReportContract" },
             "expect": {
-                "min_implementations": 24,
+                "exact_count": 24,
                 "implementations": [
                     { "file": "app/Bench/Reports/CashFlowReport.php", "needle": "class CashFlowReport extends AbstractPeriodicReport implements CompositeContract, AuditableContract" },
                     { "file": "app/Bench/Reports/ChurnRiskReport.php", "needle": "class ChurnRiskReport extends AbstractPeriodicReport implements CacheableContract, AuditableContract" },
@@ -1139,7 +1150,7 @@
             "from": { "file": "app/Bench/Contracts/RepositoryContract.php", "needle": "interface RepositoryContract", "symbol": "RepositoryContract" },
             "expect": {
                 "kind": "docblock_generic",
-                "min_implementations": 8,
+                "exact_count": 8,
                 "implementations": [
                     { "file": "app/Bench/Repositories/CustomerRepository.php", "needle": "class CustomerRepository extends AbstractComponent implements RepositoryContract" },
                     { "file": "app/Bench/Repositories/InventoryRepository.php", "needle": "class InventoryRepository extends AbstractComponent implements RepositoryContract" },
