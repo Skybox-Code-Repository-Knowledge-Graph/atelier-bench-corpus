@@ -1258,7 +1258,7 @@
             "from": { "file": "app/Concerns/HasReference.php", "needle": "trait HasReference", "symbol": "HasReference" },
             "expect": {
                 "kind": "used_by",
-                "candidate": { "file": "app/Models/Customer.php", "needle": "use HasReference;" },
+                "candidate": { "file": "app/Models/Customer.php", "needle": "class Customer extends Model" },
                 "must_not_include": [
                     "HasReference uses Customer"
                 ]
