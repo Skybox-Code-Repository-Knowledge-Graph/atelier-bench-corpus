@@ -52,6 +52,7 @@ One answer:
 | `locations` | What the tool returned: `file`, `line`, optional `end_line`. Paths are relative to the lane directory, as in `tasks.json`. A location in another lane is written `../<lane>/...` |
 | `text` | Any free text the tool returned with the answer, such as a label, a qualified name or a relation. Optional |
 | `names` | Symbol names the tool returned, when the answer is a list of names. Optional |
+| `unlocated` | How many further results the tool returned without a file and line. Optional, default 0. They count like unexpected locations, so an adapter can never improve a score by dropping them |
 
 ### What a line means
 
@@ -105,7 +106,7 @@ stated wrongly, and counts the tasks that state none; it becomes strict once eve
 | `UNSUPPORTED` | The adapter says the tool cannot be asked this |
 | `UNANSWERED` | The answer file has no entry for the task |
 | `ERROR` | The tool or adapter failed, or the answer is malformed |
-| `UNSCORABLE` | No rule in this version of the scorer covers the task |
+| `UNSCORABLE` | No rule in this version of the scorer covers the task, or the task states no `from.symbol` (its lane is not annotated yet, or the task is a misfit), so no adapter can be asked it |
 | `UNRESOLVED` | An expected file is not in the checkout (the php lane's `vendor/` needles before `composer install`) |
 
 The report ends with three ratios. The headline is passed of scorable tasks. Passed of answered

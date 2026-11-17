@@ -6,6 +6,7 @@
 import { posix } from "node:path";
 import { fileLines, resolveNeedle } from "./resolve.mjs";
 import { LANES, planTask } from "./plan.mjs";
+import { FILE_LEVEL_SURFACES } from "./symbol.mjs";
 
 export const VERDICTS = ["PASS", "FAIL", "UNSUPPORTED", "UNANSWERED", "ERROR", "UNSCORABLE", "UNRESOLVED"];
 
@@ -205,6 +206,12 @@ export function scoreTask(task, answer, context) {
     if (read.problem) {
         return { ...base, verdict: "ERROR", detail: `invalid answer: ${read.problem}` };
     }
+    // Results the tool returned without a file and line. They cannot match the target, but they
+    // were returned, so they count like unexpected locations: dropping them must never help.
+    const unlocated = answer.unlocated ?? 0;
+    if (!Number.isInteger(unlocated) || unlocated < 0) {
+        return { ...base, verdict: "ERROR", detail: "invalid answer: unlocated is not a non-negative integer" };
+    }
 
     const expected = target.resolved[0];
     const reasons = [];
@@ -224,6 +231,8 @@ export function scoreTask(task, answer, context) {
         reasons.push(`target not returned: expected ${expected.file}:${expected.line}, got ${got.file}:${got.line}${more}${covered}`);
     } else if (unexpected.length > 0) {
         reasons.push(`ambiguous: target returned with ${unexpected.length} unexpected location(s), first ${unexpected[0].file}:${unexpected[0].line}`);
+    } else if (unlocated > 0) {
+        reasons.push(`ambiguous: target returned with ${unlocated} result(s) that have no file and line`);
     }
 
     // A known site is listed by the key itself, so it is never an excluded hit.
@@ -257,7 +266,12 @@ export function scoreLane({ root, lane, tasks, answersDoc }) {
 
     for (const task of tasks) {
         const answer = Object.hasOwn(answersDoc.answers, task.id) ? answersDoc.answers[task.id] : undefined;
-        const outcome = scoreTask(task, answer, context);
+        // Every adapter asks by `from.symbol`. A task that states none cannot be asked honestly:
+        // its lane is not annotated yet, or it is a misfit. A null symbol is a statement, and is scored.
+        const asked = FILE_LEVEL_SURFACES.has(task.surface) || (task.from && Object.hasOwn(task.from, "symbol"));
+        const outcome = asked
+            ? scoreTask(task, answer, context)
+            : { verdict: "UNSCORABLE", detail: "task states no from.symbol" };
         results.push({ id: task.id, surface: task.surface, ...outcome });
     }
 

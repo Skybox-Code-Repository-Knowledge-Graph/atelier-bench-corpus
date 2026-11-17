@@ -8,28 +8,28 @@
             "id": "s-pass",
             "surface": "definition",
             "note": "The target line is returned and nothing else.",
-            "from": { "file": "src/app.txt", "needle": "gamma uses alpha" },
+            "from": { "file": "src/app.txt", "needle": "gamma uses alpha", "symbol": "alpha" },
             "expect": { "file": "src/app.txt", "needle": "alpha declaration" }
         },
         {
             "id": "s-wrong-line",
             "surface": "definition",
             "note": "A neighbouring line is returned: declarations match by exact line.",
-            "from": { "file": "src/app.txt", "needle": "gamma uses alpha" },
+            "from": { "file": "src/app.txt", "needle": "gamma uses alpha", "symbol": "alpha" },
             "expect": { "file": "src/app.txt", "needle": "beta declaration" }
         },
         {
             "id": "s-ambiguous",
             "surface": "definition",
             "note": "The target is returned with a second, unexpected location.",
-            "from": { "file": "src/app.txt", "needle": "gamma uses alpha" },
+            "from": { "file": "src/app.txt", "needle": "gamma uses alpha", "symbol": "alpha" },
             "expect": { "file": "src/app.txt", "needle": "epsilon target" }
         },
         {
             "id": "s-known-site",
             "surface": "definition",
             "note": "The extra location covers a known site by range, which is allowed.",
-            "from": { "file": "src/app.txt", "needle": "gamma uses alpha" },
+            "from": { "file": "src/app.txt", "needle": "gamma uses alpha", "symbol": "alpha" },
             "expect": {
                 "file": "src/app.txt",
                 "needle": "alpha declaration",
@@ -40,7 +40,7 @@
             "id": "s-known-site-excluded-path",
             "surface": "definition",
             "note": "A known site sits in a file the task also excludes: the key lists it, so it is not an excluded hit.",
-            "from": { "file": "src/app.txt", "needle": "gamma uses alpha" },
+            "from": { "file": "src/app.txt", "needle": "gamma uses alpha", "symbol": "alpha" },
             "expect": {
                 "file": "src/app.txt",
                 "needle": "alpha declaration",
@@ -52,7 +52,7 @@
             "id": "s-range-over-excluded-text",
             "surface": "definition",
             "note": "The target is returned with a range whose body contains excluded text: only the reported line is searched.",
-            "from": { "file": "src/app.txt", "needle": "gamma uses alpha" },
+            "from": { "file": "src/app.txt", "needle": "gamma uses alpha", "symbol": "alpha" },
             "expect": {
                 "file": "src/app.txt",
                 "needle": "delta site",
@@ -63,7 +63,7 @@
             "id": "s-lane-prefix",
             "surface": "resolution",
             "note": "Exclusion written as a lane prefix: a location in another lane.",
-            "from": { "file": "src/app.txt", "needle": "gamma uses alpha" },
+            "from": { "file": "src/app.txt", "needle": "gamma uses alpha", "symbol": "alpha" },
             "expect": {
                 "kind": "lane_local",
                 "candidate": { "file": "src/app.txt", "needle": "alpha declaration" },
@@ -74,7 +74,7 @@
             "id": "s-path",
             "surface": "import-precision",
             "note": "Exclusion written as a path.",
-            "from": { "file": "src/app.txt", "needle": "gamma uses alpha" },
+            "from": { "file": "src/app.txt", "needle": "gamma uses alpha", "symbol": "alpha" },
             "expect": {
                 "kind": "imports",
                 "candidate": { "file": "src/app.txt", "needle": "beta declaration" },
@@ -85,7 +85,7 @@
             "id": "s-path-symbol",
             "surface": "resolution",
             "note": "Exclusion written as path#symbol.",
-            "from": { "file": "src/app.txt", "needle": "gamma uses alpha" },
+            "from": { "file": "src/app.txt", "needle": "gamma uses alpha", "symbol": "alpha" },
             "expect": {
                 "kind": "same_name",
                 "candidate": { "file": "src/app.txt", "needle": "epsilon target" },
@@ -96,7 +96,7 @@
             "id": "s-pattern",
             "surface": "definition",
             "note": "Exclusion written as a pattern with a wildcard.",
-            "from": { "file": "src/app.txt", "needle": "gamma uses alpha" },
+            "from": { "file": "src/app.txt", "needle": "gamma uses alpha", "symbol": "alpha" },
             "expect": {
                 "file": "src/app.txt",
                 "needle": "delta site",
@@ -107,7 +107,7 @@
             "id": "s-text",
             "surface": "definition",
             "note": "Exclusion matched in the answer's free text, with a correct location.",
-            "from": { "file": "src/app.txt", "needle": "gamma uses alpha" },
+            "from": { "file": "src/app.txt", "needle": "gamma uses alpha", "symbol": "alpha" },
             "expect": {
                 "file": "src/app.txt",
                 "needle": "alpha declaration",
@@ -118,7 +118,7 @@
             "id": "s-not-scored",
             "surface": "definition",
             "note": "A key no rule uses is listed as not scored; a label key is not listed.",
-            "from": { "file": "src/app.txt", "needle": "gamma uses alpha" },
+            "from": { "file": "src/app.txt", "needle": "gamma uses alpha", "symbol": "alpha" },
             "expect": {
                 "kind": "string_key",
                 "file": "src/app.txt",
@@ -130,56 +130,63 @@
             "id": "s-empty",
             "surface": "definition",
             "note": "Answered, with no location.",
-            "from": { "file": "src/app.txt", "needle": "gamma uses alpha" },
+            "from": { "file": "src/app.txt", "needle": "gamma uses alpha", "symbol": "alpha" },
             "expect": { "file": "src/app.txt", "needle": "alpha declaration" }
         },
         {
             "id": "s-unsupported",
             "surface": "definition",
             "note": "The adapter says the tool cannot be asked this.",
-            "from": { "file": "src/app.txt", "needle": "gamma uses alpha" },
+            "from": { "file": "src/app.txt", "needle": "gamma uses alpha", "symbol": "alpha" },
             "expect": { "file": "src/app.txt", "needle": "alpha declaration" }
         },
         {
             "id": "s-error",
             "surface": "definition",
             "note": "The adapter reports that the tool failed.",
-            "from": { "file": "src/app.txt", "needle": "gamma uses alpha" },
+            "from": { "file": "src/app.txt", "needle": "gamma uses alpha", "symbol": "alpha" },
             "expect": { "file": "src/app.txt", "needle": "alpha declaration" }
         },
         {
             "id": "s-invalid",
             "surface": "definition",
             "note": "The answer is malformed.",
-            "from": { "file": "src/app.txt", "needle": "gamma uses alpha" },
+            "from": { "file": "src/app.txt", "needle": "gamma uses alpha", "symbol": "alpha" },
             "expect": { "file": "src/app.txt", "needle": "alpha declaration" }
         },
         {
             "id": "s-unanswered",
             "surface": "definition",
             "note": "The answer file has no entry for this task.",
-            "from": { "file": "src/app.txt", "needle": "gamma uses alpha" },
+            "from": { "file": "src/app.txt", "needle": "gamma uses alpha", "symbol": "alpha" },
             "expect": { "file": "src/app.txt", "needle": "alpha declaration" }
         },
         {
             "id": "s-unscorable-surface",
             "surface": "hover",
             "note": "No rule serves this surface yet.",
-            "from": { "file": "src/app.txt", "needle": "gamma uses alpha" },
+            "from": { "file": "src/app.txt", "needle": "gamma uses alpha", "symbol": "alpha" },
             "expect": { "contains": "alpha" }
         },
         {
             "id": "s-unscorable-count",
             "surface": "definition",
             "note": "A target with exact_count: what the count means depends on kind, so no rule scores it.",
-            "from": { "file": "src/app.txt", "needle": "gamma uses alpha" },
+            "from": { "file": "src/app.txt", "needle": "gamma uses alpha", "symbol": "alpha" },
             "expect": { "file": "src/app.txt", "needle": "alpha declaration", "exact_count": 2 }
+        },
+        {
+            "id": "s-no-symbol",
+            "surface": "definition",
+            "note": "States no from.symbol, so no adapter can be asked it: unscorable, even with a perfect answer.",
+            "from": { "file": "src/app.txt", "needle": "gamma uses alpha" },
+            "expect": { "file": "src/app.txt", "needle": "alpha declaration" }
         },
         {
             "id": "s-unresolved",
             "surface": "definition",
             "note": "The expected file is not in the checkout.",
-            "from": { "file": "src/app.txt", "needle": "gamma uses alpha" },
+            "from": { "file": "src/app.txt", "needle": "gamma uses alpha", "symbol": "alpha" },
             "expect": { "file": "src/absent.txt", "needle": "x" }
         }
     ]

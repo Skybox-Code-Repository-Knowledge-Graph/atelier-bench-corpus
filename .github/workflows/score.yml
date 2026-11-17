@@ -32,7 +32,8 @@ jobs:
         with:
           node-version: "22"
 
-      # No lane install: the scorer reads source files and tasks.json only. The php lane's
-      # vendor/ needles are reported UNRESOLVED here, which the tests expect.
-      - name: Resolver conformance, oracle and mutation checks over every lane, report format
-        run: node --test 'bench/score/test/*.test.mjs'
+      # No lane install and no tool install: the scorer reads source files and tasks.json only, and
+      # the adapter tests replay recorded replies. The php lane's vendor/ needles are reported
+      # UNRESOLVED here, which the tests expect.
+      - name: Scorer (resolver conformance, oracle and mutations over every lane, report format) and adapters (recorded replies)
+        run: node --test 'bench/score/test/*.test.mjs' 'bench/adapters/*/test/*.test.mjs'

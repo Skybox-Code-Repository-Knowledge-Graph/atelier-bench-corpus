@@ -59,7 +59,8 @@ test("unreadable or malformed inputs exit 2 and score nothing", () => {
 test("the oracle passes every scorable fixture task", () => {
     const oracle = buildOracle(LANE, tasks());
     const scored = scoreLane({ root: LANE, lane: "lane", tasks: tasks(), answersDoc: oracle });
-    const scorable = tasks().filter((candidate) => planTask(candidate).scorable && candidate.id !== "s-unresolved");
+    const scorable = tasks().filter((candidate) => planTask(candidate).scorable
+        && !["s-unresolved", "s-no-symbol"].includes(candidate.id));
     assert.equal(scored.summary.total.PASS, scorable.length);
     assert.equal(scored.summary.total.FAIL, 0);
 });
@@ -73,6 +74,16 @@ test("a lane-prefix exclusion needs repo scope to fire", () => {
     const laneOnly = scoreTask(task("s-lane-prefix"), { locations: [{ file: "src/app.txt", line: 1 }] }, { root: LANE, lane: "lane", scope: "lane" });
     assert.equal(laneOnly.verdict, "PASS");
     assert.deepEqual(laneOnly.notes, ["1 lane-prefix exclusion(s) not exercised, scope is lane"]);
+});
+
+test("results without a file and line count against the answer, never for it", () => {
+    const context = { root: LANE, lane: "lane", scope: "repo" };
+    const target = { file: "src/app.txt", line: 1 };
+    assert.equal(scoreTask(task("s-pass"), { locations: [target], unlocated: 0 }, context).verdict, "PASS");
+    const withUnlocated = scoreTask(task("s-pass"), { locations: [target], unlocated: 1 }, context);
+    assert.equal(withUnlocated.verdict, "FAIL");
+    assert.match(withUnlocated.detail, /1 result\(s\) that have no file and line/);
+    assert.equal(scoreTask(task("s-pass"), { locations: [target], unlocated: -1 }, context).verdict, "ERROR");
 });
 
 test("a declaration never passes by range, a known site does", () => {
