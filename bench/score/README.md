@@ -75,6 +75,27 @@ Many exclusions in the corpus are lane prefixes such as `php/`: the answer must 
 lane. They can only fire when the tool saw the other lanes, so they are checked for `scope: repo`
 and reported as not exercised for `scope: lane`.
 
+## The queried symbol
+
+A task's `from` names a line, and a line can hold several identifiers. `from.symbol` says which one
+the task asks about, exactly as written on that line and with no qualifier. `from.occurrence`
+(1-based) says which one when it appears more than once on the line, and is then required: two
+occurrences on a line are often two different symbols. The symbol is the alias where an alias is
+used and the member on a member access. It is `null` when the question has no single identifier,
+such as a name built at run time. `document_symbol`, `parse-negative` and `diagnostics` tasks ask
+about a file and carry neither key.
+
+An adapter takes the question from these keys and never from the answer line, which would leak the
+answer into the question. `lib/symbol.mjs` gives it the column:
+
+```js
+import { symbolColumn } from "./lib/symbol.mjs";
+const column = symbolColumn(lineText, task.from);   // 0-based, or -1 when no symbol is stated
+```
+
+The lanes are being annotated (issue #145). `test/symbol.test.mjs` fails on any symbol that is
+stated wrongly, and counts the tasks that state none; it becomes strict once every lane has them.
+
 ## Verdicts
 
 | Verdict | Meaning |
