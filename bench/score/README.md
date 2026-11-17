@@ -63,16 +63,16 @@ One answer:
   a member fails. A tool that reports the start of a decorated or attributed declaration is
   normalized by its adapter: move to the first line, at or after the reported start, that contains
   the name the tool reported.
-- **A site** (a use, a call site) that the key allows beside a target, or a call site under
-  `call_hierarchy`, is matched by containment. `line` to `end_line` may be the range of the function
-  the tool reported as the caller; it covers the site when the site's line is inside it. The
-  `references` rule is the exception: there the sites are the whole answer, and each is matched by
-  its line (see References).
+- **A site** that the key allows beside a target (`known_sites`) is matched by its line too: a
+  range that starts above it is an enclosing scope, not the site, and counts as an unexpected
+  location. Only a call site under `call_hierarchy` is matched by containment, where `line` to
+  `end_line` is the range of the function the tool reported as the caller; that is why the
+  `call_hierarchy` rules are recall-only (see Recall rules).
 - **A few targets are anchored inside their declaration**, because the declaration line is not
-  unique in its file or because the answer is a statement. They are listed by lane and id in
-  `TARGET_INSIDE_SYMBOL` in `lib/plan.mjs` and matched by containment, like a site. The list was
-  found by reading the targets, so a target missing from it fails a tool that returns the
-  declaration line; report one when you find it.
+  unique in its file or because the answer is a statement. No line of their key names the
+  declaration, and matching them by containment would pass any range that covers the anchor, one
+  over the whole file included, so they are `UNSCORABLE` (`TARGET_INSIDE_SYMBOL` in
+  `lib/plan.mjs`) until their key anchors a line a tool can return.
 
 ### Scope
 
@@ -143,10 +143,13 @@ fails when one is stated wrongly or missing, so a new task must carry it.
 | `UNSCORABLE` | No rule in this version of the scorer covers the task, or the task states no `from.symbol` (its lane is not annotated yet, or the task is a misfit), so no adapter can be asked it |
 | `UNRESOLVED` | An expected file is not in the checkout (the php lane's `vendor/` needles before `composer install`) |
 
-The report states how many tasks this scorer can score, then one line per rule class (see Rules):
-passed of scorable tasks, and passed of answered tasks. The second ratio keeps the tasks a tool
-was not asked visible without counting them for or against it. The classes are separate measures
-and are never summed.
+The report states how many tasks this scorer can score, then one line per rule class (see Rules)
+and adapter protocol (the answer file's `protocol`, per surface where it differs): passed of
+scorable tasks (the headline: a question the adapter did not ask counts as not passed), passed of
+the questions the tool was asked (its errors and "unsupported" replies count as asked), and how
+many were not asked. The per-surface table has no total row, since it would add exact and
+recall-only verdicts. The lines are separate measures and are never summed: an exact pass under one protocol does not mean what it means under another, and a
+recall-only pass means less than either. The JSON report carries them as `summary.columns`.
 
 ## Rules in this version
 

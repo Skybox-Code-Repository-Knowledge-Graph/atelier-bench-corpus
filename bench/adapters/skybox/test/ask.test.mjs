@@ -281,6 +281,42 @@ test("anchored references: CALLS and USES edges into the node at the from line, 
     assert.deepEqual(moved.locations, [], "a same-named node elsewhere does not lend its sites");
 });
 
+test("anchored implementation lists: implementors at any depth into the subject; parents out of it", async () => {
+    const from = { file: "contracts/report.go", needle: "type ReportContract interface {", line: 37, text: "type ReportContract interface {", symbol: "ReportContract" };
+    const subject = TABLE(["n.filePath", "n.startLine", "n.endLine"], ["contracts/report.go", "37", "45"]);
+    const found = TABLE(["c.filePath", "c.startLine", "c.endLine"], ["reports/b.go", "19", "30"], ["reports/a.go", "12", "20"]);
+    const header = ["c.id", "c.filePath", "c.startLine", "c.endLine"];
+    const walk = (args) => {
+        if (!args.query.includes("t.id IN")) {
+            return subject;
+        }
+        if (args.query.includes("'Class:C'")) {
+            return TABLE(header);
+        }
+        if (args.query.includes("'Class:B'")) {
+            return TABLE(header, ["Class:C", "reports/c.go", "19", "30"], ["Class:A", "reports/a.go", "12", "20"]);
+        }
+        return TABLE(header, ["Class:B", "base/b.go", "5", "9"], ["Class:A", "reports/a.go", "12", "20"]);
+    };
+    for (const surface of ["implementation", "cardinality"]) {
+        const { call, calls } = fake({ context: RESOLVED, cypher: walk });
+        const answer = await askSkybox({ id: "t", surface, kind: null, direction: null, from }, call);
+        assert.match(calls[2].args.query, /MATCH \(c\)-\[r:CodeRelation\]->\(t\) WHERE t\.id IN \['[^']+'\] AND \(r\.type = 'IMPLEMENTS' OR r\.type = 'EXTENDS'\) RETURN DISTINCT c\.id/, `${surface}: one step at a time, IMPLEMENTS and EXTENDS only`);
+        assert.equal(calls.length, 5, "context, the subject's range, then steps until one finds nothing new");
+        assert.match(calls[3].args.query, /IN \['Class:A', 'Class:B'\]/, "the next step starts from every new node, in id order");
+        assert.deepEqual(answer.locations, [
+            { file: "base/b.go", line: 5, end_line: 9 },
+            { file: "reports/a.go", line: 12, end_line: 20 },
+            { file: "reports/c.go", line: 19, end_line: 30 },
+        ], "every depth, each node once");
+    }
+    const { call, calls } = fake({ context: RESOLVED, cypher: (args) => (args.query.includes("(p)") ? found : subject) });
+    const parents = await askSkybox({ id: "t", surface: "multi-parent", kind: null, direction: null, from }, call);
+    assert.match(calls[2].args.query, /MATCH \(s\)-\[r:CodeRelation\]->\(p\) WHERE s\.id = '[^']+' AND \(r\.type = 'IMPLEMENTS' OR r\.type = 'EXTENDS'\)/, "multi-parent: the direct parents");
+    assert.equal(parents.locations.length, 2);
+    assert.match(parents.note, /its own IMPLEMENTS and EXTENDS edges$/);
+});
+
 test("a php sigil is dropped from the name skybox is asked, and only there", async () => {
     assert.equal(nameInIndex("$statusFilter"), "statusFilter");
     assert.equal(nameInIndex("statusFilter"), "statusFilter");

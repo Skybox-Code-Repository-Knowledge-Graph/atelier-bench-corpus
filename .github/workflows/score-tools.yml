@@ -51,7 +51,7 @@ jobs:
           npm install --prefix "$RUNNER_TEMP/skybox" --no-save --no-audit --no-fund "@skylence-ai/skybox@${SKYBOX_VERSION}"
           "$RUNNER_TEMP/skybox/node_modules/.bin/skybox" --version
 
-      - name: Ask (lane scope; raw protocol, anchored for hover, call_hierarchy and references)
+      - name: Ask (lane scope; raw protocol, anchored for the other surfaces)
         run: >
           node bench/adapters/skybox/run.mjs
           --lane "$LANE"
@@ -63,11 +63,11 @@ jobs:
         run: |
           node bench/score/score.mjs --lane "$LANE" --answers "skybox-$LANE.json" > "skybox-$LANE.report.txt"
           node bench/score/score.mjs --lane "$LANE" --answers "skybox-$LANE.json" --format json > "skybox-$LANE.report.json"
-          counts=$(node -e 'const c=require(process.argv[1]).summary.classes;const line=(n,k)=>`${n}: ${k.asked} asked, ${k.notAsked} not asked, of ${k.scorable} scorable`;console.log(`${line("exact",c.exact)}; ${line("recall-only",c.recall)}`)' "$PWD/skybox-$LANE.report.json")
+          counts=$(node -e 'const cs=require(process.argv[1]).summary.columns;console.log(cs.map((k)=>`${k.class==="exact"?"exact":"recall-only"}${k.protocol?", "+k.protocol:""}: ${k.asked} asked, ${k.notAsked} not asked, of ${k.scorable} scorable`).join("; "))' "$PWD/skybox-$LANE.report.json")
           {
             echo "### skybox ${SKYBOX_VERSION}, lane ${LANE}, scope lane, corpus ${GITHUB_SHA::7}"
             echo
-            echo "Protocol raw (definition, resolution, import-precision): lookup by bare name, skybox is asked \`context(name)\` with the task's \`from.symbol\` and never sees the \`from\` line, so a name that is not unique in the lane is answered with every candidate and fails. Protocol anchored (hover, call_hierarchy, references): asked within the \`from\` file, the node at the \`from\` line is the subject. The exact and recall-only lines are separate measures and are never added up. ${counts}."
+            echo "Protocol raw (definition, resolution, import-precision): lookup by bare name, skybox is asked \`context(name)\` with the task's \`from.symbol\` and never sees the \`from\` line, so a name that is not unique in the lane is answered with every candidate, which fails unless the key lists the others as known sites. Protocol anchored (hover, call_hierarchy, references, implementation, cardinality, multi-parent): asked within the \`from\` file, the node at the \`from\` line is the subject. Each line is one rule class and one protocol; the lines are separate measures and are never added up. ${counts}."
             echo
             echo '```'
             sed -n '/^surface /,$p' "skybox-$LANE.report.txt"
