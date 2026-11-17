@@ -135,6 +135,8 @@ Semantics come from the rule table in `lib/plan.mjs`, never from the shape of an
 the same key means different things in different tasks. A task is scored only when a rule names
 its surface and keys. Every key a rule does not use is printed per task as `not scored`.
 
+### Exact rules
+
 | Rule | Surface | Needs | Pass when |
 | --- | --- | --- | --- |
 | `definition/target` | `definition` | `file`, `needle` | the target declaration is returned |
