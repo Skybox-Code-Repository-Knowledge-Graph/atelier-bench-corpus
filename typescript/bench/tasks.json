@@ -469,6 +469,20 @@
                         "file": "packages/bench/src/reports/weeklyRevenueReport.ts",
                         "needle": "export class WeeklyRevenueReport extends AbstractPeriodicReport {"
                     }
+                ],
+                "optional_sites": [
+                    {
+                        "file": "packages/bench/src/support/abstractReport.ts",
+                        "needle": "export abstract class AbstractReport"
+                    },
+                    {
+                        "file": "packages/bench/src/contracts/compositeContract.ts",
+                        "needle": "export interface CompositeContract extends ReportContract"
+                    },
+                    {
+                        "file": "packages/bench/src/support/abstractPeriodicReport.ts",
+                        "needle": "export abstract class AbstractPeriodicReport extends AbstractReport"
+                    }
                 ]
             }
         },
@@ -580,6 +594,12 @@
                         "file": "packages/bench/src/reports/weeklyRevenueReport.ts",
                         "needle": "export class WeeklyRevenueReport extends AbstractPeriodicReport {"
                     }
+                ],
+                "optional_sites": [
+                    {
+                        "file": "packages/bench/src/support/abstractPeriodicReport.ts",
+                        "needle": "export abstract class AbstractPeriodicReport extends AbstractReport"
+                    }
                 ]
             }
         },
@@ -673,6 +693,12 @@
                     {
                         "file": "packages/bench/src/notifiers/webhookNotifier.ts",
                         "needle": "export class WebhookNotifier extends AbstractNotifier {"
+                    }
+                ],
+                "optional_sites": [
+                    {
+                        "file": "packages/bench/src/support/abstractNotifier.ts",
+                        "needle": "export abstract class AbstractNotifier implements NotifierContract"
                     }
                 ]
             }
@@ -1679,6 +1705,20 @@
                     {
                         "file": "packages/bench/src/reports/weeklyRevenueReport.ts",
                         "needle": "export class WeeklyRevenueReport extends AbstractPeriodicReport {"
+                    }
+                ],
+                "optional_sites": [
+                    {
+                        "file": "packages/bench/src/support/abstractReport.ts",
+                        "needle": "export abstract class AbstractReport"
+                    },
+                    {
+                        "file": "packages/bench/src/contracts/compositeContract.ts",
+                        "needle": "export interface CompositeContract extends ReportContract"
+                    },
+                    {
+                        "file": "packages/bench/src/support/abstractPeriodicReport.ts",
+                        "needle": "export abstract class AbstractPeriodicReport extends AbstractReport"
                     }
                 ]
             }
