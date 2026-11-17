@@ -37,7 +37,7 @@ node bench/check-matrix.mjs          # expect: matrix: OK (<N> canonical ids, <k
 - [ ] The lane's `notes` states the counting rule and defines every `kind` string the lane introduces.
 - [ ] The domain matches: same breadth counts, and every HTTP route, command and job of the shared set is present. Seed numbers match too, unless the lane README records a framework-native seed. Lane-only extras are listed in the lane README.
 
-      Shared set: routes `GET /health`, `GET /report/{reference}`, `GET /api/orders`, `POST /api/orders/{key}/notes`, `GET /api/reports/{slug}`; commands export-report and recalculate-inventory; the recalculate-inventory job.
+  Shared set: routes `GET /health`, `GET /report/{reference}`, `GET /api/orders`, `POST /api/orders/{key}/notes`, `GET /api/reports/{slug}`; commands export-report and recalculate-inventory; the recalculate-inventory job.
 - [ ] No tool name appears anywhere in `tasks.json`.
 
 ```bash
