@@ -17,7 +17,7 @@ use Illuminate\Database\Eloquent\Builder;
 /**
  * Filament-convention coverage: enum badge columns via enum methods, a
  * domain action calling RepairOrder::complete() (a known caller for the
- * symbol_card hub), a route() URL action, and a scope-backed filter.
+ * call-hierarchy hub), a route() URL action, and a scope-backed filter.
  */
 class RepairOrdersTable
 {
