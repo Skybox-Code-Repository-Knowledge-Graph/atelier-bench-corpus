@@ -160,7 +160,7 @@ test("null symbols are unsupported; path segments, other surfaces and missing sy
     const { call, calls } = fake({});
     assert.equal((await askSkybox(question({ symbol: null }), call)).status, "unsupported");
     assert.equal(await askSkybox(question({ symbol: "models", text: '\t"atelier.example/lane/core/models"' }), call), undefined);
-    assert.equal(await askSkybox(question({ symbol: "Sum", text: "Sum" }, "document_symbol"), call), undefined);
+    assert.equal(await askSkybox(question({ symbol: "Sum", text: "Sum" }, "parse-negative"), call), undefined);
     assert.equal(await askSkybox(question({ text: "Sum" }), call), undefined, "a task with no symbol is not asked");
     assert.equal(calls.length, 0);
 });
@@ -315,6 +315,19 @@ test("anchored implementation lists: implementors at any depth into the subject;
     assert.match(calls[2].args.query, /MATCH \(s\)-\[r:CodeRelation\]->\(p\) WHERE s\.id = '[^']+' AND \(r\.type = 'IMPLEMENTS' OR r\.type = 'EXTENDS'\)/, "multi-parent: the direct parents");
     assert.equal(parents.locations.length, 2);
     assert.match(parents.note, /its own IMPLEMENTS and EXTENDS edges$/);
+});
+
+test("file protocol (document_symbol): every node with a position in the file, as stored, by line then name", async () => {
+    const question = { id: "t", surface: "document_symbol", kind: null, direction: null, from: { file: "core/models/order.go", needle: "package models", line: 1, text: "package models" } };
+    const rows = TABLE(["n.name", "n.startLine"], ["Total", "40"], ["Order", "10"], ["ID", "11"], ["Order", "10"], ["null", "12"]);
+    const { call, calls } = fake({ cypher: rows });
+    const answer = await askSkybox(question, call);
+    assert.equal(calls.length, 1, "one cypher call, no symbol lookup");
+    assert.match(calls[0].args.query, /MATCH \(n\) WHERE n\.filePath = 'core\/models\/order\.go' AND n\.startLine IS NOT NULL RETURN n\.name, n\.startLine/);
+    assert.deepEqual(answer.names, ["Order", "Order", "ID", "Total"], "unedited: a doubled node stays doubled");
+    assert.match(answer.note, /1 without a name/);
+    const empty = await askSkybox(question, fake({ cypher: "*(no rows returned)*\n\n---\n**Next:** x" }).call);
+    assert.deepEqual(empty.names, [], "no node: an empty answer, not unsupported");
 });
 
 test("a php sigil is dropped from the name skybox is asked, and only there", async () => {

@@ -24,6 +24,9 @@ export const ASKED_SURFACES = new Set(["definition", "resolution", "import-preci
 /** Surfaces asked under "anchored". */
 export const ANCHORED_SURFACES = new Set(["hover", "call_hierarchy", "references", "implementation", "cardinality", "multi-parent"]);
 
+/** Surfaces asked under "file": the question names a file. */
+export const FILE_SURFACES = new Set(["document_symbol"]);
+
 /** Kinds whose answer is a relation of the symbol, not its definition. Not asked under "raw". */
 /**
  * Questions whose answer is a relation of the symbol, not its definition, keyed `surface:kind`. Not
@@ -220,8 +223,31 @@ async function ask(call, tool, args) {
  * Returns an answer in the corpus answer format, or undefined when this adapter does not ask the
  * question (the task is then left unanswered, which is the honest record).
  */
+/**
+ * Protocol "file" (document_symbol): the question names a file, not a symbol. One `cypher` call for
+ * every node skybox records in that file with a source position (the schema's File, Folder,
+ * Community and Process nodes have none, so the document itself and graph groupings are left out),
+ * each named as skybox stores it, ordered by start line, then name. Nothing is deduplicated or
+ * renamed: two nodes for one declaration are two names. A node without a name cannot be listed and
+ * is counted in the note. No node at all is `names: []`.
+ */
+async function askFile(question, call) {
+    const rows = parseCypherRows(await ask(call, "cypher", {
+        query: `MATCH (n) WHERE n.filePath = ${cypherString(question.from.file)} AND n.startLine IS NOT NULL RETURN n.name, n.startLine`,
+    }));
+    const named = rows.filter(([name]) => name && name !== "null");
+    const entries = named
+        .map(([name, start]) => ({ name, line: /^\d+$/.test(start ?? "") ? Number(start) : Number.MAX_SAFE_INTEGER }))
+        .sort((left, right) => left.line - right.line || (left.name < right.name ? -1 : left.name > right.name ? 1 : 0));
+    const unnamed = rows.length - named.length;
+    return { names: entries.map((entry) => entry.name), note: `${entries.length} node(s) with a position in ${question.from.file}${unnamed > 0 ? `, ${unnamed} without a name` : ""}` };
+}
+
 export async function askSkybox(question, call) {
     try {
+        if (FILE_SURFACES.has(question.surface)) {
+            return await askFile(question, call);
+        }
         if (ANCHORED_SURFACES.has(question.surface)) {
             return await askAnchored(question, call);
         }
