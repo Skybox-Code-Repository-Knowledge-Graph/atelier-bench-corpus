@@ -185,7 +185,8 @@ For all four:
 An exact rule. The sites are every known site and every line of each `repeated_sites` group, and
 `exact_count` must equal their number (`test/sites.test.mjs` holds every lane to it). A site is a
 line, so each returned location is matched by its `line` alone: a range stands for its first line,
-and one range over a function or a file answers none of the sites inside it. Two lines are
+and one range over a function or a file answers none of the sites inside it. A range whose first
+line is itself a site (a function whose signature names the symbol) does match that one site. Two lines are
 neutral, returned or not: the line the question is asked from (a tool may list the declaration
 among its references) and each optional site. Any other location, or a result without a file and
 line, fails the answer, as does a `must_not_include` hit. A task that still carries a floor
