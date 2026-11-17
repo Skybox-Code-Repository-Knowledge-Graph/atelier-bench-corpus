@@ -9,8 +9,12 @@ import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import process from "node:process";
 
+import { tmpdir } from "node:os";
+import { mkdtempSync, writeFileSync } from "node:fs";
+
 import { buildOracle } from "../oracle.mjs";
-import { planTask } from "../lib/plan.mjs";
+import { LANES, TARGET_INSIDE_SYMBOL, planTask } from "../lib/plan.mjs";
+import { resolveNeedle } from "../lib/resolve.mjs";
 import { classifyExclusion, scoreLane, scoreTask, validateAnswers } from "../lib/score.mjs";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
@@ -109,6 +113,43 @@ test("a target anchored inside its declaration matches by containment, in that l
     const method = { locations: [{ file: anchored.expect.file, line: line - 1, end_line: line }] };
     assert.equal(scoreTask(anchored, method, { root, lane: "python", scope: "repo" }).verdict, "PASS");
     assert.equal(scoreTask(anchored, method, { root, lane: "go", scope: "repo" }).verdict, "FAIL");
+});
+
+test("oracle.mjs output is accepted by score.mjs and passes every scorable task", () => {
+    const oracle = spawnSync(process.execPath, [resolve(HERE, "..", "oracle.mjs"), "--root", LANE], { encoding: "utf8" });
+    assert.equal(oracle.status, 0, oracle.stderr);
+
+    const file = join(mkdtempSync(join(tmpdir(), "score-oracle-")), "oracle.json");
+    writeFileSync(file, oracle.stdout);
+    const scored = run("--root", LANE, "--answers", file);
+    assert.equal(scored.status, 0, scored.stderr);
+    assert.match(scored.stdout, /passed: (\d+) of \1 scorable \(100\.0%\)/);
+});
+
+test("every target matched by containment names a task that exists and is scorable", () => {
+    const repo = resolve(HERE, "..", "..", "..");
+    for (const key of TARGET_INSIDE_SYMBOL) {
+        const [lane, id] = key.split(":");
+        assert.ok(LANES.includes(lane), `${key}: unknown lane`);
+        const root = join(repo, lane);
+        const found = JSON.parse(readFileSync(join(root, "bench", "tasks.json"), "utf8")).tasks.find((candidate) => candidate.id === id);
+        assert.ok(found, `${key}: no such task; the id was renamed or removed`);
+        const plan = planTask(found, lane);
+        assert.equal(plan.scorable, true, `${key}: ${plan.reason}`);
+        assert.equal(resolveNeedle(root, plan.target).ok, true, `${key}: target does not resolve`);
+    }
+});
+
+test("a kind whose key names two places is unscorable, and a near miss says why it failed", () => {
+    const repo = resolve(HERE, "..", "..", "..");
+    const rust = JSON.parse(readFileSync(join(repo, "rust", "bench", "tasks.json"), "utf8")).tasks;
+    const generated = rust.find((candidate) => candidate.expect.kind === "build_generated");
+    assert.equal(planTask(generated, "rust").scorable, false);
+    assert.match(planTask(generated, "rust").reason, /kind build_generated/);
+
+    const enclosing = { locations: [{ file: "src/app.txt", line: 1, end_line: 7 }] };
+    const outcome = scoreTask(task("s-wrong-line"), enclosing, { root: LANE, lane: "lane", scope: "repo" });
+    assert.match(outcome.detail, /a returned range covers the target line/);
 });
 
 test("must_not_include entries are classified by form", () => {

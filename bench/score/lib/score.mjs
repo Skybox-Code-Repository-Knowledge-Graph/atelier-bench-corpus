@@ -218,7 +218,10 @@ export function scoreTask(task, answer, context) {
     } else if (!read.locations.some((location) => isTarget(location, expected))) {
         const got = read.locations[0];
         const more = read.locations.length > 1 ? ` and ${read.locations.length - 1} more` : "";
-        reasons.push(`target not returned: expected ${expected.file}:${expected.line}, got ${got.file}:${got.line}${more}`);
+        const covered = read.locations.some((location) => coversSite(location, expected))
+            ? "; a returned range covers the target line, but a declaration is matched by its exact line"
+            : "";
+        reasons.push(`target not returned: expected ${expected.file}:${expected.line}, got ${got.file}:${got.line}${more}${covered}`);
     } else if (unexpected.length > 0) {
         reasons.push(`ambiguous: target returned with ${unexpected.length} unexpected location(s), first ${unexpected[0].file}:${unexpected[0].line}`);
     }

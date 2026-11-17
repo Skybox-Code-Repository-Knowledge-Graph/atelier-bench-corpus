@@ -113,9 +113,9 @@ For all four:
   key itself lists it.
 - A task that carries `exact_count` beside a target is `UNSCORABLE`: the count is an overload
   count in one task and a parameter count in another.
-- `kind` and `resolution` are labels and are never scored. Every `kind` these four rules cover was
-  read against its definition in the lane's `notes`: in each, the target is the answer the key
-  states.
+- `kind` and `resolution` are labels and are never scored. The kinds these four rules cover were
+  reviewed against the lanes' `notes`. One, `build_generated`, is excluded (`KIND_UNSCORABLE` in
+  `lib/plan.mjs`): its key names two places, so a tool that returns either one alone would fail.
 
 Not covered yet, reported `UNSCORABLE`: `references`, `implementation`, `cardinality`,
 `multi-parent`, `direction`, `call_hierarchy`, `hover`, `document_symbol`, `parse-negative`,

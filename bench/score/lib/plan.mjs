@@ -13,6 +13,11 @@ export const LANES = ["php", "rust", "typescript", "javascript", "python", "go"]
 /** Descriptive keys. They label a task; no rule ever scores them and they are not reported. */
 export const LABEL_KEYS = new Set(["kind", "resolution"]);
 
+/** Kinds no single-target rule can score, with the reason. A task of such a kind is UNSCORABLE. */
+export const KIND_UNSCORABLE = {
+    build_generated: "the key names two places, the include! line and the build.rs function",
+};
+
 const candidate = (expect) => expect.candidate;
 const fileAndNeedle = (expect) => ({ file: expect.file, needle: expect.needle });
 
@@ -91,6 +96,9 @@ export function planTask(task, lane = null) {
         const blocked = rule.forbids.filter((key) => key in expect);
         if (blocked.length > 0) {
             return { scorable: false, reason: `target plus ${blocked.join(", ")}: meaning depends on kind` };
+        }
+        if (typeof expect.kind === "string" && Object.hasOwn(KIND_UNSCORABLE, expect.kind)) {
+            return { scorable: false, reason: `kind ${expect.kind}: ${KIND_UNSCORABLE[expect.kind]}` };
         }
 
         const target = rule.target(expect);
