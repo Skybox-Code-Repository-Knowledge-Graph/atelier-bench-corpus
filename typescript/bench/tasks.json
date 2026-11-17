@@ -2495,13 +2495,13 @@
         {
             "id": "docsym-repair-order",
             "surface": "document_symbol",
-            "note": "Symbol listing for the RepairOrder model file. N = 24 named symbols at the base SHA: OrderPart + 4 properties, StatusChange + 3 properties, RepairOrderBase + 5 properties + constructor, RepairOrder + 7 members. min_symbols = floor(0.75 * 24) = 18.",
+            "note": "Symbol listing for the RepairOrder model file. N = 27 named symbols at the base SHA: OrderPart + 4 properties, StatusChange + 3 properties, RepairOrderBase + 5 properties + 3 constructor parameter properties (id, customerId, deviceId) + constructor, RepairOrder + 7 members. min_symbols = floor(0.75 * 27) = 20.",
             "from": {
                 "file": "packages/core/src/models/repairOrder.ts",
                 "needle": "export class RepairOrder extends withReference(RepairOrderBase) {"
             },
             "expect": {
-                "min_symbols": 18,
+                "min_symbols": 20,
                 "symbols": [
                     "OrderPart",
                     "partId",
@@ -2518,6 +2518,9 @@
                     "laborMinutes",
                     "parts",
                     "log",
+                    "id",
+                    "customerId",
+                    "deviceId",
                     "constructor",
                     "RepairOrder",
                     "transitionTo",
