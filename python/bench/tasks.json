@@ -490,7 +490,8 @@
             "note": "Generator method: `for order in self` calls __iter__, which yields.",
             "from": {
                 "file": "atelier_bench/dataset.py",
-                "needle": "for order in self:"
+                "needle": "for order in self:",
+                "symbol": null
             },
             "expect": {
                 "file": "atelier_bench/dataset.py",
