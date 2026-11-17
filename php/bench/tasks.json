@@ -847,11 +847,14 @@
             "note": "The lane-local Money cast (see lane-local-money): three `use` imports plus three cast-map entries.",
             "from": { "file": "app/Casts/Money.php", "needle": "class Money implements CastsAttributes", "symbol": "Money" },
             "expect": {
-                "min_references": 6,
+                "exact_count": 6,
                 "known_sites": [
-                    { "file": "app/Models/RepairOrder.php", "needle": "'subtotal_cents' => Money::class," },
+                    { "file": "app/Models/Invoice.php", "needle": "use App\\Casts\\Money;" },
                     { "file": "app/Models/Invoice.php", "needle": "'total_cents' => Money::class," },
-                    { "file": "app/Models/Part.php", "needle": "'unit_price_cents' => Money::class," }
+                    { "file": "app/Models/Part.php", "needle": "use App\\Casts\\Money;" },
+                    { "file": "app/Models/Part.php", "needle": "'unit_price_cents' => Money::class," },
+                    { "file": "app/Models/RepairOrder.php", "needle": "use App\\Casts\\Money;" },
+                    { "file": "app/Models/RepairOrder.php", "needle": "'subtotal_cents' => Money::class," }
                 ]
             }
         },
@@ -861,9 +864,10 @@
             "note": "DatabaseSeeder is the php lane's frozen Dataset (see lane-local-dataset); the in-code references are the delegating CanonicalSeeder and the canonical feature test.",
             "from": { "file": "database/seeders/DatabaseSeeder.php", "needle": "class DatabaseSeeder extends Seeder", "symbol": "DatabaseSeeder" },
             "expect": {
-                "min_references": 3,
+                "exact_count": 3,
                 "known_sites": [
                     { "file": "database/seeders/CanonicalSeeder.php", "needle": "$this->call(DatabaseSeeder::class);" },
+                    { "file": "tests/Feature/CanonicalSurfaceTest.php", "needle": "use Database\\Seeders\\DatabaseSeeder;" },
                     { "file": "tests/Feature/CanonicalSurfaceTest.php", "needle": "$this->seed(DatabaseSeeder::class);" }
                 ]
             }
@@ -874,10 +878,16 @@
             "note": "Eight canonical summaries call the row helper once each; nothing else constructs a ReportRow.",
             "from": { "file": "app/Support/Canonical/Reporting/ReportRow.php", "needle": "public static function rowFromCents(string $label, int $cents): self", "symbol": "rowFromCents" },
             "expect": {
-                "min_references": 8,
+                "exact_count": 8,
                 "known_sites": [
                     { "file": "app/Support/Canonical/Reporting/Summaries/CashSummary.php", "needle": "return [ReportRow::rowFromCents('cash on hand', 125000)];" },
-                    { "file": "app/Support/Canonical/Reporting/Summaries/TaxSummary.php", "needle": "return [ReportRow::rowFromCents('tax collected', 22150)];" }
+                    { "file": "app/Support/Canonical/Reporting/Summaries/DiscountSummary.php", "needle": "return [ReportRow::rowFromCents('discounts given', 6750)];" },
+                    { "file": "app/Support/Canonical/Reporting/Summaries/LaborSummary.php", "needle": "return [ReportRow::rowFromCents('labor billed', 84500)];" },
+                    { "file": "app/Support/Canonical/Reporting/Summaries/PartsSummary.php", "needle": "return [ReportRow::rowFromCents('parts sold', 61200)];" },
+                    { "file": "app/Support/Canonical/Reporting/Summaries/PayrollSummary.php", "needle": "return [ReportRow::rowFromCents('technician payroll', 47300)];" },
+                    { "file": "app/Support/Canonical/Reporting/Summaries/RefundSummary.php", "needle": "return [ReportRow::rowFromCents('refunds issued', 9800)];" },
+                    { "file": "app/Support/Canonical/Reporting/Summaries/TaxSummary.php", "needle": "return [ReportRow::rowFromCents('tax collected', 22150)];" },
+                    { "file": "app/Support/Canonical/Reporting/Summaries/WarrantySummary.php", "needle": "return [ReportRow::rowFromCents('warranty cost', 15400)];" }
                 ]
             }
         },
@@ -887,10 +897,12 @@
             "note": "Single fan-in constant for the 24 reports, mirroring RuleRegistry::RULES; read by the registry's own accessors and by the canonical feature test.",
             "from": { "file": "app/Bench/Reports/ReportRegistry.php", "needle": "public const array REPORTS = [", "symbol": "REPORTS" },
             "expect": {
-                "min_references": 3,
+                "exact_count": 4,
                 "known_sites": [
                     { "file": "app/Bench/Reports/ReportRegistry.php", "needle": "return self::REPORTS;" },
-                    { "file": "tests/Feature/CanonicalSurfaceTest.php", "needle": "$this->assertCount(24, ReportRegistry::REPORTS);" }
+                    { "file": "app/Bench/Reports/ReportRegistry.php", "needle": "return count(self::REPORTS);" },
+                    { "file": "tests/Feature/CanonicalSurfaceTest.php", "needle": "$this->assertCount(24, ReportRegistry::REPORTS);" },
+                    { "file": "tests/Feature/CanonicalSurfaceTest.php", "needle": "$this->assertSame(ReportRegistry::REPORTS, ReportRegistry::all());" }
                 ]
             }
         },
@@ -1072,9 +1084,10 @@
             "from": { "file": "app/Livewire/StatusBoard.php", "needle": "#[On('note-added')]", "symbol": "note-added" },
             "expect": {
                 "kind": "name_only",
-                "min_references": 3,
+                "exact_count": 3,
                 "known_sites": [
                     { "file": "app/Livewire/NoteComposer.php", "needle": "$this->dispatch('note-added', orderId: $this->order->id);" },
+                    { "file": "app/Livewire/StatusBoard.php", "needle": "#[On('note-added')]" },
                     { "file": "tests/Feature/NoteComposerTest.php", "needle": "->assertDispatched('note-added', orderId: $order->id);" }
                 ]
             }
