@@ -221,6 +221,20 @@ values (instances, object literals, macro arms); go `impl-structural-no-assertio
 values); and the method lists of go `card-embedded-promotion`, rust `def-async-trait-method` and
 php `impl-trait-abstract`.
 
+### Document symbols
+
+| Rule | Surface | Needs | Pass when |
+| --- | --- | --- | --- |
+| `document_symbol/names` | `document_symbol` | `symbols` | the answer's `names` are the file's symbol names, and nothing else |
+
+An exact rule. `symbols` lists every named symbol the file declares, at any nesting depth, as each
+lane's `notes` count them (#168). The answer's `names` must equal that list as a multiset: a name
+the file declares twice is returned twice, and the order is not judged, since tools nest containers
+and flatten them in different orders. `min_symbols` and `must_include` are reported as not scored.
+The names are compared as written, so a container a tool labels differently from the key fails:
+rust impl blocks are keyed with rust-analyzer's labels (`impl RepairOrder`,
+`impl HasReference for RepairOrder`).
+
 ### Recall rules
 
 | Rule | Surface | Needs | Pass when |
@@ -236,8 +250,8 @@ an `exact` line and a `recall-only` line, and the two are never added up. `min_i
 as `not scored`: tools count callers per call site or per calling function, and the key does not
 say which.
 
-Not covered yet, reported `UNSCORABLE`: `direction`, `document_symbol`, `parse-negative`,
-`diagnostics`, and tasks whose only expectation is a count.
+Not covered yet, reported `UNSCORABLE`: `direction`, `parse-negative`, `diagnostics`, and tasks
+whose only expectation is a count.
 
 ### `must_not_include`
 

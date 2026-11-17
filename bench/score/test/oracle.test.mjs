@@ -85,6 +85,10 @@ for (const lane of LANES) {
             counts.byCheck[plan.check] = (counts.byCheck[plan.check] ?? 0) + 1;
             const label = `${lane}:${task.id}`;
 
+            if (plan.check === "names") {
+                checkNamesRule(task, plan, answer, context, label);
+                continue;
+            }
             if (plan.check === "sites") {
                 checkSitesRule(task, plan, answer, context, label, counts);
                 continue;
@@ -152,11 +156,23 @@ for (const lane of LANES) {
 }
 
 /**
- * The recall rules ("contains", "callees", "callers"): the oracle passes, a missing or moved entry
- * fails, and each excluded entry fails. Their known limit is pinned too: an answer that returns more
- * than the key lists (extra text, extra locations, one range over a whole file) passes, which is why
- * these rules are reported in their own column.
+ * The exact rule "names" (document_symbol): the oracle passes, and so does it in reverse order (order
+ * is not judged); one name missing, one extra name, one name returned twice, no names, and a location
+ * list without names each fail.
  */
+function checkNamesRule(task, plan, answer, context, label) {
+    const verdict = (candidate) => scoreTask(task, candidate, context).verdict;
+    const names = answer.names;
+    assert.equal(verdict(answer), "PASS", `${label} oracle`);
+    assert.equal(verdict({ names: [...names].reverse() }), "PASS", `${label} order is not judged`);
+    assert.equal(verdict({ names: names.slice(1) }), "FAIL", `${label} one name missing`);
+    assert.equal(verdict({ names: [...names, "zz-not-a-symbol-of-this-file"] }), "FAIL", `${label} one extra name`);
+    assert.equal(verdict({ names: [...names, names[0]] }), "FAIL", `${label} one name twice`);
+    assert.equal(verdict({ names: [] }), "FAIL", `${label} no names`);
+    assert.equal(verdict({ locations: [{ file: task.from.file, line: 1 }] }), "FAIL", `${label} locations without names`);
+    assert.equal(verdict({ names: [1, 2] }), "ERROR", `${label} names that are not strings`);
+}
+
 /**
  * The exact rule "sites" (references): the oracle passes, and so do the oracle plus the declaration
  * the question is asked from or any optional site. One site dropped, one moved by a line, a line
@@ -231,6 +247,12 @@ function checkSitesRule(task, plan, answer, context, label, counts) {
     }
 }
 
+/**
+ * The recall rules ("contains", "callees", "callers"): the oracle passes, a missing or moved entry
+ * fails, and each excluded entry fails. Their known limit is pinned too: an answer that returns more
+ * than the key lists (extra text, extra locations, one range over a whole file) passes, which is why
+ * these rules are reported in their own column.
+ */
 function checkRecallRule(task, plan, answer, context, label, counts) {
     const verdict = (candidate) => scoreTask(task, candidate, context);
     assert.equal(verdict(answer).verdict, "PASS", `${label} oracle: ${verdict(answer).detail ?? ""}`);

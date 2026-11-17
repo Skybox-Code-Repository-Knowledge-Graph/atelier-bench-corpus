@@ -289,6 +289,31 @@ export function scoreTask(task, answer, context) {
         ? { ...base, verdict: "PASS", notes }
         : { ...base, verdict: "FAIL", detail: reasons.join("; "), notes });
 
+    if (plan.check === "names") {
+        // Exact: the names the file declares, as a multiset. A name declared twice is returned twice;
+        // the order is not judged (tools nest containers and flatten them in different orders).
+        if (answer.names !== undefined && (!Array.isArray(answer.names) || !answer.names.every((name) => typeof name === "string"))) {
+            return { ...base, verdict: "ERROR", detail: "invalid answer: names is not a list of strings" };
+        }
+        const returned = Array.isArray(answer.names) ? answer.names : [];
+        const tally = (list) => list.reduce((counts, name) => counts.set(name, (counts.get(name) ?? 0) + 1), new Map());
+        const wanted = tally(plan.symbols);
+        const got = tally(returned);
+        const missing = [...wanted].flatMap(([name, count]) => Array(Math.max(0, count - (got.get(name) ?? 0))).fill(name));
+        const extra = [...got].flatMap(([name, count]) => Array(Math.max(0, count - (wanted.get(name) ?? 0))).fill(name));
+        if (returned.length === 0) {
+            reasons.push("no names returned");
+        } else {
+            if (missing.length > 0) {
+                reasons.push(`${missing.length} of ${plan.symbols.length} symbol name(s) not returned, first ${JSON.stringify(missing[0])}`);
+            }
+            if (extra.length > 0) {
+                reasons.push(`${extra.length} name(s) beyond the file's symbols, first ${JSON.stringify(extra[0])}`);
+            }
+        }
+        return finish();
+    }
+
     if (plan.check === "contains") {
         const text = typeof answer.text === "string" ? answer.text : "";
         if (text === "") {

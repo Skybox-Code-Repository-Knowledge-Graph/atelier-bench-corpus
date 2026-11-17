@@ -86,6 +86,15 @@ export const RULES = [
         uses: ["candidate", "known_sites", "must_not_include"],
     },
     {
+        name: "document_symbol/names",
+        surface: "document_symbol",
+        requires: ["symbols"],
+        forbids: [],
+        check: "names",
+        class: "exact",
+        uses: ["symbols"],
+    },
+    {
         name: "hover/contains",
         surface: "hover",
         requires: ["contains"],
@@ -217,6 +226,13 @@ export function planTask(task, lane = null) {
             exclude: [].concat(expect.must_not_include ?? []).filter((entry) => typeof entry === "string"),
             notScored: keys.filter((key) => !rule.uses.includes(key) && !LABEL_KEYS.has(key)),
         };
+
+        if (rule.check === "names") {
+            if (!Array.isArray(expect.symbols) || expect.symbols.length === 0 || !expect.symbols.every((name) => typeof name === "string" && name !== "")) {
+                return { scorable: false, reason: `${rule.name}: symbols is not a list of names` };
+            }
+            return { ...common, symbols: expect.symbols, allow: [] };
+        }
 
         if (rule.check === "contains") {
             if (typeof expect.contains !== "string" || expect.contains === "") {

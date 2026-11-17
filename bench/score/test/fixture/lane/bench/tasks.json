@@ -274,6 +274,20 @@
             "expect": { "implementations": [ { "file": "src/app.txt", "needle": "beta declaration" } ] }
         },
         {
+            "id": "s-docsym",
+            "surface": "document_symbol",
+            "note": "The file's symbol names as a multiset: order is not judged, a name declared twice is returned twice.",
+            "from": { "file": "src/app.txt", "needle": "alpha declaration" },
+            "expect": { "min_symbols": 2, "symbols": [ "alpha", "beta", "beta" ] }
+        },
+        {
+            "id": "s-docsym-extra",
+            "surface": "document_symbol",
+            "note": "Every name returned, plus one the file does not declare.",
+            "from": { "file": "src/app.txt", "needle": "alpha declaration" },
+            "expect": { "symbols": [ "alpha", "beta" ] }
+        },
+        {
             "id": "s-unscorable-count",
             "surface": "definition",
             "note": "A target with exact_count: what the count means depends on kind, so no rule scores it.",

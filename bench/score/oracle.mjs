@@ -35,6 +35,11 @@ export function buildOracle(root, tasks, lane = null) {
             continue;
         }
 
+        if (plan.check === "names") {
+            answers[task.id] = { names: [...plan.symbols] };
+            continue;
+        }
+
         if (plan.check === "sites") {
             const sites = resolveSites(root, plan);
             if (!sites.problem) {

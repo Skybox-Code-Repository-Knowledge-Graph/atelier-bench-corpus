@@ -31,6 +31,8 @@ s-impl: PASS
 s-impl-missing: FAIL (1 of 2 declaration(s) not returned, first src/app.txt:5)
 s-parents-split: PASS
 s-impl-no-count: UNSCORABLE (implementation/list: no count states the list is complete)
+s-docsym: PASS [not scored: min_symbols]
+s-docsym-extra: FAIL (1 name(s) beyond the file's symbols, first "gamma")
 s-unscorable-count: UNSCORABLE (target plus exact_count: meaning depends on kind)
 s-no-symbol: UNSCORABLE (task states no from.symbol)
 s-unresolved: UNRESOLVED (src/absent.txt: file missing)
@@ -45,9 +47,10 @@ call_hierarchy       2     2            0           0      0           0        
 references           1     2            0           0      0           2           0      5
 implementation       1     1            0           0      0           1           0      3
 multi-parent         1     0            0           0      0           0           0      1
+document_symbol      1     1            0           0      0           0           0      2
 
 tool: fixture-tool 0.0.0   lane: fixture   scope: repo
 answers for ids this lane does not have: 1 (s-renamed-id)
-scorable by this scorer: 29 of 36 tasks
-exact        passed 7 of 23 scorable (30.4%); 7 of 22 asked (31.8%); 1 not asked
+scorable by this scorer: 31 of 38 tasks
+exact        passed 8 of 25 scorable (32.0%); 8 of 24 asked (33.3%); 1 not asked
 recall-only  passed 3 of 6 scorable (50.0%); 3 of 6 asked (50.0%); 0 not asked
