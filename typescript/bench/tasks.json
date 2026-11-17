@@ -2124,7 +2124,7 @@
         {
             "id": "resolution-satisfies",
             "surface": "resolution",
-            "note": "satisfies checks rulesConfig against the shape without widening its literal type -- unlike a `: Record<...>` annotation.",
+            "note": "satisfies checks rulesConfig against the shape without widening its literal type -- unlike a `: Record<...>` annotation. Left unscorable: the declaration the question is about is its own from line, so no line other than the asked-from line names the answer.",
             "from": {
                 "file": "packages/bench/src/support/rulesConfig.ts",
                 "needle": "export const rulesConfig = {",
@@ -2134,7 +2134,7 @@
                 "resolution": "rulesConfig keeps its literal type; satisfies only checks it against Record<string, number | string>",
                 "candidate": {
                     "file": "packages/bench/src/support/rulesConfig.ts",
-                    "needle": "export const rulesConfig = {"
+                    "needle": "} satisfies Record<string, number | string>;"
                 }
             }
         },
