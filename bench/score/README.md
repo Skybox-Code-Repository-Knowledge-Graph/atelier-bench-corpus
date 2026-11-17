@@ -91,6 +91,23 @@ The needle occurs on exactly `lines` lines of the file, and every one of them is
 that carries `repeated_sites` states `exact_count` equal to its `known_sites` plus all repeated
 lines. The lane verifiers ignore this key; `test/sites.test.mjs` checks it.
 
+## Optional sites
+
+Some lines link to a task's symbol in a way a tool may or may not report, and no `kind` on the task
+says that this link is the one asked about: an export list entry (python `__all__ = ["Money"]`), a
+type-literal key that names an export by structure, a code span in a doc comment. Such lines go in
+`optional_sites`:
+
+```json
+"optional_sites": [ { "file": "atelier_core/__init__.py", "needle": "    \"Money\"," } ]
+```
+
+An optional site is neither required nor wrong: a tool that returns it is not marked down, and a
+tool that omits it is not either. It does not count toward `exact_count`. Each needle keys exactly
+one line, which is not also the target, a known site or a repeated site. The lane verifiers ignore
+this key; `test/sites.test.mjs` checks it. No rule scores `references` yet; the rule that does will
+allow these lines.
+
 ## The queried symbol
 
 A task's `from` names a line, and a line can hold several identifiers. `from.symbol` says which one
