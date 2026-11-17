@@ -30,7 +30,7 @@ Install from the **committed** `composer.lock` only (`composer install`). Do not
 | `database/` | Migrations, factories, deterministic `DatabaseSeeder`, delegating `CanonicalSeeder` | 41 |
 | `routes/` | `web.php`, `api.php`, `console.php` | 3 |
 | `resources/views/` | Report view, Blade components, Livewire SFC, Filament pages | 12 |
-| `tests/` | Feature suite (58 tests), Dusk scaffold | 19 |
+| `tests/` | Feature + Unit suite (84 tests), Dusk scaffold | 19 |
 | `bench/` | `tasks.json` + `verify_tasks.php` self-check; **zero composer dependencies** | 1 |
 | `fixtures/broken-syntax/` | Intentionally invalid PHP + Blade, **DO NOT FIX** | 2 |
 
@@ -59,7 +59,7 @@ Install from the **committed** `composer.lock` only (`composer install`). Do not
 | Class-based Blade component | `app/View/Components/StatusBadge` + `<x-status-badge>` in the report view |
 | Model factories + states | `database/factories/*Factory.php`, deterministic sequences; `RepairOrderFactory::rush()` / `::completed()` |
 | Observer via attribute | `app/Observers/DeviceObserver` registered with `#[ObservedBy]` on Device |
-| Feature tests (incl. Livewire::test) | `tests/Feature/*`: 57 tests / 217 assertions covering HTTP, lifecycle/events, all Livewire components, observer registration, the full relationship matrix, every package integration, and the shared health, report-by-slug and export-report surfaces |
+| Feature tests (incl. Livewire::test) | `tests/Feature/*`: 83 tests / 340 assertions covering HTTP, lifecycle/events, all Livewire components, observer registration, the full relationship matrix, every package integration, and the shared health, report-by-slug and export-report surfaces |
 | COMPLETE Eloquent relationship matrix | BelongsTo, HasOne, HasMany, BelongsToMany+pivot, HasOneThrough (Device→invoice), HasManyThrough (Customer→statusLogs), HasOne/MorphOne `ofMany`, MorphTo, MorphOne (Signature), MorphMany (Note), MorphToMany/MorphedByMany first-party (Label/labelables) AND vendor (spatie tags on Part). Proven in `tests/Feature/RelationshipsTest.php` |
 | First-party packages USED as intended (auth, billing, search, flags, broadcast) | sanctum guard on the API mutation + HasApiTokens · passport guard `api` · cashier Billable on User · scout Searchable on Part (database driver) · pennant `rush-surcharge` flag in RushInvoiceCalculator · reverb-ready ShouldBroadcast event + private channel · socialite login pair · fortify actions + TwoFactorAuthenticatable |
 | First-party packages USED as intended (pages, UI, ops, plugins) | folio pages (incl. filename binding) · volt functional component at /rush-counter · flux badge + layout · horizon/octane/telescope/pulse configured (recorders env-gated) · slack notification (guarded) · spatie media/tags/settings via Filament plugins. Proven in `tests/Feature/IntegrationsTest.php` |
@@ -96,7 +96,7 @@ cp .env.example .env   # if needed
 php artisan key:generate
 php artisan migrate --force
 php artisan db:seed    # DatabaseSeeder — deterministic
-php artisan test       # 58 tests, sqlite :memory:
+php artisan test       # 84 tests, sqlite :memory:
 ```
 
 Admin UI: `/admin` (Filament). Sample report path: `GET /report/{repairOrder:reference}` (see `ReportController`).

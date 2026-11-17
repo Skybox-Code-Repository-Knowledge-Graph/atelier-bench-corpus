@@ -27,4 +27,4 @@ Route::get('/auth/{provider}/callback', [SocialAuthController::class, 'callback'
 Volt::route('/rush-counter', 'rush-counter')->name('rush.counter');
 
 // Shared-set liveness probe (the other lanes serve GET /health); Laravel's /up stays.
-Route::get('/health', fn () => response()->json(['status' => 'ok', 'orders' => \App\Models\RepairOrder::count()]));
+Route::get('/health', fn () => response()->json(['status' => 'ok', 'orders' => \App\Models\RepairOrder::count()]))->withoutMiddleware('web');

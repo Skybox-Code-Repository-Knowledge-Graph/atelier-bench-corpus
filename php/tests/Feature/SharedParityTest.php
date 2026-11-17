@@ -2,7 +2,10 @@
 
 namespace Tests\Feature;
 
+use App\Bench\Reports\ReportRegistry;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Str;
+use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\TestCase;
 
 class SharedParityTest extends TestCase
@@ -12,6 +15,38 @@ class SharedParityTest extends TestCase
     public function test_health_returns_json_status(): void
     {
         $this->getJson('/health')->assertOk()->assertJson(['status' => 'ok', 'orders' => 0]);
+    }
+
+    public function test_health_sets_no_cookie(): void
+    {
+        $response = $this->getJson('/health')->assertOk();
+        $this->assertSame([], $response->headers->getCookies());
+    }
+
+    /** @return array<string, array{string}> */
+    public static function slugs(): array
+    {
+        $out = [];
+        foreach (ReportRegistry::all() as $class) {
+            $slug = Str::kebab(Str::beforeLast(class_basename($class), 'Report'));
+            $out[$slug] = [$slug];
+        }
+
+        return $out;
+    }
+
+    #[DataProvider('slugs')]
+    public function test_every_report_slug_resolves(string $slug): void
+    {
+        $this->getJson("/api/reports/{$slug}")
+            ->assertOk()
+            ->assertJsonPath('slug', $slug)
+            ->assertJsonStructure(['slug', 'title', 'rows']);
+    }
+
+    public function test_export_report_command_accepts_md(): void
+    {
+        $this->artisan('atelier:export-report', ['report' => 'cash-flow', 'exporter' => 'md'])->assertExitCode(0);
     }
 
     public function test_report_by_slug_returns_json(): void

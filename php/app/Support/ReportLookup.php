@@ -15,6 +15,12 @@ use Illuminate\Support\Str;
  */
 final class ReportLookup
 {
+    /** Exporter keys shared with the other lanes (csv, json, md plus the rest), mapped to class stems. */
+    private const EXPORTERS = [
+        'csv' => 'Csv', 'html' => 'Html', 'json' => 'Json', 'md' => 'Markdown',
+        'pdf' => 'Pdf', 'xlsx' => 'Xlsx', 'xml' => 'Xml', 'yaml' => 'Yaml',
+    ];
+
     public static function report(string $slug): ?ReportContract
     {
         foreach (ReportRegistry::all() as $class) {
@@ -29,8 +35,8 @@ final class ReportLookup
 
     public static function exporter(string $name): ?ExporterContract
     {
-        $class = 'App\\Bench\\Exporters\\'.Str::studly($name).'Exporter';
+        $stem = self::EXPORTERS[$name] ?? null;
 
-        return class_exists($class) ? app($class) : null;
+        return $stem === null ? null : app('App\\Bench\\Exporters\\'.$stem.'Exporter');
     }
 }
