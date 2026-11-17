@@ -2204,6 +2204,26 @@
             },
             "expect": {
                 "min_symbols": 13,
+                "symbols": [
+                    "PartLine",
+                    "part_id",
+                    "sku",
+                    "quantity",
+                    "unit_price",
+                    "LogEntry",
+                    "source",
+                    "target",
+                    "changed_by",
+                    "RepairOrder",
+                    "__init__",
+                    "transition_to",
+                    "complete",
+                    "parts_subtotal",
+                    "total",
+                    "add_part",
+                    "is_open",
+                    "seed"
+                ],
                 "must_include": [
                     "transition_to",
                     "complete",
@@ -2224,6 +2244,16 @@
             },
             "expect": {
                 "min_symbols": 6,
+                "symbols": [
+                    "REPORTS",
+                    "REPORT_SLUGS",
+                    "METRICS",
+                    "report",
+                    "metric",
+                    "load_report",
+                    "__getattr__",
+                    "__all__"
+                ],
                 "must_include": [
                     "REPORTS",
                     "REPORT_SLUGS",
