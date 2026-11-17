@@ -1203,6 +1203,12 @@
                 "exact_count": 8,
                 "known_sites": [
                     { "file": "app/Bench/Repositories/CustomerRepository.php", "needle": "class CustomerRepository extends AbstractComponent implements RepositoryContract" },
+                    { "file": "app/Bench/Repositories/InventoryRepository.php", "needle": "class InventoryRepository extends AbstractComponent implements RepositoryContract" },
+                    { "file": "app/Bench/Repositories/InvoiceRepository.php", "needle": "class InvoiceRepository extends AbstractComponent implements RepositoryContract" },
+                    { "file": "app/Bench/Repositories/OrderRepository.php", "needle": "class OrderRepository extends AbstractComponent implements RepositoryContract" },
+                    { "file": "app/Bench/Repositories/PartRepository.php", "needle": "class PartRepository extends AbstractComponent implements RepositoryContract" },
+                    { "file": "app/Bench/Repositories/PaymentRepository.php", "needle": "class PaymentRepository extends AbstractComponent implements RepositoryContract" },
+                    { "file": "app/Bench/Repositories/TechnicianRepository.php", "needle": "class TechnicianRepository extends AbstractComponent implements RepositoryContract" },
                     { "file": "app/Bench/Repositories/WarrantyRepository.php", "needle": "class WarrantyRepository extends AbstractComponent implements RepositoryContract" }
                 ],
                 "must_not_include": [
