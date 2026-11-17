@@ -632,8 +632,7 @@
             "note": "The method has no impl block on the receiver type; only the blanket impl provides it.",
             "from": {
                 "file": "crates/atelier-bench/tests/breadth.rs",
-                "needle": "report.format_label(",
-                "symbol": "format_label"
+                "needle": "report.format_label("
             },
             "expect": {
                 "kind": "blanket_impl",
@@ -649,8 +648,7 @@
             "note": "to_json() is provided by a blanket impl keyed on a foreign trait bound (serde::Serialize).",
             "from": {
                 "file": "crates/atelier-bench/tests/breadth.rs",
-                "needle": "rows.to_json()",
-                "symbol": "to_json"
+                "needle": "rows.to_json()"
             },
             "expect": {
                 "kind": "blanket_impl",
@@ -788,7 +786,7 @@
             "from": {
                 "file": "crates/atelier-bench/src/reports/cash_flow_report.rs",
                 "needle": "impl ReportContract for CashFlowReport {",
-                "symbol": "ReportContract"
+                "symbol": "CashFlowReport"
             },
             "expect": {
                 "kind": "child_of",
@@ -1493,7 +1491,7 @@
             "from": {
                 "file": "crates/atelier-bench/src/support/audit_digest.rs",
                 "needle": "impl DigestContract for AuditDigest {}",
-                "symbol": "DigestContract"
+                "symbol": "AuditDigest"
             },
             "expect": {
                 "extends_count": 1,
