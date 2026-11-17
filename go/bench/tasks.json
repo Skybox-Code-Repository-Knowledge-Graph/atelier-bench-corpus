@@ -1236,7 +1236,7 @@
         {
             "id": "imp-blank-import-side-effect",
             "surface": "import-precision",
-            "note": "Blank import: no identifier is bound, and the only effect is the package's init.",
+            "note": "Blank import: no identifier is bound, and the only effect is the package's init. Left unscorable: the answer is the RegisterSink call, a statement inside init, and no declaration line names it.",
             "from": {"file": "cmd/atelier/main.go", "needle": "\t_ \"atelier.example/lane/internal/audit\"", "symbol": "audit"},
             "expect": {
                 "kind": "side_effect_only",
