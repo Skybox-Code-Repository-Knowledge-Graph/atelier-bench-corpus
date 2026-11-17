@@ -160,7 +160,7 @@ test("null symbols are unsupported; path segments, other surfaces and missing sy
     const { call, calls } = fake({});
     assert.equal((await askSkybox(question({ symbol: null }), call)).status, "unsupported");
     assert.equal(await askSkybox(question({ symbol: "models", text: '\t"atelier.example/lane/core/models"' }), call), undefined);
-    assert.equal(await askSkybox(question({ symbol: "Sum", text: "Sum" }, "parse-negative"), call), undefined);
+    assert.equal(await askSkybox(question({ symbol: "Sum", text: "Sum" }, "rename"), call), undefined);
     assert.equal(await askSkybox(question({ text: "Sum" }), call), undefined, "a task with no symbol is not asked");
     assert.equal(calls.length, 0);
 });
@@ -366,6 +366,16 @@ test("direction: two-sided kinds ask the relation and its opposite; definition k
     assert.deepEqual(calls[0].args, { name: "RepairStatus" }, "declaration_merge is a definition lookup by bare name (raw)");
     assert.deepEqual(merged.locations, []);
     assert.equal(await askSkybox({ id: "t", surface: "direction", kind: "inherent_impl", direction: null, from }, fake({}).call), undefined, "an unscored kind is not asked");
+});
+
+test("parse-negative and diagnostics: skybox has no parse-failure report, so it is unsupported, with no call", async () => {
+    for (const surface of ["parse-negative", "diagnostics"]) {
+        const { call, calls } = fake({});
+        const answer = await askSkybox({ id: "t", surface, kind: null, direction: null, from: { file: "fixtures/broken-syntax/bad.go", needle: "x", line: 1, text: "x" } }, call);
+        assert.equal(answer.status, "unsupported");
+        assert.match(answer.detail, /no per-file parse failure/);
+        assert.equal(calls.length, 0);
+    }
 });
 
 test("a php sigil is dropped from the name skybox is asked, and only there", async () => {
