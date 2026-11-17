@@ -940,11 +940,35 @@
                 "symbol": "transition_to"
             },
             "expect": {
-                "min_references": 10,
+                "exact_count": 11,
                 "known_sites": [
                     {
                         "file": "atelier_bench/dataset.py",
                         "needle": "orders[0].transition_to(RepairStatus.DIAGNOSING, \"seeder\")"
+                    },
+                    {
+                        "file": "atelier_bench/dataset.py",
+                        "needle": "orders[0].transition_to(RepairStatus.REPAIRING, \"seeder\")"
+                    },
+                    {
+                        "file": "atelier_bench/dataset.py",
+                        "needle": "orders[0].transition_to(RepairStatus.COMPLETED, \"seeder\")"
+                    },
+                    {
+                        "file": "atelier_bench/dataset.py",
+                        "needle": "orders[1].transition_to(RepairStatus.DIAGNOSING, \"seeder\")"
+                    },
+                    {
+                        "file": "atelier_bench/dataset.py",
+                        "needle": "orders[1].transition_to(RepairStatus.AWAITING_PARTS, \"seeder\")"
+                    },
+                    {
+                        "file": "atelier_bench/dataset.py",
+                        "needle": "orders[2].transition_to(RepairStatus.DIAGNOSING, \"seeder\")"
+                    },
+                    {
+                        "file": "atelier_bench/dataset.py",
+                        "needle": "orders[2].transition_to(RepairStatus.REPAIRING, \"seeder\")"
                     },
                     {
                         "file": "atelier_core/models/repair_order.py",
@@ -952,7 +976,15 @@
                     },
                     {
                         "file": "tests/test_lifecycle.py",
+                        "needle": "self.assertFalse(order.transition_to(RepairStatus.COMPLETED, \"test\"))"
+                    },
+                    {
+                        "file": "tests/test_lifecycle.py",
                         "needle": "self.assertTrue(order.transition_to(RepairStatus.DIAGNOSING, \"test\"))"
+                    },
+                    {
+                        "file": "tests/test_structure.py",
+                        "needle": "order.transition_to(status, \"t\")"
                     }
                 ]
             }
@@ -966,11 +998,23 @@
                 "symbol": "consumed_quantity"
             },
             "expect": {
-                "min_references": 4,
+                "exact_count": 5,
                 "known_sites": [
+                    {
+                        "file": "atelier_bench/reports/inventory_turnover.py",
+                        "needle": "report_row(part.sku, 0 if part.stock == 0 else part.consumed_quantity() / part.stock) for part in data.parts"
+                    },
                     {
                         "file": "atelier_bench/reports/part_usage.py",
                         "needle": "return [report_row(part.name, part.consumed_quantity()) for part in data.parts]"
+                    },
+                    {
+                        "file": "atelier_bench/rules/structural.py",
+                        "needle": "AdHocRule(\"inventory-turnover\", lambda data: any(part.consumed_quantity() >= 0 for part in data.parts)),"
+                    },
+                    {
+                        "file": "atelier_bench/services/inventory_turnover_service.py",
+                        "needle": "return 0.0 if part.stock == 0 else part.consumed_quantity() / part.stock"
                     },
                     {
                         "file": "atelier_bench/services/part_usage_service.py",
@@ -1010,19 +1054,279 @@
                 "symbol": "Money"
             },
             "expect": {
-                "min_references": 20,
+                "exact_count": 68,
                 "known_sites": [
+                    {
+                        "file": "atelier_bench/contracts/formatter_contract.py",
+                        "needle": "from atelier_core import Money"
+                    },
+                    {
+                        "file": "atelier_bench/contracts/formatter_contract.py",
+                        "needle": "def _(value: Money) -> str:"
+                    },
+                    {
+                        "file": "atelier_bench/dataset.py",
+                        "needle": "Money,"
+                    },
                     {
                         "file": "atelier_bench/dataset.py",
                         "needle": "Part(1, \"SCR-13\", 'Screen 13\"', Money(19900), 4),"
+                    },
+                    {
+                        "file": "atelier_bench/dataset.py",
+                        "needle": "Part(2, \"BAT-55\", \"Battery 55Wh\", Money(8900), 1),"
+                    },
+                    {
+                        "file": "atelier_bench/dataset.py",
+                        "needle": "Part(3, \"KBD-EU\", \"Keyboard EU\", Money(6400), 7),"
+                    },
+                    {
+                        "file": "atelier_bench/dataset.py",
+                        "needle": "Part(4, \"FAN-A1\", \"Cooling fan\", Money(2200), 2),"
+                    },
+                    {
+                        "file": "atelier_bench/dataset.py",
+                        "needle": "invoices = [Invoice(1, 1, Money(34900)), Invoice(2, 2, Money(23425))]"
+                    },
+                    {
+                        "file": "atelier_core/__init__.py",
+                        "needle": "from .money import Money"
+                    },
+                    {
+                        "file": "atelier_core/__init__.py",
+                        "needle": "\"Money\","
+                    },
+                    {
+                        "file": "atelier_core/billing/formatter.py",
+                        "needle": "from ..money import Money"
+                    },
+                    {
+                        "file": "atelier_core/billing/formatter.py",
+                        "needle": "def money(self, amount: Money, currency: str = \"\") -> str:"
+                    },
+                    {
+                        "file": "atelier_core/billing/formatter.py",
+                        "needle": "def line(self, quantity: int, description: str, amount: Money) -> str:"
+                    },
+                    {
+                        "file": "atelier_core/contracts/invoice_calculator.py",
+                        "needle": "from ..money import Money"
+                    },
+                    {
+                        "file": "atelier_core/contracts/invoice_calculator.py",
+                        "needle": "def calculate(self, order: \"RepairOrder\") -> Money: ..."
+                    },
+                    {
+                        "file": "atelier_core/models/invoice.py",
+                        "needle": "from ..money import Money"
                     },
                     {
                         "file": "atelier_core/models/invoice.py",
                         "needle": "def __init__(self, id: int, repair_order_id: int, total: Money) -> None:"
                     },
                     {
-                        "file": "atelier_core/contracts/invoice_calculator.py",
-                        "needle": "def calculate(self, order: \"RepairOrder\") -> Money: ..."
+                        "file": "atelier_core/models/invoice.py",
+                        "needle": "def outstanding(self) -> Money:"
+                    },
+                    {
+                        "file": "atelier_core/models/invoice.py",
+                        "needle": "return Money.ZERO if self.paid else self.total"
+                    },
+                    {
+                        "file": "atelier_core/models/part.py",
+                        "needle": "from ..money import Money"
+                    },
+                    {
+                        "file": "atelier_core/models/part.py",
+                        "needle": "def __init__(self, id: int, sku: str, name: str, unit_price: Money, stock: int = 0, reorder_level: int = 2) -> None:"
+                    },
+                    {
+                        "file": "atelier_core/models/part.py",
+                        "needle": "def extended_price(self, quantity: int) -> Money:"
+                    },
+                    {
+                        "file": "atelier_core/models/repair_order.py",
+                        "needle": "from ..money import Money"
+                    },
+                    {
+                        "file": "atelier_core/models/repair_order.py",
+                        "needle": "unit_price: Money"
+                    },
+                    {
+                        "file": "atelier_core/models/repair_order.py",
+                        "needle": "def parts_subtotal(self) -> Money:"
+                    },
+                    {
+                        "file": "atelier_core/models/repair_order.py",
+                        "needle": "return Money.sum(line.unit_price * line.quantity for line in self.parts)"
+                    },
+                    {
+                        "file": "atelier_core/models/repair_order.py",
+                        "needle": "def total(self, container: \"Container\") -> Money:"
+                    },
+                    {
+                        "file": "atelier_core/money.py",
+                        "needle": "ZERO: \"Money\""
+                    },
+                    {
+                        "file": "atelier_core/money.py",
+                        "needle": "def with_surcharge_bp(self, bp: int) -> \"Money\":"
+                    },
+                    {
+                        "file": "atelier_core/money.py",
+                        "needle": "return Money(self._cents + (self._cents * bp + 5000) // 10000)"
+                    },
+                    {
+                        "file": "atelier_core/money.py",
+                        "needle": "def plus(self, other: \"Money\") -> \"Money\":"
+                    },
+                    {
+                        "file": "atelier_core/money.py",
+                        "needle": "return Money(self._cents + other.cents)"
+                    },
+                    {
+                        "file": "atelier_core/money.py",
+                        "needle": "def minus(self, other: \"Money\") -> \"Money\":"
+                    },
+                    {
+                        "file": "atelier_core/money.py",
+                        "needle": "return Money(self._cents - other.cents)"
+                    },
+                    {
+                        "file": "atelier_core/money.py",
+                        "needle": "def times(self, factor: int) -> \"Money\":"
+                    },
+                    {
+                        "file": "atelier_core/money.py",
+                        "needle": "return Money(self._cents * factor)"
+                    },
+                    {
+                        "file": "atelier_core/money.py",
+                        "needle": "def __add__(self, other: \"Money\") -> \"Money\":"
+                    },
+                    {
+                        "file": "atelier_core/money.py",
+                        "needle": "def __sub__(self, other: \"Money\") -> \"Money\":"
+                    },
+                    {
+                        "file": "atelier_core/money.py",
+                        "needle": "def __mul__(self, factor: int) -> \"Money\":"
+                    },
+                    {
+                        "file": "atelier_core/money.py",
+                        "needle": "def __neg__(self) -> \"Money\":"
+                    },
+                    {
+                        "file": "atelier_core/money.py",
+                        "needle": "return Money(-self._cents)"
+                    },
+                    {
+                        "file": "atelier_core/money.py",
+                        "needle": "return isinstance(other, Money) and other.cents == self._cents"
+                    },
+                    {
+                        "file": "atelier_core/money.py",
+                        "needle": "def __lt__(self, other: \"Money\") -> bool:"
+                    },
+                    {
+                        "file": "atelier_core/money.py",
+                        "needle": "def from_cents(cls, cents: int) -> \"Money\":"
+                    },
+                    {
+                        "file": "atelier_core/money.py",
+                        "needle": "def parse(cls, raw: str) -> \"Money\":"
+                    },
+                    {
+                        "file": "atelier_core/money.py",
+                        "needle": "def sum(amounts: Iterable[\"Money\"]) -> \"Money\":"
+                    },
+                    {
+                        "file": "atelier_core/money.py",
+                        "needle": "total = Money.ZERO"
+                    },
+                    {
+                        "file": "atelier_core/money.py",
+                        "needle": "Money.ZERO = Money(0)"
+                    },
+                    {
+                        "file": "atelier_core/services/rush_invoice_calculator.py",
+                        "needle": "from ..money import Money"
+                    },
+                    {
+                        "file": "atelier_core/services/rush_invoice_calculator.py",
+                        "needle": "def calculate(self, order: \"RepairOrder\") -> Money:"
+                    },
+                    {
+                        "file": "atelier_core/services/standard_invoice_calculator.py",
+                        "needle": "from ..money import Money"
+                    },
+                    {
+                        "file": "atelier_core/services/standard_invoice_calculator.py",
+                        "needle": "def calculate(self, order: \"RepairOrder\") -> Money:"
+                    },
+                    {
+                        "file": "atelier_core/services/standard_invoice_calculator.py",
+                        "needle": "def labour(self, order: \"RepairOrder\") -> Money:"
+                    },
+                    {
+                        "file": "atelier_core/services/standard_invoice_calculator.py",
+                        "needle": "return Money(self.labour_rate_cents_per_hour * order.labor_minutes // 60)"
+                    },
+                    {
+                        "file": "tests/test_breadth.py",
+                        "needle": "from atelier_core import Money"
+                    },
+                    {
+                        "file": "tests/test_breadth.py",
+                        "needle": "self.assertEqual(format_cell(Money(5)), \"0.05\")"
+                    },
+                    {
+                        "file": "tests/test_money.py",
+                        "needle": "from atelier_core import Money"
+                    },
+                    {
+                        "file": "tests/test_money.py",
+                        "needle": "self.assertEqual(str(Money(19900) + Money(100)), \"200.00\")"
+                    },
+                    {
+                        "file": "tests/test_money.py",
+                        "needle": "self.assertEqual(str(-Money(5)), \"-0.05\")"
+                    },
+                    {
+                        "file": "tests/test_money.py",
+                        "needle": "self.assertEqual(Money(23425).with_surcharge_bp(2500), Money(29281))"
+                    },
+                    {
+                        "file": "tests/test_money.py",
+                        "needle": "self.assertEqual(Money.parse(\"12.5\"), Money(1250))"
+                    },
+                    {
+                        "file": "tests/test_money.py",
+                        "needle": "self.assertEqual(Money.sum([Money(1), Money(2)]), Money(3))"
+                    },
+                    {
+                        "file": "tests/test_money.py",
+                        "needle": "self.assertTrue(Money(1) < Money(2))"
+                    },
+                    {
+                        "file": "tests/test_money.py",
+                        "needle": "Money.parse(\"twelve\")"
+                    },
+                    {
+                        "file": "tests/test_money.py",
+                        "needle": "self.assertTrue(Money.ZERO.is_zero())"
+                    },
+                    {
+                        "file": "tests/test_money.py",
+                        "needle": "self.assertEqual(Money.from_cents(0), Money.ZERO)"
+                    },
+                    {
+                        "file": "tests/test_shadow_pair.py",
+                        "needle": "from atelier_core import Money, RepairStatus"
+                    },
+                    {
+                        "file": "tests/test_shadow_pair.py",
+                        "needle": "self.assertEqual(MoneyFormatter(\"EUR\").money(Money(34900)), \"349.00 EUR\")"
                     }
                 ]
             }
@@ -1036,11 +1340,91 @@
                 "symbol": "row_from_cents"
             },
             "expect": {
-                "min_references": 8,
+                "exact_count": 22,
                 "known_sites": [
+                    {
+                        "file": "atelier_bench/__init__.py",
+                        "needle": "from .contracts.report_contract import ReportRow, report_row, row_from_cents"
+                    },
+                    {
+                        "file": "atelier_bench/__init__.py",
+                        "needle": "\"row_from_cents\","
+                    },
+                    {
+                        "file": "atelier_bench/reports/cash_flow.py",
+                        "needle": "from ..contracts.report_contract import ReportRow, row_from_cents"
+                    },
+                    {
+                        "file": "atelier_bench/reports/cash_flow.py",
+                        "needle": "return [row_from_cents(\"paid\", paid), row_from_cents(\"outstanding\", outstanding)]"
+                    },
+                    {
+                        "file": "atelier_bench/reports/customer_lifetime.py",
+                        "needle": "from ..contracts.report_contract import ReportRow, row_from_cents"
+                    },
+                    {
+                        "file": "atelier_bench/reports/customer_lifetime.py",
+                        "needle": "row_from_cents(customer.name, sum(order.parts_subtotal().cents for order in data.orders_for(customer.id)))"
+                    },
+                    {
+                        "file": "atelier_bench/reports/daily_revenue.py",
+                        "needle": "from ..contracts.report_contract import ReportRow, row_from_cents"
+                    },
+                    {
+                        "file": "atelier_bench/reports/daily_revenue.py",
+                        "needle": "return [row_from_cents(f\"order-{order.id}\", order.parts_subtotal().cents) for order in data.completed_orders()]"
+                    },
+                    {
+                        "file": "atelier_bench/reports/gross_profit.py",
+                        "needle": "from ..contracts.report_contract import ReportRow, row_from_cents"
+                    },
+                    {
+                        "file": "atelier_bench/reports/gross_profit.py",
+                        "needle": "row_from_cents(\"revenue\", revenue),"
+                    },
+                    {
+                        "file": "atelier_bench/reports/gross_profit.py",
+                        "needle": "row_from_cents(\"part cost\", cost),"
+                    },
                     {
                         "file": "atelier_bench/reports/gross_profit.py",
                         "needle": "row_from_cents(\"gross profit\", revenue - cost),"
+                    },
+                    {
+                        "file": "atelier_bench/reports/monthly_revenue.py",
+                        "needle": "from ..contracts.report_contract import ReportRow, row_from_cents"
+                    },
+                    {
+                        "file": "atelier_bench/reports/monthly_revenue.py",
+                        "needle": "return [row_from_cents(\"month to date\", data.revenue_cents())]"
+                    },
+                    {
+                        "file": "atelier_bench/reports/payment_default.py",
+                        "needle": "from ..contracts.report_contract import ReportRow, row_from_cents"
+                    },
+                    {
+                        "file": "atelier_bench/reports/payment_default.py",
+                        "needle": "row_from_cents(f\"invoice-{invoice.id}\", invoice.outstanding().cents)"
+                    },
+                    {
+                        "file": "atelier_bench/reports/technician_payroll.py",
+                        "needle": "from ..contracts.report_contract import ReportRow, row_from_cents"
+                    },
+                    {
+                        "file": "atelier_bench/reports/technician_payroll.py",
+                        "needle": "return [row_from_cents(technician.name, share) for technician in data.technicians]"
+                    },
+                    {
+                        "file": "atelier_bench/reports/warranty_cost.py",
+                        "needle": "from ..contracts.report_contract import ReportRow, row_from_cents"
+                    },
+                    {
+                        "file": "atelier_bench/reports/warranty_cost.py",
+                        "needle": "row_from_cents(f\"order-{order.id}\", order.parts_subtotal().cents)"
+                    },
+                    {
+                        "file": "atelier_bench/reports/weekly_revenue.py",
+                        "needle": "from ..contracts.report_contract import ReportRow, row_from_cents"
                     },
                     {
                         "file": "atelier_bench/reports/weekly_revenue.py",
@@ -1058,15 +1442,31 @@
                 "symbol": "REPORTS"
             },
             "expect": {
-                "min_references": 3,
+                "exact_count": 6,
                 "known_sites": [
+                    {
+                        "file": "atelier_bench/__init__.py",
+                        "needle": "REPORT_SLUGS: list[str] = [entry.slug for entry in REPORTS]"
+                    },
                     {
                         "file": "atelier_bench/__init__.py",
                         "needle": "return next((candidate for candidate in REPORTS if candidate.slug == slug), None)"
                     },
                     {
+                        "file": "atelier_bench/__init__.py",
+                        "needle": "\"REPORTS\","
+                    },
+                    {
+                        "file": "tests/test_breadth.py",
+                        "needle": "from atelier_bench import METRICS, REPORTS, Dataset, load_report, metric, report"
+                    },
+                    {
                         "file": "tests/test_breadth.py",
                         "needle": "self.assertEqual(len(REPORTS), 24)"
+                    },
+                    {
+                        "file": "tests/test_breadth.py",
+                        "needle": "for entry in REPORTS:"
                     }
                 ]
             }
