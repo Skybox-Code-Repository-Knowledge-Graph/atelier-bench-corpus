@@ -774,15 +774,43 @@
                 "symbol": "seeded"
             },
             "expect": {
-                "min_references": 7,
+                "exact_count": 10,
                 "known_sites": [
                     {
                         "file": "packages/app/src/state.ts",
                         "needle": "data: Dataset.seeded(),"
                     },
                     {
+                        "file": "packages/app/tests/jobs.test.ts",
+                        "needle": "recalculateInventory(Dataset.seeded(), new Dispatcher(), (error, count) => {"
+                    },
+                    {
+                        "file": "packages/app/tests/jobs.test.ts",
+                        "needle": "expect(new RecalculateInventory().run(Dataset.seeded(), new Dispatcher())).toBe(1);"
+                    },
+                    {
                         "file": "packages/bench/tests/breadth.test.ts",
                         "needle": "const repo = new OrderRepository(Dataset.seeded().orders);"
+                    },
+                    {
+                        "file": "packages/bench/tests/breadth.test.ts",
+                        "needle": "const sweep = new RevenueService().metricSweep(Dataset.seeded());"
+                    },
+                    {
+                        "file": "packages/bench/tests/surfaces.test.ts",
+                        "needle": "const data = Dataset.seeded();"
+                    }
+                ],
+                "repeated_sites": [
+                    {
+                        "file": "packages/bench/tests/breadth.test.ts",
+                        "needle": "const data = Dataset.seeded();",
+                        "lines": 2
+                    },
+                    {
+                        "file": "packages/bench/tests/breadth.test.ts",
+                        "needle": "const rows = new GrossProfitReport().rows(Dataset.seeded());",
+                        "lines": 2
                     }
                 ]
             }
