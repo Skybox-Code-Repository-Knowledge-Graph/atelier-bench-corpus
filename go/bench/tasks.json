@@ -1277,7 +1277,6 @@
             "from": {"file": "atelier/contracts/composite.go", "needle": "type CompositeContract interface {", "symbol": "CompositeContract"},
             "expect": {
                 "exact_count": 3,
-                "min_references": 3,
                 "implementations": [
                     {"file": "atelier/contracts/report.go", "needle": "type ReportContract interface {"},
                     {"file": "atelier/contracts/cacheable.go", "needle": "type CacheableContract interface {"},

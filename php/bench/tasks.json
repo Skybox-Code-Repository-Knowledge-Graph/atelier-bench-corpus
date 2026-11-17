@@ -1170,10 +1170,9 @@
             "from": { "file": "app/Livewire/StatusBoard.php", "needle": "#[On('note-added')]", "symbol": "note-added" },
             "expect": {
                 "kind": "name_only",
-                "exact_count": 3,
+                "exact_count": 2,
                 "known_sites": [
                     { "file": "app/Livewire/NoteComposer.php", "needle": "$this->dispatch('note-added', orderId: $this->order->id);" },
-                    { "file": "app/Livewire/StatusBoard.php", "needle": "#[On('note-added')]" },
                     { "file": "tests/Feature/NoteComposerTest.php", "needle": "->assertDispatched('note-added', orderId: $order->id);" }
                 ]
             }
