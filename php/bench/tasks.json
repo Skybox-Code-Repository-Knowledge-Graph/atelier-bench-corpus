@@ -2,81 +2,81 @@
     "version": 1,
     "lane": "php",
     "corpus": "atelier-bench-corpus",
-    "notes": "Known-answer navigation tasks. Needle-based, not line-based: bench/verify_tasks.php resolves every needle to a unique line at the current SHA, so the manifest survives edits without stale line numbers. 'expect' blocks carry the ground truth a harness scores against; counts are minimums where marked. exact_count is exact and counts concrete, non-generic, unconditionally compiled types that satisfy the contract directly or through inheritance; abstract bases, blanket impls and cfg-gated impls are excluded. Framework-magic kinds: facade (static call -> manager instance method), scope (->x() -> scopeX), accessor (snake_case read -> Attribute method), string_key (container key, gate ability, middleware alias, config/lang key -> its registration line), route_model_binding (a {param:column} route segment: the parameter name selects the Eloquent model and the suffix after the colon selects the column it is looked up by). Canonical-id kinds added by the parity wave: dynamic_method (magic __call forwarding: the receiver declares no such method), barrel (an import routed through a declaration-free re-export file), type_only (a `use` consumed only by a docblock, no runtime edge), structural (shape matches a contract the class never names), shadow_alias (a type position written through an alias of a same-name class). min_implementations counts exactly the way exact_count does: concrete, non-generic, unconditionally compiled types that satisfy the contract directly or through inheritance; abstract bases, blanket impls and cfg-gated impls are excluded. document_symbol tasks count every named symbol the anchored FILE declares at any nesting depth (classes, constants, properties, methods); each task's note enumerates that count N and states min_symbols = floor(0.75 * N), the 25% margin absorbing listings that fold container nodes. call_hierarchy tasks name callees under outgoing_includes and callers under incoming_includes; both are file+needle pairs the verifier resolves. Wave-2 kinds: docblock_generic (a @template interface with no runtime generics), group_use (one brace-group import binding exactly N names), namespace_prefix (an import that binds a namespace rather than a class), same_name (two classes of the same name in different namespaces, separated only by an alias), trait_conflict (two traits declaring one name, resolved with insteadof), used_by (edge orientation from a trait to the classes that use it), syntax_error (an intentionally invalid fixture that must fail to parse). min_implementations counts the same way exact_count does: concrete, non-generic, unconditionally compiled types that satisfy the contract directly or through inheritance; abstract bases are excluded. name_only (an edge connected only by a matching literal, with no symbol declaring it). Kinds shared with other lanes, worded identically in every lane that uses them. child_of: the anchored declaration is the child end of a parent edge, and the answer is a direct parent it extends, implements or embeds, one level up, never a further ancestor and never one of its own children. imports: an import that binds only the names it lists; the answer is each named declaration in the file that declares it, never a sibling declared beside it and never every name the target module exports. lane_local: a symbol every lane carries under the same name or as its lane equivalent (Money, Customer, Dataset, the reference prefix, the invoice calculator's calculate, the billing Formatter); resolution must land on this lane's own declaration and never cross into a sibling lane. parent_of: a parent edge scored for direction, with the anchor at either end; the parent is the type that is extended, implemented or embedded, the child is the type that does so, and an answer that reports the child as the parent is wrong. uses_self: a type that refers to itself, such as a tree node holding children of its own type; the edge is a uses edge back to the declaring type, never extends, implements or embedding.",
+    "notes": "Known-answer navigation tasks. Needle-based, not line-based: bench/verify_tasks.php resolves every needle to a unique line at the current SHA, so the manifest survives edits without stale line numbers. 'expect' blocks carry the ground truth a harness scores against; counts are minimums where marked. exact_count is exact and counts concrete, non-generic, unconditionally compiled types that satisfy the contract directly or through inheritance; abstract bases, blanket impls and cfg-gated impls are excluded. Framework-magic kinds: facade (static call -> manager instance method), scope (->x() -> scopeX), accessor (snake_case read -> Attribute method), string_key (container key, gate ability, middleware alias, config/lang key -> its registration line), route_model_binding (a {param:column} route segment: the parameter name selects the Eloquent model and the suffix after the colon selects the column it is looked up by). Canonical-id kinds added by the parity wave: dynamic_method (magic __call forwarding: the receiver declares no such method), barrel (an import routed through a declaration-free re-export file), type_only (a `use` consumed only by a docblock, no runtime edge), structural (shape matches a contract the class never names), shadow_alias (a type position written through an alias of a same-name class). min_implementations counts exactly the way exact_count does: concrete, non-generic, unconditionally compiled types that satisfy the contract directly or through inheritance; abstract bases, blanket impls and cfg-gated impls are excluded. document_symbol tasks count every named symbol the anchored FILE declares at any nesting depth (classes, constants, properties, methods); each task's note enumerates that count N and states min_symbols = floor(0.75 * N), the 25% margin absorbing listings that fold container nodes. call_hierarchy tasks name callees under outgoing_includes and callers under incoming_includes; both are file+needle pairs the verifier resolves. Wave-2 kinds: docblock_generic (a @template interface with no runtime generics), group_use (one brace-group import binding exactly N names), namespace_prefix (an import that binds a namespace rather than a class), same_name (two classes of the same name in different namespaces, separated only by an alias), trait_conflict (two traits declaring one name, resolved with insteadof), used_by (edge orientation from a trait to the classes that use it), syntax_error (an intentionally invalid fixture that must fail to parse). min_implementations counts the same way exact_count does: concrete, non-generic, unconditionally compiled types that satisfy the contract directly or through inheritance; abstract bases are excluded. name_only (an edge connected only by a matching literal, with no symbol declaring it). Kinds shared with other lanes, worded identically in every lane that uses them. child_of: the anchored declaration is the child end of a parent edge, and the answer is a direct parent it extends, implements or embeds, one level up, never a further ancestor and never one of its own children. imports: an import that binds only the names it lists; the answer is each named declaration in the file that declares it, never a sibling declared beside it and never every name the target module exports. lane_local: a symbol every lane carries under the same name or as its lane equivalent (Money, Customer, Dataset, the reference prefix, the invoice calculator's calculate, the billing Formatter); resolution must land on this lane's own declaration and never cross into a sibling lane. parent_of: a parent edge scored for direction, with the anchor at either end; the parent is the type that is extended, implemented or embedded, the child is the type that does so, and an answer that reports the child as the parent is wrong. uses_self: a type that refers to itself, such as a tree node holding children of its own type; the edge is a uses edge back to the declaring type, never extends, implements or embedding. from.symbol is the identifier a task asks about, exactly as written on the from line and with no qualifier: the alias where an alias is used, the member on a member access, null when the question has no single identifier. from.occurrence (1-based) says which one when it appears more than once on that line, and is then required. document_symbol, parse-negative and diagnostics tasks ask about a file and carry neither key.",
     "tasks": [
         {
             "id": "def-enum-method",
             "surface": "definition",
-            "from": { "file": "app/Models/RepairOrder.php", "needle": "$this->status->transitionsTo()" },
+            "from": { "file": "app/Models/RepairOrder.php", "needle": "$this->status->transitionsTo()", "symbol": "transitionsTo" },
             "expect": { "file": "app/Enums/RepairStatus.php", "needle": "public function transitionsTo(): array" }
         },
         {
             "id": "def-enum-case",
             "surface": "definition",
-            "from": { "file": "database/seeders/DatabaseSeeder.php", "needle": "'priority' => Priority::Rush" },
+            "from": { "file": "database/seeders/DatabaseSeeder.php", "needle": "'priority' => Priority::Rush", "symbol": "Rush" },
             "expect": { "file": "app/Enums/Priority.php", "needle": "case Rush = 'rush';" }
         },
         {
             "id": "def-global-function",
             "surface": "definition",
-            "from": { "file": "app/Concerns/HasReference.php", "needle": "$model->reference = atelier_format_reference(" },
+            "from": { "file": "app/Concerns/HasReference.php", "needle": "$model->reference = atelier_format_reference(", "symbol": "atelier_format_reference" },
             "expect": { "file": "app/Support/helpers.php", "needle": "function atelier_format_reference(string $prefix, int $number): string" }
         },
         {
             "id": "def-global-const",
             "surface": "definition",
-            "from": { "file": "app/Concerns/HasReference.php", "needle": "ATELIER_REF_PREFIX)," },
+            "from": { "file": "app/Concerns/HasReference.php", "needle": "ATELIER_REF_PREFIX),", "symbol": "ATELIER_REF_PREFIX" },
             "expect": { "file": "app/Support/helpers.php", "needle": "const ATELIER_REF_PREFIX = 'AT';" }
         },
         {
             "id": "def-class-const",
             "surface": "definition",
-            "from": { "file": "app/Support/helpers.php", "needle": "Reference::PREFIX_SEPARATOR, now()->year" },
+            "from": { "file": "app/Support/helpers.php", "needle": "Reference::PREFIX_SEPARATOR, now()->year", "symbol": "PREFIX_SEPARATOR", "occurrence": 1 },
             "expect": { "file": "app/Support/Reference.php", "needle": "public const PREFIX_SEPARATOR = '-';" }
         },
         {
             "id": "def-shadow-alias-billing",
             "surface": "definition",
             "note": "Same-name pair: alias must resolve to App\\Billing, never App\\Reporting.",
-            "from": { "file": "app/Http/Controllers/ReportController.php", "needle": "$this->money->money($order->subtotal_cents)" },
+            "from": { "file": "app/Http/Controllers/ReportController.php", "needle": "$this->money->money($order->subtotal_cents)", "symbol": "money", "occurrence": 2 },
             "expect": { "file": "app/Billing/Formatter.php", "needle": "public function money(string $decimal, string $currency = 'EUR'): string" }
         },
         {
             "id": "def-shadow-alias-reporting",
             "surface": "definition",
-            "from": { "file": "app/Http/Controllers/ReportController.php", "needle": "$this->status->statusLine(" },
+            "from": { "file": "app/Http/Controllers/ReportController.php", "needle": "$this->status->statusLine(", "symbol": "statusLine", "occurrence": 2 },
             "expect": { "file": "app/Reporting/Formatter.php", "needle": "public function statusLine(RepairStatus $status, ?string $since): string" }
         },
         {
             "id": "def-interface-through-binding",
             "surface": "definition",
             "note": "Contract def is the interface; the container binds StandardInvoiceCalculator (see impl-interface task).",
-            "from": { "file": "app/Models/RepairOrder.php", "needle": "app(\\App\\Contracts\\InvoiceCalculator::class)->calculate($this)" },
+            "from": { "file": "app/Models/RepairOrder.php", "needle": "app(\\App\\Contracts\\InvoiceCalculator::class)->calculate($this)", "symbol": "calculate" },
             "expect": { "file": "app/Contracts/InvoiceCalculator.php", "needle": "public function calculate(RepairOrder $order): int;" }
         },
         {
             "id": "def-trait-method-scope",
             "surface": "definition",
-            "from": { "file": "app/Filament/Resources/RepairOrders/Tables/RepairOrdersTable.php", "needle": "$query->open()" },
+            "from": { "file": "app/Filament/Resources/RepairOrders/Tables/RepairOrdersTable.php", "needle": "$query->open()", "symbol": "open" },
             "expect": { "file": "app/Models/RepairOrder.php", "needle": "public function scopeOpen(Builder $query): Builder" }
         },
         {
             "id": "def-blade-model-method",
             "surface": "definition",
-            "from": { "file": "resources/views/report/summary.blade.php", "needle": "$order->device->label()" },
+            "from": { "file": "resources/views/report/summary.blade.php", "needle": "$order->device->label()", "symbol": "label" },
             "expect": { "file": "app/Models/Device.php", "needle": "public function label(): string" }
         },
         {
             "id": "def-livewire-computed",
             "surface": "definition",
             "note": "Livewire #[Computed]: blade property access resolves to a method.",
-            "from": { "file": "resources/views/filament/pages/inventory-report.blade.php", "needle": "$this->lowStockParts as $part" },
+            "from": { "file": "resources/views/filament/pages/inventory-report.blade.php", "needle": "$this->lowStockParts as $part", "symbol": "lowStockParts" },
             "expect": { "file": "app/Filament/Pages/InventoryReport.php", "needle": "public function lowStockParts(): Collection" }
         },
         {
             "id": "impl-interface",
             "surface": "implementation",
-            "from": { "file": "app/Contracts/InvoiceCalculator.php", "needle": "interface InvoiceCalculator" },
+            "from": { "file": "app/Contracts/InvoiceCalculator.php", "needle": "interface InvoiceCalculator", "symbol": "InvoiceCalculator" },
             "expect": {
                 "implementations": [
                     { "file": "app/Services/StandardInvoiceCalculator.php", "needle": "class StandardInvoiceCalculator implements InvoiceCalculator" },
@@ -87,7 +87,7 @@
         {
             "id": "refs-transition-to",
             "surface": "references",
-            "from": { "file": "app/Models/RepairOrder.php", "needle": "public function transitionTo(RepairStatus $next, string $changedBy): bool" },
+            "from": { "file": "app/Models/RepairOrder.php", "needle": "public function transitionTo(RepairStatus $next, string $changedBy): bool", "symbol": "transitionTo" },
             "expect": {
                 "min_references": 3,
                 "known_sites": [
@@ -100,7 +100,7 @@
         {
             "id": "refs-consumed-quantity",
             "surface": "references",
-            "from": { "file": "app/Models/Part.php", "needle": "public function consumedQuantity(): int" },
+            "from": { "file": "app/Models/Part.php", "needle": "public function consumedQuantity(): int", "symbol": "consumedQuantity" },
             "expect": {
                 "min_references": 2,
                 "known_sites": [
@@ -112,7 +112,7 @@
         {
             "id": "refs-trait-usage",
             "surface": "references",
-            "from": { "file": "app/Concerns/HasReference.php", "needle": "trait HasReference" },
+            "from": { "file": "app/Concerns/HasReference.php", "needle": "trait HasReference", "symbol": "HasReference" },
             "expect": {
                 "min_references": 2,
                 "known_sites": [
@@ -124,13 +124,13 @@
         {
             "id": "hover-global-function",
             "surface": "hover",
-            "from": { "file": "app/Concerns/HasReference.php", "needle": "$model->reference = atelier_format_reference(" },
+            "from": { "file": "app/Concerns/HasReference.php", "needle": "$model->reference = atelier_format_reference(", "symbol": "atelier_format_reference" },
             "expect": { "contains": "zero-padded width" }
         },
         {
             "id": "hover-schedule-method",
             "surface": "hover",
-            "from": { "file": "app/Support/Schedule.php", "needle": "public function nextSlot(CarbonImmutable $after): CarbonImmutable" },
+            "from": { "file": "app/Support/Schedule.php", "needle": "public function nextSlot(CarbonImmutable $after): CarbonImmutable", "symbol": "nextSlot" },
             "expect": { "contains": "Earliest free slot" }
         },
         {
@@ -146,7 +146,7 @@
         {
             "id": "card-complete-hub",
             "surface": "call_hierarchy",
-            "from": { "file": "app/Models/RepairOrder.php", "needle": "public function complete(string $changedBy): bool" },
+            "from": { "file": "app/Models/RepairOrder.php", "needle": "public function complete(string $changedBy): bool", "symbol": "complete" },
             "expect": {
                 "min_incoming": 2,
                 "incoming_includes": [
@@ -159,7 +159,7 @@
             "id": "card-magic-forward",
             "surface": "resolution",
             "note": "The name_only case: Technician has no nextSlot method; resolution goes through ForwardsToSchedule::__call to Schedule::nextSlot. Expected: tagged name_only (or explicitly via-__call), NEVER a silent empty answer.",
-            "from": { "file": "database/seeders/DatabaseSeeder.php", "needle": "$slot = $technician->nextSlot(now()->toImmutable());" },
+            "from": { "file": "database/seeders/DatabaseSeeder.php", "needle": "$slot = $technician->nextSlot(now()->toImmutable());", "symbol": "nextSlot" },
             "expect": {
                 "kind": "dynamic_method",
                 "candidate": { "file": "app/Support/Schedule.php", "needle": "public function nextSlot(CarbonImmutable $after): CarbonImmutable" }
@@ -168,7 +168,7 @@
         {
             "id": "hierarchy-complete-chain",
             "surface": "call_hierarchy",
-            "from": { "file": "app/Models/RepairOrder.php", "needle": "public function complete(string $changedBy): bool" },
+            "from": { "file": "app/Models/RepairOrder.php", "needle": "public function complete(string $changedBy): bool", "symbol": "complete" },
             "expect": {
                 "outgoing_includes": [
                     { "file": "app/Models/RepairOrder.php", "needle": "public function transitionTo(RepairStatus $next, string $changedBy): bool" }
@@ -186,35 +186,35 @@
             "id": "lw-sfc-computed",
             "surface": "definition",
             "note": "Livewire 4 single-file component: anonymous class + #[Computed] inside a .blade.php file. Parser must index PHP living in a blade extension.",
-            "from": { "file": "resources/views/components/⚡order-tracker.blade.php", "needle": "Progress: {{ $this->progressPercent }}%" },
+            "from": { "file": "resources/views/components/⚡order-tracker.blade.php", "needle": "Progress: {{ $this->progressPercent }}%", "symbol": "progressPercent" },
             "expect": { "file": "resources/views/components/⚡order-tracker.blade.php", "needle": "public function progressPercent(): int" }
         },
         {
             "id": "lw-wireclick-method",
             "surface": "definition",
             "note": "wire:click in blade resolves to a public method on the component class.",
-            "from": { "file": "resources/views/livewire/status-board.blade.php", "needle": "wire:click=\"completeOrder({{ $order->id }})\"" },
+            "from": { "file": "resources/views/livewire/status-board.blade.php", "needle": "wire:click=\"completeOrder({{ $order->id }})\"", "symbol": "completeOrder" },
             "expect": { "file": "app/Livewire/StatusBoard.php", "needle": "public function completeOrder(int $orderId): void" }
         },
         {
             "id": "lw-form-object-magic",
             "surface": "definition",
             "note": "wire:model=form.body resolves through the NoteForm Form-object property, Livewire magic in between.",
-            "from": { "file": "resources/views/livewire/note-composer.blade.php", "needle": "wire:model.blur=\"form.body\"" },
+            "from": { "file": "resources/views/livewire/note-composer.blade.php", "needle": "wire:model.blur=\"form.body\"", "symbol": "body" },
             "expect": { "file": "app/Livewire/Forms/NoteForm.php", "needle": "public string $body = '';" }
         },
         {
             "id": "lw-url-attribute",
             "surface": "hover",
             "note": "#[Url] attribute prop: hover should surface the attribute + docblock, and the query-string alias.",
-            "from": { "file": "app/Livewire/StatusBoard.php", "needle": "public string $statusFilter = '';" },
+            "from": { "file": "app/Livewire/StatusBoard.php", "needle": "public string $statusFilter = '';", "symbol": "$statusFilter" },
             "expect": { "contains": "Url" }
         },
         {
             "id": "lw-on-listener-edge",
             "surface": "references",
             "note": "Event edge: dispatch('part-added') in the child must connect to the #[On('part-added')] listener on the parent.",
-            "from": { "file": "app/Livewire/StatusBoard.php", "needle": "#[On('part-added')]" },
+            "from": { "file": "app/Livewire/StatusBoard.php", "needle": "#[On('part-added')]", "symbol": "part-added" },
             "expect": {
                 "min_references": 1,
                 "known_sites": [
@@ -226,28 +226,28 @@
             "id": "lw-di-in-mount",
             "surface": "definition",
             "note": "Container DI in Livewire mount(): the InvoiceCalculator param resolves to the interface, binding lands on StandardInvoiceCalculator.",
-            "from": { "file": "app/Livewire/PartsPicker.php", "needle": "public function mount(RepairOrder $order, InvoiceCalculator $calculator): void" },
+            "from": { "file": "app/Livewire/PartsPicker.php", "needle": "public function mount(RepairOrder $order, InvoiceCalculator $calculator): void", "symbol": "InvoiceCalculator" },
             "expect": { "file": "app/Contracts/InvoiceCalculator.php", "needle": "interface InvoiceCalculator" }
         },
         {
             "id": "lw-fullpage-route",
             "surface": "definition",
             "note": "Full-page component routing: the route action is a Livewire class, its 'handler' is render().",
-            "from": { "file": "routes/web.php", "needle": "Route::get('/board', App\\Livewire\\StatusBoard::class)->name('board');" },
+            "from": { "file": "routes/web.php", "needle": "Route::get('/board', App\\Livewire\\StatusBoard::class)->name('board');", "symbol": "StatusBoard" },
             "expect": { "file": "app/Livewire/StatusBoard.php", "needle": "public function render()" }
         },
         {
             "id": "lw-embed-tag",
             "surface": "definition",
             "note": "livewire: tag resolution from a plain blade to the SFC component file.",
-            "from": { "file": "resources/views/report/summary.blade.php", "needle": "<livewire:order-tracker :order=\"$order\" />" },
+            "from": { "file": "resources/views/report/summary.blade.php", "needle": "<livewire:order-tracker :order=\"$order\" />", "symbol": "order-tracker" },
             "expect": { "file": "resources/views/components/⚡order-tracker.blade.php", "needle": "new class extends Component" }
         },
         {
             "id": "rel-hasonethrough",
             "surface": "definition",
             "note": "HasOneThrough: Device reaches its invoice through RepairOrder.",
-            "from": { "file": "app/Models/Device.php", "needle": "return $this->hasOneThrough(Invoice::class, RepairOrder::class);" },
+            "from": { "file": "app/Models/Device.php", "needle": "return $this->hasOneThrough(Invoice::class, RepairOrder::class);", "symbol": "Invoice" },
             "expect": { "file": "app/Models/Invoice.php", "needle": "class Invoice extends Model" }
         },
         {
@@ -260,14 +260,14 @@
             "id": "rel-ofmany-builder",
             "surface": "hover",
             "note": "HasOne-of-many builder chain: hover on the chained call should surface a HasOne relationship type.",
-            "from": { "file": "app/Models/Customer.php", "needle": "return $this->hasMany(RepairOrder::class)->one()->latestOfMany('opened_at');" },
+            "from": { "file": "app/Models/Customer.php", "needle": "return $this->hasMany(RepairOrder::class)->one()->latestOfMany('opened_at');", "symbol": "latestOfMany" },
             "expect": { "contains": "HasOne" }
         },
         {
             "id": "rel-morphedbymany",
             "surface": "references",
             "note": "First-party polymorphic pivot: Label's MorphedByMany answers who carries the label.",
-            "from": { "file": "app/Models/Label.php", "needle": "public function repairOrders(): MorphToMany" },
+            "from": { "file": "app/Models/Label.php", "needle": "public function repairOrders(): MorphToMany", "symbol": "repairOrders" },
             "expect": {
                 "min_references": 1,
                 "known_sites": [
@@ -279,21 +279,21 @@
             "id": "vendor-scout-trait",
             "surface": "definition",
             "note": "VENDOR resolution: the Searchable trait lives in laravel/scout (dep-index / stub-pack class). Needle resolves only after composer install.",
-            "from": { "file": "app/Models/Part.php", "needle": "use HasFactory, HasTags, Searchable;" },
+            "from": { "file": "app/Models/Part.php", "needle": "use HasFactory, HasTags, Searchable;", "symbol": "Searchable" },
             "expect": { "file": "vendor/laravel/scout/src/Searchable.php", "needle": "trait Searchable" }
         },
         {
             "id": "vendor-shouldbroadcast-contract",
             "surface": "implementation",
             "note": "VENDOR contract: RepairCompleted implements a framework interface.",
-            "from": { "file": "app/Events/RepairCompleted.php", "needle": "class RepairCompleted implements ShouldBroadcast" },
+            "from": { "file": "app/Events/RepairCompleted.php", "needle": "class RepairCompleted implements ShouldBroadcast", "symbol": "ShouldBroadcast" },
             "expect": { "file": "vendor/laravel/framework/src/Illuminate/Contracts/Broadcasting/ShouldBroadcast.php", "needle": "interface ShouldBroadcast" }
         },
         {
             "id": "int-pennant-flag",
             "surface": "references",
             "note": "Pennant facade edge: the flag consumed in RushInvoiceCalculator is defined in AppServiceProvider.",
-            "from": { "file": "app/Providers/AppServiceProvider.php", "needle": "Feature::define('rush-surcharge'" },
+            "from": { "file": "app/Providers/AppServiceProvider.php", "needle": "Feature::define('rush-surcharge'", "symbol": "rush-surcharge" },
             "expect": {
                 "min_references": 1,
                 "known_sites": [
@@ -305,28 +305,28 @@
             "id": "int-folio-filename-binding",
             "surface": "definition",
             "note": "Folio: route-model binding encoded in the FILENAME [RepairOrder-reference]; $repairOrder is injected, no route entry exists.",
-            "from": { "file": "resources/views/pages/orders/[RepairOrder-reference].blade.php", "needle": "<h1>{{ $repairOrder->reference }}</h1>" },
+            "from": { "file": "resources/views/pages/orders/[RepairOrder-reference].blade.php", "needle": "<h1>{{ $repairOrder->reference }}</h1>", "symbol": "$repairOrder" },
             "expect": { "file": "app/Models/RepairOrder.php", "needle": "class RepairOrder extends Model" }
         },
         {
             "id": "int-volt-functional-prop",
             "surface": "definition",
             "note": "Volt functional API: $this->rushCount in the template resolves to a computed() assignment, no class involved.",
-            "from": { "file": "resources/views/livewire/rush-counter.blade.php", "needle": "{{ $label }}: {{ $this->rushCount }}" },
+            "from": { "file": "resources/views/livewire/rush-counter.blade.php", "needle": "{{ $label }}: {{ $this->rushCount }}", "symbol": "rushCount" },
             "expect": { "file": "resources/views/livewire/rush-counter.blade.php", "needle": "$rushCount = computed(fn (): int" }
         },
         {
             "id": "vendor-sanctum-trait",
             "surface": "definition",
             "note": "VENDOR resolution: HasApiTokens from laravel/sanctum on the User model.",
-            "from": { "file": "app/Models/User.php", "needle": "use Billable, HasApiTokens, HasFactory, Notifiable, TwoFactorAuthenticatable;" },
+            "from": { "file": "app/Models/User.php", "needle": "use Billable, HasApiTokens, HasFactory, Notifiable, TwoFactorAuthenticatable;", "symbol": "HasApiTokens" },
             "expect": { "file": "vendor/laravel/sanctum/src/HasApiTokens.php", "needle": "trait HasApiTokens" }
         },
         {
             "id": "card-rule-contract",
             "surface": "cardinality",
             "note": "48 RuleContract implementors under app/Bench/Rules/, fanned in through RuleRegistry::RULES.",
-            "from": { "file": "app/Bench/Contracts/RuleContract.php", "needle": "interface RuleContract" },
+            "from": { "file": "app/Bench/Contracts/RuleContract.php", "needle": "interface RuleContract", "symbol": "RuleContract" },
             "expect": {
                 "exact_count": 48,
                 "implementations": [
@@ -340,13 +340,13 @@
             "id": "card-report-contract",
             "surface": "cardinality",
             "note": "exact_count is exact, not a minimum: a tool returning 20, 25 or 100 implementors is wrong.",
-            "from": { "file": "app/Bench/Contracts/ReportContract.php", "needle": "interface ReportContract" },
+            "from": { "file": "app/Bench/Contracts/ReportContract.php", "needle": "interface ReportContract", "symbol": "ReportContract" },
             "expect": { "exact_count": 24 }
         },
         {
             "id": "dir-contract-parent",
             "surface": "direction",
-            "from": { "file": "app/Bench/Contracts/ReportContract.php", "needle": "interface ReportContract" },
+            "from": { "file": "app/Bench/Contracts/ReportContract.php", "needle": "interface ReportContract", "symbol": "ReportContract" },
             "expect": {
                 "kind": "parent_of",
                 "candidate": { "file": "app/Bench/Reports/CashFlowReport.php", "needle": "class CashFlowReport extends AbstractPeriodicReport implements CompositeContract, AuditableContract" },
@@ -356,7 +356,7 @@
         {
             "id": "dir-implementor-child",
             "surface": "direction",
-            "from": { "file": "app/Bench/Reports/CashFlowReport.php", "needle": "class CashFlowReport extends AbstractPeriodicReport implements CompositeContract, AuditableContract" },
+            "from": { "file": "app/Bench/Reports/CashFlowReport.php", "needle": "class CashFlowReport extends AbstractPeriodicReport implements CompositeContract, AuditableContract", "symbol": "CashFlowReport" },
             "expect": {
                 "kind": "child_of",
                 "candidate": { "file": "app/Bench/Support/AbstractPeriodicReport.php", "needle": "abstract class AbstractPeriodicReport extends AbstractReport implements ScheduleContract" }
@@ -376,7 +376,7 @@
         {
             "id": "imp-const-not-function",
             "surface": "import-precision",
-            "from": { "file": "app/Support/Formatting/UnitLabel.php", "needle": "use const App\\Support\\ATELIER_UNIT_SUFFIX;" },
+            "from": { "file": "app/Support/Formatting/UnitLabel.php", "needle": "use const App\\Support\\ATELIER_UNIT_SUFFIX;", "symbol": "ATELIER_UNIT_SUFFIX" },
             "expect": {
                 "kind": "imports",
                 "candidate": { "file": "app/Support/Units.php", "needle": "const ATELIER_UNIT_SUFFIX = 'u';" },
@@ -386,7 +386,7 @@
         {
             "id": "imp-function-not-const",
             "surface": "import-precision",
-            "from": { "file": "app/Support/Formatting/UnitFormatter.php", "needle": "use function App\\Support\\atelier_format_unit;" },
+            "from": { "file": "app/Support/Formatting/UnitFormatter.php", "needle": "use function App\\Support\\atelier_format_unit;", "symbol": "atelier_format_unit" },
             "expect": {
                 "kind": "imports",
                 "candidate": { "file": "app/Support/Units.php", "needle": "function atelier_format_unit(int $value): string" },
@@ -396,7 +396,7 @@
         {
             "id": "imp-one-of-two-siblings",
             "surface": "import-precision",
-            "from": { "file": "app/Support/Pair/PairConsumer.php", "needle": "use App\\Support\\Pair\\Left;" },
+            "from": { "file": "app/Support/Pair/PairConsumer.php", "needle": "use App\\Support\\Pair\\Left;", "symbol": "Left" },
             "expect": {
                 "kind": "imports",
                 "candidate": { "file": "app/Support/Pair/Left.php", "needle": "final class Left" },
@@ -406,7 +406,7 @@
         {
             "id": "lane-local-money",
             "surface": "resolution",
-            "from": { "file": "app/Models/RepairOrder.php", "needle": "'subtotal_cents' => Money::class," },
+            "from": { "file": "app/Models/RepairOrder.php", "needle": "'subtotal_cents' => Money::class,", "symbol": "Money" },
             "expect": {
                 "kind": "lane_local",
                 "candidate": { "file": "app/Casts/Money.php", "needle": "class Money implements CastsAttributes" },
@@ -416,7 +416,7 @@
         {
             "id": "lane-local-customer",
             "surface": "resolution",
-            "from": { "file": "app/Models/Device.php", "needle": "return $this->belongsTo(Customer::class);" },
+            "from": { "file": "app/Models/Device.php", "needle": "return $this->belongsTo(Customer::class);", "symbol": "Customer" },
             "expect": {
                 "kind": "lane_local",
                 "candidate": { "file": "app/Models/Customer.php", "needle": "class Customer extends Model" },
@@ -437,7 +437,7 @@
         {
             "id": "lane-local-ref-prefix",
             "surface": "resolution",
-            "from": { "file": "app/Concerns/HasReference.php", "needle": "ATELIER_REF_PREFIX)," },
+            "from": { "file": "app/Concerns/HasReference.php", "needle": "ATELIER_REF_PREFIX),", "symbol": "ATELIER_REF_PREFIX" },
             "expect": {
                 "kind": "lane_local",
                 "candidate": { "file": "app/Support/helpers.php", "needle": "const ATELIER_REF_PREFIX = 'AT';" },
@@ -467,7 +467,7 @@
         {
             "id": "parents-contract-three",
             "surface": "multi-parent",
-            "from": { "file": "app/Bench/Contracts/CompositeContract.php", "needle": "interface CompositeContract extends ReportContract, CacheableContract, ScheduleContract" },
+            "from": { "file": "app/Bench/Contracts/CompositeContract.php", "needle": "interface CompositeContract extends ReportContract, CacheableContract, ScheduleContract", "symbol": "CompositeContract" },
             "expect": {
                 "exact_count": 3,
                 "min_references": 3,
@@ -481,7 +481,7 @@
         {
             "id": "parents-class-one-plus-two",
             "surface": "multi-parent",
-            "from": { "file": "app/Bench/Reports/CashFlowReport.php", "needle": "class CashFlowReport extends AbstractPeriodicReport implements CompositeContract, AuditableContract" },
+            "from": { "file": "app/Bench/Reports/CashFlowReport.php", "needle": "class CashFlowReport extends AbstractPeriodicReport implements CompositeContract, AuditableContract", "symbol": "CashFlowReport" },
             "expect": {
                 "extends_count": 1,
                 "exact_count": 3,
@@ -496,37 +496,37 @@
         {
             "id": "def-enum-implements",
             "surface": "definition",
-            "from": { "file": "app/Support/Edge/SeverityLevel.php", "needle": "return SeverityLevel::fromScore($score);" },
+            "from": { "file": "app/Support/Edge/SeverityLevel.php", "needle": "return SeverityLevel::fromScore($score);", "symbol": "SeverityLevel" },
             "expect": { "file": "app/Support/Edge/SeverityLevel.php", "needle": "enum SeverityLevel: string implements HasLabel" }
         },
         {
             "id": "def-first-class-callable",
             "surface": "definition",
-            "from": { "file": "app/Support/Edge/CallableStore.php", "needle": "$this->handlers[] = $this->double(...);" },
+            "from": { "file": "app/Support/Edge/CallableStore.php", "needle": "$this->handlers[] = $this->double(...);", "symbol": "double" },
             "expect": { "file": "app/Support/Edge/CallableStore.php", "needle": "public function double(int $value): int" }
         },
         {
             "id": "def-readonly-promoted",
             "surface": "definition",
-            "from": { "file": "app/Support/Edge/ImmutablePoint.php", "needle": "return new self($this->x + $dx, $this->y + $dy);" },
+            "from": { "file": "app/Support/Edge/ImmutablePoint.php", "needle": "return new self($this->x + $dx, $this->y + $dy);", "symbol": "self" },
             "expect": { "file": "app/Support/Edge/ImmutablePoint.php", "needle": "readonly class ImmutablePoint" }
         },
         {
             "id": "def-intersection-type",
             "surface": "definition",
-            "from": { "file": "app/Support/Edge/Tally.php", "needle": "return $this->sizeOf(new \\ArrayIterator($rows));" },
+            "from": { "file": "app/Support/Edge/Tally.php", "needle": "return $this->sizeOf(new \\ArrayIterator($rows));", "symbol": "sizeOf" },
             "expect": { "file": "app/Support/Edge/Tally.php", "needle": "public function sizeOf(Countable&Traversable $items): int" }
         },
         {
             "id": "def-attribute-class",
             "surface": "definition",
-            "from": { "file": "app/Support/Edge/Trackable.php", "needle": "#[Trackable('probe-heartbeat')]" },
+            "from": { "file": "app/Support/Edge/Trackable.php", "needle": "#[Trackable('probe-heartbeat')]", "symbol": "Trackable" },
             "expect": { "file": "app/Support/Edge/Trackable.php", "needle": "final class Trackable" }
         },
         {
             "id": "refs-attribute-usage",
             "surface": "references",
-            "from": { "file": "app/Support/Edge/Trackable.php", "needle": "final class Trackable" },
+            "from": { "file": "app/Support/Edge/Trackable.php", "needle": "final class Trackable", "symbol": "Trackable" },
             "expect": {
                 "min_references": 2,
                 "known_sites": [
@@ -539,39 +539,39 @@
             "id": "def-new-in-initializer",
             "surface": "definition",
             "note": "Also exercises a `never` return type on reject() in the same class.",
-            "from": { "file": "app/Support/Edge/ClockAware.php", "needle": "return (new ClockAware())->currentTimestamp();" },
+            "from": { "file": "app/Support/Edge/ClockAware.php", "needle": "return (new ClockAware())->currentTimestamp();", "symbol": "ClockAware" },
             "expect": { "file": "app/Support/Edge/ClockAware.php", "needle": "public function __construct(private Clock $clock = new SystemClock())" }
         },
         {
             "id": "def-static-closure",
             "surface": "definition",
             "note": "The closure's match expression has no default arm.",
-            "from": { "file": "app/Support/Edge/PriorityMatcher.php", "needle": "return ($this->resolver())($level);" },
+            "from": { "file": "app/Support/Edge/PriorityMatcher.php", "needle": "return ($this->resolver())($level);", "symbol": "resolver" },
             "expect": { "file": "app/Support/Edge/PriorityMatcher.php", "needle": "return static function (string $level): int {" }
         },
         {
             "id": "def-named-args",
             "surface": "definition",
-            "from": { "file": "app/Support/Edge/InvoiceLineBuilder.php", "needle": "return $this->build(label: 'Diagnostic fee', unitPriceCents: 5000);" },
+            "from": { "file": "app/Support/Edge/InvoiceLineBuilder.php", "needle": "return $this->build(label: 'Diagnostic fee', unitPriceCents: 5000);", "symbol": "build" },
             "expect": { "file": "app/Support/Edge/InvoiceLineBuilder.php", "needle": "public function build(string $label, int $quantity = 1, int $unitPriceCents = 0): array" }
         },
         {
             "id": "def-nullsafe-chain",
             "surface": "definition",
-            "from": { "file": "app/Support/Edge/OrderLabel.php", "needle": "return $order?->device?->label();" },
+            "from": { "file": "app/Support/Edge/OrderLabel.php", "needle": "return $order?->device?->label();", "symbol": "label" },
             "expect": { "file": "app/Models/Device.php", "needle": "public function label(): string" }
         },
         {
             "id": "def-docblock-generic",
             "surface": "definition",
             "note": "@extends Collection<int, Part> on the declaring class.",
-            "from": { "file": "app/Support/Edge/PartCollection.php", "needle": "return new PartCollection($parts);" },
+            "from": { "file": "app/Support/Edge/PartCollection.php", "needle": "return new PartCollection($parts);", "symbol": "PartCollection" },
             "expect": { "file": "app/Support/Edge/PartCollection.php", "needle": "final class PartCollection extends Collection" }
         },
         {
             "id": "impl-trait-abstract",
             "surface": "implementation",
-            "from": { "file": "app/Support/Edge/HasWeighting.php", "needle": "abstract public function weight(): int;" },
+            "from": { "file": "app/Support/Edge/HasWeighting.php", "needle": "abstract public function weight(): int;", "symbol": "weight" },
             "expect": {
                 "implementations": [
                     { "file": "app/Support/Edge/LightItem.php", "needle": "public function weight(): int" },
@@ -583,14 +583,14 @@
             "id": "def-interface-const-via-impl",
             "surface": "definition",
             "note": "CACHE_TTL is declared on CacheableContract; CashFlowReport inherits it (interface const, not overridden).",
-            "from": { "file": "app/Support/Edge/CacheableTtlProbe.php", "needle": "return CashFlowReport::CACHE_TTL;" },
+            "from": { "file": "app/Support/Edge/CacheableTtlProbe.php", "needle": "return CashFlowReport::CACHE_TTL;", "symbol": "CACHE_TTL" },
             "expect": { "file": "app/Bench/Contracts/CacheableContract.php", "needle": "public const int CACHE_TTL = 3600;" }
         },
         {
             "id": "def-facade-static-call",
             "surface": "definition",
             "note": "Facade edge: the static call resolves through Illuminate\\Support\\Facades\\Log (@see LogManager) to the manager's instance method; the facade class is an intermediate, not the answer. Needs composer install (vendor/).",
-            "from": { "file": "app/Listeners/SendCompletionNotice.php", "needle": "Log::info('Repair completed', [" },
+            "from": { "file": "app/Listeners/SendCompletionNotice.php", "needle": "Log::info('Repair completed', [", "symbol": "info" },
             "expect": {
                 "kind": "facade",
                 "file": "vendor/laravel/framework/src/Illuminate/Log/LogManager.php",
@@ -602,7 +602,7 @@
             "id": "def-policy-ability",
             "surface": "definition",
             "note": "Ability string -> policy method, mapped by Gate::policy in AppServiceProvider::boot (known_sites); the method is named by the string alone.",
-            "from": { "file": "app/Support/Edge/StringKeyProbe.php", "needle": "return Gate::forUser($user)->allows('update', $order);" },
+            "from": { "file": "app/Support/Edge/StringKeyProbe.php", "needle": "return Gate::forUser($user)->allows('update', $order);", "symbol": "update" },
             "expect": {
                 "kind": "string_key",
                 "file": "app/Policies/RepairOrderPolicy.php",
@@ -616,7 +616,7 @@
             "id": "def-query-scope",
             "surface": "definition",
             "note": "Local query scope: ->open() on a Builder resolves to scopeOpen() on the model through the scope prefix; nothing named open() exists.",
-            "from": { "file": "app/Filament/Widgets/RepairStats.php", "needle": "Stat::make('Open orders', (string) RepairOrder::query()->open()->count())," },
+            "from": { "file": "app/Filament/Widgets/RepairStats.php", "needle": "Stat::make('Open orders', (string) RepairOrder::query()->open()->count()),", "symbol": "open" },
             "expect": {
                 "kind": "scope",
                 "file": "app/Models/RepairOrder.php",
@@ -627,7 +627,7 @@
             "id": "def-accessor-attribute",
             "surface": "definition",
             "note": "New-style accessor: the snake_case property read resolves to the camelCase method returning Attribute::get; no property named display_name exists.",
-            "from": { "file": "resources/views/report/summary.blade.php", "needle": "<p>Customer: {{ $order->customer->display_name }}</p>" },
+            "from": { "file": "resources/views/report/summary.blade.php", "needle": "<p>Customer: {{ $order->customer->display_name }}</p>", "symbol": "display_name" },
             "expect": {
                 "kind": "accessor",
                 "file": "app/Models/Customer.php",
@@ -638,7 +638,7 @@
             "id": "def-container-string-key",
             "surface": "definition",
             "note": "String-keyed container binding: app('atelier.clock') has no class to look up; the answer is the singleton registration, whose closure returns ClockAware.",
-            "from": { "file": "app/Support/Edge/StringKeyProbe.php", "needle": "return app('atelier.clock')->currentTimestamp();" },
+            "from": { "file": "app/Support/Edge/StringKeyProbe.php", "needle": "return app('atelier.clock')->currentTimestamp();", "symbol": "atelier.clock" },
             "expect": {
                 "kind": "string_key",
                 "file": "app/Providers/AppServiceProvider.php",
@@ -650,7 +650,7 @@
             "id": "def-middleware-alias",
             "surface": "definition",
             "note": "Middleware alias: 'record.visit' is mapped to the class in bootstrap/app.php (known_sites); the class is the definition.",
-            "from": { "file": "routes/web.php", "needle": "->middleware('record.visit')" },
+            "from": { "file": "routes/web.php", "needle": "->middleware('record.visit')", "symbol": "record.visit" },
             "expect": {
                 "kind": "string_key",
                 "file": "app/Http/Middleware/RecordReportVisit.php",
@@ -664,7 +664,7 @@
             "id": "def-route-to-handler",
             "surface": "definition",
             "note": "Route registration array [Controller::class, 'show'] -> the controller method. Same id as the rust/typescript/javascript lanes.",
-            "from": { "file": "routes/web.php", "needle": "Route::get('/report/{repairOrder:reference}', [ReportController::class, 'show'])" },
+            "from": { "file": "routes/web.php", "needle": "Route::get('/report/{repairOrder:reference}', [ReportController::class, 'show'])", "symbol": "show" },
             "expect": {
                 "file": "app/Http/Controllers/ReportController.php",
                 "needle": "public function show(RepairOrder $repairOrder): View"
@@ -674,7 +674,7 @@
             "id": "resolution-route-model-binding",
             "surface": "resolution",
             "note": "{repairOrder:reference} binds the RepairOrder model by its reference column, not its id; the parameter name selects the model, the suffix selects the key.",
-            "from": { "file": "routes/web.php", "needle": "Route::get('/report/{repairOrder:reference}', [ReportController::class, 'show'])" },
+            "from": { "file": "routes/web.php", "needle": "Route::get('/report/{repairOrder:reference}', [ReportController::class, 'show'])", "symbol": "repairOrder" },
             "expect": {
                 "kind": "route_model_binding",
                 "candidate": { "file": "app/Models/RepairOrder.php", "needle": "class RepairOrder extends Model" },
@@ -685,7 +685,7 @@
             "id": "def-config-key",
             "surface": "definition",
             "note": "config('atelier.labor_rate_cents') -> the array key in config/atelier.php (file = first segment, key = second).",
-            "from": { "file": "app/Services/StandardInvoiceCalculator.php", "needle": "return $parts + (int) config('atelier.labor_rate_cents');" },
+            "from": { "file": "app/Services/StandardInvoiceCalculator.php", "needle": "return $parts + (int) config('atelier.labor_rate_cents');", "symbol": "labor_rate_cents" },
             "expect": {
                 "kind": "string_key",
                 "file": "config/atelier.php",
@@ -696,7 +696,7 @@
             "id": "def-lang-key",
             "surface": "definition",
             "note": "__('atelier.note_created') -> the array key in lang/en/atelier.php.",
-            "from": { "file": "app/Http/Controllers/Api/OrderController.php", "needle": "'message' => __('atelier.note_created')," },
+            "from": { "file": "app/Http/Controllers/Api/OrderController.php", "needle": "'message' => __('atelier.note_created'),", "symbol": "note_created" },
             "expect": {
                 "kind": "string_key",
                 "file": "lang/en/atelier.php",
@@ -707,63 +707,63 @@
             "id": "def-free-function",
             "surface": "definition",
             "note": "Canonical mirror of the php-local def-global-function id, asked from a second call site: the declaration is the global function in helpers.php, not the trait that also calls it.",
-            "from": { "file": "app/Support/Canonical/CanonicalProbe.php", "needle": "return atelier_format_reference('CN', $number);" },
+            "from": { "file": "app/Support/Canonical/CanonicalProbe.php", "needle": "return atelier_format_reference('CN', $number);", "symbol": "atelier_format_reference" },
             "expect": { "file": "app/Support/helpers.php", "needle": "function atelier_format_reference(string $prefix, int $number): string" }
         },
         {
             "id": "def-assoc-const",
             "surface": "definition",
             "note": "Canonical mirror of the php-local def-class-const id: class constant read as Reference::PREFIX_SEPARATOR, no instance involved.",
-            "from": { "file": "app/Support/Canonical/CanonicalProbe.php", "needle": "$separator = Reference::PREFIX_SEPARATOR;" },
+            "from": { "file": "app/Support/Canonical/CanonicalProbe.php", "needle": "$separator = Reference::PREFIX_SEPARATOR;", "symbol": "PREFIX_SEPARATOR" },
             "expect": { "file": "app/Support/Reference.php", "needle": "public const PREFIX_SEPARATOR = '-';" }
         },
         {
             "id": "def-enum-variant",
             "surface": "definition",
             "note": "Canonical mirror of the php-local def-enum-case id, asked from the scopeRush query site: the enum case is a class-body declaration on the enum.",
-            "from": { "file": "app/Models/RepairOrder.php", "needle": "->where('priority', Priority::Rush->value)" },
+            "from": { "file": "app/Models/RepairOrder.php", "needle": "->where('priority', Priority::Rush->value)", "symbol": "Rush" },
             "expect": { "file": "app/Enums/Priority.php", "needle": "case Rush = 'rush';" }
         },
         {
             "id": "def-static-factory",
             "surface": "definition",
             "note": "Static alternate constructor on the enum; php had no lane-local id for this.",
-            "from": { "file": "app/Support/Canonical/CanonicalProbe.php", "needle": "return Priority::fromWeight(2);" },
+            "from": { "file": "app/Support/Canonical/CanonicalProbe.php", "needle": "return Priority::fromWeight(2);", "symbol": "fromWeight" },
             "expect": { "file": "app/Enums/Priority.php", "needle": "public static function fromWeight(int $weight): self" }
         },
         {
             "id": "def-container-binding",
             "surface": "definition",
             "note": "Same question as the other lanes: the default binding constructs StandardInvoiceCalculator, so the definition is that class, not the interface.",
-            "from": { "file": "app/Providers/AppServiceProvider.php", "needle": "$this->app->bind(InvoiceCalculator::class, StandardInvoiceCalculator::class);" },
+            "from": { "file": "app/Providers/AppServiceProvider.php", "needle": "$this->app->bind(InvoiceCalculator::class, StandardInvoiceCalculator::class);", "symbol": "StandardInvoiceCalculator" },
             "expect": { "file": "app/Services/StandardInvoiceCalculator.php", "needle": "class StandardInvoiceCalculator implements InvoiceCalculator" }
         },
         {
             "id": "def-trait-method-through-binding",
             "surface": "definition",
             "note": "Canonical mirror of the php-local def-interface-through-binding id: the call goes through the container to whichever InvoiceCalculator is bound, so the declaration is the interface method (two implementors, see impl-invoice-calculator).",
-            "from": { "file": "app/Support/Canonical/CanonicalProbe.php", "needle": "return app(InvoiceCalculator::class)->calculate($order);" },
+            "from": { "file": "app/Support/Canonical/CanonicalProbe.php", "needle": "return app(InvoiceCalculator::class)->calculate($order);", "symbol": "calculate" },
             "expect": { "file": "app/Contracts/InvoiceCalculator.php", "needle": "public function calculate(RepairOrder $order): int;" }
         },
         {
             "id": "def-import-alias",
             "surface": "definition",
             "note": "Canonical mirror of the php-local def-shadow-alias-billing id, asked at the import itself: `use ... as BillingFormatter` resolves to App\\Billing\\Formatter, never App\\Reporting\\Formatter.",
-            "from": { "file": "app/Http/Controllers/ReportController.php", "needle": "use App\\Billing\\Formatter as BillingFormatter;" },
+            "from": { "file": "app/Http/Controllers/ReportController.php", "needle": "use App\\Billing\\Formatter as BillingFormatter;", "symbol": "Formatter" },
             "expect": { "file": "app/Billing/Formatter.php", "needle": "class Formatter" }
         },
         {
             "id": "def-error-subclass",
             "surface": "definition",
             "note": "Same question as the typescript/javascript/python lanes: the thrown subclass, not its base (AtelierError) and not RuntimeException.",
-            "from": { "file": "app/Support/Canonical/CanonicalProbe.php", "needle": "throw new NotFoundError('repair order', (string) $reference);" },
+            "from": { "file": "app/Support/Canonical/CanonicalProbe.php", "needle": "throw new NotFoundError('repair order', (string) $reference);", "symbol": "NotFoundError" },
             "expect": { "file": "app/Support/Canonical/NotFoundError.php", "needle": "class NotFoundError extends AtelierError" }
         },
         {
             "id": "def-proxy-forwarded-method",
             "surface": "definition",
             "note": "Canonical mirror of the php-local card-magic-forward id. Technician declares no bookSlot method: ForwardsToSchedule::__call hands the name to Schedule at runtime (same question as the ts/js Proxy and the python __getattr__). The `@method` docblock line on Technician is a hint, not a declaration.",
-            "from": { "file": "database/seeders/DatabaseSeeder.php", "needle": "$technician->bookSlot($slot);" },
+            "from": { "file": "database/seeders/DatabaseSeeder.php", "needle": "$technician->bookSlot($slot);", "symbol": "bookSlot" },
             "expect": {
                 "kind": "dynamic_method",
                 "file": "app/Support/Schedule.php",
@@ -778,7 +778,7 @@
             "id": "impl-invoice-calculator",
             "surface": "implementation",
             "note": "Canonical mirror of the php-local impl-interface id. php is nominal: both implementors write `implements InvoiceCalculator`, unlike the python lane's structural Protocol.",
-            "from": { "file": "app/Contracts/InvoiceCalculator.php", "needle": "interface InvoiceCalculator" },
+            "from": { "file": "app/Contracts/InvoiceCalculator.php", "needle": "interface InvoiceCalculator", "symbol": "InvoiceCalculator" },
             "expect": {
                 "min_implementations": 2,
                 "implementations": [
@@ -791,7 +791,7 @@
             "id": "impl-notifier-contract",
             "surface": "implementation",
             "note": "8 concrete implementors, all reaching the contract through AbstractNotifier; the abstract base itself is excluded by the counting rule in notes.",
-            "from": { "file": "app/Bench/Contracts/NotifierContract.php", "needle": "interface NotifierContract" },
+            "from": { "file": "app/Bench/Contracts/NotifierContract.php", "needle": "interface NotifierContract", "symbol": "NotifierContract" },
             "expect": {
                 "min_implementations": 8,
                 "implementations": [
@@ -810,7 +810,7 @@
             "id": "impl-report-contract",
             "surface": "implementation",
             "note": "24 concrete implementors through AbstractReport / AbstractPeriodicReport. Same counting rule and the same 24 as card-report-contract: abstract bases excluded, ReportRegistry is a fan-in holder and not an implementor.",
-            "from": { "file": "app/Bench/Contracts/ReportContract.php", "needle": "interface ReportContract" },
+            "from": { "file": "app/Bench/Contracts/ReportContract.php", "needle": "interface ReportContract", "symbol": "ReportContract" },
             "expect": {
                 "min_implementations": 24,
                 "implementations": [
@@ -845,7 +845,7 @@
             "id": "refs-money-class",
             "surface": "references",
             "note": "The lane-local Money cast (see lane-local-money): three `use` imports plus three cast-map entries.",
-            "from": { "file": "app/Casts/Money.php", "needle": "class Money implements CastsAttributes" },
+            "from": { "file": "app/Casts/Money.php", "needle": "class Money implements CastsAttributes", "symbol": "Money" },
             "expect": {
                 "min_references": 6,
                 "known_sites": [
@@ -872,7 +872,7 @@
             "id": "refs-row-from-cents",
             "surface": "references",
             "note": "Eight canonical summaries call the row helper once each; nothing else constructs a ReportRow.",
-            "from": { "file": "app/Support/Canonical/Reporting/ReportRow.php", "needle": "public static function rowFromCents(string $label, int $cents): self" },
+            "from": { "file": "app/Support/Canonical/Reporting/ReportRow.php", "needle": "public static function rowFromCents(string $label, int $cents): self", "symbol": "rowFromCents" },
             "expect": {
                 "min_references": 8,
                 "known_sites": [
@@ -885,7 +885,7 @@
             "id": "refs-report-registry",
             "surface": "references",
             "note": "Single fan-in constant for the 24 reports, mirroring RuleRegistry::RULES; read by the registry's own accessors and by the canonical feature test.",
-            "from": { "file": "app/Bench/Reports/ReportRegistry.php", "needle": "public const array REPORTS = [" },
+            "from": { "file": "app/Bench/Reports/ReportRegistry.php", "needle": "public const array REPORTS = [", "symbol": "REPORTS" },
             "expect": {
                 "min_references": 3,
                 "known_sites": [
@@ -898,28 +898,28 @@
             "id": "hover-free-function",
             "surface": "hover",
             "note": "Canonical mirror of the php-local hover-global-function id, asked from the canonical call site.",
-            "from": { "file": "app/Support/Canonical/CanonicalProbe.php", "needle": "return atelier_format_reference('CN', $number);" },
+            "from": { "file": "app/Support/Canonical/CanonicalProbe.php", "needle": "return atelier_format_reference('CN', $number);", "symbol": "atelier_format_reference" },
             "expect": { "contains": "zero-padded width" }
         },
         {
             "id": "hover-frozen-seed",
             "surface": "hover",
             "note": "Hover on the frozen dataset must surface the determinism warning, not just the class name.",
-            "from": { "file": "database/seeders/DatabaseSeeder.php", "needle": "class DatabaseSeeder extends Seeder" },
+            "from": { "file": "database/seeders/DatabaseSeeder.php", "needle": "class DatabaseSeeder extends Seeder", "symbol": "DatabaseSeeder" },
             "expect": { "contains": "no faker randomness" }
         },
         {
             "id": "hover-proxy-forwarding",
             "surface": "hover",
             "note": "Hover on the forwarding host must explain that undeclared methods reach Schedule through __call.",
-            "from": { "file": "app/Models/Technician.php", "needle": "class Technician extends Model" },
+            "from": { "file": "app/Models/Technician.php", "needle": "class Technician extends Model", "symbol": "Technician" },
             "expect": { "contains": "resolve through __call" }
         },
         {
             "id": "resolution-shadow-type-billing",
             "surface": "resolution",
             "note": "Type position written through an alias of a same-name class: BillingFormatter is App\\Billing\\Formatter.",
-            "from": { "file": "app/Http/Controllers/ReportController.php", "needle": "private readonly BillingFormatter $money," },
+            "from": { "file": "app/Http/Controllers/ReportController.php", "needle": "private readonly BillingFormatter $money,", "symbol": "BillingFormatter" },
             "expect": {
                 "kind": "shadow_alias",
                 "resolution": "App\\Billing\\Formatter",
@@ -930,7 +930,7 @@
             "id": "resolution-shadow-type-reporting",
             "surface": "resolution",
             "note": "The other half of the same-name pair: ReportingFormatter is App\\Reporting\\Formatter.",
-            "from": { "file": "app/Http/Controllers/ReportController.php", "needle": "private readonly ReportingFormatter $status," },
+            "from": { "file": "app/Http/Controllers/ReportController.php", "needle": "private readonly ReportingFormatter $status,", "symbol": "ReportingFormatter" },
             "expect": {
                 "kind": "shadow_alias",
                 "resolution": "App\\Reporting\\Formatter",
@@ -941,7 +941,7 @@
             "id": "resolution-structural-concern",
             "surface": "resolution",
             "note": "DuckFormatter matches FormatterContract's shape (format(mixed): string) but never writes `implements`, so the structural link is the correct answer while a nominal implementor list must NOT contain it.",
-            "from": { "file": "app/Support/Canonical/DuckFormatter.php", "needle": "final class DuckFormatter" },
+            "from": { "file": "app/Support/Canonical/DuckFormatter.php", "needle": "final class DuckFormatter", "symbol": "DuckFormatter" },
             "expect": {
                 "kind": "structural",
                 "candidate": { "file": "app/Bench/Contracts/FormatterContract.php", "needle": "interface FormatterContract" },
@@ -952,7 +952,7 @@
             "id": "imp-type-only-no-value-edge",
             "surface": "import-precision",
             "note": "php has no `import type`; the faithful equivalent is a `use` consumed only by a docblock. TypeOnlyProbe types its parameter `mixed` on purpose, so this file has no runtime edge to RepairOrder.",
-            "from": { "file": "app/Support/Canonical/TypeOnlyProbe.php", "needle": "use App\\Models\\RepairOrder;" },
+            "from": { "file": "app/Support/Canonical/TypeOnlyProbe.php", "needle": "use App\\Models\\RepairOrder;", "symbol": "RepairOrder" },
             "expect": {
                 "kind": "type_only",
                 "candidate": { "file": "app/Models/RepairOrder.php", "needle": "class RepairOrder extends Model" },
@@ -965,7 +965,7 @@
             "id": "imp-barrel-no-fanout",
             "surface": "import-precision",
             "note": "Exports/barrel.php declares nothing: it registers class_alias entries and is loaded through composer autoload.files. Resolution must land on the real Ledger declaration, never on the barrel file or an unrelated canonical sibling.",
-            "from": { "file": "app/Support/Canonical/CanonicalProbe.php", "needle": "use App\\Support\\Canonical\\Exports\\Ledger as ExportedLedger;" },
+            "from": { "file": "app/Support/Canonical/CanonicalProbe.php", "needle": "use App\\Support\\Canonical\\Exports\\Ledger as ExportedLedger;", "symbol": "Ledger" },
             "expect": {
                 "kind": "barrel",
                 "candidate": { "file": "app/Support/Canonical/Ledger.php", "needle": "final class Ledger" },
@@ -989,7 +989,7 @@
             "id": "hierarchy-incoming-transition",
             "surface": "call_hierarchy",
             "note": "Incoming edges on the lifecycle hub: at least three callers of transitionTo, spread over the model itself, the seeder and the feature suite.",
-            "from": { "file": "app/Models/RepairOrder.php", "needle": "public function transitionTo(RepairStatus $next, string $changedBy): bool" },
+            "from": { "file": "app/Models/RepairOrder.php", "needle": "public function transitionTo(RepairStatus $next, string $changedBy): bool", "symbol": "transitionTo" },
             "expect": {
                 "min_incoming": 3,
                 "incoming_includes": [
@@ -1003,7 +1003,7 @@
             "id": "hierarchy-cross-package",
             "surface": "call_hierarchy",
             "note": "Layer-boundary edges: the HTTP action reaches both halves of the shadow pair through constructor-promoted properties typed by ALIASED imports, so each outgoing edge crosses App\\Http\\Controllers into a different namespace and a bare-name matcher conflates the two Formatter classes.",
-            "from": { "file": "app/Http/Controllers/ReportController.php", "needle": "public function show(RepairOrder $repairOrder): View" },
+            "from": { "file": "app/Http/Controllers/ReportController.php", "needle": "public function show(RepairOrder $repairOrder): View", "symbol": "show" },
             "expect": {
                 "outgoing_includes": [
                     { "file": "app/Billing/Formatter.php", "needle": "public function money(string $decimal, string $currency = 'EUR'): string" },
@@ -1015,28 +1015,28 @@
             "id": "def-module-const",
             "surface": "definition",
             "note": "Namespace-level constant seeded from the global one; the declaration asked for is the right-hand side in helpers.php, not this alias. Same id as the javascript, python and go lanes.",
-            "from": { "file": "app/Support/Canonical/Wave2/constants.php", "needle": "const DEFAULT_REFERENCE_PREFIX = \\ATELIER_REF_PREFIX;" },
+            "from": { "file": "app/Support/Canonical/Wave2/constants.php", "needle": "const DEFAULT_REFERENCE_PREFIX = \\ATELIER_REF_PREFIX;", "symbol": "ATELIER_REF_PREFIX" },
             "expect": { "file": "app/Support/helpers.php", "needle": "const ATELIER_REF_PREFIX = 'AT';" }
         },
         {
             "id": "def-mixin-method",
             "surface": "definition",
             "note": "Technician declares no schedule(); the method arrives through the ForwardsToSchedule trait. php's mixin is the trait, as go's is embedding and python's is the MRO.",
-            "from": { "file": "tests/Feature/Wave2SurfaceTest.php", "needle": "$this->assertInstanceOf(Schedule::class, $technician->schedule());" },
+            "from": { "file": "tests/Feature/Wave2SurfaceTest.php", "needle": "$this->assertInstanceOf(Schedule::class, $technician->schedule());", "symbol": "schedule" },
             "expect": { "file": "app/Concerns/ForwardsToSchedule.php", "needle": "public function schedule(): Schedule" }
         },
         {
             "id": "def-generator-function",
             "surface": "definition",
             "note": "The foreach drives a generator: each() suspends at yield instead of returning an array.",
-            "from": { "file": "app/Support/Canonical/Wave2/StreamConsumer.php", "needle": "foreach ($stream->each() as $reference) {" },
+            "from": { "file": "app/Support/Canonical/Wave2/StreamConsumer.php", "needle": "foreach ($stream->each() as $reference) {", "symbol": "each" },
             "expect": { "file": "app/Support/Canonical/Wave2/OrderStream.php", "needle": "public function each(): Generator" }
         },
         {
             "id": "def-callback-style",
             "surface": "definition",
             "note": "The continuation is a callable parameter. NOTE the console command of the same name carries no such method, so an answer pointing there is wrong.",
-            "from": { "file": "tests/Feature/Wave2SurfaceTest.php", "needle": "RecalculateInventoryJob::withCallback(3, function (?Throwable $error, int $parts) use (&$seen): void {" },
+            "from": { "file": "tests/Feature/Wave2SurfaceTest.php", "needle": "RecalculateInventoryJob::withCallback(3, function (?Throwable $error, int $parts) use (&$seen): void {", "symbol": "withCallback" },
             "expect": {
                 "file": "app/Jobs/RecalculateInventory.php",
                 "needle": "public static function withCallback(int $restockLevel, callable $done): void",
@@ -1049,7 +1049,7 @@
             "id": "impl-repository-generic",
             "surface": "implementation",
             "note": "One docblock-generic interface, eight implementors. PHP has no runtime generics, so @template carries the parameter; the counting rule in notes applies unchanged.",
-            "from": { "file": "app/Bench/Contracts/RepositoryContract.php", "needle": "interface RepositoryContract" },
+            "from": { "file": "app/Bench/Contracts/RepositoryContract.php", "needle": "interface RepositoryContract", "symbol": "RepositoryContract" },
             "expect": {
                 "kind": "docblock_generic",
                 "min_implementations": 8,
@@ -1069,7 +1069,7 @@
             "id": "refs-string-event-name",
             "surface": "references",
             "note": "Nothing declares 'note-added' as a symbol: the listener attribute, the dispatch call and the test assertion are connected only by the literal. Distinct from the php-local lw-on-listener-edge id, which scores 'part-added'.",
-            "from": { "file": "app/Livewire/StatusBoard.php", "needle": "#[On('note-added')]" },
+            "from": { "file": "app/Livewire/StatusBoard.php", "needle": "#[On('note-added')]", "symbol": "note-added" },
             "expect": {
                 "kind": "name_only",
                 "min_references": 3,
@@ -1083,7 +1083,7 @@
             "id": "resolution-same-name-command-vs-job",
             "surface": "resolution",
             "note": "Two classes named RecalculateInventory in two namespaces. PHP forbids importing the job under its own name inside the command file, so the import is aliased; the alias is the only thing separating them.",
-            "from": { "file": "app/Console/Commands/RecalculateInventory.php", "needle": "use App\\Jobs\\RecalculateInventory as RecalculateInventoryJob;" },
+            "from": { "file": "app/Console/Commands/RecalculateInventory.php", "needle": "use App\\Jobs\\RecalculateInventory as RecalculateInventoryJob;", "symbol": "RecalculateInventory" },
             "expect": {
                 "kind": "same_name",
                 "candidate": { "file": "app/Jobs/RecalculateInventory.php", "needle": "class RecalculateInventory implements ShouldQueue" },
@@ -1096,7 +1096,7 @@
             "id": "resolution-trait-conflict-insteadof",
             "surface": "resolution",
             "note": "php-local: both traits declare rate(); insteadof selects HasSurcharge's and the aliasing clause rebinds the excluded one as discountRate(). A bare-name matcher returns the wrong half.",
-            "from": { "file": "app/Support/Canonical/Wave2/PricingPolicy.php", "needle": "HasSurcharge::rate insteadof HasDiscount;" },
+            "from": { "file": "app/Support/Canonical/Wave2/PricingPolicy.php", "needle": "HasSurcharge::rate insteadof HasDiscount;", "symbol": "rate" },
             "expect": {
                 "kind": "trait_conflict",
                 "candidate": { "file": "app/Support/Canonical/Wave2/HasSurcharge.php", "needle": "public function rate(): int" },
@@ -1109,7 +1109,7 @@
             "id": "imp-glob-import",
             "surface": "import-precision",
             "note": "PHP has no wildcard import; the brace group-use is the lane's one-statement-many-names construct. It binds exactly the eight names listed and nothing else from the namespace.",
-            "from": { "file": "app/Support/Canonical/Wave2/RepositoryGlob.php", "needle": "use App\\Bench\\Repositories\\{CustomerRepository," },
+            "from": { "file": "app/Support/Canonical/Wave2/RepositoryGlob.php", "needle": "use App\\Bench\\Repositories\\{CustomerRepository,", "symbol": "Repositories" },
             "expect": {
                 "kind": "group_use",
                 "exact_count": 8,
@@ -1126,7 +1126,7 @@
             "id": "imp-namespace-one-member",
             "surface": "import-precision",
             "note": "The import binds a NAMESPACE, not a class: App\\Bench\\Rules holds 49 classes and exactly one is read through the prefix.",
-            "from": { "file": "app/Support/Canonical/Wave2/NamespaceOneMember.php", "needle": "use App\\Bench\\Rules;" },
+            "from": { "file": "app/Support/Canonical/Wave2/NamespaceOneMember.php", "needle": "use App\\Bench\\Rules;", "symbol": "Rules" },
             "expect": {
                 "kind": "namespace_prefix",
                 "candidate": { "file": "app/Bench/Rules/RuleRegistry.php", "needle": "final class RuleRegistry" },
@@ -1139,7 +1139,7 @@
             "id": "dir-trait-user",
             "surface": "direction",
             "note": "php-local: the edge runs trait -> using class. HasReference is used BY Customer and RepairOrder; neither is used by the trait. Distinct from refs-trait-usage, which counts the same sites without asking about orientation.",
-            "from": { "file": "app/Concerns/HasReference.php", "needle": "trait HasReference" },
+            "from": { "file": "app/Concerns/HasReference.php", "needle": "trait HasReference", "symbol": "HasReference" },
             "expect": {
                 "kind": "used_by",
                 "candidate": { "file": "app/Models/Customer.php", "needle": "use HasReference;" },
