@@ -984,6 +984,12 @@
                         "file": "packages/bench/tests/breadth.test.cjs",
                         "needle": "        for (const entry of REPORTS) {"
                     }
+                ],
+                "optional_sites": [
+                    {
+                        "file": "packages/app/src/reportsIndex.js",
+                        "needle": "@type {{ REPORTS: readonly"
+                    }
                 ]
             }
         },
