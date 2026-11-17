@@ -253,7 +253,7 @@
         {
             "id": "rel-hasmanythrough",
             "surface": "definition",
-            "from": { "file": "app/Models/Customer.php", "needle": "public function statusLogs(): HasManyThrough" },
+            "from": { "file": "app/Models/Customer.php", "needle": "return $this->hasManyThrough(StatusLog::class, RepairOrder::class);", "symbol": "StatusLog" },
             "expect": { "file": "app/Models/StatusLog.php", "needle": "class StatusLog extends Model" }
         },
         {
@@ -366,7 +366,7 @@
             "id": "dir-self-reference",
             "surface": "direction",
             "note": "children/parent() on TreeNode is a USES edge, never inheritance.",
-            "from": { "file": "app/Support/TreeNode.php", "needle": "public array $children = [];" },
+            "from": { "file": "app/Support/TreeNode.php", "needle": "private ?TreeNode $parentNode = null;", "symbol": "TreeNode" },
             "expect": {
                 "kind": "uses_self",
                 "candidate": { "file": "app/Support/TreeNode.php", "needle": "final class TreeNode" },
@@ -427,7 +427,7 @@
             "id": "lane-local-dataset",
             "surface": "resolution",
             "note": "php has no Dataset class: targets DatabaseSeeder, the lane's Dataset equivalent.",
-            "from": { "file": "database/seeders/DatabaseSeeder.php", "needle": "Collision-surface anchor: this is the php lane's \"Dataset\" equivalent (the" },
+            "from": { "file": "database/seeders/CanonicalSeeder.php", "needle": "$this->call(DatabaseSeeder::class);", "symbol": "DatabaseSeeder" },
             "expect": {
                 "kind": "lane_local",
                 "candidate": { "file": "database/seeders/DatabaseSeeder.php", "needle": "class DatabaseSeeder extends Seeder" },
@@ -447,7 +447,7 @@
         {
             "id": "lane-local-calculate",
             "surface": "resolution",
-            "from": { "file": "app/Support/HelperInventory.php", "needle": "$calculator = app(InvoiceCalculator::class); // container: app()" },
+            "from": { "file": "app/Support/HelperInventory.php", "needle": "$totalOrZero = rescue(fn () => $calculator->calculate($order), 0); // rescue()", "symbol": "calculate" },
             "expect": {
                 "kind": "lane_local",
                 "candidate": { "file": "app/Contracts/InvoiceCalculator.php", "needle": "public function calculate(RepairOrder $order): int;" },
@@ -457,7 +457,7 @@
         {
             "id": "lane-local-formatter-billing",
             "surface": "resolution",
-            "from": { "file": "app/Http/Controllers/ReportController.php", "needle": "$this->money->money($order->subtotal_cents)" },
+            "from": { "file": "app/Http/Controllers/ReportController.php", "needle": "private readonly BillingFormatter $money,", "symbol": "BillingFormatter" },
             "expect": {
                 "kind": "lane_local",
                 "candidate": { "file": "app/Billing/Formatter.php", "needle": "class Formatter" },
@@ -859,7 +859,7 @@
             "id": "refs-dataset-seeded",
             "surface": "references",
             "note": "DatabaseSeeder is the php lane's frozen Dataset (see lane-local-dataset); the in-code references are the delegating CanonicalSeeder and the canonical feature test.",
-            "from": { "file": "database/seeders/DatabaseSeeder.php", "needle": "public function run(): void" },
+            "from": { "file": "database/seeders/DatabaseSeeder.php", "needle": "class DatabaseSeeder extends Seeder", "symbol": "DatabaseSeeder" },
             "expect": {
                 "min_references": 3,
                 "known_sites": [
