@@ -505,6 +505,10 @@ async function relationRows(relation, id, call) {
             return parseCypherRows(await ask(call, "cypher", {
                 query: `MATCH (c)-[r:CodeRelation]->(t) WHERE t.id = ${subject} AND r.type = 'USES_TRAIT' RETURN c.filePath, c.startLine, c.endLine`,
             }));
+        case "uses":
+            return parseCypherRows(await ask(call, "cypher", {
+                query: `MATCH (s)-[r:CodeRelation]->(t) WHERE s.id = ${subject} AND r.type = 'USES' RETURN t.filePath, t.startLine, t.endLine`,
+            }));
         case "traits used":
             return parseCypherRows(await ask(call, "cypher", {
                 query: `MATCH (s)-[r:CodeRelation]->(t) WHERE s.id = ${subject} AND r.type = 'USES_TRAIT' RETURN t.filePath, t.startLine, t.endLine`,
@@ -522,7 +526,10 @@ export const TWO_SIDED_KINDS = {
     parent_of: { asked: "children", reverse: "parents" },
     child_of: { asked: "parents", reverse: "children" },
     used_by: { asked: "trait users", reverse: "traits used" },
+    // The lane notes: a self-reference is a uses edge back to the declaring type, never extends,
+    // implements or embedding. Asked: the subject's own USES targets; opposite: its parents.
+    uses_self: { asked: "uses", reverse: "parents" },
 };
 
 /** Direction kinds that are definition lookups, asked under "raw". */
-export const RAW_DIRECTION_KINDS = new Set(["uses_self", "declaration_merge"]);
+export const RAW_DIRECTION_KINDS = new Set(["declaration_merge"]);

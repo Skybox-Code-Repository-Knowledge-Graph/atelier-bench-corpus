@@ -159,24 +159,11 @@ export const RULES = [
         uses: ["implementations", "exact_count", "extends_count", "implements_count", "optional_sites", "known_sites", "must_not_include"],
     })),
     {
-        // A use of a type inside its own declaration: the answer is that declaration (a definition
-        // lookup), so the exact single-target rule applies.
-        name: "direction/self",
-        surface: "direction",
-        kinds: ["uses_self"],
-        requires: ["candidate"],
-        forbids: ["exact_count"],
-        check: "target",
-        class: "exact",
-        target: candidate,
-        uses: ["candidate", "known_sites", "must_not_include"],
-    },
-    {
         // The key names one member of a set it does not list: the candidate must be returned when
         // the asked direction is asked, and must not be when the opposite direction is asked.
         name: "direction/two-sided",
         surface: "direction",
-        kinds: ["parent_of", "child_of", "used_by"],
+        kinds: ["parent_of", "child_of", "used_by", "uses_self"],
         requires: [],
         forbids: [],
         check: "twoSided",

@@ -354,10 +354,17 @@ test("direction: two-sided kinds ask the relation and its opposite; definition k
     assert.deepEqual(childOf.locations, parentOf.reverse_locations, "child_of asks the parents");
     assert.deepEqual(childOf.reverse_locations, parentOf.locations, "and the children, the opposite");
 
+    const uses = TABLE(["t.filePath", "t.startLine", "t.endLine"], ["contracts/report.go", "37", "45"]);
+    const selfCalls = fake({ context: RESOLVED, cypher: (args) => (args.query.includes("r.type = 'USES'") ? uses : cypher(args)) });
+    const self = await askSkybox({ id: "t", surface: "direction", kind: "uses_self", direction: null, from }, selfCalls.call);
+    assert.ok(selfCalls.calls.some((entry) => /WHERE s\.id = '[^']+' AND r\.type = 'USES'/.test(entry.args.query ?? "")), "uses_self asks the subject's own USES edges");
+    assert.deepEqual(self.locations, [{ file: "contracts/report.go", line: 37, end_line: 45 }]);
+    assert.deepEqual(self.reverse_locations, parentOf.reverse_locations, "and its parents, the opposite");
+
     const { call, calls } = fake({ context: "Symbol not found in index" });
-    const self = await askSkybox({ id: "t", surface: "direction", kind: "uses_self", direction: null, from: { ...from, text: "Children []*TreeNode", symbol: "TreeNode" } }, call);
-    assert.deepEqual(calls[0].args, { name: "TreeNode" }, "uses_self is a definition lookup by bare name (raw)");
-    assert.deepEqual(self.locations, []);
+    const merged = await askSkybox({ id: "t", surface: "direction", kind: "declaration_merge", direction: null, from: { ...from, text: "export enum RepairStatus {", symbol: "RepairStatus" } }, call);
+    assert.deepEqual(calls[0].args, { name: "RepairStatus" }, "declaration_merge is a definition lookup by bare name (raw)");
+    assert.deepEqual(merged.locations, []);
     assert.equal(await askSkybox({ id: "t", surface: "direction", kind: "inherent_impl", direction: null, from }, fake({}).call), undefined, "an unscored kind is not asked");
 });
 
