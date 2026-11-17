@@ -800,7 +800,7 @@
         {
             "id": "refs-promoted-method-call",
             "surface": "references",
-            "note": "Two of the call sites reach it through embedding, on a *models.Technician receiver.",
+            "note": "Four of the five call sites reach it through embedding, on a *models.Technician receiver; the fifth is inside Schedule itself, on its own receiver.",
             "from": {"file": "core/support/schedule.go", "needle": "func (s *Schedule) NextSlot() int {", "symbol": "NextSlot"},
             "expect": {
                 "exact_count": 5,
@@ -1146,7 +1146,7 @@
         {
             "id": "card-embedded-promotion",
             "surface": "cardinality",
-            "note": "Four methods are promoted onto every embedder of BaseReport; Rows is not among them, which is why each report must declare it.",
+            "note": "Five methods are promoted onto every embedder of BaseReport: Slug, Title and Describe from Component, CacheKey and TTLSeconds from HasCache. The key lists Slug, Title, CacheKey and TTLSeconds, not Describe; Rows is not among the promoted methods, which is why each report must declare it.",
             "from": {"file": "atelier/support/report.go", "needle": "type BaseReport struct {", "symbol": "BaseReport"},
             "expect": {
                 "exact_count": 4,
@@ -1336,7 +1336,7 @@
         {
             "id": "refs-money-class",
             "surface": "references",
-            "note": "Canonical id for the go-local refs-money-type: field types, signature types, constructor calls and package-qualified money.Money mentions all count.",
+            "note": "Canonical id for the go-local refs-money-type: the 44 lines that spell the Money type count, as field types, receiver and signature types, Money{...} composite literals and package-qualified money.Money mentions; a call such as FromCents(100) that never spells the type does not count on its own.",
             "from": {"file": "core/money/money.go", "needle": "type Money struct {", "symbol": "Money"},
             "expect": {
                 "exact_count": 44,
