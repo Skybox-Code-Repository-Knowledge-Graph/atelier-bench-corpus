@@ -1088,22 +1088,30 @@
         {
             "id": "refs-report-contract-registry",
             "surface": "references",
-            "note": "Every registry entry is a construction site of a ReportContract implementor.",
+            "note": "Same sites as refs-report-registry; the earlier floor of 24 counted the Box::new(XReport::new()) constructors, which build implementors and do not reference REPORTS.",
             "from": {
                 "file": "crates/atelier-bench/src/lib.rs",
                 "needle": "pub static REPORTS: Lazy<Vec<Box<dyn ReportContract>>>",
                 "symbol": "REPORTS"
             },
             "expect": {
-                "min_references": 24,
+                "exact_count": 4,
                 "known_sites": [
                     {
-                        "file": "crates/atelier-bench/src/lib.rs",
-                        "needle": "reports::cash_flow_report::CashFlowReport::new()"
+                        "file": "crates/atelier-bench/tests/breadth.rs",
+                        "needle": "assert_eq!(atelier_bench::REPORTS.len(), 24);"
                     },
                     {
-                        "file": "crates/atelier-app/src/http/api.rs",
-                        "needle": "atelier_bench::report(&slug)"
+                        "file": "crates/atelier-bench/tests/breadth.rs",
+                        "needle": "let mut slugs: Vec<&str> = atelier_bench::REPORTS.iter().map(|r| r.slug()).collect();"
+                    },
+                    {
+                        "file": "crates/atelier-bench/tests/breadth.rs",
+                        "needle": "for report in atelier_bench::REPORTS.iter() {"
+                    },
+                    {
+                        "file": "crates/atelier-bench/src/lib.rs",
+                        "needle": "    REPORTS"
                     }
                 ]
             }
