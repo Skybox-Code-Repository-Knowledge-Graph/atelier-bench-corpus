@@ -1442,6 +1442,20 @@
                         "file": "packages/bench/src/reports/weekly-revenue.cjs",
                         "needle": "module.exports = class WeeklyRevenueReport extends AbstractPeriodicReport {"
                     }
+                ],
+                "optional_sites": [
+                    {
+                        "file": "packages/bench/src/support/abstractReport.cjs",
+                        "needle": "class AbstractReport extends AbstractComponent {"
+                    },
+                    {
+                        "file": "packages/bench/src/support/abstractPeriodicReport.cjs",
+                        "needle": "class AbstractPeriodicReport extends AbstractReport {"
+                    },
+                    {
+                        "file": "packages/bench/src/support/abstractCompositeReport.cjs",
+                        "needle": "class AbstractCompositeReport extends AbstractPeriodicReport {"
+                    }
                 ]
             }
         },
@@ -2129,6 +2143,12 @@
                         "file": "packages/bench/src/notifiers/webhookNotifier.cjs",
                         "needle": "class WebhookNotifier extends AbstractNotifier {"
                     }
+                ],
+                "optional_sites": [
+                    {
+                        "file": "packages/bench/src/support/abstractNotifier.cjs",
+                        "needle": "class AbstractNotifier {"
+                    }
                 ]
             }
         },
@@ -2240,6 +2260,20 @@
                     {
                         "file": "packages/bench/src/reports/weekly-revenue.cjs",
                         "needle": "module.exports = class WeeklyRevenueReport extends AbstractPeriodicReport {"
+                    }
+                ],
+                "optional_sites": [
+                    {
+                        "file": "packages/bench/src/support/abstractReport.cjs",
+                        "needle": "class AbstractReport extends AbstractComponent {"
+                    },
+                    {
+                        "file": "packages/bench/src/support/abstractPeriodicReport.cjs",
+                        "needle": "class AbstractPeriodicReport extends AbstractReport {"
+                    },
+                    {
+                        "file": "packages/bench/src/support/abstractCompositeReport.cjs",
+                        "needle": "class AbstractCompositeReport extends AbstractPeriodicReport {"
                     }
                 ]
             }
@@ -2907,6 +2941,12 @@
                     {
                         "file": "packages/bench/src/exporters/yamlExporter.cjs",
                         "needle": "class YamlExporter extends AbstractExporter {"
+                    }
+                ],
+                "optional_sites": [
+                    {
+                        "file": "packages/bench/src/support/abstractExporter.cjs",
+                        "needle": "class AbstractExporter {"
                     }
                 ]
             }
