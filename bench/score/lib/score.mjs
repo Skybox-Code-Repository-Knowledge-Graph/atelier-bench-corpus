@@ -165,19 +165,40 @@ function resolveAll(root, pairs) {
     return { resolved };
 }
 
-/** Score one task. Returns { verdict, detail, rule, notScored, notes }. */
+/** Check the answer's exclusions; locations the key lists are never excluded hits. */
+function checkExclusions(plan, answer, locations, context, reasons, notes) {
+    const subject = {
+        locations,
+        text: typeof answer.text === "string" ? answer.text : "",
+        names: Array.isArray(answer.names) ? answer.names.filter((name) => typeof name === "string") : [],
+    };
+    let notExercised = 0;
+    for (const entry of plan.exclude) {
+        const hit = exclusionHit(entry, subject, context);
+        if (hit === "not-exercised") {
+            notExercised += 1;
+        } else if (hit) {
+            reasons.push(`excluded ${JSON.stringify(entry)} returned`);
+        }
+    }
+    if (notExercised > 0) {
+        notes.push(`${notExercised} lane-prefix exclusion(s) not exercised, scope is lane`);
+    }
+}
+
+/** Score one task. Returns { verdict, detail, rule, class, notScored, notes }. */
 export function scoreTask(task, answer, context) {
     const plan = planTask(task, context.lane);
     if (!plan.scorable) {
         return { verdict: "UNSCORABLE", detail: plan.reason };
     }
 
-    const base = { rule: plan.rule, notScored: plan.notScored };
-    const isTarget = plan.targetInsideSymbol ? coversSite : isDeclaration;
+    const base = { rule: plan.rule, class: plan.class, notScored: plan.notScored };
 
-    const target = resolveAll(context.root, [plan.target]);
-    if (target.problem) {
-        return { ...base, verdict: "UNRESOLVED", detail: target.problem };
+    // Every needle the rule needs must resolve in this checkout before any answer is judged.
+    const needed = resolveAll(context.root, plan.check === "target" ? [plan.target] : plan.entries ?? []);
+    if (needed.problem) {
+        return { ...base, verdict: "UNRESOLVED", detail: needed.problem };
     }
     const allowed = resolveAll(context.root, plan.allow);
     if (allowed.problem) {
@@ -212,11 +233,43 @@ export function scoreTask(task, answer, context) {
     if (!Number.isInteger(unlocated) || unlocated < 0) {
         return { ...base, verdict: "ERROR", detail: "invalid answer: unlocated is not a non-negative integer" };
     }
+    if (answer.text !== undefined && typeof answer.text !== "string") {
+        return { ...base, verdict: "ERROR", detail: "invalid answer: text is not a string" };
+    }
 
-    const expected = target.resolved[0];
     const reasons = [];
     const notes = [];
+    const finish = () => (reasons.length === 0
+        ? { ...base, verdict: "PASS", notes }
+        : { ...base, verdict: "FAIL", detail: reasons.join("; "), notes });
 
+    if (plan.check === "contains") {
+        const text = typeof answer.text === "string" ? answer.text : "";
+        if (text === "") {
+            reasons.push("no text returned");
+        } else if (!text.includes(plan.contains)) {
+            reasons.push(`text does not contain ${JSON.stringify(plan.contains)}`);
+        }
+        return finish();
+    }
+
+    if (plan.check === "callees" || plan.check === "callers") {
+        // Recall: every listed entry must be returned; anything else the tool returns is not judged.
+        const matches = plan.check === "callees" ? isDeclaration : coversSite;
+        const missing = needed.resolved.filter((entry) => !read.locations.some((location) => matches(location, entry)));
+        if (read.locations.length === 0) {
+            reasons.push("no location returned");
+        } else if (missing.length > 0) {
+            const what = plan.check === "callees" ? "callee" : "call site";
+            reasons.push(`${missing.length} of ${needed.resolved.length} listed ${what}(s) not returned, first ${missing[0].file}:${missing[0].line}`);
+        }
+        const unlisted = read.locations.filter((location) => !needed.resolved.some((entry) => matches(location, entry)));
+        checkExclusions(plan, answer, unlisted, context, reasons, notes);
+        return finish();
+    }
+
+    const isTarget = plan.targetInsideSymbol ? coversSite : isDeclaration;
+    const expected = needed.resolved[0];
     const isKnownSite = (location) => allowed.resolved.some((site) => coversSite(location, site));
     const unexpected = read.locations.filter((location) => !isTarget(location, expected) && !isKnownSite(location));
 
@@ -236,27 +289,8 @@ export function scoreTask(task, answer, context) {
     }
 
     // A known site is listed by the key itself, so it is never an excluded hit.
-    const subject = {
-        locations: read.locations.filter((location) => !isKnownSite(location)),
-        text: typeof answer.text === "string" ? answer.text : "",
-        names: Array.isArray(answer.names) ? answer.names.filter((name) => typeof name === "string") : [],
-    };
-    let notExercised = 0;
-    for (const entry of plan.exclude) {
-        const hit = exclusionHit(entry, subject, context);
-        if (hit === "not-exercised") {
-            notExercised += 1;
-        } else if (hit) {
-            reasons.push(`excluded ${JSON.stringify(entry)} returned`);
-        }
-    }
-    if (notExercised > 0) {
-        notes.push(`${notExercised} lane-prefix exclusion(s) not exercised, scope is lane`);
-    }
-
-    return reasons.length === 0
-        ? { ...base, verdict: "PASS", notes }
-        : { ...base, verdict: "FAIL", detail: reasons.join("; "), notes };
+    checkExclusions(plan, answer, read.locations.filter((location) => !isKnownSite(location)), context, reasons, notes);
+    return finish();
 }
 
 /** Score every task of a lane. `root` is the lane directory, `lane` its name in the repository. */
@@ -287,6 +321,7 @@ export function summarize(results) {
     const blank = () => Object.fromEntries([...VERDICTS.map((verdict) => [verdict, 0]), ["total", 0]]);
     const bySurface = {};
     const total = blank();
+    const byClass = { exact: blank(), recall: blank() };
 
     for (const result of results) {
         const row = (bySurface[result.surface] ??= blank());
@@ -294,9 +329,24 @@ export function summarize(results) {
         row.total += 1;
         total[result.verdict] += 1;
         total.total += 1;
+        if (result.class && byClass[result.class]) {
+            byClass[result.class][result.verdict] += 1;
+            byClass[result.class].total += 1;
+        }
     }
+
+    // The two classes are reported side by side and never added together: a recall rule cannot
+    // fail a tool that returns everything, so its passes do not mean what an exact pass means.
+    const ratios = (counts) => ({
+        pass: counts.PASS,
+        answered: counts.PASS + counts.FAIL,
+        scorable: counts.total - counts.UNRESOLVED,
+        asked: counts.PASS + counts.FAIL + counts.UNSUPPORTED + counts.ERROR,
+        notAsked: counts.UNANSWERED,
+    });
+    const classes = { exact: ratios(byClass.exact), recall: ratios(byClass.recall) };
 
     const answered = total.PASS + total.FAIL;
     const scorable = total.total - total.UNSCORABLE - total.UNRESOLVED;
-    return { bySurface, total, answered, scorable };
+    return { bySurface, total, answered, scorable, classes };
 }

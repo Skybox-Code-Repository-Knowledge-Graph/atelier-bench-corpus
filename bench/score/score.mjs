@@ -142,9 +142,11 @@ function renderText({ results, summary, unknownIds }, { lane, tool, scope }) {
         out.push(formatRow(row));
     }
 
-    // Three ratios. The first is the headline: the others count the scorer's own gaps, or the
-    // tasks a tool skipped, against or for the tool.
-    const { total, answered, scorable } = summary;
+    // Two columns, never added together. "exact": the key states the whole answer, so an extra
+    // result fails. "recall-only": the key states part of the answer, so extras are not judged and a
+    // tool that returns everything is not caught. For each: passed of scorable is the headline;
+    // passed of answered shows what the tool did with the questions it was asked.
+    const { total, scorable, classes } = summary;
     const version = typeof tool.version === "string" && tool.version !== "" ? ` ${tool.version}` : "";
     out.push("");
     out.push(`tool: ${tool.name}${version}   lane: ${lane}   scope: ${scope}`);
@@ -152,8 +154,13 @@ function renderText({ results, summary, unknownIds }, { lane, tool, scope }) {
         out.push(`answers for ids this lane does not have: ${unknownIds.length} (${unknownIds.join(", ")})`);
     }
     out.push(`scorable by this scorer: ${scorable} of ${total.total} tasks`);
-    out.push(`passed: ${total.PASS} of ${scorable} scorable (${percent(total.PASS, scorable)})`);
-    out.push(`        ${total.PASS} of ${answered} answered (${percent(total.PASS, answered)}), ${total.PASS} of ${total.total} tasks (${percent(total.PASS, total.total)})`);
+    for (const [name, label] of [["exact", "exact      "], ["recall", "recall-only"]]) {
+        const c = classes[name];
+        if (c.scorable === 0) {
+            continue;
+        }
+        out.push(`${label}  passed ${c.pass} of ${c.scorable} scorable (${percent(c.pass, c.scorable)}), ${c.pass} of ${c.answered} answered (${percent(c.pass, c.answered)})`);
+    }
 
     return `${out.join("\n")}\n`;
 }

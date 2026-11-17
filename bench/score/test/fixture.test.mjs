@@ -134,7 +134,8 @@ test("oracle.mjs output is accepted by score.mjs and passes every scorable task"
     writeFileSync(file, oracle.stdout);
     const scored = run("--root", LANE, "--answers", file);
     assert.equal(scored.status, 0, scored.stderr);
-    assert.match(scored.stdout, /passed: (\d+) of \1 scorable \(100\.0%\)/);
+    assert.match(scored.stdout, /exact +passed (\d+) of \1 scorable \(100\.0%\)/);
+    assert.match(scored.stdout, /recall-only +passed (\d+) of \1 scorable \(100\.0%\)/);
 });
 
 test("every target matched by containment names a task that exists and is scorable", () => {

@@ -163,10 +163,52 @@
         },
         {
             "id": "s-unscorable-surface",
-            "surface": "hover",
+            "surface": "parse-negative",
             "note": "No rule serves this surface yet.",
+            "from": { "file": "src/app.txt", "needle": "gamma uses alpha" },
+            "expect": { "kind": "syntax_error", "must_include": "alpha" }
+        },
+        {
+            "id": "s-hover-pass",
+            "surface": "hover",
+            "note": "The answer's text contains the key's string; surrounding text is not judged (recall).",
             "from": { "file": "src/app.txt", "needle": "gamma uses alpha", "symbol": "alpha" },
-            "expect": { "contains": "alpha" }
+            "expect": { "contains": "alpha declaration" }
+        },
+        {
+            "id": "s-hover-miss",
+            "surface": "hover",
+            "note": "The answer's text lacks the key's string.",
+            "from": { "file": "src/app.txt", "needle": "gamma uses alpha", "symbol": "alpha" },
+            "expect": { "contains": "beta declaration" }
+        },
+        {
+            "id": "s-callees",
+            "surface": "call_hierarchy",
+            "note": "Every listed callee is returned by exact line; an extra callee is not judged (recall).",
+            "from": { "file": "src/app.txt", "needle": "gamma uses alpha", "symbol": "gamma" },
+            "expect": { "outgoing_includes": [ { "file": "src/app.txt", "needle": "alpha declaration" }, { "file": "src/app.txt", "needle": "beta declaration" } ] }
+        },
+        {
+            "id": "s-callees-missing",
+            "surface": "call_hierarchy",
+            "note": "One listed callee is not returned.",
+            "from": { "file": "src/app.txt", "needle": "gamma uses alpha", "symbol": "gamma" },
+            "expect": { "outgoing_includes": [ { "file": "src/app.txt", "needle": "alpha declaration" }, { "file": "src/app.txt", "needle": "beta declaration" } ] }
+        },
+        {
+            "id": "s-callers",
+            "surface": "call_hierarchy",
+            "note": "Every listed call site is covered by a returned caller's range.",
+            "from": { "file": "src/app.txt", "needle": "alpha declaration", "symbol": "alpha" },
+            "expect": { "incoming_includes": [ { "file": "src/app.txt", "needle": "gamma uses alpha" }, { "file": "src/app.txt", "needle": "delta site" } ], "min_incoming": 2 }
+        },
+        {
+            "id": "s-callers-missing",
+            "surface": "call_hierarchy",
+            "note": "One listed call site lies outside every returned range.",
+            "from": { "file": "src/app.txt", "needle": "alpha declaration", "symbol": "alpha" },
+            "expect": { "incoming_includes": [ { "file": "src/app.txt", "needle": "gamma uses alpha" }, { "file": "src/app.txt", "needle": "epsilon target" } ] }
         },
         {
             "id": "s-unscorable-count",
