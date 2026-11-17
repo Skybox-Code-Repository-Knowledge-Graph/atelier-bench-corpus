@@ -42,7 +42,9 @@ in separate columns, never blended.
 
 - **`raw`**: the fewest calls the tool needs to answer, with no help from the adapter. For a
   name-based tool that is one lookup by `from.symbol`, plus whatever call is needed to read a line
-  number from the tool itself. No second guess, no disambiguation by the adapter.
+  number from the tool itself. No second guess, no disambiguation by the adapter. A `raw` score for
+  a name-based tool therefore measures lookup by bare name: the tool never sees the `from` line, so
+  every name that is not unique in the lane is answered with all its candidates and fails.
 - Assisted protocols (the adapter narrows candidates with the tool's own graph, for example) may
   come later, each with its own name and its own call budget, written here first.
 
@@ -62,7 +64,7 @@ An adapter's tests replay recorded tool replies (`bench/adapters/<tool>/test/`).
 
 | Tool | Protocol | Notes |
 | --- | --- | --- |
-| [skybox](skybox/) | `raw`: one `context(name)`, plus one `cypher` lookup by node id for the line of a resolved symbol | Asked: `definition`, `resolution`, `import-precision`. Not asked under `raw`: a symbol that is a segment of an import path, and the kinds whose answer is a relation rather than the symbol's definition (`structural`, `init_order`, `mro`, `derive_generated`, `dyn_upcast`, `blanket_impl`). A `null` symbol is `unsupported`: skybox is asked by name |
+| [skybox](skybox/) | `raw`: one `context(name)`, plus one `cypher` lookup by node id for the line of a resolved symbol | Asked: `definition`, `resolution`, `import-precision`. Not asked under `raw`: a symbol that is a segment of an import path, and the `resolution` kinds whose answer is a relation rather than the symbol's definition (`structural`, `init_order`, `mro`, `derive_generated`, `dyn_upcast`, `blanket_impl`). A `null` symbol is `unsupported`: skybox is asked by name |
 
 To run one locally:
 

@@ -16,7 +16,19 @@ import { symbolColumns } from "../../score/lib/symbol.mjs";
 export const ASKED_SURFACES = new Set(["definition", "resolution", "import-precision"]);
 
 /** Kinds whose answer is a relation of the symbol, not its definition. Not asked under "raw". */
-export const RELATION_KINDS = new Set(["structural", "init_order", "mro", "derive_generated", "dyn_upcast", "blanket_impl"]);
+/**
+ * Questions whose answer is a relation of the symbol, not its definition, keyed `surface:kind`. Not
+ * asked under "raw". Keyed by surface too: python `def-super-cooperative` is a `definition` task of
+ * kind `mro`, and its answer is a definition, so it is asked.
+ */
+export const RELATION_QUESTIONS = new Set([
+    "resolution:structural",
+    "resolution:init_order",
+    "resolution:mro",
+    "resolution:derive_generated",
+    "resolution:dyn_upcast",
+    "resolution:blanket_impl",
+]);
 
 const NOT_FOUND = /^Symbol not found in index/m;
 const AMBIGUOUS = /^Ambiguous: (\d+) symbols? match\. Candidates:\s*$/m;
@@ -122,7 +134,7 @@ function cypherString(value) {
  * question (the task is then left unanswered, which is the honest record).
  */
 export async function askSkybox(question, call) {
-    if (!ASKED_SURFACES.has(question.surface) || RELATION_KINDS.has(question.kind)) {
+    if (!ASKED_SURFACES.has(question.surface) || RELATION_QUESTIONS.has(`${question.surface}:${question.kind}`)) {
         return undefined;
     }
 

@@ -165,4 +165,9 @@ test("a question whose answer is a relation is not asked under the raw protocol"
     const asked = { ...question({ symbol: "AdHocRule", text: "func (r AdHocRule) Evaluate() bool {" }, "resolution"), kind: "structural" };
     assert.equal(await askSkybox(asked, call), undefined);
     assert.equal(calls.length, 0);
+
+    // The same kind on a definition task is a definition question, and is asked.
+    const definition = { ...question({ symbol: "label", text: "return f'{super().label()}'" }, "definition"), kind: "mro" };
+    const answer = await askSkybox(definition, fake({ context: "Symbol not found in index" }).call);
+    assert.deepEqual(answer, { locations: [], text: "Symbol not found in index" });
 });

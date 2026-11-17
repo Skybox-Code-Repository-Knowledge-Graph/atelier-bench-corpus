@@ -62,8 +62,12 @@ jobs:
       - name: Score
         run: |
           node bench/score/score.mjs --lane "$LANE" --answers "skybox-$LANE.json" > "skybox-$LANE.report.txt"
+          node bench/score/score.mjs --lane "$LANE" --answers "skybox-$LANE.json" --format json > "skybox-$LANE.report.json"
+          counts=$(node -e 'const r=require(process.argv[1]).summary;const t=r.total;const asked=t.PASS+t.FAIL+t.UNSUPPORTED+t.ERROR;console.log(`${asked} asked, ${t.UNANSWERED} not asked, of ${r.scorable} scorable`)' "$PWD/skybox-$LANE.report.json")
           {
             echo "### skybox ${SKYBOX_VERSION}, lane ${LANE}, scope lane, protocol raw, corpus ${GITHUB_SHA::7}"
+            echo
+            echo "Lookup by bare name: skybox is asked \`context(name)\` with the task's \`from.symbol\` and never sees the \`from\` line, so a name that is not unique in the lane is answered with every candidate and fails. ${counts}."
             echo
             echo '```'
             sed -n '/^surface /,$p' "skybox-$LANE.report.txt"
@@ -80,4 +84,5 @@ jobs:
           path: |
             skybox-${{ matrix.lane }}.json
             skybox-${{ matrix.lane }}.report.txt
+            skybox-${{ matrix.lane }}.report.json
           if-no-files-found: ignore
