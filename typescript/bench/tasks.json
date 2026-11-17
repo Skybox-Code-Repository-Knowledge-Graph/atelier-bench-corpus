@@ -821,7 +821,7 @@
             "from": {
                 "file": "packages/bench/src/concerns/hasFormatting.ts",
                 "needle": "export const formatting: HasFormatting = {",
-                "symbol": "HasFormatting"
+                "symbol": "formatting"
             },
             "expect": {
                 "kind": "structural",
@@ -1681,7 +1681,8 @@
             "note": "TSX surface: every intrinsic JSX element is a call to the configured factory h(tag, props, ...children); Fragment handles <>...</>.",
             "from": {
                 "file": "packages/app/src/views/reportCard.tsx",
-                "needle": "<article class=\"report-card\" data-reference={props.reference}>"
+                "needle": "<article class=\"report-card\" data-reference={props.reference}>",
+                "symbol": "article"
             },
             "expect": {
                 "kind": "jsx_factory",
