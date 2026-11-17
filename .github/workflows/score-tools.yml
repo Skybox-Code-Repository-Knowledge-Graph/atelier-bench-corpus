@@ -33,7 +33,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        lane: [go]
+        lane: [php, rust, typescript, javascript, python, go]
     env:
       SKYBOX_VERSION: "0.9.0"
       LANE: ${{ matrix.lane }}
