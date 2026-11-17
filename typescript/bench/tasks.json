@@ -606,15 +606,47 @@
                 "symbol": "transitionTo"
             },
             "expect": {
-                "min_references": 11,
+                "exact_count": 11,
                 "known_sites": [
+                    {
+                        "file": "packages/bench/src/dataset.ts",
+                        "needle": "orders[0]!.transitionTo(RepairStatus.Diagnosing, \"seeder\");"
+                    },
+                    {
+                        "file": "packages/bench/src/dataset.ts",
+                        "needle": "orders[0]!.transitionTo(RepairStatus.Repairing, \"seeder\");"
+                    },
+                    {
+                        "file": "packages/bench/src/dataset.ts",
+                        "needle": "orders[0]!.transitionTo(RepairStatus.Completed, \"seeder\");"
+                    },
+                    {
+                        "file": "packages/bench/src/dataset.ts",
+                        "needle": "orders[1]!.transitionTo(RepairStatus.Diagnosing, \"seeder\");"
+                    },
+                    {
+                        "file": "packages/bench/src/dataset.ts",
+                        "needle": "orders[1]!.transitionTo(RepairStatus.AwaitingParts, \"seeder\");"
+                    },
+                    {
+                        "file": "packages/bench/src/dataset.ts",
+                        "needle": "orders[2]!.transitionTo(RepairStatus.Diagnosing, \"seeder\");"
+                    },
+                    {
+                        "file": "packages/bench/src/dataset.ts",
+                        "needle": "orders[2]!.transitionTo(RepairStatus.Repairing, \"seeder\");"
+                    },
                     {
                         "file": "packages/core/src/models/repairOrder.ts",
                         "needle": "if (!this.transitionTo(RepairStatus.Completed, changedBy)) {"
                     },
                     {
-                        "file": "packages/bench/src/dataset.ts",
-                        "needle": "orders[1]!.transitionTo(RepairStatus.AwaitingParts, \"seeder\");"
+                        "file": "packages/core/tests/lifecycle.test.ts",
+                        "needle": "expect(order.transitionTo(RepairStatus.Diagnosing, \"seeder\")).toBe(true);"
+                    },
+                    {
+                        "file": "packages/core/tests/lifecycle.test.ts",
+                        "needle": "expect(order.transitionTo(RepairStatus.Repairing, \"seeder\")).toBe(true);"
                     },
                     {
                         "file": "packages/core/tests/lifecycle.test.ts",
@@ -632,7 +664,7 @@
                 "symbol": "consumedQuantity"
             },
             "expect": {
-                "min_references": 4,
+                "exact_count": 4,
                 "known_sites": [
                     {
                         "file": "packages/bench/src/reports/inventoryTurnoverReport.ts",
@@ -641,6 +673,10 @@
                     {
                         "file": "packages/bench/src/reports/partUsageReport.ts",
                         "needle": "part.consumedQuantity()"
+                    },
+                    {
+                        "file": "packages/bench/src/services/inventoryTurnoverService.ts",
+                        "needle": "return part.stock === 0 ? 0 : part.consumedQuantity() / part.stock;"
                     },
                     {
                         "file": "packages/bench/src/services/partUsageService.ts",
@@ -680,19 +716,235 @@
                 "symbol": "Money"
             },
             "expect": {
-                "min_references": 20,
+                "exact_count": 57,
                 "known_sites": [
                     {
-                        "file": "packages/core/src/models/part.ts",
-                        "needle": "readonly unitPrice: Money,"
+                        "file": "packages/bench/src/dataset.ts",
+                        "needle": "Money,"
+                    },
+                    {
+                        "file": "packages/bench/src/dataset.ts",
+                        "needle": "new Part(1, \"SCR-13\", 'Screen 13\"', new Money(19900), 4),"
+                    },
+                    {
+                        "file": "packages/bench/src/dataset.ts",
+                        "needle": "new Part(2, \"BAT-55\", \"Battery 55Wh\", new Money(8900), 1),"
+                    },
+                    {
+                        "file": "packages/bench/src/dataset.ts",
+                        "needle": "new Part(3, \"KBD-EU\", \"Keyboard EU\", new Money(6400), 7),"
+                    },
+                    {
+                        "file": "packages/bench/src/dataset.ts",
+                        "needle": "new Part(4, \"FAN-A1\", \"Cooling fan\", new Money(2200), 2),"
+                    },
+                    {
+                        "file": "packages/bench/src/dataset.ts",
+                        "needle": "const invoices = [new Invoice(1, 1, new Money(34900)), new Invoice(2, 2, new Money(23425))];"
+                    },
+                    {
+                        "file": "packages/core/src/billing/formatter.ts",
+                        "needle": "import type { Money } from \"../money\";"
+                    },
+                    {
+                        "file": "packages/core/src/billing/formatter.ts",
+                        "needle": "money(amount: Money, currency = \"\"): string {"
+                    },
+                    {
+                        "file": "packages/core/src/billing/formatter.ts",
+                        "needle": "line(quantity: number, description: string, amount: Money): string {"
+                    },
+                    {
+                        "file": "packages/core/src/contracts/invoiceCalculator.ts",
+                        "needle": "import type { Money } from \"../money\";"
+                    },
+                    {
+                        "file": "packages/core/src/contracts/invoiceCalculator.ts",
+                        "needle": "calculate(order: RepairOrder): Money;"
+                    },
+                    {
+                        "file": "packages/core/src/index.ts",
+                        "needle": "export { Money } from \"./money\";"
+                    },
+                    {
+                        "file": "packages/core/src/models/invoice.ts",
+                        "needle": "import { Money } from \"../money\";"
                     },
                     {
                         "file": "packages/core/src/models/invoice.ts",
                         "needle": "readonly total: Money,"
                     },
                     {
-                        "file": "packages/core/src/contracts/invoiceCalculator.ts",
-                        "needle": "calculate(order: RepairOrder): Money;"
+                        "file": "packages/core/src/models/invoice.ts",
+                        "needle": "outstanding(): Money {"
+                    },
+                    {
+                        "file": "packages/core/src/models/invoice.ts",
+                        "needle": "return this.paid ? Money.ZERO : this.total;"
+                    },
+                    {
+                        "file": "packages/core/src/models/part.ts",
+                        "needle": "import { Money } from \"../money\";"
+                    },
+                    {
+                        "file": "packages/core/src/models/part.ts",
+                        "needle": "readonly unitPrice: Money,"
+                    },
+                    {
+                        "file": "packages/core/src/models/part.ts",
+                        "needle": "extendedPrice(quantity: number): Money {"
+                    },
+                    {
+                        "file": "packages/core/src/models/repairOrder.ts",
+                        "needle": "import { Money } from \"../money\";"
+                    },
+                    {
+                        "file": "packages/core/src/models/repairOrder.ts",
+                        "needle": "readonly unitPrice: Money;"
+                    },
+                    {
+                        "file": "packages/core/src/models/repairOrder.ts",
+                        "needle": "partsSubtotal(): Money {"
+                    },
+                    {
+                        "file": "packages/core/src/models/repairOrder.ts",
+                        "needle": "return Money.sum(this.parts.map((line) => line.unitPrice.times(line.quantity)));"
+                    },
+                    {
+                        "file": "packages/core/src/models/repairOrder.ts",
+                        "needle": "total(container: Container): Money {"
+                    },
+                    {
+                        "file": "packages/core/src/money.ts",
+                        "needle": "withSurchargeBp(bp: number): Money {"
+                    },
+                    {
+                        "file": "packages/core/src/money.ts",
+                        "needle": "return new Money(this.cents + Math.floor((this.cents * bp + 5000) / 10000));"
+                    },
+                    {
+                        "file": "packages/core/src/money.ts",
+                        "needle": "plus(other: Money): Money;"
+                    },
+                    {
+                        "file": "packages/core/src/money.ts",
+                        "needle": "plus(cents: number): Money;"
+                    },
+                    {
+                        "file": "packages/core/src/money.ts",
+                        "needle": "plus(other: Money | number): Money {"
+                    },
+                    {
+                        "file": "packages/core/src/money.ts",
+                        "needle": "return new Money(this.cents + (other instanceof Money ? other.cents : other));"
+                    },
+                    {
+                        "file": "packages/core/src/money.ts",
+                        "needle": "minus(other: Money): Money {"
+                    },
+                    {
+                        "file": "packages/core/src/money.ts",
+                        "needle": "return new Money(this.cents - other.cents);"
+                    },
+                    {
+                        "file": "packages/core/src/money.ts",
+                        "needle": "times(factor: number): Money {"
+                    },
+                    {
+                        "file": "packages/core/src/money.ts",
+                        "needle": "return new Money(this.cents * factor);"
+                    },
+                    {
+                        "file": "packages/core/src/money.ts",
+                        "needle": "export const ZERO = new Money(0);"
+                    },
+                    {
+                        "file": "packages/core/src/money.ts",
+                        "needle": "export function fromCents(cents: number): Money {"
+                    },
+                    {
+                        "file": "packages/core/src/money.ts",
+                        "needle": "return new Money(cents);"
+                    },
+                    {
+                        "file": "packages/core/src/money.ts",
+                        "needle": "export function parse(raw: string): Money {"
+                    },
+                    {
+                        "file": "packages/core/src/money.ts",
+                        "needle": "return new Money(Number(whole) * 100 + Number(fraction.padEnd(2, \"0\")));"
+                    },
+                    {
+                        "file": "packages/core/src/money.ts",
+                        "needle": "export function sum(amounts: readonly Money[]): Money {"
+                    },
+                    {
+                        "file": "packages/core/src/services/rushInvoiceCalculator.ts",
+                        "needle": "import type { Money } from \"../money\";"
+                    },
+                    {
+                        "file": "packages/core/src/services/rushInvoiceCalculator.ts",
+                        "needle": "calculate(order: RepairOrder): Money {"
+                    },
+                    {
+                        "file": "packages/core/src/services/standardInvoiceCalculator.ts",
+                        "needle": "import { Money } from \"../money\";"
+                    },
+                    {
+                        "file": "packages/core/src/services/standardInvoiceCalculator.ts",
+                        "needle": "calculate(order: RepairOrder): Money {"
+                    },
+                    {
+                        "file": "packages/core/src/services/standardInvoiceCalculator.ts",
+                        "needle": "private labour(order: RepairOrder): Money {"
+                    },
+                    {
+                        "file": "packages/core/src/services/standardInvoiceCalculator.ts",
+                        "needle": "return new Money(Math.floor((this.labourRateCentsPerHour * order.laborMinutes) / 60));"
+                    },
+                    {
+                        "file": "packages/core/tests/lifecycle.test.ts",
+                        "needle": "import { Money } from \"@atelier/core\";"
+                    },
+                    {
+                        "file": "packages/core/tests/lifecycle.test.ts",
+                        "needle": "order.addPart(new Part(1, \"SCR-13\", 'Screen 13\"', new Money(19900), 4), 1);"
+                    },
+                    {
+                        "file": "packages/core/tests/money.test.ts",
+                        "needle": "import { Money } from \"@atelier/core\";"
+                    },
+                    {
+                        "file": "packages/core/tests/money.test.ts",
+                        "needle": "expect(new Money(10000).withSurchargeBp(2500).cents).toBe(12500);"
+                    },
+                    {
+                        "file": "packages/core/tests/money.test.ts",
+                        "needle": "expect(Money.parse(\"12.34\").cents).toBe(1234);"
+                    },
+                    {
+                        "file": "packages/core/tests/money.test.ts",
+                        "needle": "expect(new Money(1234).toString()).toBe(\"12.34\");"
+                    },
+                    {
+                        "file": "packages/core/tests/money.test.ts",
+                        "needle": "expect(() => Money.parse(\"12.345\")).toThrow(TypeError);"
+                    },
+                    {
+                        "file": "packages/core/tests/money.test.ts",
+                        "needle": "expect(Money.sum([new Money(100), new Money(250)]).cents).toBe(350);"
+                    },
+                    {
+                        "file": "packages/core/tests/money.test.ts",
+                        "needle": "expect(Money.ZERO.isZero()).toBe(true);"
+                    },
+                    {
+                        "file": "packages/core/tests/shadowPair.test.ts",
+                        "needle": "import { Money, RepairStatus } from \"@atelier/core\";"
+                    },
+                    {
+                        "file": "packages/core/tests/shadowPair.test.ts",
+                        "needle": "expect(new MoneyFormatter(\"EUR\").money(new Money(1234))).toBe(\"12.34 EUR\");"
                     }
                 ]
             }
@@ -700,18 +952,90 @@
         {
             "id": "refs-row-from-cents",
             "surface": "references",
-            "note": "11 call lines across 9 report files at the pinned base; import lines do not count.",
+            "note": "20 reference sites across 9 report files at the pinned base: 11 call lines and the 9 import lines that bind the name.",
             "from": {
                 "file": "packages/bench/src/contracts/reportContract.ts",
                 "needle": "export function rowFromCents(label: string, cents: number): ReportRow {",
                 "symbol": "rowFromCents"
             },
             "expect": {
-                "min_references": 10,
+                "exact_count": 20,
                 "known_sites": [
                     {
                         "file": "packages/bench/src/reports/cashFlowReport.ts",
+                        "needle": "import { rowFromCents } from \"../contracts/reportContract\";"
+                    },
+                    {
+                        "file": "packages/bench/src/reports/cashFlowReport.ts",
                         "needle": "return [rowFromCents(\"paid\", paid), rowFromCents(\"outstanding\", outstanding)];"
+                    },
+                    {
+                        "file": "packages/bench/src/reports/customerLifetimeReport.ts",
+                        "needle": "import { rowFromCents } from \"../contracts/reportContract\";"
+                    },
+                    {
+                        "file": "packages/bench/src/reports/customerLifetimeReport.ts",
+                        "needle": "rowFromCents("
+                    },
+                    {
+                        "file": "packages/bench/src/reports/dailyRevenueReport.ts",
+                        "needle": "import { rowFromCents } from \"../contracts/reportContract\";"
+                    },
+                    {
+                        "file": "packages/bench/src/reports/dailyRevenueReport.ts",
+                        "needle": ".map((order) => rowFromCents(`order-${order.id}`, order.partsSubtotal().cents));"
+                    },
+                    {
+                        "file": "packages/bench/src/reports/grossProfitReport.ts",
+                        "needle": "import { rowFromCents } from \"../contracts/reportContract\";"
+                    },
+                    {
+                        "file": "packages/bench/src/reports/grossProfitReport.ts",
+                        "needle": "rowFromCents(\"revenue\", revenue),"
+                    },
+                    {
+                        "file": "packages/bench/src/reports/grossProfitReport.ts",
+                        "needle": "rowFromCents(\"part cost\", cost),"
+                    },
+                    {
+                        "file": "packages/bench/src/reports/grossProfitReport.ts",
+                        "needle": "rowFromCents(\"gross profit\", revenue - cost),"
+                    },
+                    {
+                        "file": "packages/bench/src/reports/monthlyRevenueReport.ts",
+                        "needle": "import { rowFromCents } from \"../contracts/reportContract\";"
+                    },
+                    {
+                        "file": "packages/bench/src/reports/monthlyRevenueReport.ts",
+                        "needle": "return [rowFromCents(\"month to date\", data.revenueCents())];"
+                    },
+                    {
+                        "file": "packages/bench/src/reports/paymentDefaultReport.ts",
+                        "needle": "import { rowFromCents } from \"../contracts/reportContract\";"
+                    },
+                    {
+                        "file": "packages/bench/src/reports/paymentDefaultReport.ts",
+                        "needle": ".map((invoice) => rowFromCents(`invoice-${invoice.id}`, invoice.outstanding().cents));"
+                    },
+                    {
+                        "file": "packages/bench/src/reports/technicianPayrollReport.ts",
+                        "needle": "import { rowFromCents } from \"../contracts/reportContract\";"
+                    },
+                    {
+                        "file": "packages/bench/src/reports/technicianPayrollReport.ts",
+                        "needle": "return data.technicians.map((technician) => rowFromCents(technician.name, share));"
+                    },
+                    {
+                        "file": "packages/bench/src/reports/warrantyCostReport.ts",
+                        "needle": "import { rowFromCents } from \"../contracts/reportContract\";"
+                    },
+                    {
+                        "file": "packages/bench/src/reports/warrantyCostReport.ts",
+                        "needle": ".map((order) => rowFromCents(`order-${order.id}`, order.partsSubtotal().cents));"
+                    },
+                    {
+                        "file": "packages/bench/src/reports/weeklyRevenueReport.ts",
+                        "needle": "import { rowFromCents } from \"../contracts/reportContract\";"
                     },
                     {
                         "file": "packages/bench/src/reports/weeklyRevenueReport.ts",
@@ -730,7 +1054,7 @@
                 "symbol": "REPORTS"
             },
             "expect": {
-                "min_references": 4,
+                "exact_count": 5,
                 "known_sites": [
                     {
                         "file": "packages/bench/src/index.ts",
@@ -738,7 +1062,19 @@
                     },
                     {
                         "file": "packages/bench/tests/breadth.test.ts",
+                        "needle": "import { METRICS, REPORTS, report, metric, Dataset } from \"@atelier/bench\";"
+                    },
+                    {
+                        "file": "packages/bench/tests/breadth.test.ts",
                         "needle": "expect(REPORTS).toHaveLength(24);"
+                    },
+                    {
+                        "file": "packages/bench/tests/breadth.test.ts",
+                        "needle": "expect(new Set(REPORTS.map((r) => r.slug)).size).toBe(REPORTS.length);"
+                    },
+                    {
+                        "file": "packages/bench/tests/breadth.test.ts",
+                        "needle": "for (const entry of REPORTS) {"
                     }
                 ]
             }
@@ -2020,7 +2356,7 @@
         {
             "id": "refs-type-only-report-row",
             "surface": "references",
-            "note": "Lane-local: ReportRow is an interface, so every one of its use sites is a type position and none survives to runtime. 74 lines name it at the base SHA, one of them the declaration; the floor of 60 leaves room for a tool that folds the import lines into their declarations.",
+            "note": "Lane-local: ReportRow is an interface, so every one of its use sites is a type position and none survives to runtime. 74 lines name it at the base SHA, one of them the declaration; the 73 other lines (31 type positions, 42 import lines) are the exact answer.",
             "from": {
                 "file": "packages/bench/src/contracts/reportContract.ts",
                 "needle": "export interface ReportRow {",
@@ -2028,19 +2364,299 @@
             },
             "expect": {
                 "kind": "type_only",
-                "min_references": 60,
+                "exact_count": 73,
                 "known_sites": [
+                    {
+                        "file": "packages/bench/src/contracts/exporterContract.ts",
+                        "needle": "import type { ReportRow } from \"./reportContract\";"
+                    },
                     {
                         "file": "packages/bench/src/contracts/exporterContract.ts",
                         "needle": "export(rows: readonly ReportRow[]): string;"
                     },
                     {
-                        "file": "packages/bench/src/support/abstractReport.ts",
-                        "needle": "abstract rows(data: Dataset): ReportRow[];"
+                        "file": "packages/bench/src/contracts/reportContract.ts",
+                        "needle": "export function reportRow(label: string, value: number): ReportRow {"
+                    },
+                    {
+                        "file": "packages/bench/src/contracts/reportContract.ts",
+                        "needle": "export function rowFromCents(label: string, cents: number): ReportRow {"
+                    },
+                    {
+                        "file": "packages/bench/src/contracts/reportContract.ts",
+                        "needle": "rows(data: Dataset): ReportRow[];"
+                    },
+                    {
+                        "file": "packages/bench/src/exporters/csvExporter.ts",
+                        "needle": "import type { ReportRow } from \"../contracts/reportContract\";"
+                    },
+                    {
+                        "file": "packages/bench/src/exporters/csvExporter.ts",
+                        "needle": "override export(rows: readonly ReportRow[]): string {"
                     },
                     {
                         "file": "packages/bench/src/exporters/htmlExporter.ts",
                         "needle": "import type { ReportRow } from \"../contracts/reportContract\";"
+                    },
+                    {
+                        "file": "packages/bench/src/exporters/htmlExporter.ts",
+                        "needle": "override export(rows: readonly ReportRow[]): string {"
+                    },
+                    {
+                        "file": "packages/bench/src/exporters/jsonExporter.ts",
+                        "needle": "import type { ReportRow } from \"../contracts/reportContract\";"
+                    },
+                    {
+                        "file": "packages/bench/src/exporters/jsonExporter.ts",
+                        "needle": "override export(rows: readonly ReportRow[]): string {"
+                    },
+                    {
+                        "file": "packages/bench/src/exporters/markdownExporter.ts",
+                        "needle": "import type { ReportRow } from \"../contracts/reportContract\";"
+                    },
+                    {
+                        "file": "packages/bench/src/exporters/markdownExporter.ts",
+                        "needle": "override export(rows: readonly ReportRow[]): string {"
+                    },
+                    {
+                        "file": "packages/bench/src/exporters/pdfExporter.ts",
+                        "needle": "import type { ReportRow } from \"../contracts/reportContract\";"
+                    },
+                    {
+                        "file": "packages/bench/src/exporters/pdfExporter.ts",
+                        "needle": "override export(rows: readonly ReportRow[]): string {"
+                    },
+                    {
+                        "file": "packages/bench/src/exporters/xlsxExporter.ts",
+                        "needle": "import type { ReportRow } from \"../contracts/reportContract\";"
+                    },
+                    {
+                        "file": "packages/bench/src/exporters/xlsxExporter.ts",
+                        "needle": "override export(rows: readonly ReportRow[]): string {"
+                    },
+                    {
+                        "file": "packages/bench/src/exporters/xmlExporter.ts",
+                        "needle": "import type { ReportRow } from \"../contracts/reportContract\";"
+                    },
+                    {
+                        "file": "packages/bench/src/exporters/xmlExporter.ts",
+                        "needle": "override export(rows: readonly ReportRow[]): string {"
+                    },
+                    {
+                        "file": "packages/bench/src/exporters/yamlExporter.ts",
+                        "needle": "import type { ReportRow } from \"../contracts/reportContract\";"
+                    },
+                    {
+                        "file": "packages/bench/src/exporters/yamlExporter.ts",
+                        "needle": "override export(rows: readonly ReportRow[]): string {"
+                    },
+                    {
+                        "file": "packages/bench/src/reports/cashFlowReport.ts",
+                        "needle": "import type { ReportRow } from \"../contracts/reportContract\";"
+                    },
+                    {
+                        "file": "packages/bench/src/reports/cashFlowReport.ts",
+                        "needle": "override rows(data: Dataset): ReportRow[] {"
+                    },
+                    {
+                        "file": "packages/bench/src/reports/churnRiskReport.ts",
+                        "needle": "import type { ReportRow } from \"../contracts/reportContract\";"
+                    },
+                    {
+                        "file": "packages/bench/src/reports/churnRiskReport.ts",
+                        "needle": "override rows(data: Dataset): ReportRow[] {"
+                    },
+                    {
+                        "file": "packages/bench/src/reports/customerLifetimeReport.ts",
+                        "needle": "import type { ReportRow } from \"../contracts/reportContract\";"
+                    },
+                    {
+                        "file": "packages/bench/src/reports/customerLifetimeReport.ts",
+                        "needle": "override rows(data: Dataset): ReportRow[] {"
+                    },
+                    {
+                        "file": "packages/bench/src/reports/customerRetentionReport.ts",
+                        "needle": "import type { ReportRow } from \"../contracts/reportContract\";"
+                    },
+                    {
+                        "file": "packages/bench/src/reports/customerRetentionReport.ts",
+                        "needle": "override rows(data: Dataset): ReportRow[] {"
+                    },
+                    {
+                        "file": "packages/bench/src/reports/dailyRevenueReport.ts",
+                        "needle": "import type { ReportRow } from \"../contracts/reportContract\";"
+                    },
+                    {
+                        "file": "packages/bench/src/reports/dailyRevenueReport.ts",
+                        "needle": "override rows(data: Dataset): ReportRow[] {"
+                    },
+                    {
+                        "file": "packages/bench/src/reports/grossProfitReport.ts",
+                        "needle": "import type { ReportRow } from \"../contracts/reportContract\";"
+                    },
+                    {
+                        "file": "packages/bench/src/reports/grossProfitReport.ts",
+                        "needle": "override rows(data: Dataset): ReportRow[] {"
+                    },
+                    {
+                        "file": "packages/bench/src/reports/inventoryTurnoverReport.ts",
+                        "needle": "import type { ReportRow } from \"../contracts/reportContract\";"
+                    },
+                    {
+                        "file": "packages/bench/src/reports/inventoryTurnoverReport.ts",
+                        "needle": "override rows(data: Dataset): ReportRow[] {"
+                    },
+                    {
+                        "file": "packages/bench/src/reports/monthlyRevenueReport.ts",
+                        "needle": "import type { ReportRow } from \"../contracts/reportContract\";"
+                    },
+                    {
+                        "file": "packages/bench/src/reports/monthlyRevenueReport.ts",
+                        "needle": "override rows(data: Dataset): ReportRow[] {"
+                    },
+                    {
+                        "file": "packages/bench/src/reports/netMarginReport.ts",
+                        "needle": "import type { ReportRow } from \"../contracts/reportContract\";"
+                    },
+                    {
+                        "file": "packages/bench/src/reports/netMarginReport.ts",
+                        "needle": "override rows(data: Dataset): ReportRow[] {"
+                    },
+                    {
+                        "file": "packages/bench/src/reports/orderBacklogReport.ts",
+                        "needle": "import type { ReportRow } from \"../contracts/reportContract\";"
+                    },
+                    {
+                        "file": "packages/bench/src/reports/orderBacklogReport.ts",
+                        "needle": "override rows(data: Dataset): ReportRow[] {"
+                    },
+                    {
+                        "file": "packages/bench/src/reports/orderThroughputReport.ts",
+                        "needle": "import type { ReportRow } from \"../contracts/reportContract\";"
+                    },
+                    {
+                        "file": "packages/bench/src/reports/orderThroughputReport.ts",
+                        "needle": "override rows(data: Dataset): ReportRow[] {"
+                    },
+                    {
+                        "file": "packages/bench/src/reports/orderVolumeReport.ts",
+                        "needle": "import type { ReportRow } from \"../contracts/reportContract\";"
+                    },
+                    {
+                        "file": "packages/bench/src/reports/orderVolumeReport.ts",
+                        "needle": "override rows(data: Dataset): ReportRow[] {"
+                    },
+                    {
+                        "file": "packages/bench/src/reports/partShortageReport.ts",
+                        "needle": "import type { ReportRow } from \"../contracts/reportContract\";"
+                    },
+                    {
+                        "file": "packages/bench/src/reports/partShortageReport.ts",
+                        "needle": "override rows(data: Dataset): ReportRow[] {"
+                    },
+                    {
+                        "file": "packages/bench/src/reports/partUsageReport.ts",
+                        "needle": "import type { ReportRow } from \"../contracts/reportContract\";"
+                    },
+                    {
+                        "file": "packages/bench/src/reports/partUsageReport.ts",
+                        "needle": "override rows(data: Dataset): ReportRow[] {"
+                    },
+                    {
+                        "file": "packages/bench/src/reports/paymentDefaultReport.ts",
+                        "needle": "import type { ReportRow } from \"../contracts/reportContract\";"
+                    },
+                    {
+                        "file": "packages/bench/src/reports/paymentDefaultReport.ts",
+                        "needle": "override rows(data: Dataset): ReportRow[] {"
+                    },
+                    {
+                        "file": "packages/bench/src/reports/paymentLatencyReport.ts",
+                        "needle": "import type { ReportRow } from \"../contracts/reportContract\";"
+                    },
+                    {
+                        "file": "packages/bench/src/reports/paymentLatencyReport.ts",
+                        "needle": "override rows(data: Dataset): ReportRow[] {"
+                    },
+                    {
+                        "file": "packages/bench/src/reports/profitMarginReport.ts",
+                        "needle": "import type { ReportRow } from \"../contracts/reportContract\";"
+                    },
+                    {
+                        "file": "packages/bench/src/reports/profitMarginReport.ts",
+                        "needle": "override rows(data: Dataset): ReportRow[] {"
+                    },
+                    {
+                        "file": "packages/bench/src/reports/technicianEfficiencyReport.ts",
+                        "needle": "import type { ReportRow } from \"../contracts/reportContract\";"
+                    },
+                    {
+                        "file": "packages/bench/src/reports/technicianEfficiencyReport.ts",
+                        "needle": "override rows(data: Dataset): ReportRow[] {"
+                    },
+                    {
+                        "file": "packages/bench/src/reports/technicianLoadReport.ts",
+                        "needle": "import type { ReportRow } from \"../contracts/reportContract\";"
+                    },
+                    {
+                        "file": "packages/bench/src/reports/technicianLoadReport.ts",
+                        "needle": "override rows(data: Dataset): ReportRow[] {"
+                    },
+                    {
+                        "file": "packages/bench/src/reports/technicianPayrollReport.ts",
+                        "needle": "import type { ReportRow } from \"../contracts/reportContract\";"
+                    },
+                    {
+                        "file": "packages/bench/src/reports/technicianPayrollReport.ts",
+                        "needle": "override rows(data: Dataset): ReportRow[] {"
+                    },
+                    {
+                        "file": "packages/bench/src/reports/warrantyClaimReport.ts",
+                        "needle": "import type { ReportRow } from \"../contracts/reportContract\";"
+                    },
+                    {
+                        "file": "packages/bench/src/reports/warrantyClaimReport.ts",
+                        "needle": "override rows(data: Dataset): ReportRow[] {"
+                    },
+                    {
+                        "file": "packages/bench/src/reports/warrantyCostReport.ts",
+                        "needle": "import type { ReportRow } from \"../contracts/reportContract\";"
+                    },
+                    {
+                        "file": "packages/bench/src/reports/warrantyCostReport.ts",
+                        "needle": "override rows(data: Dataset): ReportRow[] {"
+                    },
+                    {
+                        "file": "packages/bench/src/reports/warrantyTrendReport.ts",
+                        "needle": "import type { ReportRow } from \"../contracts/reportContract\";"
+                    },
+                    {
+                        "file": "packages/bench/src/reports/warrantyTrendReport.ts",
+                        "needle": "override rows(data: Dataset): ReportRow[] {"
+                    },
+                    {
+                        "file": "packages/bench/src/reports/weeklyRevenueReport.ts",
+                        "needle": "import type { ReportRow } from \"../contracts/reportContract\";"
+                    },
+                    {
+                        "file": "packages/bench/src/reports/weeklyRevenueReport.ts",
+                        "needle": "override rows(data: Dataset): ReportRow[] {"
+                    },
+                    {
+                        "file": "packages/bench/src/support/abstractExporter.ts",
+                        "needle": "import type { ReportRow } from \"../contracts/reportContract\";"
+                    },
+                    {
+                        "file": "packages/bench/src/support/abstractExporter.ts",
+                        "needle": "abstract export(rows: readonly ReportRow[]): string;"
+                    },
+                    {
+                        "file": "packages/bench/src/support/abstractReport.ts",
+                        "needle": "import type { ReportContract, ReportRow } from \"../contracts/reportContract\";"
+                    },
+                    {
+                        "file": "packages/bench/src/support/abstractReport.ts",
+                        "needle": "abstract rows(data: Dataset): ReportRow[];"
                     }
                 ]
             }
