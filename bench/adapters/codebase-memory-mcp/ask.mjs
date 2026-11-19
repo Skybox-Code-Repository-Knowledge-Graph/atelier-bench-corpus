@@ -4,10 +4,13 @@
 // Protocols, reported in separate columns:
 //
 // "raw" (definition, resolution, import-precision): exactly one `search_graph` call per question,
-// `name_pattern` = the task's `from.symbol` as an anchored exact-name regex. No file hint, no label
-// filter, no second guess. Every node cbm returns for that bare name is an answer location (its
-// reply carries the start and end line, so no second call is needed). A name that is not unique in
-// the lane is answered with every node of that name: that is what lookup by bare name measures.
+// `name_pattern` = the task's `from.symbol` as an anchored regex (`^Sum$`). cbm matches
+// `name_pattern` case-insensitively (`^total$` returns `Total`; `(?-i)` is rejected): tool
+// behaviour, the reply is passed on unedited. It fails def-embedded-asset (Banner@internal/audit/
+// audit.go:42) and def-struct-tag (Reference nodes). No file hint, no label filter, no second
+// guess. Every node cbm returns for that bare name is an answer location (its reply carries the
+// start and end line, so no second call is needed). A name that is not unique in the lane is
+// answered with every node of that name: that is what lookup by bare name measures.
 //
 // "file" (document_symbol): one `get_file_outline` call for the asked file; every row it lists, in
 // the order cbm lists them (by start line, then name).
@@ -95,7 +98,7 @@ const ROW_LIMIT = 5000;
 /** get_file_outline refuses a page larger than this. */
 const OUTLINE_PAGE = 200;
 
-/** Escape a name for an anchored exact-match regex. */
+/** Escape a name for an anchored regex (cbm then matches it case-insensitively). */
 export function exactNamePattern(symbol) {
     return `^${symbol.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`;
 }
@@ -166,7 +169,9 @@ export function parseOutline(text) {
  * The `parse_errors` an `index_repository` reply gives for one file. `partial` is the reply's
  * `parse_partial` object, or undefined when cbm flagged nothing. Throws when the reply's list is
  * incomplete (cbm says it holds examples only), because a missing entry would then look like a
- * miss by the tool.
+ * miss by the tool. The reply's own `note` says it lists examples only; the guard is
+ * `count === files.length`, so if cbm ever caps both, a missing file would read as a miss (not the
+ * case on this lane: 2 files, count 2, truncated false). `message` is cbm's own entry, verbatim.
  */
 export function parseErrorsFor(partial, file) {
     if (partial === undefined || partial === null) {
@@ -179,7 +184,7 @@ export function parseErrorsFor(partial, file) {
         .filter((entry) => entry.path === file)
         .map((entry) => {
             const first = parseLines(entry.error_ranges?.split(",")[0]);
-            return { file: entry.path, ...(first ? { line: first.line } : {}), message: `parse_partial: error range ${entry.error_ranges}` };
+            return { file: entry.path, ...(first ? { line: first.line } : {}), message: JSON.stringify(entry) };
         });
 }
 

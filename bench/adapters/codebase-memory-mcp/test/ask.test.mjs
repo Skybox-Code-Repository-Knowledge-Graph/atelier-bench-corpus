@@ -179,7 +179,8 @@ test("outline replies are parsed", () => {
 test("parse-negative and diagnostics read cbm's parse_partial report for the asked file", async () => {
     const tool = fake({});
     const hit = await askCbm(question({ file: "fixtures/broken-syntax/unclosed_struct.go" }, "parse-negative", "syntax_error"), tool.call, { parseErrors: PARTIAL });
-    assert.deepEqual(hit.parse_errors, [{ file: "fixtures/broken-syntax/unclosed_struct.go", line: 11, message: "parse_partial: error range 11-14" }]);
+    assert.deepEqual(hit.parse_errors, [{ file: "fixtures/broken-syntax/unclosed_struct.go", line: 11, message: JSON.stringify(PARTIAL.files.find((entry) => entry.path === "fixtures/broken-syntax/unclosed_struct.go")) }]);
+    assert.doesNotMatch(hit.parse_errors[0].message, /^parse_partial:/, "no adapter-composed prose");
     const clean = await askCbm(question({ file: "fixtures/broken-syntax/doc.go" }, "diagnostics"), tool.call, { parseErrors: PARTIAL });
     assert.deepEqual(clean.parse_errors, [], "a file cbm did not flag is an empty answer, not unsupported");
     const none = await askCbm(question({ file: "x.go" }, "diagnostics"), tool.call, {});
