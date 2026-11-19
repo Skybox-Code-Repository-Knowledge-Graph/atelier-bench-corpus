@@ -22,9 +22,72 @@
 //
 // The adapter's own remarks go in `note`, which the scorer never reads.
 
-import { isPathSegment, RELATION_QUESTIONS, ASKED_SURFACES, FILE_SURFACES, BEHAVIOUR_SURFACES } from "../skybox/ask.mjs";
+import { symbolColumns } from "../../score/lib/symbol.mjs";
 
-export { ASKED_SURFACES, FILE_SURFACES, BEHAVIOUR_SURFACES };
+/** Surfaces asked under "raw". */
+export const ASKED_SURFACES = new Set(["definition", "resolution", "import-precision"]);
+
+/** Surfaces asked under "file": the question names a file. */
+export const FILE_SURFACES = new Set(["document_symbol"]);
+
+/** Surfaces answered from cbm's parse report: does it say a broken file failed to parse? */
+export const BEHAVIOUR_SURFACES = new Set(["parse-negative", "diagnostics"]);
+
+/**
+ * Questions whose answer is a relation of the symbol, not its definition, keyed `surface:kind`, and
+ * import kinds whose answer is the member reached through a namespace or package. A lookup of the
+ * bare name cannot answer them, so they are not asked under "raw" (the same reading the other
+ * adapters take; it is held here, not imported, so one adapter's edit never changes another's answers).
+ */
+export const RELATION_QUESTIONS = new Set([
+    "resolution:structural",
+    "resolution:init_order",
+    "resolution:mro",
+    "resolution:derive_generated",
+    "resolution:dyn_upcast",
+    "resolution:blanket_impl",
+    "import-precision:namespace_import",
+    "import-precision:namespace_prefix",
+    "import-precision:one_member",
+    "import-precision:dot_import",
+    "import-precision:side_effect_only",
+    "import-precision:no_fanout",
+]);
+
+/**
+ * Is the symbol, at its stated occurrence, inside a quoted string that holds a path? Then it is a
+ * segment of an import path (go `"atelier.example/lane/core/models"`), which no name lookup can take.
+ */
+export function isPathSegment(text, symbol, occurrence = 1) {
+    const at = symbolColumns(text, symbol)[occurrence - 1];
+    if (at === undefined) {
+        return false;
+    }
+    for (const quote of ['"', "'", "`"]) {
+        const open = text.lastIndexOf(quote, at);
+        const close = text.indexOf(quote, at + symbol.length);
+        if (open !== -1 && close !== -1 && text.slice(open, close).includes("/")) {
+            return true;
+        }
+    }
+    return false;
+}
+
+/**
+ * Read what `codebase-memory-mcp cli --json <tool>` printed: `{ text, isError }`. cbm exits 1 when a
+ * tool flags an error and still prints the envelope, so the envelope is read whatever the exit code.
+ * Throws when there is none (a crash): a harness failure, never a miss.
+ */
+export function parseEnvelope(stdout, tool, status = null, stderr = "") {
+    let envelope;
+    try {
+        envelope = JSON.parse(stdout);
+    } catch {
+        throw new Error(`${tool} exited ${status} without a JSON envelope: ${(stderr || stdout).slice(-300)}`);
+    }
+    const text = (envelope.content ?? []).map((part) => (typeof part.text === "string" ? part.text : "")).join("\n");
+    return { text, isError: envelope.isError === true };
+}
 
 /** Largest reply the tool is allowed to send, so its own output budget never truncates an answer. */
 const MAX_OUTPUT_TOKENS = 200000;

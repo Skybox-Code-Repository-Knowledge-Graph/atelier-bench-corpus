@@ -20,7 +20,7 @@ import { fileURLToPath } from "node:url";
 import process from "node:process";
 
 import { questionOf } from "../lib/question.mjs";
-import { askCbm } from "./ask.mjs";
+import { askCbm, parseEnvelope } from "./ask.mjs";
 
 const REPO_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..", "..", "..");
 const LANES = ["php", "rust", "typescript", "javascript", "python", "go"];
@@ -35,15 +35,7 @@ function callTool(binary, env, tool, args) {
     if (result.error) {
         throw new Error(`${tool} failed: ${result.error.message}`);
     }
-    // cbm exits 1 when the tool flags an error, and still prints the envelope: read it first.
-    let envelope;
-    try {
-        envelope = JSON.parse(result.stdout);
-    } catch {
-        throw new Error(`${tool} exited ${result.status ?? result.signal} without a JSON envelope: ${(result.stderr || result.stdout).slice(-300)}`);
-    }
-    const text = (envelope.content ?? []).map((part) => (typeof part.text === "string" ? part.text : "")).join("\n");
-    return { text, isError: envelope.isError === true };
+    return parseEnvelope(result.stdout, tool, result.status ?? result.signal, result.stderr);
 }
 
 async function main(args) {

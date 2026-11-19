@@ -8,7 +8,7 @@ import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { questionOf } from "../../lib/question.mjs";
-import { askCbm, exactNamePattern, parseErrorsFor, parseLines, parseOutline, parseSearchGraph } from "../ask.mjs";
+import { askCbm, exactNamePattern, isPathSegment, parseEnvelope, parseErrorsFor, parseLines, parseOutline, parseSearchGraph } from "../ask.mjs";
 
 const REPO_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..", "..", "..", "..");
 
@@ -190,4 +190,17 @@ test("parse-negative and diagnostics read cbm's parse_partial report for the ask
 test("an incomplete parse_partial list is a harness error, never a miss", () => {
     assert.throws(() => parseErrorsFor({ ...PARTIAL, truncated: true }, "x.go"), /incomplete/);
     assert.throws(() => parseErrorsFor({ ...PARTIAL, count: 5 }, "x.go"), /incomplete/);
+});
+
+test("the envelope is read whatever the exit code; no envelope is a harness failure", () => {
+    const flagged = JSON.stringify({ content: [{ type: "text", text: "limit must be between 1 and 200" }], isError: true });
+    assert.deepEqual(parseEnvelope(flagged, "get_file_outline", 1), { text: "limit must be between 1 and 200", isError: true });
+    const fine = JSON.stringify({ content: [{ type: "text", text: "a" }, { type: "text", text: "b" }], isError: false });
+    assert.deepEqual(parseEnvelope(fine, "search_graph", 0), { text: "a\nb", isError: false });
+    assert.throws(() => parseEnvelope("", "search_graph", null, "killed"), /without a JSON envelope: killed/);
+});
+
+test("a segment of a quoted import path is recognised", () => {
+    assert.equal(isPathSegment('import "atelier.example/lane/core/models"', "models", 1), true);
+    assert.equal(isPathSegment("sum := money.Sum(x)", "Sum", 1), false);
 });
