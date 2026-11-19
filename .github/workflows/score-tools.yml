@@ -86,3 +86,64 @@ jobs:
             skybox-${{ matrix.lane }}.report.txt
             skybox-${{ matrix.lane }}.report.json
           if-no-files-found: ignore
+
+  codebase-memory-mcp:
+    name: codebase-memory-mcp (${{ matrix.lane }})
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        lane: [go]
+    env:
+      CBM_VERSION: "0.12.1"
+      LANE: ${{ matrix.lane }}
+    steps:
+      - uses: actions/checkout@v7.0.1
+
+      - name: Node 22
+        uses: actions/setup-node@v7.0.0
+        with:
+          node-version: "22"
+
+      # The public npm package; its platform build comes in as an optional dependency.
+      - name: Install codebase-memory-mcp ${{ env.CBM_VERSION }} (pinned)
+        run: |
+          npm install --prefix "$RUNNER_TEMP/cbm" --no-save --no-audit --no-fund "codebase-memory-mcp@${CBM_VERSION}"
+          "$RUNNER_TEMP/cbm/node_modules/.bin/codebase-memory-mcp" --version
+
+      - name: Ask (lane scope; raw protocol, file protocol for document_symbol and the parse behaviour)
+        run: >
+          node bench/adapters/codebase-memory-mcp/run.mjs
+          --lane "$LANE"
+          --cbm "$RUNNER_TEMP/cbm/node_modules/.bin/codebase-memory-mcp"
+          --version "$CBM_VERSION"
+          --out "cbm-$LANE.json"
+
+      - name: Score
+        run: |
+          node bench/score/score.mjs --lane "$LANE" --answers "cbm-$LANE.json" > "cbm-$LANE.report.txt"
+          node bench/score/score.mjs --lane "$LANE" --answers "cbm-$LANE.json" --format json > "cbm-$LANE.report.json"
+          counts=$(node -e 'const cs=require(process.argv[1]).summary.columns;console.log(cs.map((k)=>`${k.class==="exact"?"exact":k.class==="behaviour"?"behaviour":"recall-only"}${k.protocol?", "+k.protocol:""}: ${k.asked} asked, ${k.notAsked} not asked, of ${k.scorable} scorable`).join("; "))' "$PWD/cbm-$LANE.report.json")
+          {
+            echo "### codebase-memory-mcp ${CBM_VERSION}, lane ${LANE}, scope lane, corpus ${GITHUB_SHA::7}"
+            echo
+            echo "Protocol raw (definition, resolution, import-precision): one \`search_graph\` call by bare name, every node of that name is the answer; the tool never sees the \`from\` line. Protocol file (document_symbol): \`get_file_outline\`; (parse-negative, diagnostics): the files \`index_repository\` reports as partially parsed. The anchored surfaces are not asked yet. Each line is one rule class and one protocol; the lines are separate measures and are never added up. ${counts}."
+            echo
+            echo '```'
+            sed -n '/^surface /,$p' "cbm-$LANE.report.txt"
+            echo '```'
+            echo
+            echo "Per-task verdicts are in the artifact cbm-${LANE}."
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Keep the answers and the report
+        if: always()
+        uses: actions/upload-artifact@v7.0.1
+        with:
+          name: cbm-${{ matrix.lane }}
+          path: |
+            cbm-${{ matrix.lane }}.json
+            cbm-${{ matrix.lane }}.report.txt
+            cbm-${{ matrix.lane }}.report.json
+          if-no-files-found: ignore
