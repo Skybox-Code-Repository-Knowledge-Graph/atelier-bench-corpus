@@ -94,7 +94,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        lane: [go]
+        lane: [go, typescript]
     env:
       CBM_VERSION: "0.12.1"
       LANE: ${{ matrix.lane }}
