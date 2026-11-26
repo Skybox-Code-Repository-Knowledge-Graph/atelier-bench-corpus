@@ -20,7 +20,10 @@
 //    line-ending normalisation; every task id, in each lane and in bench/conformance, is lower-case
 //    kebab-case and unique there; every hover task states a `contains` string, byte-present in its
 //    lane's source, and a hover id shared by several lanes uses one string in all of them; and a
-//    list task that states a count lists exactly that many implementations (issue #223).
+//    list task that states a count lists exactly that many implementations; and bench/TOOL-SURFACE.md
+//    (what checklist section E is graded against) names only task ids its lanes have, quotes only
+//    lines its lanes' READMEs have, lists each lane's extractors as quoted, and pins the skybox
+//    version score-tools.yml installs (issue #223).
 // 1. For each lane in matrix.json's `lanes`, runs its verifier from the lane directory and
 //    requires exit 0.
 // 2. Cross-checks the ids each verifier reported against that lane's bench/tasks.json, then
@@ -51,6 +54,11 @@ const GITATTRIBUTES_PATH = join(REPO_ROOT, ".gitattributes");
 const TASK_ID = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 // The surfaces whose answer is an `implementations` list (listCountProblem).
 const LIST_SURFACES = new Set(["implementation", "cardinality", "multi-parent"]);
+const TOOL_SURFACE_PATH = join(REPO_ROOT, "bench", "TOOL-SURFACE.md");
+const SCORE_TOOLS_PATH = join(REPO_ROOT, ".github", "workflows", "score-tools.yml");
+// The language each lane is written in, as bench/TOOL-SURFACE.md's quoted list names it.
+const LANE_LANGUAGES = { php: "PHP", rust: "Rust", typescript: "TypeScript", javascript: "JavaScript", python: "Python", go: "Go" };
+const EXTRACTOR_CLASSES = new Set(["route parser", "ORM, schema or serialization", "other"]);
 
 // Known lane verify commands. A lane is included only when its directory carries
 // bench/tasks.json on disk -- a lane that does not exist yet is simply omitted (issue #5).
@@ -197,7 +205,134 @@ function staticProblem(lanes) {
         ?? crlfAttributesProblem()
         ?? duplicateIdProblem(lanes)
         ?? hoverContainsProblem(lanes)
-        ?? listCountProblem(lanes);
+        ?? listCountProblem(lanes)
+        ?? toolSurfaceProblem(lanes);
+}
+
+/**
+ * bench/TOOL-SURFACE.md cannot rot (issue #223, checklist section E):
+ *   - its `Pinned version:` is the skybox version .github/workflows/score-tools.yml installs;
+ *   - each lane's coverage table ("### <lane>" under "## Per-lane coverage") has one row per
+ *     extractor of the lane's language in the quoted list, in that order;
+ *   - each row fills exactly one of Scored by (backticked ids, each in the lane's tasks.json),
+ *     Deliberate gap (a double-quoted line of the lane README; never for a route parser, ruling R3)
+ *     and Not yet (`not yet`);
+ *   - each lane's language-server row is `not pinned yet` or quotes the README line that pins it.
+ * NOT proven: that a listed task really exercises the extractor (a reviewer's read of its `from`
+ * line), or that the quoted list is what the package prints (re-run the command in the file).
+ */
+function toolSurfaceProblem(lanes) {
+    const where = relative(TOOL_SURFACE_PATH);
+    if (!existsSync(TOOL_SURFACE_PATH)) {
+        return `${where} is missing: checklist section E is graded against it`;
+    }
+    const text = readFileSync(TOOL_SURFACE_PATH, "utf8");
+
+    const pinned = /^Pinned version: `(\d+\.\d+\.\d+)`$/m.exec(text)?.[1];
+    const installed = existsSync(SCORE_TOOLS_PATH)
+        ? /inputs\.skybox_version \|\| '(\d+\.\d+\.\d+)'/.exec(readFileSync(SCORE_TOOLS_PATH, "utf8"))?.[1]
+        : undefined;
+    if (pinned === undefined || pinned !== installed) {
+        return `${where}: pinned version ${pinned ?? "(no \"Pinned version:\" line)"} is not the one ${relative(SCORE_TOOLS_PATH)} installs (${installed ?? "none found"}); re-run the npm view command at that version and update the file`;
+    }
+
+    const tables = markdownTables(text);
+    const extractorsOf = new Map((tables.get("Framework extractors (ruling R2)")?.rows ?? [])
+        .map(([language, list = ""]) => [language, list.split(", ")]));
+    const servers = new Map((tables.get("Language servers (E.5)")?.rows ?? []).map((row) => [row[0], row]));
+
+    for (const lane of lanes) {
+        const language = LANE_LANGUAGES[lane.name];
+        const manifestPath = join(REPO_ROOT, lane.name, "bench", "tasks.json");
+        if (language === undefined || !existsSync(manifestPath)) {
+            continue;
+        }
+        const expected = extractorsOf.get(language);
+        if (expected === undefined) {
+            return `${where}: the quoted extractor list has no ${language} row`;
+        }
+        const rows = tables.get(`Per-lane coverage > ${lane.name}`)?.rows ?? [];
+        if (rows.length === 0) {
+            return `${where}: no coverage table for lane ${lane.name} (a "### ${lane.name}" section under "## Per-lane coverage")`;
+        }
+        const listed = rows.map(([extractor]) => extractor);
+        if (listed.join("\n") !== expected.join("\n")) {
+            return `${where}: ${lane.name} rows are [${listed.join(", ")}], but the quoted ${language} list is [${expected.join(", ")}]; one row per extractor, in that order`;
+        }
+
+        const ids = new Set(readLaneTasks(lane).keys());
+        const readme = existsSync(join(REPO_ROOT, lane.name, "README.md")) ? readFileSync(join(REPO_ROOT, lane.name, "README.md"), "utf8") : "";
+        const quotes = (cell) => {
+            const quote = /^"(.+)"$/.exec(cell)?.[1];
+            return quote !== undefined && readme.includes(quote);
+        };
+        for (const [extractor, klass, scoredBy = "", gap = "", notYet = ""] of rows) {
+            const at = `${where}: ${lane.name} ${extractor}`;
+            if (!EXTRACTOR_CLASSES.has(klass)) {
+                return `${at}: class ${JSON.stringify(klass)} is not one of: ${[...EXTRACTOR_CLASSES].join("; ")}`;
+            }
+            const filled = [scoredBy, gap, notYet].filter((cell) => cell !== "").length;
+            if (filled !== 1) {
+                return `${at}: fill exactly one of Scored by, Deliberate gap and Not yet (${filled} filled)`;
+            }
+            if (scoredBy !== "") {
+                if (!/^`[^`]+`(?:, `[^`]+`)*$/.test(scoredBy)) {
+                    return `${at}: Scored by must be backticked task ids separated by ", "`;
+                }
+                const missing = scoredBy.slice(1, -1).split("`, `").find((id) => !ids.has(id));
+                if (missing !== undefined) {
+                    return `${at}: task ${missing} is not in ${lane.name}/bench/tasks.json; update this row whenever a task id it names is renamed or retired`;
+                }
+            }
+            if (gap !== "" && klass === "route parser") {
+                return `${at}: a route parser cannot be a deliberate gap (ruling R3 reads E.1 literally); add a route task for it`;
+            }
+            if (gap !== "" && !quotes(gap)) {
+                return `${at}: Deliberate gap must quote, in double quotes, a line of ${lane.name}/README.md that names the gap`;
+            }
+            if (notYet !== "" && notYet !== "not yet") {
+                return `${at}: the Not yet cell reads ${JSON.stringify(notYet)}; write "not yet" or fill another cell`;
+            }
+        }
+
+        const [, server = "", , source = ""] = servers.get(lane.name) ?? [];
+        if (server === "") {
+            return `${where}: no language-server row for lane ${lane.name}`;
+        }
+        if (server !== "not pinned yet" && !quotes(source)) {
+            return `${where}: ${lane.name} language server: quote, in double quotes, the ${lane.name}/README.md line that pins it, or write "not pinned yet"`;
+        }
+    }
+    return undefined;
+}
+
+/** A Markdown file's tables, keyed by the headings above them ("h2" or "h2 > h3"). */
+function markdownTables(text) {
+    const tables = new Map();
+    let h2 = "";
+    let h3 = "";
+    let fenced = false;
+    for (const line of text.split(/\r?\n/)) {
+        if (line.startsWith("```")) {
+            fenced = !fenced;
+        } else if (fenced) {
+            continue;
+        } else if (line.startsWith("## ")) {
+            [h2, h3] = [line.slice(3).trim(), ""];
+        } else if (line.startsWith("### ")) {
+            h3 = line.slice(4).trim();
+        } else if (line.startsWith("|")) {
+            const cells = line.trim().replace(/^\|/, "").replace(/(?<!\\)\|$/, "").split(/(?<!\\)\|/)
+                .map((cell) => cell.trim().replaceAll("\\|", "|"));
+            const key = h3 === "" ? h2 : `${h2} > ${h3}`;
+            if (!tables.has(key)) {
+                tables.set(key, { header: cells, rows: [] });
+            } else if (!cells.every((cell) => /^-+$/.test(cell))) {
+                tables.get(key).rows.push(cells);
+            }
+        }
+    }
+    return tables;
 }
 
 /**

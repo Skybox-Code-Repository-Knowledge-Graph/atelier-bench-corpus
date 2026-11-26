@@ -228,3 +228,63 @@ test("guard: .gitattributes keeps crlf.txt -text, as the last line that sets tex
     const result = run(root, "--write", "--matrix-only");
     assert.equal(result.status, 0, result.stderr);
 });
+
+/** Replace the one occurrence of `from` in a copied file (asserted, so a mutation never silently misses). */
+function replaceOnce(root, path, from, to) {
+    const file = join(root, path);
+    const text = readFileSync(file, "utf8");
+    assert.equal(text.split(from).length, 2, `${path}: ${JSON.stringify(from)} is not there exactly once`);
+    writeFileSync(file, text.replace(from, to));
+}
+const SURFACE = "bench/TOOL-SURFACE.md";
+
+test("guard: bench/TOOL-SURFACE.md names only task ids its lanes have", (t) => {
+    // The table names an id the lane does not have...
+    assertRefused(t, (root) => replaceOnce(root, SURFACE, "`def-route-to-handler`, `def-async-handler`", "`def-route-to-handler`, `def-async-handlr`"),
+        /^matrix: FAIL bench\/TOOL-SURFACE\.md: rust Axum routes: task def-async-handlr is not in rust\/bench\/tasks\.json/);
+    // ...or the lane renames an id the table names.
+    assertRefused(t, (root) => editJson(root, "go/bench/tasks.json", (manifest) => {
+        taskIn(manifest, "def-route-default-mux").id = "def-route-default-mux-renamed";
+    }), /^matrix: FAIL bench\/TOOL-SURFACE\.md: go net\/http: task def-route-default-mux is not in go\/bench\/tasks\.json/);
+    assertRefused(t, (root) => replaceOnce(root, SURFACE, "| Flask | route parser | `def-route-to-handler` |", "| Flask | route parser | def-route-to-handler |"),
+        /python Flask: Scored by must be backticked task ids/);
+});
+
+test("guard: bench/TOOL-SURFACE.md rows follow the quoted list, one state each", (t) => {
+    assertRefused(t, (root) => replaceOnce(root, SURFACE, "| Reqwest HTTP | other | | | not yet |\n", ""),
+        /^matrix: FAIL bench\/TOOL-SURFACE\.md: rust rows are \[Axum routes\], but the quoted Rust list is \[Axum routes, Reqwest HTTP\]/);
+    assertRefused(t, (root) => replaceOnce(root, SURFACE, "| Go | net/http, gorilla/mux,", "| Go | net/http, gorilla/mux, httprouter,"),
+        /go rows are \[.*\], but the quoted Go list is \[net\/http, gorilla\/mux, httprouter,/);
+    assertRefused(t, (root) => replaceOnce(root, SURFACE, "| Axum routes | route parser | `def-route-to-handler`, `def-async-handler` | | |", "| Axum routes | route parser | `def-route-to-handler`, `def-async-handler` | | not yet |"),
+        /rust Axum routes: fill exactly one of Scored by, Deliberate gap and Not yet \(2 filled\)/);
+    assertRefused(t, (root) => replaceOnce(root, SURFACE, "| Django | route parser | | | not yet |", "| Django | route parser | | | |"),
+        /python Django: fill exactly one of Scored by, Deliberate gap and Not yet \(0 filled\)/);
+    assertRefused(t, (root) => replaceOnce(root, SURFACE, "| Reqwest HTTP | other |", "| Reqwest HTTP | client |"),
+        /rust Reqwest HTTP: class "client" is not one of/);
+});
+
+test("guard: a deliberate gap quotes the lane README, and a route parser cannot be one", (t) => {
+    const gap = (cell) => (root) => replaceOnce(root, SURFACE, "| SQLAlchemy | ORM, schema or serialization | | | not yet |", `| SQLAlchemy | ORM, schema or serialization | | ${cell} | |`);
+    assertRefused(t, gap('"no SQLAlchemy here, on purpose"'), /python SQLAlchemy: Deliberate gap must quote, in double quotes, a line of python\/README\.md/);
+    assertRefused(t, gap("Flask==3.1.1"), /python SQLAlchemy: Deliberate gap must quote/);
+    assertRefused(t, (root) => replaceOnce(root, SURFACE, "| FastAPI | route parser | | | not yet |", '| FastAPI | route parser | | "Flask==3.1.1" | |'),
+        /python FastAPI: a route parser cannot be a deliberate gap/);
+
+    // A quote that is in the lane README is accepted (the mechanism; the words are the lane's to write).
+    const root = scratch(t);
+    gap('"`Flask==3.1.1`"')(root);
+    const result = run(root, "--write", "--matrix-only");
+    assert.equal(result.status, 0, result.stderr);
+});
+
+test("guard: bench/TOOL-SURFACE.md pins the version score-tools.yml installs, and quotes each pinned server", (t) => {
+    assertRefused(t, (root) => replaceOnce(root, ".github/workflows/score-tools.yml", "inputs.skybox_version || '0.9.0'", "inputs.skybox_version || '0.9.1'"),
+        /^matrix: FAIL bench\/TOOL-SURFACE\.md: pinned version 0\.9\.0 is not the one \.github\/workflows\/score-tools\.yml installs \(0\.9\.1\)/);
+    assertRefused(t, (root) => replaceOnce(root, SURFACE, "Pinned version: `0.9.0`", "Pinned version: 0.9.0"),
+        /pinned version \(no "Pinned version:" line\)/);
+    assertRefused(t, (root) => replaceOnce(root, SURFACE, "| go | not pinned yet | | |", "| go | gopls | v0.24.0 | |"),
+        /go language server: quote, in double quotes, the go\/README\.md line that pins it/);
+    assertRefused(t, (root) => replaceOnce(root, "javascript/README.md", "(graded through `typescript-language-server` 6.1.0)", "(graded through `typescript-language-server` 6.2.0)"),
+        /javascript language server: quote, in double quotes, the javascript\/README\.md line that pins it/);
+    assertRefused(t, (root) => rmSync(join(root, SURFACE)), /^matrix: FAIL bench\/TOOL-SURFACE\.md is missing/);
+});

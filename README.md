@@ -68,9 +68,11 @@ checks, from files alone, that `bench/conformance/src/crlf.txt` still ends every
 that `.gitattributes` still keeps it `-text`, that every task id (in each lane and in
 `bench/conformance/`) is lower-case kebab-case and unique there, that every hover task states a
 `contains` string, present in its lane's source and the same in every lane sharing the hover id,
-and that a list task stating a count lists exactly that many implementations; and a cardinality or
+and that a list task stating a count lists exactly that many implementations; a cardinality or
 multi-parent id shared by several lanes must state the same `exact_count` in every lane that
-carries it.
+carries it; and [`bench/TOOL-SURFACE.md`](bench/TOOL-SURFACE.md), the tool surface checklist
+section E is graded against, may name only task ids and README lines its lanes have, so a lane
+that renames or retires such an id updates its row there.
 
 ## Scoring a tool
 
