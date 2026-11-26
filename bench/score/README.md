@@ -341,7 +341,8 @@ node bench/score/compare.mjs --before before.report.json --after after.report.js
 What it prints, in this order:
 
 - **One line per rule class and protocol**, as the score report groups them, with `passed of
-  scorable` before and after and how many tasks that line gained and lost. Lines are never added up.
+  scorable` before and after, how many tasks that line gained and lost, and how many of its tasks
+  were not compared (they move the totals but are in neither gained nor lost). Lines are never added up.
 - **GAINED**: tasks that were not `PASS` and are `PASS`.
 - **LOST**: tasks that were `PASS` and are not, with the verdict they have now. A loss is listed
   even when its line's total went up.
@@ -366,7 +367,8 @@ node bench/score/score.mjs --lane go --answers after.json --format json > after.
 node bench/score/compare.mjs --before before.report.json --after after.report.json
 ```
 
-Run both at the same checkout of this repository, or the NOT COMPARED section will say the keys
-moved. The `score-tools` workflow does this for skybox when a baseline version is given to a manual
+Run both at the same checkout of this repository. A key edit that keeps a task's rule, class and
+protocol is not detected: it shows as a gain or a loss, so both reports must be scored at the same
+checkout. The `score-tools` workflow does this for skybox when a baseline version is given to a manual
 run (`baseline_version`): it scores both versions and adds the comparison to the job summary and to
 the lane's artifact.

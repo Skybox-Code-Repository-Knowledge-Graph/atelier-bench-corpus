@@ -100,8 +100,11 @@ jobs:
           } >> "$GITHUB_STEP_SUMMARY"
 
       # Only when a baseline version was given to a manual run: the same checkout, the same lane,
-      # the baseline version asked and scored the same way, then the two reports compared. A
-      # baseline that crashes is a recorded result in its answers, not a red step.
+      # the baseline version asked and scored the same way, then the two reports compared. This step is
+      # not continue-on-error: it fails the job for the same causes the Ask step does (a wrong
+      # version, an index or serve failure), so a comparison whose baseline could not be scored is
+      # visibly failed; the version under test's report is already written and uploaded. Per-question
+      # failures are recorded in the answers.
       - name: Baseline (same checkout; only when baseline_version is given)
         if: env.BASELINE_VERSION != ''
         run: |

@@ -1,10 +1,12 @@
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
-import { mkdtempSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
+import { mkdtempSync, readdirSync, readFileSync, symlinkSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { test } from "node:test";
 import { fileURLToPath } from "node:url";
+
+import { summarize } from "../lib/score.mjs";
 
 const COMPARE = join(dirname(fileURLToPath(import.meta.url)), "..", "compare.mjs");
 
@@ -48,7 +50,7 @@ test("a loss is shown when the line's total rose (2)", () => {
     const after = report([task("a", "PASS"), task("b", "PASS"), task("c", "FAIL")]);
     const { status, stdout } = run(before, after);
     assert.equal(status, 0);
-    assert.match(stdout, /exact, raw\s+passed 1 of 3 -> 2 of 3\s+\(gained 2, lost 1\)/);
+    assert.match(stdout, /exact, raw\s+passed 1 of 3 -> 2 of 3\s+\(gained 2, lost 1, not compared 0\)/);
     assert.match(stdout, /LOST \(1\)\n {2}c: PASS -> FAIL/);
     assert.match(stdout, /GAINED \(2\)\n {2}a: FAIL -> PASS/);
 });
@@ -111,5 +113,54 @@ test("a report compared with itself shows no changes (6)", () => {
     assert.deepEqual([out.gained, out.lost, out.changed, out.notCompared], [[], [], [], []]);
     for (const line of out.lines) {
         assert.deepEqual(line.before, line.after);
+    }
+});
+
+test("through a symlink it still compares, and a bad input still exits 2 (I1)", () => {
+    const dir = mkdtempSync(join(tmpdir(), "compare-link-"));
+    const link = join(dir, "compare-link.mjs");
+    symlinkSync(COMPARE, link);
+    const write = (name, value) => {
+        const path = join(dir, name);
+        writeFileSync(path, JSON.stringify(value));
+        return path;
+    };
+    const both = write("r.json", report([task("a", "PASS")]));
+    const ok = spawnSync(process.execPath, [link, "--before", both, "--after", both], { encoding: "utf8" });
+    assert.equal(ok.status, 0, ok.stderr);
+    assert.match(ok.stdout, /^compare: t 1\.0\.0 -> t 1\.0\.0/);
+    const bad = spawnSync(process.execPath, [link, "--before", both, "--after", join(dir, "missing.json")], { encoding: "utf8" });
+    assert.equal(bad.status, 2);
+    assert.match(bad.stderr, /^compare: cannot read /);
+});
+
+test("lines equal summarize's columns, in its order, and count NOT COMPARED per line (M4, M5)", () => {
+    const results = [
+        task("a", "PASS"),
+        task("b", "FAIL", { protocol: "anchored" }),
+        task("c", "UNSCORABLE", { class: "recall" }),
+        task("d", "PASS", { class: "behaviour", protocol: "anchored" }),
+        task("e", "UNANSWERED", { class: "recall", protocol: "raw" }),
+        task("f", "PASS", { protocol: "unstated" }),
+    ];
+    const columns = summarize(results).columns;
+    const out = JSON.parse(run(report(results), report(results), "--format", "json").stdout);
+    assert.deepEqual(
+        out.lines.map((line) => [line.class, line.protocol, line.before, line.after]),
+        columns.map((column) => [column.class, column.protocol, { pass: column.pass, scorable: column.scorable }, { pass: column.pass, scorable: column.scorable }]),
+    );
+
+    const moved = report([task("a", "PASS"), task("b", "PASS", { rule: "definition/other" }), task("only", "PASS")]);
+    const base = report([task("a", "PASS"), task("b", "PASS"), task("gone", "PASS")]);
+    const compared = run(base, moved);
+    assert.match(compared.stdout, /passed 3 of 3 -> 3 of 3\s+\(gained 0, lost 0, not compared 3\)/);
+});
+
+test("a class outside the scorer's classes is refused as a malformed report (M3)", () => {
+    for (const bad of ["constructor", "toString", "__proto__", "weird", 7]) {
+        const { status, stdout, stderr } = run(report([task("a", "PASS")]), report([task("a", "PASS", { class: bad })]));
+        assert.equal(status, 2, stderr);
+        assert.equal(stdout, "");
+        assert.match(stderr, /^compare: .* is not a score report: a has an unknown class\n$/);
     }
 });

@@ -12,15 +12,12 @@
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import process from "node:process";
-import { fileURLToPath } from "node:url";
 
-const VERDICTS = ["PASS", "FAIL", "UNSUPPORTED", "UNANSWERED", "ERROR", "UNSCORABLE", "UNRESOLVED"];
+import { VERDICTS, summarize } from "./lib/score.mjs";
 const CLASS_ORDER = { exact: 0, recall: 1, behaviour: 2 };
 const CLASS_LABEL = { exact: "exact", recall: "recall-only", behaviour: "behaviour" };
 
-if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
-    process.exit(main(process.argv.slice(2)));
-}
+process.exit(main(process.argv.slice(2)));
 
 function main(args) {
     const options = parseArgs(args);
@@ -90,7 +87,7 @@ function readJson(path) {
 }
 
 /** The first reason a value is not a `score.mjs --format json` report, or null. */
-export function reportProblem(report) {
+function reportProblem(report) {
     if (report === null || typeof report !== "object" || Array.isArray(report)) {
         return "not a JSON object";
     }
@@ -117,6 +114,9 @@ export function reportProblem(report) {
         if (!VERDICTS.includes(result.verdict)) {
             return `${result.id} has no known verdict`;
         }
+        if (result.class !== undefined && result.class !== null && !(typeof result.class === "string" && Object.hasOwn(CLASS_ORDER, result.class))) {
+            return `${result.id} has an unknown class`;
+        }
         if (seen.has(result.id)) {
             return `task id ${result.id} appears twice`;
         }
@@ -129,7 +129,7 @@ export function reportProblem(report) {
  * Compare two valid reports. Returns { problem } when they must not be compared (lanes, tool names
  * or scopes differ), otherwise the comparison. Deterministic: ids are sorted, nothing reads a clock.
  */
-export function compareReports(before, after) {
+function compareReports(before, after) {
     if (before.lane !== after.lane) {
         return { problem: `lanes differ: before is ${before.lane}, after is ${after.lane}` };
     }
@@ -148,17 +148,20 @@ export function compareReports(before, after) {
     const lost = [];
     const changed = [];
     const notCompared = [];
+    const notComparedKeys = [];
 
     for (const id of ids) {
         const was = beforeById.get(id);
         const now = afterById.get(id);
         if (!was || !now) {
+            notComparedKeys.push(...[was ?? now].filter((result) => Object.hasOwn(CLASS_ORDER, result.class)).map(lineKey));
             notCompared.push({ id, reason: `only in the ${was ? "before" : "after"} report` });
             continue;
         }
         const differs = ["rule", "class", "protocol"].filter((field) => (was[field] ?? null) !== (now[field] ?? null));
         if (differs.length > 0) {
             const parts = differs.map((field) => `${field} ${was[field] ?? "none"} -> ${now[field] ?? "none"}`);
+            notComparedKeys.push(...new Set([was, now].filter((result) => Object.hasOwn(CLASS_ORDER, result.class)).map(lineKey)));
             notCompared.push({ id, reason: parts.join("; ") });
             continue;
         }
@@ -181,7 +184,7 @@ export function compareReports(before, after) {
         scope: after.scope,
         before: { tool: before.tool },
         after: { tool: after.tool },
-        lines: lineTable(before.results, after.results, { gained, lost }),
+        lines: lineTable(before.results, after.results, { gained, lost, notComparedKeys }),
         gained,
         lost,
         changed,
@@ -189,41 +192,47 @@ export function compareReports(before, after) {
     };
 }
 
-/** One line per rule class and protocol, as score.mjs groups them; never added together. */
-function lineTable(beforeResults, afterResults, { gained, lost }) {
-    const lines = new Map();
-    const line = (result) => {
-        if (!(result.class in CLASS_ORDER)) {
-            return null;
+/**
+ * One line per rule class and protocol, taken from `summarize` (lib/score.mjs) for each side, in the
+ * order `summarize` gives them; never added together. A line carries how many of its tasks are in
+ * neither gained nor lost because they were not compared.
+ */
+function lineTable(beforeResults, afterResults, { gained, lost, notComparedKeys }) {
+    const columnsOf = (results) => new Map(summarize(results).columns.map((column) => [lineKey(column), column]));
+    const beforeColumns = columnsOf(beforeResults);
+    const afterColumns = columnsOf(afterResults);
+    const tally = (entries) => {
+        const counts = new Map();
+        for (const entry of entries) {
+            const key = typeof entry === "string" ? entry : lineKey(entry);
+            counts.set(key, (counts.get(key) ?? 0) + 1);
         }
-        const protocol = result.protocol ?? null;
-        const key = `${result.class}\u0000${protocol ?? ""}`;
-        if (!lines.has(key)) {
-            lines.set(key, { class: result.class, protocol, before: { pass: 0, scorable: 0 }, after: { pass: 0, scorable: 0 }, gained: 0, lost: 0 });
-        }
-        return lines.get(key);
+        return counts;
     };
-    const count = (results, side) => {
-        for (const result of results) {
-            const target = line(result)?.[side];
-            if (target && result.verdict !== "UNSCORABLE" && result.verdict !== "UNRESOLVED") {
-                target.scorable += 1;
-                target.pass += result.verdict === "PASS" ? 1 : 0;
-            }
-        }
-    };
-    count(beforeResults, "before");
-    count(afterResults, "after");
-    for (const entry of gained) {
-        line(entry).gained += 1;
-    }
-    for (const entry of lost) {
-        line(entry).lost += 1;
-    }
+    const gainedBy = tally(gained);
+    const lostBy = tally(lost);
+    const notComparedBy = tally(notComparedKeys);
+    const side = (column) => ({ pass: column?.pass ?? 0, scorable: column?.scorable ?? 0 });
 
-    return [...lines.values()]
-        .filter((entry) => entry.before.scorable > 0 || entry.after.scorable > 0)
-        .sort((left, right) => CLASS_ORDER[left.class] - CLASS_ORDER[right.class] || byCodeUnit(left.protocol ?? "", right.protocol ?? ""));
+    // summarize over both sides together gives the one order for the union of the lines.
+    return summarize([...beforeResults, ...afterResults])
+        .columns.map((column) => {
+            const key = lineKey(column);
+            return {
+                class: column.class,
+                protocol: column.protocol,
+                before: side(beforeColumns.get(key)),
+                after: side(afterColumns.get(key)),
+                gained: gainedBy.get(key) ?? 0,
+                lost: lostBy.get(key) ?? 0,
+                notCompared: notComparedBy.get(key) ?? 0,
+            };
+        })
+        .filter((entry) => entry.before.scorable > 0 || entry.after.scorable > 0);
+}
+
+function lineKey(item) {
+    return `${item.class}\u0000${item.protocol ?? ""}`;
 }
 
 function renderText(compared) {
@@ -234,7 +243,7 @@ function renderText(compared) {
 
     for (const entry of compared.lines) {
         const label = `${CLASS_LABEL[entry.class]}${entry.protocol ? `, ${entry.protocol}` : ""}`.padEnd(22);
-        out.push(`${label}  passed ${entry.before.pass} of ${entry.before.scorable} -> ${entry.after.pass} of ${entry.after.scorable}   (gained ${entry.gained}, lost ${entry.lost})`);
+        out.push(`${label}  passed ${entry.before.pass} of ${entry.before.scorable} -> ${entry.after.pass} of ${entry.after.scorable}   (gained ${entry.gained}, lost ${entry.lost}, not compared ${entry.notCompared})`);
     }
 
     const section = (title, entries, describe) => {
