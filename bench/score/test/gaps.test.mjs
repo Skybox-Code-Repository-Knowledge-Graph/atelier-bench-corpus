@@ -37,6 +37,8 @@ const DECIDED = {
     "python:def-string-key-dispatch": { rule: "definition/string-key" },
     "javascript:def-dynamic-require": { reason: /^kind unresolvable_static: .* anchors each module on a line inside it/ },
     "python:def-dynamic-import-module": { reason: /^kind unresolvable_static: .* anchors each module on a line inside it/ },
+    // import-precision, kind visibility_boundary, with contains and one known site (go)
+    "go:imp-internal-package": { reason: /^kind visibility_boundary with `contains` and one known site and no count: gopls v0\.24\.0 answers .* three importers/ },
 };
 
 const tasksOf = new Map();

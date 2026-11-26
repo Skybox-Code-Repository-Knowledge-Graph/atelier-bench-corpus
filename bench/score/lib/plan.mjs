@@ -355,6 +355,13 @@ export const UNRULED_SHAPES = [
         tasks: new Set(["javascript:def-dynamic-require", "python:def-dynamic-import-module"]),
         reason: "kind unresolvable_static: the answer is each candidate module, and the key anchors each module on a line inside it (its SLUG line), so no line of the key names the module; a module answer lands on the file's first line (typescript-language-server 6.1.0 and pyright 1.1.414 on a static specifier), and matching by file is a mode the key does not state",
     },
+    {
+        surface: "import-precision",
+        kind: "visibility_boundary",
+        keys: ["contains", "kind", "known_sites"],
+        tasks: new Set(["go:imp-internal-package"]),
+        reason: "kind visibility_boundary with `contains` and one known site and no count: gopls v0.24.0 answers references at the package clause with three importers (cmd/atelier/main.go, tests/events_test.go, tests/structure_test.go) and the key lists one, so the list is not known to be complete and a rule over it could only be recall, which every import line of the lane would pass; `contains` is defined for hover text only",
+    },
 ];
 
 /**
