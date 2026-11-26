@@ -48,8 +48,9 @@ const DECIDED = {
     "php:imp-glob-import": { reason: /^imp-glob-import has no single reading: .* the php key has rust's form .* the shared id, whose python, typescript and go keys read differently$/ },
     // multi-parent with only exact_count and must_include, parents outside the repository (rust)
     "rust:parents-supertrait-send-sync": { reason: /^parents with only `exact_count` and `must_include`: the two parents, Send and Sync, are declared in the Rust core library/ },
-    // implementation with a single target under vendor/ (php)
-    "php:vendor-shouldbroadcast-contract": { reason: /^an implementation question whose key names the contract, not an implementor: phpactor 2026\.11\.22\.0 answers implementation .* six implementors/ },
+    // a definition target under vendor/ (php); was an implementation task refused here until issue
+    // #223 moved it to the definition surface its key answers
+    "php:vendor-shouldbroadcast-contract": { rule: "definition/target" },
 };
 
 const tasksOf = new Map();

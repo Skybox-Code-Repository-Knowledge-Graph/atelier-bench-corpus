@@ -2244,7 +2244,7 @@
       ]
     },
     "vendor-shouldbroadcast-contract": {
-      "surface": "implementation",
+      "surface": "definition",
       "lanes": [
         "php"
       ]
