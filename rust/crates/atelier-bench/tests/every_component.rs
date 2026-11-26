@@ -1,8 +1,9 @@
 //! Reaches the breadth components no other test touches: every exporter and
 //! notifier, the repositories and services the registry tests skip, the
-//! glob-import helper, the timestamp concern and the device observer. Each
-//! service, repository, concern and observer test asserts a value worked out
-//! by hand from the frozen seed (or from one stated change to it).
+//! glob-import helper, the timestamp concern and the device observer. The
+//! one-file tests from `the_backlog_is_the_three_open_seed_orders` on, and
+//! the churn, usage and load checks in the services test, assert values
+//! worked out by hand from the frozen seed (or from one stated change to it).
 
 use atelier_bench::concerns::has_timestamps::{HasTimestamps, Stamped};
 use atelier_bench::contracts::exporter_contract::ExporterContract;
