@@ -8,7 +8,8 @@
 // Node built-ins only, run from the repository root. CI runs the default (read-only) mode.
 //
 // 0. Static guards, before any verifier runs: bench/conformance/src/crlf.txt still ends every line
-//    in CRLF (the c-crlf case is no CRLF test otherwise; issue #223).
+//    in CRLF (the c-crlf case is no CRLF test otherwise), and no lane's tasks.json repeats a task
+//    id (issue #223).
 // 1. For each lane in matrix.json's `lanes`, runs its verifier from the lane directory and
 //    requires exit 0.
 // 2. Cross-checks the ids each verifier reported against that lane's bench/tasks.json, then
@@ -51,7 +52,7 @@ process.exit(write ? runWrite() : runCheck());
 function runWrite() {
     const lanes = presentLanes();
 
-    const problem = staticProblem();
+    const problem = staticProblem(lanes);
     if (problem !== undefined) {
         return fail(problem);
     }
@@ -86,16 +87,15 @@ function runCheck() {
     }
 
     const committed = JSON.parse(readFileSync(MATRIX_PATH, "utf8"));
-
-    const problem = staticProblem();
-    if (problem !== undefined) {
-        return fail(problem);
-    }
-
     const lanes = Object.keys(committed.lanes).map((name) => {
         const known = LANE_DEFS.find((lane) => lane.name === name);
         return known ?? { name, verify: committed.lanes[name].verify };
     });
+
+    const problem = staticProblem(lanes);
+    if (problem !== undefined) {
+        return fail(problem);
+    }
 
     for (const lane of lanes) {
         const manifestPath = join(REPO_ROOT, lane.name, "bench", "tasks.json");
@@ -158,8 +158,30 @@ function runCheck() {
 }
 
 /** The first static guard that fails, or undefined. Reads files only; spawns nothing. */
-function staticProblem() {
-    return crlfFixtureProblem();
+function staticProblem(lanes) {
+    return crlfFixtureProblem() ?? duplicateIdProblem(lanes);
+}
+
+/**
+ * A task id repeated inside one lane's tasks.json. Every later step keys tasks by id (Maps and Sets),
+ * so a repeat would collapse silently and both copies would pass; it must fail by name instead.
+ * A lane without tasks.json is skipped here and reported by the verifier loop.
+ */
+function duplicateIdProblem(lanes) {
+    for (const lane of lanes) {
+        const manifestPath = join(REPO_ROOT, lane.name, "bench", "tasks.json");
+        if (!existsSync(manifestPath)) {
+            continue;
+        }
+        const seen = new Set();
+        for (const task of JSON.parse(readFileSync(manifestPath, "utf8")).tasks) {
+            if (seen.has(task.id)) {
+                return `${lane.name}/bench/tasks.json repeats task id ${task.id}`;
+            }
+            seen.add(task.id);
+        }
+    }
+    return undefined;
 }
 
 /**
