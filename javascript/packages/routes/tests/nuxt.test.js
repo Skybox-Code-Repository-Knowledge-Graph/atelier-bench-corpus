@@ -1,19 +1,35 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
+import { fileURLToPath, pathToFileURL } from "node:url";
+
 import { createApp, createRouter, toWebHandler } from "h3";
+import { createNitro, scanHandlers } from "nitropack";
 
-import reportHandler from "@atelier/routes/nuxt/server/api/reports/[slug].get.js";
-import latestHandler from "@atelier/routes/nuxt/server/routes/reports/latest.get.js";
+const SERVER_DIR = fileURLToPath(new URL("../src/nuxt/server/", import.meta.url));
 
-/** The router Nitro builds from the two file names. */
-function nitroLikeHandler() {
-    const router = createRouter().get("/api/reports/:slug", reportHandler).get("/reports/latest", latestHandler);
-    return toWebHandler(createApp().use(router));
+/**
+ * The routes Nitro (Nuxt's server engine) reads off the server/ file names with its own
+ * scanner, each served through h3 the way Nitro's runtime serves it.
+ */
+async function nitroRoutes() {
+    const nitro = await createNitro({ rootDir: SERVER_DIR, srcDir: SERVER_DIR, dev: false, preset: "node-server", logLevel: 0, compatibilityDate: "2026-11-26" });
+    const scanned = await scanHandlers(nitro);
+    await nitro.close();
+    const router = createRouter();
+    for (const entry of scanned) {
+        router.use(entry.route, (await import(pathToFileURL(entry.handler).href)).default, entry.method);
+    }
+    return { scanned, fetchHandler: toWebHandler(createApp().use(router)) };
 }
 
-describe("nuxt (h3 server routes)", () => {
-    it("serves GET /api/reports/:slug, routed the way the file name says", async () => {
-        const fetchHandler = nitroLikeHandler();
+describe("nuxt (nitro server routes)", () => {
+    it("routes GET /api/reports/:slug to server/api/reports/[slug].get.js by its file name", async () => {
+        const { scanned, fetchHandler } = await nitroRoutes();
+        const routes = scanned.map((entry) => `${entry.method} ${entry.route} ${entry.handler.split("/src/nuxt/")[1]}`).sort();
+        assert.deepEqual(routes, [
+            "get /api/reports/:slug server/api/reports/[slug].get.js",
+            "get /reports/latest server/routes/reports/latest.get.js",
+        ]);
         const response = await fetchHandler(new Request("http://localhost/api/reports/gross-profit"));
         assert.equal(response.status, 200);
         assert.deepEqual((await response.json()).rows.map((row) => row.cents), [58325, 46300, 12025]);
@@ -21,7 +37,7 @@ describe("nuxt (h3 server routes)", () => {
     });
 
     it("follows /reports/latest to the API route by URL", async () => {
-        const fetchHandler = nitroLikeHandler();
+        const { fetchHandler } = await nitroRoutes();
         const redirected = await fetchHandler(new Request("http://localhost/reports/latest"));
         assert.equal(redirected.status, 302);
         const location = String(redirected.headers.get("location"));
