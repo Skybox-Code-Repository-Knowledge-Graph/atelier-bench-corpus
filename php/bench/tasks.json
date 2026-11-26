@@ -211,7 +211,7 @@
         {
             "id": "lw-url-attribute",
             "surface": "hover",
-            "note": "#[Url] attribute prop: hover should surface the attribute + docblock, and the query-string alias.",
+            "note": "#[Url] attribute prop: the $statusFilter docblock names the #[Url] attribute that syncs it to the ?status= query string, so a hover that shows the declaration's docblock contains Url.",
             "from": { "file": "app/Livewire/StatusBoard.php", "needle": "public string $statusFilter = '';", "symbol": "$statusFilter" },
             "expect": { "contains": "Url" }
         },
@@ -265,8 +265,8 @@
         {
             "id": "rel-ofmany-builder",
             "surface": "hover",
-            "note": "HasOne-of-many builder chain: hover on the chained call should surface a HasOne relationship type.",
-            "from": { "file": "app/Models/Customer.php", "needle": "return $this->hasMany(RepairOrder::class)->one()->latestOfMany('opened_at');", "symbol": "latestOfMany" },
+            "note": "HasOne-of-many builder chain: hover on one(), the call that turns the HasMany into a HasOne, surfaces the HasOne relationship type, which its declaration states (vendor Relations/HasMany.php, `@return \\Illuminate\\Database\\Eloquent\\Relations\\HasOne<...>`). The task used to hover latestOfMany, whose declaration says only `@return $this`; it was moved to one() so the string is in the hovered declaration (issue #223).",
+            "from": { "file": "app/Models/Customer.php", "needle": "return $this->hasMany(RepairOrder::class)->one()->latestOfMany('opened_at');", "symbol": "one" },
             "expect": { "contains": "HasOne" }
         },
         {
