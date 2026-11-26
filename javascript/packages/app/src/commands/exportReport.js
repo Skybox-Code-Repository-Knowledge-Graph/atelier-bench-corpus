@@ -1,9 +1,10 @@
 /**
  * `report <slug>`: render one registered report.
  *
- * The lane's single `createRequire` site. The exporter is a CommonJS module
- * picked by extension at call time, so it cannot be an `import` statement: the
- * require built here is the only way in from an ESM file.
+ * One of the lane's two `createRequire` sites (the other is `reportsIndex.js`).
+ * The exporter is a CommonJS module picked by extension at call time, so it
+ * cannot be a static `import` statement: the require built here loads it
+ * synchronously from this ESM file.
  */
 
 import { createRequire } from "node:module";

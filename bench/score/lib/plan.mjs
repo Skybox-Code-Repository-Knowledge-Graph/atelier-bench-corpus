@@ -1,10 +1,10 @@
 // The rule table: which tasks this version of the scorer can score, and how.
 //
 // Semantics come from this table, never from the shape of an `expect` block. The same key means
-// different things in different tasks (`exact_count` is an overload count in one task, a parameter
-// count in another), so a task is scored only when a rule names its surface and its keys. Every
-// other task is reported UNSCORABLE with the reason, and every key a rule does not use is listed
-// per task as "not scored".
+// different things in different tasks (`exact_count` counts the declarations a list names in one
+// task, a signature's parameters in another), so a task is scored only when a rule names its
+// surface and its keys. Every other task is reported UNSCORABLE with the reason, and every key a
+// rule does not use is listed per task as "not scored".
 
 import { isFileNeedle } from "./resolve.mjs";
 import { symbolColumns } from "./symbol.mjs";
@@ -321,11 +321,17 @@ export const TARGET_COUNT_UNSCORABLE = {
 };
 
 /**
+ * Why no rule scores the shared id imp-glob-import (issue #135): the start of each lane's reason.
+ * The lanes ask one question, and neither the servers nor the keys settle what its answer is.
+ */
+const GLOB_NO_READING = "imp-glob-import has no single reading: asked at the import, every lane's own server answers the module or nothing, never the lines the keys list (rust-analyzer 1.96.0 and pyright 1.1.414 the module's first line, typescript-language-server 6.1.0 its first statement, phpactor 2026.11.22.0 no location), asked at a name the import binds the servers answer that name's declaration, and the keys of this shared id disagree on the answer (go's, kind dot_import, names one member the file uses as its candidate, though the file uses more than one)";
+
+/**
  * Key shapes no rule scores, with the reason (issue #135): a surface, an optional kind, the exact
  * set of expect keys, and the tasks (`lane:id`) the reason is true of. Matched only after every rule
  * has passed a task by, so an entry can never take a task a rule scores; a task of the same shape
  * that is not listed falls through to the generic "no rule for surface ..." reason instead of one
- * written for another lane's task.
+ * written for another lane's task. An entry whose `tasks` is not a Set matches no task.
  */
 export const UNRULED_SHAPES = [
     {
@@ -354,6 +360,60 @@ export const UNRULED_SHAPES = [
         keys: ["exact_count", "kind", "known_sites"],
         tasks: new Set(["javascript:def-dynamic-require", "python:def-dynamic-import-module"]),
         reason: "kind unresolvable_static: the answer is each candidate module, and the key anchors each module on a line inside it (its SLUG line), so no line of the key names the module; a module answer lands on the file's first line (typescript-language-server 6.1.0 and pyright 1.1.414 on a static specifier), and matching by file is a mode the key does not state",
+    },
+    {
+        surface: "import-precision",
+        kind: "visibility_boundary",
+        keys: ["contains", "kind", "known_sites"],
+        tasks: new Set(["go:imp-internal-package"]),
+        reason: "kind visibility_boundary with `contains` and one known site and no count: no source says what the question returns, known_sites with no target has no stated role (README), and `contains` is defined for hover text only; gopls v0.24.0 answers references at the package clause with three importers (cmd/atelier/main.go, tests/events_test.go, tests/structure_test.go) and the key lists one, so a rule over the list could only be recall",
+    },
+    {
+        surface: "import-precision",
+        kind: "glob",
+        keys: ["exact_count", "kind", "known_sites"],
+        tasks: new Set(["rust:imp-glob-import"]),
+        reason: `${GLOB_NO_READING}; the rust key lists both public items of the module, so its list is complete and only the reading is open`,
+    },
+    {
+        surface: "import-precision",
+        kind: "glob",
+        keys: ["exact_count", "kind", "known_sites", "must_include"],
+        tasks: new Set(["python:imp-glob-import"]),
+        reason: `${GLOB_NO_READING}; the python key lists 2 of the 16 names, each on its \`from .x import X\` line in metrics/__init__.py, while pyright 1.1.414 resolves a name the star import brings in to its class (metrics/margin.py), and the lane's barrel note says the same of atelier_core: an import through its __init__.py lands on the submodule that defines the name`,
+    },
+    {
+        surface: "import-precision",
+        kind: "glob",
+        keys: ["exact_count", "kind", "known_sites", "must_include"],
+        tasks: new Set(["typescript:imp-glob-import"]),
+        reason: `${GLOB_NO_READING}; the typescript key lists 2 of the 4 exported names by line and the other 2 only by name (must_include), so no line of it states the whole answer`,
+    },
+    {
+        surface: "import-precision",
+        kind: "glob",
+        keys: ["exact_count", "kind", "known_sites", "must_not_include"],
+        tasks: new Set(["javascript:imp-glob-import"]),
+        reason: `${GLOB_NO_READING}; the javascript key lists the four declarations of helpers.js and counts them (the lane notes: glob is \`export *\`, whose exact_count is the number of names crossing the re-export), and typescript-language-server 6.1.0 asked at from.symbol answers the module (helpers.js:3), which no line of the key names`,
+    },
+    {
+        surface: "import-precision",
+        kind: "group_use",
+        keys: ["exact_count", "kind", "known_sites", "must_not_include"],
+        tasks: new Set(["php:imp-glob-import"]),
+        reason: `${GLOB_NO_READING}; the php key has rust's form (the eight declarations the brace group-use binds, exact_count 8; the lane's own note calls the group-use its equivalent of the glob question), and phpactor 2026.11.22.0 answers no location at the namespace asked (Repositories); what splits is the shared id, whose python, typescript and go keys read differently`,
+    },
+    {
+        surface: "multi-parent",
+        keys: ["exact_count", "must_include"],
+        tasks: new Set(["rust:parents-supertrait-send-sync"]),
+        reason: "parents with only `exact_count` and `must_include`: the two parents, Send and Sync, are declared in the Rust core library, outside the repository, so no lane-relative location names them (rust-analyzer 1.96.0 answers core/src/marker.rs in the toolchain, and has no type hierarchy); the key names them only in `must_include`, which no rule scores, and judging a parents answer by name is a mode no source states for this surface",
+    },
+    {
+        surface: "implementation",
+        keys: ["file", "needle"],
+        tasks: new Set(["php:vendor-shouldbroadcast-contract"]),
+        reason: "an implementation question whose key names the contract, not an implementor: phpactor 2026.11.22.0 answers implementation at ShouldBroadcast with six implementors (RepairCompleted and five under vendor/) and definition with the key's interface, so the key holds the definition answer on the implementation surface (the lane's other vendor targets are definition tasks)",
     },
 ];
 
@@ -529,7 +589,7 @@ export function planTask(task, lane = null) {
         };
     }
 
-    const unruled = UNRULED_SHAPES.find((shape) => shape.tasks.has(`${lane}:${task.id}`)
+    const unruled = UNRULED_SHAPES.find((shape) => shape.tasks instanceof Set && shape.tasks.has(`${lane}:${task.id}`)
         && shape.surface === task.surface
         && (shape.kind === undefined || shape.kind === expect.kind)
         && shape.keys.length === keys.length
