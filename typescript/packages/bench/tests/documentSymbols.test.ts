@@ -24,8 +24,28 @@ interface Task {
     expect: { symbols?: string[]; min_symbols?: number; must_include?: string[] };
 }
 
-function nameOf(node: { name?: ts.Node }): string | undefined {
-    return node.name !== undefined && (ts.isIdentifier(node.name) || ts.isStringLiteral(node.name)) ? node.name.text : undefined;
+/**
+ * The names a declaration introduces: an identifier, a string-literal name, a #private name, or
+ * every identifier bound by a destructuring pattern. Anything else (a computed name, no name where
+ * the rule counts one) throws, so a construct this walker cannot read can never leave the key and
+ * the test agreeing by accident.
+ */
+function namesOf(name: ts.Node | undefined, what: string): string[] {
+    if (name === undefined) {
+        return []; // an anonymous default export declares no name
+    }
+    if (ts.isIdentifier(name) || ts.isStringLiteral(name) || ts.isPrivateIdentifier(name) || ts.isNumericLiteral(name)) {
+        return [name.text];
+    }
+    if (ts.isObjectBindingPattern(name) || ts.isArrayBindingPattern(name)) {
+        return name.elements.flatMap((element) => (ts.isOmittedExpression(element) ? [] : namesOf(element.name, what)));
+    }
+
+    throw new Error(`cannot read the name of ${what}: ${name.getText()} (kind ${ts.SyntaxKind[name.kind]})`);
+}
+
+function nameOf(node: { name?: ts.Node }): string[] {
+    return namesOf(node.name, "member");
 }
 
 function isParameterProperty(parameter: ts.ParameterDeclaration): boolean {
@@ -44,10 +64,13 @@ function members(node: ts.ClassLikeDeclaration | ts.InterfaceDeclaration | ts.En
             }
             continue;
         }
-        const name = nameOf(member);
-        if (name !== undefined) {
-            names.push(name);
+        if (member.name === undefined) {
+            if (ts.isSemicolonClassElement(member)) {
+                continue;
+            }
+            throw new Error(`cannot read the name of an unnamed member (kind ${ts.SyntaxKind[member.kind]}): the notes' rule does not count it`);
         }
+        names.push(...nameOf(member));
     }
 
     return names;
@@ -56,23 +79,24 @@ function members(node: ts.ClassLikeDeclaration | ts.InterfaceDeclaration | ts.En
 /** Names the notes count in one file: module-level declarations and their members. */
 function countedSymbols(source: ts.SourceFile): string[] {
     const names: string[] = [];
+    const declare = (node: { name?: ts.Node }, what: string): void => {
+        names.push(...namesOf(node.name, what));
+    };
     for (const statement of source.statements) {
         if (ts.isClassDeclaration(statement) || ts.isInterfaceDeclaration(statement) || ts.isEnumDeclaration(statement)) {
-            const name = nameOf(statement);
-            if (name !== undefined) {
-                names.push(name);
-            }
+            declare(statement, statement.getText(source).slice(0, 40));
             names.push(...members(statement));
-        } else if (ts.isFunctionDeclaration(statement) || ts.isTypeAliasDeclaration(statement) || ts.isModuleDeclaration(statement)) {
-            const name = nameOf(statement);
-            if (name !== undefined) {
-                names.push(name);
+        } else if (ts.isModuleDeclaration(statement)) {
+            declare(statement, "namespace");
+            // The notes count a namespace as one symbol and do not count what is declared inside it.
+            if (statement.body !== undefined && ts.isModuleBlock(statement.body) && statement.body.statements.length > 0) {
+                throw new Error(`namespace ${statement.name.getText(source)} declares members: the notes' rule does not say how to count them`);
             }
+        } else if (ts.isFunctionDeclaration(statement) || ts.isTypeAliasDeclaration(statement)) {
+            declare(statement, "declaration");
         } else if (ts.isVariableStatement(statement)) {
             for (const declaration of statement.declarationList.declarations) {
-                if (ts.isIdentifier(declaration.name)) {
-                    names.push(declaration.name.text);
-                }
+                declare(declaration, "variable");
             }
         }
         // Import declarations and export ... from re-exports declare no name inside the file.

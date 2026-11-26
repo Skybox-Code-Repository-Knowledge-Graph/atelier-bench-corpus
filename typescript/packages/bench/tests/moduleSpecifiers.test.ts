@@ -9,7 +9,8 @@
  *   - import() calls and require() calls with a string argument;
  *   - type-level import(<path>) types;
  *   - the module named by a declare-module augmentation inside a module file;
- *   - import(<path>) written inside any comment or docblock;
+ *   - import(<path>) written inside any comment or docblock, and any quoted or backticked ./ or ../
+ *     path written in prose in a comment (resolved as a module or as an existing directory);
  *   - triple-slash path and types references;
  * and resolves each with TypeScript's own module resolution under the lane's root tsconfig, or
  * against an ambient module declaration (@types/node's "node:*", the lane's .d.ts modules). It also
@@ -29,7 +30,7 @@ import { describe, expect, it } from "vitest";
 
 const LANE = join(dirname(fileURLToPath(import.meta.url)), "..", "..", "..");
 
-type Kind = "static" | "type-only" | "call" | "type-level" | "augmentation" | "comment" | "reference";
+type Kind = "static" | "type-only" | "call" | "type-level" | "augmentation" | "comment" | "comment-path" | "reference";
 
 interface Specifier {
     kind: Kind;
@@ -55,6 +56,8 @@ function laneFiles(dir: string, pattern: RegExp, out: string[] = []): string[] {
 }
 
 const COMMENT_IMPORT = /import\(\s*["'`]([^"'`]+)["'`]\s*\)/g;
+/** A quoted or backticked ./ or ../ path in a comment that is not already the argument of an import(). */
+const COMMENT_PATH = /(?<!import\(\s*)["'`](\.{1,2}\/[\w./-]+)["'`]/g;
 
 function collect(path: string): Specifier[] {
     const text = readFileSync(path, "utf8");
@@ -114,6 +117,10 @@ function collect(path: string): Specifier[] {
             const offset = pos + (match.index ?? 0);
             found.push({ kind: "comment", file, line: source.getLineAndCharacterOfPosition(offset).line + 1, text: match[1]! });
         }
+        for (const match of comment.matchAll(COMMENT_PATH)) {
+            const offset = pos + (match.index ?? 0);
+            found.push({ kind: "comment-path", file, line: source.getLineAndCharacterOfPosition(offset).line + 1, text: match[1]! });
+        }
     }
     for (const reference of [...source.referencedFiles, ...source.typeReferenceDirectives]) {
         found.push({ kind: "reference", file, line: source.getLineAndCharacterOfPosition(reference.pos).line + 1, text: reference.fileName });
@@ -155,6 +162,12 @@ function resolveTarget(specifier: Specifier): string | undefined {
         return ambient;
     }
     const resolved = ts.resolveModuleName(specifier.text, from, options, ts.sys).resolvedModule?.resolvedFileName;
+    if (resolved === undefined && specifier.kind === "comment-path") {
+        // A path written in prose may name a directory (a barrel or a folder of modules).
+        const directory = join(dirname(from), specifier.text);
+
+        return existsSync(directory) && statSync(directory).isDirectory() ? directory : undefined;
+    }
 
     return resolved === undefined ? undefined : realpathSync(resolved);
 }
@@ -176,6 +189,7 @@ describe("every module specifier in the lane resolves", () => {
         expect(count("type-level")).toBeGreaterThan(0);
         expect(count("augmentation")).toBeGreaterThan(0);
         expect(count("comment")).toBeGreaterThan(0);
+        expect(count("comment-path")).toBeGreaterThan(5);
     });
 
     it("resolves each one, docblock specifiers included", () => {
@@ -223,6 +237,31 @@ const TEST_FILE = /^packages\/[^/]+\/tests\/.+\.test\.tsx?$/;
 const SOURCE_FILE = /^packages\/[^/]+\/src\/.+\.tsx?$/;
 /** Specifier kinds that load or type-check their target; a docblock link does neither. */
 const IMPORT_KINDS = new Set<Kind>(["static", "type-only", "call", "type-level", "augmentation", "reference"]);
+/** The subset that loads its target at runtime: an `import type` and an import() type do not. */
+const VALUE_KINDS = new Set<Kind>(["static", "call", "augmentation", "reference"]);
+
+/** True when the file has a statement that survives type erasure (class, enum, function, value, re-export). */
+function holdsRuntimeCode(file: string): boolean {
+    const path = join(LANE, file);
+    const source = ts.createSourceFile(path, readFileSync(path, "utf8"), ts.ScriptTarget.Latest, true, extname(path) === ".tsx" ? ts.ScriptKind.TSX : ts.ScriptKind.TS);
+
+    return source.statements.some((statement) => {
+        if (ts.isInterfaceDeclaration(statement) || ts.isTypeAliasDeclaration(statement) || ts.isImportDeclaration(statement)) {
+            return false;
+        }
+        if (ts.isExportDeclaration(statement)) {
+            return !statement.isTypeOnly;
+        }
+        if (ts.isModuleDeclaration(statement)) {
+            const body = statement.body;
+            const declared = ts.getModifiers(statement)?.some((modifier) => modifier.kind === ts.SyntaxKind.DeclareKeyword) === true;
+
+            return !declared && (body === undefined || !ts.isModuleBlock(body) || body.statements.some((inner) => !ts.isInterfaceDeclaration(inner) && !ts.isTypeAliasDeclaration(inner)));
+        }
+
+        return true;
+    });
+}
 
 function laneRelative(path: string): string {
     return relative(LANE, path).split("\\").join("/");
@@ -249,7 +288,7 @@ function identifiersIn(file: string): Set<string> {
  * declares it; a global declaration file (no imports or exports) is reached by a file that names
  * one of its top-level declarations, such as the JSX namespace.
  */
-function reachedFromTests(): Set<string> {
+function reachedFromTests(kinds: Set<Kind>): Set<string> {
     const byFile = new Map<string, Specifier[]>();
     for (const specifier of specifiers) {
         byFile.set(specifier.file, [...(byFile.get(specifier.file) ?? []), specifier]);
@@ -277,7 +316,7 @@ function reachedFromTests(): Set<string> {
         }
         reached.add(file);
         for (const specifier of byFile.get(file) ?? []) {
-            const resolved = IMPORT_KINDS.has(specifier.kind) ? resolveTarget(specifier) : undefined;
+            const resolved = kinds.has(specifier.kind) ? resolveTarget(specifier) : undefined;
             if (resolved !== undefined) {
                 const next = laneRelative(resolved);
                 if (!next.startsWith("..") && !next.includes("node_modules")) {
@@ -298,11 +337,19 @@ function reachedFromTests(): Set<string> {
 
 describe("every source file the lane adds is reached from a test (issue #223, checklist F.5)", () => {
     it("leaves no packages/*/src file outside the module graph of the test files", () => {
-        const reached = reachedFromTests();
+        const reached = reachedFromTests(IMPORT_KINDS);
         const sourceFiles = sources.map(laneRelative).filter((file) => SOURCE_FILE.test(file));
         const unreached = sourceFiles.filter((file) => !reached.has(file));
 
         expect(sourceFiles.length).toBeGreaterThan(200);
         expect(unreached, `unreached: ${unreached.join("; ")}`).toEqual([]);
+    });
+
+    it("reaches every file that holds runtime code through a value edge, not only an import type", () => {
+        const reached = reachedFromTests(VALUE_KINDS);
+        const sourceFiles = sources.map(laneRelative).filter((file) => SOURCE_FILE.test(file) && !file.endsWith(".d.ts"));
+        const typeOnlyReached = sourceFiles.filter((file) => !reached.has(file) && holdsRuntimeCode(file));
+
+        expect(typeOnlyReached, `reached only through type edges although they hold runtime code: ${typeOnlyReached.join("; ")}`).toEqual([]);
     });
 });
