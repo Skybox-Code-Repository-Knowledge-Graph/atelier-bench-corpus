@@ -64,10 +64,13 @@ review the diff like code. `node bench/check-matrix.mjs --write --matrix-only` w
 from the lanes' `tasks.json` after the static checks alone, without running any lane verifier or
 the conformance diff, so nothing compiles (the rust verifier is `cargo run`); it does not replace
 the default check, which is the full run. CI runs the default (read-only) mode. Before any verifier runs it also
-checks, from files alone, that `bench/conformance/src/crlf.txt` still ends every line in CRLF, that
-no lane repeats a task id, and that every hover `contains` string is present in its lane's source
-and the same in every lane sharing the hover id; and a cardinality or multi-parent id shared by
-several lanes must state the same `exact_count` in every lane that carries it.
+checks, from files alone, that `bench/conformance/src/crlf.txt` still ends every line in CRLF and
+that `.gitattributes` still keeps it `-text`, that every task id (in each lane and in
+`bench/conformance/`) is lower-case kebab-case and unique there, that every hover task states a
+`contains` string, present in its lane's source and the same in every lane sharing the hover id,
+and that a list task stating a count lists exactly that many implementations; and a cardinality or
+multi-parent id shared by several lanes must state the same `exact_count` in every lane that
+carries it.
 
 ## Scoring a tool
 

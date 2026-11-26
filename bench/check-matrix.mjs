@@ -16,9 +16,11 @@
 // default check stays the full run. `--matrix-only` without `--write` is an error.
 //
 // 0. Static guards, before any verifier runs: bench/conformance/src/crlf.txt still ends every line
-//    in CRLF (the c-crlf case is no CRLF test otherwise), no lane's tasks.json repeats a task id,
-//    every hover `contains` string is byte-present in its lane's source, and a hover id shared by
-//    several lanes uses one string in all of them (issue #223).
+//    in CRLF (the c-crlf case is no CRLF test otherwise) and .gitattributes still keeps it out of
+//    line-ending normalisation; every task id, in each lane and in bench/conformance, is lower-case
+//    kebab-case and unique there; every hover task states a `contains` string, byte-present in its
+//    lane's source, and a hover id shared by several lanes uses one string in all of them; and a
+//    list task that states a count lists exactly that many implementations (issue #223).
 // 1. For each lane in matrix.json's `lanes`, runs its verifier from the lane directory and
 //    requires exit 0.
 // 2. Cross-checks the ids each verifier reported against that lane's bench/tasks.json, then
@@ -43,6 +45,12 @@ const MATRIX_PATH = join(REPO_ROOT, "bench", "matrix.json");
 const CONFORMANCE_DIR = join(REPO_ROOT, "bench", "conformance");
 const EXPECTED_PATH = join(CONFORMANCE_DIR, "expected.txt");
 const CRLF_FIXTURE_PATH = join(CONFORMANCE_DIR, "src", "crlf.txt");
+const CONFORMANCE_MANIFEST_PATH = join(CONFORMANCE_DIR, "bench", "tasks.json");
+const GITATTRIBUTES_PATH = join(REPO_ROOT, ".gitattributes");
+// Task ids are lower-case words of a-z and 0-9 joined by single hyphens (duplicateIdProblem).
+const TASK_ID = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
+// The surfaces whose answer is an `implementations` list (listCountProblem).
+const LIST_SURFACES = new Set(["implementation", "cardinality", "multi-parent"]);
 
 // Known lane verify commands. A lane is included only when its directory carries
 // bench/tasks.json on disk -- a lane that does not exist yet is simply omitted (issue #5).
@@ -185,11 +193,52 @@ function runCheck() {
 
 /** The first static guard that fails, or undefined. Reads files only; spawns nothing. */
 function staticProblem(lanes) {
-    return crlfFixtureProblem() ?? duplicateIdProblem(lanes) ?? hoverContainsProblem(lanes);
+    return crlfFixtureProblem()
+        ?? crlfAttributesProblem()
+        ?? duplicateIdProblem(lanes)
+        ?? hoverContainsProblem(lanes)
+        ?? listCountProblem(lanes);
+}
+
+/**
+ * A list task that states a count lists exactly that many entries (issue #223; the cross-lane
+ * exact_count guard proves only presence and agreement). On the implementation, cardinality and
+ * multi-parent surfaces, a task with an `implementations` array and a count (`exact_count`, or
+ * `extends_count` plus `implements_count`, which must agree when both are stated: the scorer's
+ * listCount in bench/score/lib/plan.mjs) has exactly count entries. A task with no count is not
+ * checked. NOT proven: that each entry resolves to a distinct line, or that the count is true of
+ * the tree (bench/score/test/sites.test.mjs resolves the entries; the tree is a reviewer's read).
+ */
+function listCountProblem(lanes) {
+    for (const lane of lanes) {
+        const manifestPath = join(REPO_ROOT, lane.name, "bench", "tasks.json");
+        if (!existsSync(manifestPath)) {
+            continue;
+        }
+        for (const task of JSON.parse(readFileSync(manifestPath, "utf8")).tasks) {
+            const expect = task.expect ?? {};
+            if (!LIST_SURFACES.has(task.surface) || !Array.isArray(expect.implementations)) {
+                continue;
+            }
+            const exact = Number.isInteger(expect.exact_count) ? expect.exact_count : null;
+            const split = Number.isInteger(expect.extends_count) && Number.isInteger(expect.implements_count)
+                ? expect.extends_count + expect.implements_count
+                : null;
+            if (exact !== null && split !== null && exact !== split) {
+                return `${lane.name}:${task.id}: exact_count ${exact} disagrees with extends_count + implements_count ${split}; recount and make them agree`;
+            }
+            const count = exact ?? split;
+            if (count !== null && count !== expect.implementations.length) {
+                return `${lane.name}:${task.id}: the key states a count of ${count} but lists ${expect.implementations.length} implementations; recount from the tree and make the count and the list agree`;
+            }
+        }
+    }
+    return undefined;
 }
 
 /**
  * Hover `contains` strings are a cross-lane string contract (issue #223, C.6 and F.3):
+ *   (0) every hover task states a non-empty `contains` string, lane-local ones too;
  *   (a) every hover task's `contains` is byte-present in its lane: in from.file, or else in another
  *       file git tracks under <lane>/ outside <lane>/bench/, Markdown excluded. The fallback exists
  *       because a hover asked at a call site shows the doc comment of a declaration in another file,
@@ -212,14 +261,15 @@ function hoverContainsProblem(lanes) {
             if (task.surface !== "hover") {
                 continue;
             }
-            const contains = typeof task.expect?.contains === "string" ? task.expect.contains : undefined;
+            const contains = typeof task.expect?.contains === "string" && task.expect.contains !== "" ? task.expect.contains : undefined;
+            if (contains === undefined) {
+                // A hover key with no string checks nothing (no scorer rule takes it either).
+                return `${lane.name}:${task.id}: hover task states no contains string; quote the expected hover text from the source as expect.contains`;
+            }
             if (!stringsById.has(task.id)) {
                 stringsById.set(task.id, []);
             }
             stringsById.get(task.id).push([lane.name, contains]);
-            if (contains === undefined) {
-                continue;
-            }
 
             const fromFile = typeof task.from?.file === "string" ? join(REPO_ROOT, lane.name, task.from.file) : undefined;
             if (fromFile !== undefined && existsSync(fromFile) && readFileSync(fromFile, "utf8").includes(contains)) {
@@ -288,25 +338,83 @@ function laneSources(lane) {
 }
 
 /**
- * A task id repeated inside one lane's tasks.json. Every later step keys tasks by id (Maps and Sets),
- * so a repeat would collapse silently and both copies would pass; it must fail by name instead.
- * A lane without tasks.json is skipped here and reported by the verifier loop.
+ * A task id repeated inside one tasks.json, a lane's or bench/conformance's. Every later step keys
+ * tasks by id (Maps and Sets), so a repeat would collapse silently and both copies would pass; it
+ * must fail by name instead. Ids must also be lower-case kebab-case (TASK_ID), so a case or
+ * whitespace variant can never pass as a different id. A lane without tasks.json is skipped here
+ * and reported by the verifier loop.
  */
 function duplicateIdProblem(lanes) {
-    for (const lane of lanes) {
-        const manifestPath = join(REPO_ROOT, lane.name, "bench", "tasks.json");
+    const manifests = [
+        ...lanes.map((lane) => join(REPO_ROOT, lane.name, "bench", "tasks.json")),
+        CONFORMANCE_MANIFEST_PATH,
+    ];
+    for (const manifestPath of manifests) {
         if (!existsSync(manifestPath)) {
             continue;
         }
         const seen = new Set();
         for (const task of JSON.parse(readFileSync(manifestPath, "utf8")).tasks) {
+            if (typeof task.id !== "string" || !TASK_ID.test(task.id)) {
+                return `${relative(manifestPath)}: task id ${JSON.stringify(task.id)} is not lower-case kebab-case (words of a-z and 0-9 joined by single hyphens); rename it`;
+            }
             if (seen.has(task.id)) {
-                return `${lane.name}/bench/tasks.json repeats task id ${task.id}`;
+                return `${relative(manifestPath)} repeats task id ${task.id}`;
             }
             seen.add(task.id);
         }
     }
     return undefined;
+}
+
+/**
+ * .gitattributes keeps bench/conformance/src/crlf.txt out of line-ending normalisation (issue
+ * #223; crlfFixtureProblem checks only the bytes checked out now): the last line whose pattern
+ * matches the file and sets the `text` attribute must unset it (`-text`, or the `binary` macro).
+ * Patterns are matched as git does for the forms used here: `*` and `?` within one path segment,
+ * `**` across segments, a pattern without a slash against the file name. Other macros are not
+ * expanded, and character classes are not parsed.
+ */
+function crlfAttributesProblem() {
+    const target = relative(CRLF_FIXTURE_PATH);
+    const fix = `keep "${target} -text" in .gitattributes, after every line that sets text for it`;
+    if (!existsSync(GITATTRIBUTES_PATH)) {
+        return `.gitattributes is missing; ${fix}`;
+    }
+    let last;
+    for (const raw of readFileSync(GITATTRIBUTES_PATH, "utf8").split(/\r?\n/)) {
+        const line = raw.trim();
+        if (line === "" || line.startsWith("#")) {
+            continue;
+        }
+        const [pattern, ...attributes] = line.split(/\s+/);
+        if (!gitPatternMatches(pattern, target)) {
+            continue;
+        }
+        for (const attribute of attributes) {
+            if (attribute === "-text" || attribute === "binary") {
+                last = { line, unset: true };
+            } else if (attribute === "text" || attribute.startsWith("text=") || attribute === "!text") {
+                last = { line, unset: false };
+            }
+        }
+    }
+    if (last === undefined || !last.unset) {
+        const found = last === undefined ? "no line unsets text for it" : `the last line setting text for it is "${last.line}"`;
+        return `.gitattributes lets git normalise the line endings of ${target} (${found}); ${fix}`;
+    }
+    return undefined;
+}
+
+function gitPatternMatches(pattern, path) {
+    // A slash at the start or in the middle anchors the pattern to the repository root.
+    const anchored = pattern.includes("/");
+    const glob = pattern.startsWith("/") ? pattern.slice(1) : pattern;
+    const subject = anchored ? path : path.slice(path.lastIndexOf("/") + 1);
+    const segment = (part) => part.split("*")
+        .map((piece) => piece.replace(/[.+^${}()|[\]\\]/g, "\\$&").replaceAll("?", "[^/]"))
+        .join("[^/]*");
+    return new RegExp(`^${glob.split("**").map(segment).join(".*")}$`).test(subject);
 }
 
 /**

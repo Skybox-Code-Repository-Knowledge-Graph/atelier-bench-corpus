@@ -152,3 +152,79 @@ test("a new task id fails the default check until a write; both writes then agre
         assert.match(lastLine(after.stdout), /^matrix: OK \(\d+ canonical ids, 6 lanes\)$/);
     }
 });
+
+// The static guards: each mutation below breaks exactly what one guard protects, on its own temp
+// copy, and `--write --matrix-only` (static guards only) must refuse it by name, spawn nothing and
+// write nothing. The unchanged copy passing (tests above) is the green half.
+function editJson(root, path, change) {
+    const file = join(root, path);
+    const value = JSON.parse(readFileSync(file, "utf8"));
+    change(value);
+    writeFileSync(file, `${JSON.stringify(value, null, 4)}\n`);
+}
+const taskIn = (manifest, id) => manifest.tasks.find((task) => task.id === id);
+const appendText = (root, path, text) => writeFileSync(join(root, path), readFileSync(join(root, path), "utf8") + text);
+
+function assertRefused(t, mutate, pattern) {
+    const root = scratch(t);
+    mutate(root);
+    const result = run(root, "--write", "--matrix-only");
+    assert.equal(result.status, 1, `not refused: ${lastLine(result.stdout)}`);
+    assert.match(result.stderr, pattern);
+    assert.deepEqual(result.calls, []);
+    assert.equal(matrixOf(root), COMMITTED_MATRIX, "nothing written");
+}
+
+test("guard: task ids are lower-case kebab-case, so a case or whitespace variant is refused", (t) => {
+    for (const id of ["Def-Free-Function", "def-free-function ", "def_free_function", "def--free-function"]) {
+        assertRefused(t, (root) => editJson(root, "go/bench/tasks.json", (manifest) => {
+            manifest.tasks.push({ ...structuredClone(taskIn(manifest, "def-free-function")), id });
+        }), new RegExp(`^matrix: FAIL go/bench/tasks\\.json: task id ${JSON.stringify(JSON.stringify(id)).slice(1, -1)} is not lower-case kebab-case`));
+    }
+});
+
+test("guard: bench/conformance/bench/tasks.json is checked for repeated and malformed ids too", (t) => {
+    assertRefused(t, (root) => editJson(root, "bench/conformance/bench/tasks.json", (manifest) => {
+        manifest.tasks.push(structuredClone(taskIn(manifest, "c-unique")));
+    }), /^matrix: FAIL bench\/conformance\/bench\/tasks\.json repeats task id c-unique$/m);
+    assertRefused(t, (root) => editJson(root, "bench/conformance/bench/tasks.json", (manifest) => {
+        taskIn(manifest, "c-unique").id = "C-Unique";
+    }), /^matrix: FAIL bench\/conformance\/bench\/tasks\.json: task id "C-Unique" is not lower-case kebab-case/);
+});
+
+test("guard: every hover task states a contains string, a lane-local one included", (t) => {
+    assertRefused(t, (root) => editJson(root, "go/bench/tasks.json", (manifest) => {
+        delete taskIn(manifest, "hover-generated-marker").expect.contains;
+    }), /^matrix: FAIL go:hover-generated-marker: hover task states no contains string/);
+    assertRefused(t, (root) => editJson(root, "php/bench/tasks.json", (manifest) => {
+        taskIn(manifest, "hover-global-function").expect.contains = "";
+    }), /^matrix: FAIL php:hover-global-function: hover task states no contains string/);
+});
+
+test("guard: a list task's count equals its implementations list", (t) => {
+    assertRefused(t, (root) => editJson(root, "javascript/bench/tasks.json", (manifest) => {
+        taskIn(manifest, "card-report-contract").expect.exact_count += 1;
+    }), /^matrix: FAIL javascript:card-report-contract: the key states a count of 25 but lists 24 implementations/);
+    assertRefused(t, (root) => editJson(root, "go/bench/tasks.json", (manifest) => {
+        taskIn(manifest, "impl-structural-no-assertion").expect.implementations.pop();
+    }), /^matrix: FAIL go:impl-structural-no-assertion: the key states a count of 25 but lists 24 implementations/);
+    assertRefused(t, (root) => editJson(root, "python/bench/tasks.json", (manifest) => {
+        taskIn(manifest, "parents-class-one-plus-two").expect.extends_count = 2;
+    }), /^matrix: FAIL python:parents-class-one-plus-two: exact_count 3 disagrees with extends_count \+ implements_count 4/);
+});
+
+test("guard: .gitattributes keeps crlf.txt -text, as the last line that sets text for it", (t) => {
+    assertRefused(t, (root) => {
+        const path = join(root, ".gitattributes");
+        writeFileSync(path, readFileSync(path, "utf8").replace("bench/conformance/src/crlf.txt -text\n", ""));
+    }, /^matrix: FAIL \.gitattributes lets git normalise the line endings of bench\/conformance\/src\/crlf\.txt \(the last line setting text for it is "\* text=auto eol=lf"\)/);
+    assertRefused(t, (root) => appendText(root, ".gitattributes", "*.txt text\n"), /\(the last line setting text for it is "\*\.txt text"\)/);
+    assertRefused(t, (root) => appendText(root, ".gitattributes", "bench/** text eol=lf\n"), /\(the last line setting text for it is "bench\/\*\* text eol=lf"\)/);
+    assertRefused(t, (root) => rmSync(join(root, ".gitattributes")), /^matrix: FAIL \.gitattributes is missing/);
+
+    // Lines that do not match the file, or that do not set text, leave it alone.
+    const root = scratch(t);
+    appendText(root, ".gitattributes", "*.md text\nbench/conformance/src/*.txt diff=text\n/crlf.txt text\n");
+    const result = run(root, "--write", "--matrix-only");
+    assert.equal(result.status, 0, result.stderr);
+});
