@@ -91,13 +91,13 @@ Language server (E.5): not pinned yet
 
 | Extractor | Class | Scored by (task ids) | Deliberate gap (README line) | Not yet |
 | --- | --- | --- | --- | --- |
-| Laravel routes | route parser | `def-route-to-handler`, `resolution-route-model-binding`, `def-middleware-alias`, `lw-fullpage-route` | | |
-| Eloquent | ORM, schema or serialization | `rel-hasonethrough`, `rel-hasmanythrough`, `rel-ofmany-builder`, `rel-morphedbymany`, `def-query-scope`, `def-trait-method-scope`, `def-accessor-attribute`, `lane-local-money` | | |
-| Guzzle | other | | | not yet |
-| Inertia (PHP side) | other | | | not yet |
-| Blade | other | `def-blade-model-method`, `def-livewire-computed`, `def-accessor-attribute`, `lw-sfc-computed`, `lw-wireclick-method`, `lw-form-object-magic`, `lw-embed-tag`, `int-folio-filename-binding`, `int-volt-functional-prop` | | |
+| Laravel routes | route parser | `def-route-to-handler`, `def-named-route-api`, `resolution-route-model-binding`, `def-middleware-alias`, `lw-fullpage-route` | | |
+| Eloquent | ORM, schema or serialization | `rel-hasonethrough`, `rel-hasmanythrough`, `rel-ofmany-builder`, `rel-morphedbymany`, `def-relation-name`, `def-relation-property`, `def-query-scope`, `def-accessor-attribute`, `def-enum-method`, `lane-local-money`, `refs-money-class` | | |
+| Guzzle | other | | "Deliberate gap: the lane's own code makes no outgoing HTTP call (no `Http::` client and no Guzzle client anywhere" | |
+| Inertia (PHP side) | other | | "Deliberate gap: Inertia (PHP side) goes unscored because Inertia is not installed" | |
+| Blade | other | `def-blade-model-method`, `def-livewire-computed`, `def-accessor-attribute`, `def-view-name`, `def-blade-component-tag`, `def-anonymous-component`, `lw-sfc-computed`, `lw-wireclick-method`, `lw-form-object-magic`, `lw-embed-tag`, `int-folio-filename-binding`, `int-volt-functional-prop` | | |
 
-Language server (E.5): not pinned yet
+Language server (E.5): phpactor 2026.11.22.0; source "Pinned: **phpactor 2026.11.22.0**, the release phar"
 
 ### typescript
 

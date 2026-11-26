@@ -62,12 +62,6 @@
         "go"
       ]
     },
-    "card-magic-forward": {
-      "surface": "resolution",
-      "lanes": [
-        "php"
-      ]
-    },
     "card-report-contract": {
       "surface": "cardinality",
       "lanes": [
@@ -114,10 +108,22 @@
         "typescript"
       ]
     },
+    "def-anonymous-component": {
+      "surface": "definition",
+      "lanes": [
+        "php"
+      ]
+    },
     "def-anonymous-struct": {
       "surface": "definition",
       "lanes": [
         "go"
+      ]
+    },
+    "def-artisan-command-name": {
+      "surface": "definition",
+      "lanes": [
+        "php"
       ]
     },
     "def-assoc-const": {
@@ -174,6 +180,12 @@
         "php"
       ]
     },
+    "def-blade-component-tag": {
+      "surface": "definition",
+      "lanes": [
+        "php"
+      ]
+    },
     "def-blade-model-method": {
       "surface": "definition",
       "lanes": [
@@ -186,6 +198,12 @@
         "rust"
       ]
     },
+    "def-broadcast-channel": {
+      "surface": "definition",
+      "lanes": [
+        "php"
+      ]
+    },
     "def-build-script-generated": {
       "surface": "definition",
       "lanes": [
@@ -196,6 +214,18 @@
       "surface": "definition",
       "lanes": [
         "go"
+      ]
+    },
+    "def-callable-array": {
+      "surface": "definition",
+      "lanes": [
+        "php"
+      ]
+    },
+    "def-callable-string": {
+      "surface": "definition",
+      "lanes": [
+        "php"
       ]
     },
     "def-callback-style": {
@@ -231,12 +261,6 @@
       "surface": "definition",
       "lanes": [
         "javascript"
-      ]
-    },
-    "def-class-const": {
-      "surface": "definition",
-      "lanes": [
-        "php"
       ]
     },
     "def-class-expression": {
@@ -424,12 +448,6 @@
       "surface": "definition",
       "lanes": [
         "go"
-      ]
-    },
-    "def-enum-case": {
-      "surface": "definition",
-      "lanes": [
-        "php"
       ]
     },
     "def-enum-implements": {
@@ -649,18 +667,6 @@
         "typescript"
       ]
     },
-    "def-global-const": {
-      "surface": "definition",
-      "lanes": [
-        "php"
-      ]
-    },
-    "def-global-function": {
-      "surface": "definition",
-      "lanes": [
-        "php"
-      ]
-    },
     "def-goroutine-select": {
       "surface": "definition",
       "lanes": [
@@ -738,12 +744,6 @@
         "php"
       ]
     },
-    "def-interface-through-binding": {
-      "surface": "definition",
-      "lanes": [
-        "php"
-      ]
-    },
     "def-internal-package": {
       "surface": "definition",
       "lanes": [
@@ -787,6 +787,12 @@
       ]
     },
     "def-lang-key": {
+      "surface": "definition",
+      "lanes": [
+        "php"
+      ]
+    },
+    "def-late-static-return": {
       "surface": "definition",
       "lanes": [
         "php"
@@ -922,6 +928,12 @@
         "go"
       ]
     },
+    "def-named-route-api": {
+      "surface": "definition",
+      "lanes": [
+        "php"
+      ]
+    },
     "def-namedtuple-field": {
       "surface": "definition",
       "lanes": [
@@ -981,6 +993,12 @@
       "surface": "definition",
       "lanes": [
         "typescript"
+      ]
+    },
+    "def-pennant-flag": {
+      "surface": "definition",
+      "lanes": [
+        "php"
       ]
     },
     "def-policy-ability": {
@@ -1046,6 +1064,18 @@
       "surface": "definition",
       "lanes": [
         "rust"
+      ]
+    },
+    "def-relation-name": {
+      "surface": "definition",
+      "lanes": [
+        "php"
+      ]
+    },
+    "def-relation-property": {
+      "surface": "definition",
+      "lanes": [
+        "php"
       ]
     },
     "def-route-default-mux": {
@@ -1177,6 +1207,12 @@
         "php"
       ]
     },
+    "def-static-creating": {
+      "surface": "definition",
+      "lanes": [
+        "php"
+      ]
+    },
     "def-static-factory": {
       "surface": "definition",
       "lanes": [
@@ -1273,7 +1309,7 @@
         "javascript"
       ]
     },
-    "def-trait-method-scope": {
+    "def-trait-alias": {
       "surface": "definition",
       "lanes": [
         "php"
@@ -1324,6 +1360,12 @@
       "surface": "definition",
       "lanes": [
         "go"
+      ]
+    },
+    "def-view-name": {
+      "surface": "definition",
+      "lanes": [
+        "php"
       ]
     },
     "dir-contract-parent": {
@@ -1502,12 +1544,6 @@
         "go"
       ]
     },
-    "hover-global-function": {
-      "surface": "hover",
-      "lanes": [
-        "php"
-      ]
-    },
     "hover-macro-generated": {
       "surface": "hover",
       "lanes": [
@@ -1651,12 +1687,6 @@
       "surface": "implementation",
       "lanes": [
         "python"
-      ]
-    },
-    "impl-interface": {
-      "surface": "implementation",
-      "lanes": [
-        "php"
       ]
     },
     "impl-invoice-calculator": {
@@ -1837,12 +1867,6 @@
     },
     "lw-fullpage-route": {
       "surface": "definition",
-      "lanes": [
-        "php"
-      ]
-    },
-    "lw-on-listener-edge": {
-      "surface": "references",
       "lanes": [
         "php"
       ]
