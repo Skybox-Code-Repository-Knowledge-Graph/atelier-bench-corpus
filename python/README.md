@@ -68,7 +68,7 @@ hints as the only static-typing surface.
 
 1. Check out the pinned SHA.
 2. `cd python && pip install -r requirements-dev.txt` (exact pins; `requirements.txt` alone is enough to run the app).
-3. No remote artifacts beyond PyPI, no SSH private remotes, no secrets.
+3. No remote artifacts beyond PyPI, no SSH private remotes, no secrets. The one exception is optional and outside CI: `bench/lsp_check.py` runs pyright on the node found on PATH, and with no node there the pyright wheel's nodeenv downloads one on first run.
 
 Local use (from `python/`):
 
@@ -107,6 +107,20 @@ Task `file` paths are relative to this lane root (`python/`), not to the reposit
 
 **Regenerate discipline:** any edit under `atelier_*/`, `tests/` or `fixtures/` must leave
 `python3 bench/verify_tasks.py` at **exit 0**. If needles move, update `bench/tasks.json` in the same change.
+
+## Language server
+
+| Server | Pin | Check |
+| --- | --- | --- |
+| pyright 1.1.414 | `pyright==1.1.414` in `requirements-dev.txt`; the wheel bundles that pyright build and runs it on node | `python bench/lsp_check.py` (from `python/`, in the lane's venv) starts the venv's `pyright-langserver --stdio` over the `hover`, `document_symbol`, `call_hierarchy` and `implementation` keys and writes `bench/lsp-check.md` |
+
+Committed run (`bench/lsp-check.md`): 14 tasks, 7 agree (4 hover, 3 call_hierarchy), 2 disagree, 5 with no answer.
+
+- Both disagreements are `document_symbol`: the server also lists parameters, locals and attributes assigned through `self`, which the notes' document-symbol rule excludes. Every key name is in the server's list, so the keys are right by the tree and stay as they are.
+- The 5 with no answer are the `implementation` tasks: pyright answers `-32601 Unhandled method textDocument/implementation`. Those keys rest on the class statements read from the tree.
+- No key was changed because of the server.
+
+The live run needs node and is not part of CI. `tests/test_lsp_check.py` replays recorded replies through the script's comparison and report code, and checks that the committed report lists every task of the four surfaces.
 
 ## License
 

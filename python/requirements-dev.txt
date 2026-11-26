@@ -9,6 +9,7 @@ httpx2==2.16.2
 httpcore2==2.16.2
 truststore==0.10.5
 h11==0.16.0
-# pyright (PyPI wrapper): on first run it fetches the npm package pyright@1.1.414 (see README).
+# pyright (PyPI wheel): bundles the pyright 1.1.414 build and runs it on the node found on PATH;
+# with no node on PATH, nodeenv downloads one on first run (see README, Language server).
 pyright==1.1.414
 nodeenv==1.12.0
