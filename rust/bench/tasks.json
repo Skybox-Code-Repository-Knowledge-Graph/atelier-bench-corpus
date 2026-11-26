@@ -641,7 +641,7 @@
                 "symbol": "seeded"
             },
             "expect": {
-                "exact_count": 16,
+                "exact_count": 17,
                 "known_sites": [
                     {
                         "file": "crates/atelier-app/src/state.rs",
@@ -674,6 +674,10 @@
                     {
                         "file": "crates/atelier-bench/tests/breadth.rs",
                         "needle": "let repo = OrderRepository::new(Dataset::seeded().orders);"
+                    },
+                    {
+                        "file": "crates/atelier-bench/tests/every_component.rs",
+                        "needle": "Dataset::seeded()"
                     }
                 ],
                 "repeated_sites": [
