@@ -24,7 +24,7 @@
 // 5. Prints a coverage grid and `matrix: OK (<n> canonical ids, <m> lanes)`, or the first
 //    violation, and exits accordingly.
 
-import { readFileSync, writeFileSync, existsSync } from "node:fs";
+import { readFileSync, writeFileSync, existsSync, readdirSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { spawnSync } from "node:child_process";
@@ -226,14 +226,37 @@ function hoverContainsProblem(lanes) {
     return undefined;
 }
 
-/** Absolute paths of the files git tracks under <lane>/, minus <lane>/bench/ and Markdown. */
+/** Walk <dir> on disk, skipping dependency/build directories. Paths are repo-relative with "/". */
+function walkLane(dir, prefix) {
+    const out = [];
+    for (const entry of readdirSync(dir, { withFileTypes: true })) {
+        if (["vendor", "node_modules", "target", "__pycache__", ".git"].includes(entry.name)) {
+            continue;
+        }
+        if (entry.isDirectory()) {
+            out.push(...walkLane(join(dir, entry.name), `${prefix}${entry.name}/`));
+        } else if (entry.isFile()) {
+            out.push(`${prefix}${entry.name}`);
+        }
+    }
+    return out;
+}
+
+/**
+ * Absolute paths of the lane's source files, minus <lane>/bench/ and Markdown. Uses `git ls-files`
+ * inside a work tree; outside one (git archive, tarball) it walks <lane>/ on disk instead.
+ */
 function laneSources(lane) {
     const result = spawnSync("git", ["ls-files", "-z", "--", `${lane}/`], { cwd: REPO_ROOT, encoding: "utf8" });
-    if (result.error || result.status !== 0) {
-        return { error: `git ls-files ${lane}/ exited ${exitDescription(result)}: hover contains strings cannot be checked` };
+    let listed;
+    if (!result.error && result.status === 0) {
+        listed = result.stdout.split("\0");
+    } else if (existsSync(join(REPO_ROOT, lane))) {
+        listed = walkLane(join(REPO_ROOT, lane), `${lane}/`);
+    } else {
+        return { error: `${lane}/ not found: hover contains strings cannot be checked` };
     }
-    const paths = result.stdout
-        .split("\0")
+    const paths = listed
         .filter((path) => path !== "" && !path.startsWith(`${lane}/bench/`) && !path.endsWith(".md"))
         .map((path) => join(REPO_ROOT, path))
         .filter((path) => existsSync(path));
