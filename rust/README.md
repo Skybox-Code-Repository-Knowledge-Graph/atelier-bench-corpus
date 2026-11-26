@@ -72,7 +72,7 @@ Build from the **committed** `Cargo.lock` only (`cargo build --locked`). Do not 
 | Hand-written iterator (rust's generator) | `atelier-bench/src/dataset.rs`: `OpenOrders::next` is the yield point; `Dataset::open_labour_minutes` drives it with a `for` loop |
 | Namespace-bound module import | `atelier-bench/src/support/rule_namespace_user.rs`: `use crate::rules;` binds the module, only `rules::RULES` is read |
 | String-keyed subscription | `atelier-core/src/events.rs`: `Dispatcher::on` matches on a topic literal; `DomainEvent::topic` writes the same literal per variant |
-| Axum route variant: generic handler | `atelier-app/src/lib.rs` registers `GET /api/exports/{slug}` as `get(http::api::export_rows::<CsvExporter>)`; `http/api.rs` declares `export_rows<E: ExporterContract + Default>` |
+| Axum route variant: generic handler | `atelier-app/src/lib.rs` registers `GET /api/exports/{slug}` as `get(export_rows::<CsvExporter>)` on one line, `export_rows` imported from `http::api`; `http/api.rs` declares `export_rows<E: ExporterContract + Default>` |
 | `?` conversion and `IntoResponse` | `http/report.rs` `show`: the `?` on a `NotFoundError` converts through `impl From<NotFoundError> for ApiError`, and axum turns the `ApiError` into the response through `impl IntoResponse for ApiError` (`http/errors.rs`) |
 | Trait brought into scope for its methods | `atelier-bench/tests/breadth.rs`: `use ...::has_formatting::HasFormatting;` is never written again; `report.format_value(1.5)` resolves because of it |
 | References of macro, macro-generated and cfg-gated items | `forwards_to_schedule!` (3 sites), the macro-generated `book_next_slot` (4 calls), the `extra-rules`-gated `ExperimentalRule` (2 sites) |
@@ -109,7 +109,7 @@ HTTP surface: `GET /report/{reference}` (e.g. `AT-2026-000001`), `GET /api/order
 | --- | --- |
 | `bench/tasks.json` | 104 needle-based accuracy tasks (`from` → `expect` file/needle pairs): 59 shared canonical ids (three or more lanes), 3 two-lane ids (`def-crate-const`, `parse-negative-bad-generics`, `refs-rule-registry`) and 42 one-lane ids (box D.2 below) |
 | `bench/lsp-check.mjs` | Runs rust-analyzer over the hover, document_symbol, call_hierarchy and implementation keys and prints one verdict per task; never changes a key. Its committed output is `bench/lsp-check.md` |
-| `bench/verify-tasks` | Self-check that every task needle still resolves to exactly one line (`optional_sites` included), every `repeated_sites` needle to exactly its `lines` count (a whole number, 2 or more), every references `exact_count` equals its `known_sites` entries plus the sum of `lines` with no line counted twice, and every `must_not_include` entry written as text or as a `.*` pattern occurs on a code line (not a `//` comment) of the lane's sources |
+| `bench/verify-tasks` | Self-check that every task needle still resolves to exactly one line (`optional_sites` included), every `repeated_sites` needle to exactly its `lines` count (a whole number, 2 or more), every references `exact_count` equals its `known_sites` entries plus the sum of `lines` with no line counted twice, and every `must_not_include` entry written as text or as a `.*` pattern occurs in the code of the lane's sources (outside `//` and `/* */` comments and string and char literals) |
 
 ```bash
 cargo run -p bench-verify           # resolve every file+needle pair
@@ -159,10 +159,12 @@ for Rust its published framework extractors are "Axum routes, Reqwest HTTP" (rul
   → `http::report::show`) and the lane-local variant `def-route-axum-generic-handler`
   (`GET /api/exports/{slug}` → the generic `export_rows`, instantiated by turbofish at the route).
 - **E.2 integrations.** No ORM, schema or serialization integration is listed for Rust, and the stack
-  has no ORM (no diesel, sqlx or sea-orm in any manifest), so none is scored as an integration; the
-  three serde tasks (`def-serde-tagged-enum`, `impl-derived-serialize`,
-  `resolution-foreign-bound-blanket`) score serde's derive and its blanket trait bound as Rust
-  resolution. Reqwest HTTP is a deliberate gap: the lane makes no outbound HTTP call, and adding
+  has no ORM (no diesel, sqlx or sea-orm in any manifest), so none is scored as an integration; two
+  tasks score serde as Rust resolution instead: `impl-derived-serialize` (the impl that
+  `#[derive(Serialize)]` writes) and `resolution-foreign-bound-blanket` (a blanket impl keyed on the
+  foreign bound `serde::Serialize`). `def-serde-tagged-enum` only finds a serde-annotated type and
+  reads no serde attribute, so it is not counted here.
+  Reqwest HTTP is a deliberate gap: the lane makes no outbound HTTP call, and adding
   reqwest would pull an HTTP client and TLS stack into a lockfile that must install offline.
 - **E.3 known-hard classes.** Dynamic dispatch: `lane-local-calculate`,
   `def-trait-method-through-binding`, `resolution-dyn-upcast`. String-keyed lookup:

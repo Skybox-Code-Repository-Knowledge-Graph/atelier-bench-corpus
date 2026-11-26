@@ -15,6 +15,7 @@ import {
     hoverText,
     judgeDocumentSymbol,
     judgeHover,
+    judgeImplementation,
     laneRelative,
     lineOf,
     locations,
@@ -207,6 +208,29 @@ if (process.env.LSP_CHECK_FAKE_SERVER === "1") {
         const docsym = { expect: { symbols: ["A", "impl A"], min_symbols: 1 } };
         assert.equal(judgeDocumentSymbol(docsym, [{ name: "A" }, { name: "impl A" }]).verdict, "agrees");
         assert.match(judgeDocumentSymbol(docsym, [{ name: "A" }, { name: "B" }]).detail, /not returned: \[impl A\]; returned names not in the key: \[B\]/);
+    });
+
+    test("every keyed answer returned plus one more still disagrees: the key is the whole answer", () => {
+        const docsym = { expect: { symbols: ["A", "impl A"], min_symbols: 1 } };
+        const extraName = judgeDocumentSymbol(docsym, [{ name: "A" }, { name: "impl A" }, { name: "B" }]);
+        assert.equal(extraName.verdict, "disagrees");
+        assert.match(extraName.detail, /key names not returned: \[\]; returned names not in the key: \[B\]$/);
+
+        const root = mkdtempSync(join(tmpdir(), "lsp-check-extra-"));
+        try {
+            mkdirSync(join(root, "src"));
+            writeFileSync(join(root, "src", "lib.rs"), SOURCE);
+            const uri = pathToFileURL(join(root, "src", "lib.rs")).href;
+            const impl = { expect: { exact_count: 1, implementations: [site("impl Shape for Square {")] } };
+            const keyedOnly = judgeImplementation(root, impl, [{ uri, range: range(4, 8) }]);
+            const extraSite = judgeImplementation(root, impl, [{ uri, range: range(4, 8) }, { uri, range: range(10, 12) }]);
+
+            assert.equal(keyedOnly.verdict, "agrees");
+            assert.equal(extraSite.verdict, "disagrees");
+            assert.match(extraSite.detail, /keyed but not returned: \[\]; returned but not keyed: \[src\/lib\.rs:11\]$/);
+        } finally {
+            rmSync(root, { recursive: true, force: true });
+        }
     });
 
     /** Write the fixture lane, point the fake server at it, and run `body(root)`. */

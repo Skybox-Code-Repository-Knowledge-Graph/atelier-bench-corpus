@@ -170,7 +170,7 @@
         {
             "id": "def-operator-overload",
             "surface": "definition",
-            "note": "Operator trait dispatch: the + between two Money values desugars to <Money as std::ops::Add>::add, so the answer is the add method of the impl Add for Money block, picked by the operand types (impl Mul<i64> for Money sits beside it).",
+            "note": "Operator trait dispatch: the + between two Money values desugars to <Money as std::ops::Add>::add, so the answer is the add method of the impl Add for Money block.",
             "from": {
                 "file": "crates/atelier-core/src/services/standard_invoice_calculator.rs",
                 "needle": "self.labour(order) + order.parts_subtotal()",
@@ -238,10 +238,10 @@
         {
             "id": "def-route-axum-generic-handler",
             "surface": "definition",
-            "note": "Route variant (axum): GET /api/exports/{slug} is served by a generic async handler that the registration instantiates with a turbofish, export_rows::<CsvExporter>; the handler is the generic fn, whatever type argument the route names.",
+            "note": "Route variant (axum): GET /api/exports/{slug} is served by a generic async handler that the registration on the same line instantiates with a turbofish, export_rows::<CsvExporter>; the handler is the generic fn, whatever type argument the route names.",
             "from": {
                 "file": "crates/atelier-app/src/lib.rs",
-                "needle": "get(http::api::export_rows::<CsvExporter>)",
+                "needle": ".route(\"/api/exports/{slug}\", get(export_rows::<CsvExporter>))",
                 "symbol": "export_rows"
             },
             "expect": {
@@ -1603,16 +1603,15 @@
         {
             "id": "def-generic-impl-two-params",
             "surface": "definition",
-            "note": "Impl blocks of a generic type: PairMap's methods are declared in impl<K, V> PairMap<K, V>, a block apart from the struct, so the answer is that block.",
+            "note": "Impl blocks of a generic type: PairMap::new() is declared in impl<K, V> PairMap<K, V>, a block apart from the struct, so the answer is the new method of that block.",
             "from": {
                 "file": "crates/atelier-bench/src/support/pair_map.rs",
                 "needle": "let mut map: PairMap<&str, i32> = PairMap::new();",
-                "symbol": "PairMap",
-                "occurrence": 1
+                "symbol": "new"
             },
             "expect": {
                 "file": "crates/atelier-bench/src/support/pair_map.rs",
-                "needle": "impl<K, V> PairMap<K, V>"
+                "needle": "pub fn new() -> Self {"
             }
         },
         {

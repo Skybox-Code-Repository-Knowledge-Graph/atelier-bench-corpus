@@ -6,12 +6,13 @@
 //! ```
 //!
 //! Exit 0 only when every check passes. Follows `php/bench/verify_tasks.php`
-//! for the needle keys both read, so the two lanes print the same lines; this
-//! this one also checks `optional_sites` and `repeated_sites` (a whole `lines`
+//! for the needle keys both read, so the two lanes print the same lines. This
+//! one also checks `optional_sites` and `repeated_sites` (a whole `lines`
 //! count of 2 or more), the references counting rule in `notes` (`exact_count`
 //! = the `known_sites` entries + the sum of `lines`, no line counted twice),
 //! and that every `must_not_include` entry written as text or as a `.*`
-//! pattern occurs on a code line of the lane's sources.
+//! pattern occurs in the code of the lane's sources, outside comments and
+//! string literals.
 
 mod json;
 
@@ -417,15 +418,136 @@ fn absent_from<'a>(texts: &[&'a str], lines: &[String]) -> Vec<&'a str> {
         .collect()
 }
 
-/// A line that is not a `//` comment (doc comments included): a look-alike
-/// only a comment quotes is not one a tool can return.
-fn is_code(line: &str) -> bool {
-    !line.trim_start().starts_with("//")
+/// The code of each line of a Rust source, in order: `//` comments (doc
+/// comments included) and `/* */` blocks (nested ones too) are dropped, and
+/// string and char literals keep only their quotes, so a look-alike that only
+/// a comment or a string quotes is not one a tool can return. Lifetimes stay
+/// code. Limit: a `'` opens a char literal only as `'x'` or `'\` followed by
+/// an escape; anything else is read as a lifetime or a label.
+fn code_lines(content: &str) -> Vec<String> {
+    let chars: Vec<char> = content.chars().collect();
+    let mut lines = Vec::new();
+    let mut line = String::new();
+    let mut depth = 0_usize;
+    let mut i = 0;
+
+    while let Some(&c) = chars.get(i) {
+        let next = chars.get(i + 1).copied();
+        if c == '\n' {
+            lines.push(std::mem::take(&mut line));
+            i += 1;
+        } else if depth > 0 {
+            match (c, next) {
+                ('/', Some('*')) => {
+                    depth += 1;
+                    i += 2;
+                }
+                ('*', Some('/')) => {
+                    depth -= 1;
+                    i += 2;
+                }
+                _ => i += 1,
+            }
+        } else if c == '/' && next == Some('/') {
+            while chars.get(i).is_some_and(|&c| c != '\n') {
+                i += 1;
+            }
+        } else if c == '/' && next == Some('*') {
+            depth = 1;
+            i += 2;
+        } else if c == '"' {
+            i = skip_string(&chars, i, &mut line, &mut lines);
+        } else if c == '\'' {
+            i = skip_char(&chars, i, &mut line);
+        } else {
+            line.push(c);
+            i += 1;
+        }
+    }
+    lines.push(line);
+
+    lines
+}
+
+/// Skip the string literal whose opening `"` is at `start`, keeping only its
+/// two quotes on `line` (a raw string's opening hashes were already kept as
+/// code); returns the index after the literal.
+fn skip_string(chars: &[char], start: usize, line: &mut String, lines: &mut Vec<String>) -> usize {
+    let mut from = start;
+    while from > 0 && chars[from - 1] == '#' {
+        from -= 1;
+    }
+    let hashes = start - from;
+    let raw = from > 0 && chars[from - 1] == 'r' && !continues_ident(chars, from - 1);
+    let mut i = start + 1;
+    line.push('"');
+
+    while let Some(&c) = chars.get(i) {
+        if c == '\n' {
+            lines.push(std::mem::take(line));
+            i += 1;
+        } else if c == '\\' && !raw {
+            if chars.get(i + 1) == Some(&'\n') {
+                lines.push(std::mem::take(line));
+            }
+            i += 2;
+        } else if c == '"' && (!raw || closes_raw(chars, i, hashes)) {
+            line.push('"');
+
+            return i + 1 + if raw { hashes } else { 0 };
+        } else {
+            i += 1;
+        }
+    }
+
+    i
+}
+
+/// Is the `r` at `at` the tail of an identifier rather than a raw-string
+/// prefix (`r`, `br` or `cr`)?
+fn continues_ident(chars: &[char], at: usize) -> bool {
+    let ident = |i: usize| chars[i].is_alphanumeric() || chars[i] == '_';
+
+    match at {
+        0 => false,
+        1 => ident(0) && !matches!(chars[0], 'b' | 'c'),
+        _ => ident(at - 1) && !(matches!(chars[at - 1], 'b' | 'c') && !ident(at - 2)),
+    }
+}
+
+/// Does the `"` at `quote` close a raw string opened with `hashes` hashes?
+fn closes_raw(chars: &[char], quote: usize, hashes: usize) -> bool {
+    chars
+        .get(quote + 1..quote + 1 + hashes)
+        .is_some_and(|run| run.iter().all(|&c| c == '#'))
+}
+
+/// Skip the char literal whose `'` is at `start`, keeping `''` on `line`, or
+/// keep a lifetime's or a label's `'` as code; returns the index after what
+/// was read.
+fn skip_char(chars: &[char], start: usize, line: &mut String) -> usize {
+    if chars.get(start + 1) == Some(&'\\') {
+        let mut i = start + 3;
+        while chars.get(i).is_some_and(|&c| c != '\'') {
+            i += 1;
+        }
+        line.push_str("''");
+
+        return i + 1;
+    }
+    if chars.get(start + 2) == Some(&'\'') {
+        line.push_str("''");
+
+        return start + 3;
+    }
+    line.push('\'');
+
+    start + 1
 }
 
 /// Every code line of the lane's Rust sources under `crates/` and
-/// `fixtures/`; `bench/` stays out, or `tasks.json` would match its own
-/// entries.
+/// `fixtures/`, as `code_lines` reads them; `bench/` stays out, or
+/// `tasks.json` would match its own entries.
 fn lane_source_lines(root: &Path) -> Vec<String> {
     let mut lines = Vec::new();
     let mut pending = vec![root.join("crates"), root.join("fixtures")];
@@ -445,8 +567,7 @@ fn lane_source_lines(root: &Path) -> Vec<String> {
                 continue;
             }
             if let Ok(content) = std::fs::read_to_string(&path) {
-                let code = content.lines().filter(|line| is_code(line));
-                lines.extend(code.map(str::to_string));
+                lines.extend(code_lines(&content));
             }
         }
     }
@@ -596,8 +717,22 @@ mod tests {
         );
         assert!(occurs_on("impl .* for Square", "impl Shape for Square {"));
         assert!(!occurs_on("for .* impl", "impl Shape for Square {"));
-        assert!(is_code("impl Shape for Square {"));
-        assert!(!is_code("    /// impl Shape for Square"));
+        let source = r##"let a = "impl Shape for Circle"; // impl Shape for Line
+/* impl Shape for Dot /* nested */
+ still a comment */ impl Shape for Square {
+let b = r#"impl Shape for Ring"#; let c = '"'; let d = '\''; let e: &'static str = "\
+impl Shape for Arc";"##;
+
+        assert_eq!(
+            code_lines(source),
+            [
+                "let a = \"\"; ",
+                "",
+                " impl Shape for Square {",
+                "let b = r#\"\"; let c = ''; let d = ''; let e: &'static str = \"",
+                "\";",
+            ]
+        );
     }
 
     #[test]

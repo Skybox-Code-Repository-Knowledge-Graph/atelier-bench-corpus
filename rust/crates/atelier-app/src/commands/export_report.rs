@@ -1,4 +1,4 @@
-//! `report <slug>`: render one registered report as CSV.
+//! `export-report <slug>` (or `report <slug>`): render one registered report as CSV.
 
 use atelier_bench::contracts::exporter_contract::ExporterContract;
 use atelier_bench::exporters::csv_exporter::CsvExporter;
