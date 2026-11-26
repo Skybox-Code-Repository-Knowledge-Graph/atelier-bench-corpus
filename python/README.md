@@ -22,12 +22,12 @@ hints as the only static-typing surface.
 
 | Package | Role | .py files |
 | --- | --- | --- |
-| `atelier_core/` | Domain: models, Money, enums, Protocols, container, events, policy, both `Formatter` halves, intake channels | 40 |
+| `atelier_core/` | Domain: models, Money, enums, Protocols, container, events, policy, both `Formatter` halves, intake channels, the stock ledger (Python data-model hooks) | 41 |
 | `atelier_bench/` | Breadth subsystem: 10 contracts, 8 concerns, 8 abstract bases, 24 reports, 16 metrics, 8 exporters, 8 notifiers, 8 repositories, 12 services, 48 rules, dataset, registry | 140 |
 | `atelier_app/` | Application surface: Flask routes, console commands, jobs (callback / Future / async) | 12 |
 | `atelier_frameworks/` | Lane-only framework modules: FastAPI routes (`fastapi_app.py`), a Django site (`django_site/`), a SQLAlchemy model (`orm.py`), Pydantic models (`schemas.py`) | 8 |
-| `tests/` | 46 unittest tests incl. request-level (Flask test client), the every-file sweep and the module-specifier check | 15 |
-| `bench/` | `tasks.json` + `verify_tasks.py` (stdlib only) + `mypy-allowlist.txt` | 3 |
+| `tests/` | 68 unittest tests incl. request-level (Flask test client, FastAPI `TestClient`, Django test `Client`), the every-file sweep, the module-specifier check and the language-server replay | 18 |
+| `bench/` | `tasks.json` + `verify_tasks.py` (stdlib only) + `mypy-allowlist.txt` + `lsp_check.py` (stdlib only) + `lsp-check.md` | 5 |
 | `fixtures/broken-syntax/` | Intentionally invalid Python, **DO NOT FIX** | 2 |
 
 ## Coverage map
@@ -35,7 +35,7 @@ hints as the only static-typing surface.
 | Surface | Where |
 | --- | --- |
 | Enums with methods | `atelier_core/support/{status,priority}.py` (`transitions_to`, `surcharge_bp`) — `str` Enums |
-| Mixin class (MRO) vs class decorator (`setattr`) | `concerns/has_reference.py`: `Customer(HasReference)` inherits `reference()`; `@with_reference()` grafts the same methods onto `RepairOrder`, which has no base and no declaration |
+| Mixin class (MRO) vs class decorator (`setattr`) | `concerns/has_reference.py`: `Customer(HasReference)` inherits `reference()`; `@with_reference()` grafts the same methods onto `RepairOrder`, which has no base and no declaration (`def-mixin-method` asks the MRO half, `refs-decorator-usage` the decorator; `def-setattr-mixin` was retired in wave 3 as a near copy of `def-mixin-method`) |
 | `__getattr__` forwarding | `concerns/forwards_to_schedule.py`: `technician.next_slot()` resolves to `Schedule` at runtime |
 | Protocol (structural) + 2 implementors + container binding | `contracts/invoice_calculator.py`, `services/{standard,rush}_invoice_calculator.py`, `container.py` |
 | Same-name shadow pair (aliases) | `billing/formatter.py` vs `reporting/formatter.py`, aliased in `atelier_app/state.py`, called in `http/report.py` |
@@ -58,11 +58,13 @@ hints as the only static-typing surface.
 | Direction / import-precision / collision / multi-parent | tasks `dir-*`, `imp-*`, `lane-local-*`, `parents-*` in `bench/tasks.json` (same ids as the other lanes) |
 | Same-name functions in two modules | `atelier_app/commands/recalculate_inventory.py` vs `atelier_app/jobs.py` |
 | HTTP surface (Flask) | `atelier_app/__init__.py`: `GET /report/<reference>`, `GET /api/orders`, `POST /api/orders/<id>/notes`, `GET /api/reports/<slug>`, `GET /health` |
-| Tests (incl. request-level) | 46 unittest tests: money, lifecycle, forwarding, shadow pair, events, structure, breadth, http, console, jobs, intake, lane-only uses, the every-file sweep, module specifiers |
-| Guards no other gate runs | `tests/test_module_specifiers.py` resolves every import (`TYPE_CHECKING` and function-local ones included), every dotted `atelier_*` path and every `.py` path (brace lists expanded) written in any string constant, docstring or comment, the literal prefix of every `import_module(...)` argument, and every dotted string in a `*MODULES*` table; `tests/test_every_file.py` imports every module on disk and calls what the other tests never reach, so the whole suite runs every function body in the three packages that has something to run at least once (measured with `sys.settrace` over the suite; the 17 of 525 bodies that are a bare `...`, abstract and overload stubs, never run) |
+| Tests (incl. request-level) | 68 unittest tests: money, lifecycle, forwarding, shadow pair, events, structure, breadth, http, console (all four command spellings), jobs, intake, lane-only uses, frameworks, Python hooks, the language-server replay, the every-file sweep, module specifiers |
+| Guards no other gate runs | `tests/test_module_specifiers.py` resolves every import (`TYPE_CHECKING` and function-local ones included), every dotted `atelier_*` path and every `.py` path (brace lists expanded) written in any string constant, docstring or comment, the literal prefix of every `import_module(...)` argument, and every dotted string in a `*MODULES*` table, over `atelier_core`, `atelier_bench`, `atelier_app`, `atelier_frameworks`, `tests` and `bench`; `tests/test_every_file.py` imports every module on disk and calls what the other tests never reach, so the whole suite runs every function body in the four packages that has something to run at least once (measured with `sys.settrace` over the suite in wave 3: 201 files, 555 bodies, none left unrun; the 17 bodies that are a bare `...`, abstract and overload stubs, never run) |
 | Broken-syntax fixtures | `fixtures/broken-syntax`, **DO NOT FIX** (outside every package; `--lint` requires them to fail `py_compile`) |
 | Document-symbol + call-hierarchy | `atelier_core/models/repair_order.py` (18 named symbols) and `atelier_bench/__init__.py` (8) for the symbol listing; `complete` → `transition_to`, three of the four functions that call `transition_to`, and `atelier_app.commands.recalculate_inventory` → `atelier_core` `SendCompletionNotice.subscribe` for the call graph |
 | Metaclass method, virtual subclass, `_missing_`, `__post_init__`, `__call__`, `cached_property` | `atelier_core/support/intake.py`; the `Schedule.capacity` setter's only write site is `Technician.set_capacity` in `models/technician.py` |
+| Python data-model hooks no call site names | `atelier_core/support/stock_ledger.py`: `Sku.__new__` (a `str` subclass, no `__init__`), `Ledger.__enter__` / `__aenter__` and the `as` binding to the `LedgerSession` they return, `Ledger.__contains__`, `MovementTotals.__missing__`, `StockLevel.__bool__` / `__format__` / `__radd__` (through `sum()`); `@total_ordering` filling in `Money.__ge__` from `__lt__` (`money.py`); `Endpoint.__set_name__` (`atelier_bench/support/abstract_notifier.py`); the 26 class statements that run `AbstractReport.__init_subclass__` |
+| Frameworks other than Flask (lane-only) | `atelier_frameworks/`: FastAPI (`fastapi_app.py`: `@router.get` / `@router.post` path operations, a Pydantic body, a `Depends` session), Django (`django_site/urls.py` `urlpatterns`, `views.py`), SQLAlchemy (`orm.py`: `Mapped` columns, `ForeignKey("parts.sku")`, `relationship(back_populates=...)`), Pydantic (`schemas.py`: `Field`, `@field_validator`) |
 
 ## Consumption (runner)
 
@@ -73,7 +75,7 @@ hints as the only static-typing surface.
 Local use (from `python/`):
 
 ```bash
-python3 -m unittest discover -s tests -t . -v   # 46 tests
+python3 -m unittest discover -s tests -t . -v   # 68 tests
 python3 -m atelier_app seed                      # summary + 16 metric lines + rules line
 python3 -m atelier_app export-report gross-profit   # csv export
 python3 -m atelier_app recalculate-inventory         # "recalculated 1 part(s)"
@@ -87,14 +89,18 @@ Not part of the shared set (`bench/S-PLUS-CHECKLIST.md` B.5), listed so a parity
 | Extra | Where |
 | --- | --- |
 | Command spellings `report [slug]` and `recalculate` | `atelier_app/commands/__init__.py`: aliases that parse to the same commands as the shared names `export-report` and `recalculate-inventory` (`tests/test_console.py` runs both spellings of each through `main`) |
+| FastAPI routes `GET /api/parts/low-stock`, `GET /api/parts/{sku}`, `POST /api/parts/{sku}/adjustments` | `atelier_frameworks/fastapi_app.py` (not mounted on the Flask app; `tests/test_frameworks.py` drives them through `TestClient`) |
+| Django routes `customers/<int:customer_id>/orders/` (`customer-orders`) and `parts/low-stock/` (`low-stock-parts`) | `atelier_frameworks/django_site/urls.py` (`tests/test_frameworks.py` drives them through Django's test `Client`) |
+| SQLAlchemy models `PartRow`, `StockMovementRow`; Pydantic models `PartOut`, `StockAdjustment` | `atelier_frameworks/orm.py`, `atelier_frameworks/schemas.py` |
+| Stock ledger (`Ledger`, `LedgerSession`, `Sku`, `StockLevel`, `MovementTotals`, `recount`, `recount_async`) | `atelier_core/support/stock_ledger.py` (`tests/test_python_hooks.py`) |
 
 ## Ground truth
 
 | Artifact | Role |
 | --- | --- |
-| `bench/tasks.json` | 95 needle-based accuracy tasks (`from` → `expect` file/needle pairs) incl. the cardinality/direction/import-precision/collision/multi-parent surfaces from day one + 5 document-symbol/call-hierarchy surfaces + 8 intake/property-setter surfaces |
+| `bench/tasks.json` | 110 needle-based accuracy tasks (`from` → `expect` file/needle pairs): 54 definition, 15 resolution, 11 references, 6 import-precision, 5 implementation, 4 hover, 4 direction, 3 call_hierarchy, 2 document_symbol, 2 cardinality, 2 multi-parent, 2 parse-negative; 45 of the ids are carried by this lane alone (see Lane-only ids) |
 | `bench/verify_tasks.py` | Self-check that every task needle still resolves to exactly one line, each `optional_sites` needle to one line and each `repeated_sites` needle to exactly its `lines` count; **standard library only** |
-| Lane-specific `kind` strings | `setattr_mixin` (method grafted by a class decorator), `dynamic_attribute` (`__getattr__` forwarding), `property`, `dataclass_generated`, `class_creation_hook` (`__init_subclass__`), `descriptor`, `name_mangling`, `singledispatch`, `context_manager`, `same_name`, `pattern_match`, `module_getattr` (PEP 562), `unresolvable_static` (importlib with a runtime-built name), `string_key`, `mro`, `relative_import`, `metaclass` (method defined on the metaclass), `virtual_subclass` (registered at runtime, no inheritance edge), `enum_missing` (`Enum._missing_`), `dataclass_hook` (`__post_init__`) |
+| Lane-specific `kind` strings (each defined in the `notes`) | `barrel`, `class_creation_hook` (`__init_subclass__`), `context_enter` (`with` / `async with` entry and the `as` binding), `context_manager`, `dataclass_generated`, `dataclass_hook` (`__post_init__`), `descriptor`, `dunder_new`, `dynamic_attribute` (`__getattr__` forwarding), `enum_missing` (`Enum._missing_`), `field_validator` (pydantic), `foreign_key` (SQLAlchemy), `glob`, `metaclass` (method defined on the metaclass), `missing_hook` (`dict.__missing__`), `module_getattr` (PEP 562), `mro`, `name_mangling`, `name_only`, `namespace_import`, `operator_hook` (`in`, truth test, format spec, reflected `__radd__`), `pattern_match`, `property`, `relative_import`, `same_name`, `set_name_hook`, `shadow_alias`, `singledispatch`, `string_key`, `structural`, `syntax_error`, `total_ordering`, `type_only`, `virtual_subclass` (registered at runtime, no inheritance edge) |
 | `bench/mypy-allowlist.txt` | The exact `mypy` diagnostics `--lint` accepts (5 at the pinned version: the setattr-grafted `reference()`/`reference_number` the lane exists to exercise); regenerate with `--lint --write-allowlist` |
 
 ```bash
@@ -107,6 +113,45 @@ Task `file` paths are relative to this lane root (`python/`), not to the reposit
 
 **Regenerate discipline:** any edit under `atelier_*/`, `tests/` or `fixtures/` must leave
 `python3 bench/verify_tasks.py` at **exit 0**. If needles move, update `bench/tasks.json` in the same change.
+
+## Lane-only ids
+
+45 ids are carried by this lane alone. Sorted under rulings R13 and R14 (issue #223):
+
+| Outcome | Count | Ids |
+| --- | --- | --- |
+| Python-specific, the note names the mechanism | 28 | `def-descriptor`, `def-enum-missing-hook`, `def-init-subclass-registry`, `def-metaclass-method`, `def-module-getattr`, `def-name-mangling`, `def-post-init`, `def-singledispatch`, `def-context-manager`, `def-dataclass-field`, `dir-mro-linearization`, `resolution-diamond-mro`, `impl-intake-contract`, `refs-cached-property`, `def-dunder-new`, `def-with-enter`, `def-enter-as-target`, `def-async-enter`, `def-dict-missing`, `def-dunder-contains`, `def-dunder-bool`, `def-dunder-format`, `def-reflected-radd`, `def-total-ordering`, `def-set-name-hook`, `refs-init-subclass-hook`, `resolution-sqlalchemy-foreign-key`, `resolution-pydantic-field-validator` |
+| Python-specific by a note sentence | 3 | `parse-negative-bad-indent`, `def-namedtuple-field`, `hover-cached-property` |
+| Route variants (R3; not counted toward the 30) | 2 | `def-route-fastapi`, `def-route-django` |
+| Common candidates (a sibling lane could ask the same question unchanged; not counted, source untouched) | 12 | `def-dynamic-import-module` (javascript, typescript), `def-super-cooperative` (typescript, javascript, php), `def-future-style` (javascript, typescript, rust), `def-generic-pep695` (typescript, rust, go), `def-match-class-pattern` (rust), `def-property` (javascript, typescript), `resolution-property-setter` (javascript, typescript), `def-string-key-dispatch` (javascript, typescript, php), `def-string-key-exporter` (javascript, php), `def-typed-dict-key` (typescript, rust, go), `imp-relative-import` (typescript, javascript, rust), `refs-dunder-call` (php) |
+
+The floor of 30 one-lane ids is met by the 31 Python-specific ones alone.
+
+## Indexer surface
+
+The tools under test and their python extractors, from `bench/TOOL-SURFACE.md` (rulings R1 to R3): routes FastAPI, Flask, Django; ORM and schema SQLAlchemy, Pydantic. Each is scored, so this lane names no deliberate gap.
+
+| Extractor | Scored by |
+| --- | --- |
+| Flask routes (the lane's main framework, `atelier_app/__init__.py`) | `def-route-to-handler` |
+| FastAPI routes (`atelier_frameworks/fastapi_app.py`) | `def-route-fastapi` |
+| Django routes (`atelier_frameworks/django_site/urls.py`) | `def-route-django` |
+| SQLAlchemy (`atelier_frameworks/orm.py`) | `resolution-sqlalchemy-foreign-key` |
+| Pydantic (`atelier_frameworks/schemas.py`) | `resolution-pydantic-field-validator` |
+
+Known-hard resolution classes (checklist E.3), each exercised:
+
+| Class | Task ids |
+| --- | --- |
+| Dynamic dispatch | `def-singledispatch`, `def-proxy-forwarded-method`, `impl-intake-contract`, `def-with-enter`, `def-enter-as-target`, `def-async-enter`, `def-dunder-contains`, `def-dunder-bool`, `def-dunder-format`, `def-reflected-radd`, `def-dict-missing` |
+| String-keyed lookup | `def-string-key-dispatch`, `def-string-key-exporter`, `def-module-getattr`, `refs-string-event-name`, `resolution-sqlalchemy-foreign-key`, `resolution-pydantic-field-validator` |
+| Alias divergence | `def-import-alias`, `def-shadow-alias-billing`, `def-shadow-alias-reporting`, `resolution-shadow-type-billing`, `resolution-shadow-type-reporting` |
+| Re-export chain | `def-through-barrel`, `imp-barrel-no-fanout`, `imp-glob-import` |
+| Generated code | `def-dataclass-field`, `def-namedtuple-field`, `def-post-init`, `def-total-ordering`, `def-init-subclass-registry`, `refs-init-subclass-hook` |
+| Conditional compilation | Python compiles nothing conditionally; its counterpart is the import under `if TYPE_CHECKING:`, which never runs: `resolution-type-only-import`, `imp-type-only-no-value-edge` |
+| Runtime-built import | `def-dynamic-import-module` |
+
+E.4 (a task the indexer is known to get wrong) follows the key freeze (ruling R4) and is not part of this README yet.
 
 ## Language server
 
