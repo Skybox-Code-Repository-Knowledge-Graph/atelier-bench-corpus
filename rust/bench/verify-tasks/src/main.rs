@@ -27,15 +27,20 @@ struct NeedlePair {
     file: String,
     needle: String,
     role: Role,
+    /// How many lines the needle must match: 1, or a repeated site's `lines`
+    /// (0 when that count is missing or not a positive number).
+    lines: usize,
 }
 
-/// Nested expect keys that hold arrays of {file, needle} objects.
-const NESTED_KEYS: [&str; 5] = [
+/// Nested expect keys that hold arrays of {file, needle} objects, each of
+/// which must resolve to exactly one line.
+const NESTED_KEYS: [&str; 6] = [
     "known_sites",
     "implementations",
     "known_callers",
     "outgoing_includes",
     "incoming_includes",
+    "optional_sites",
 ];
 
 fn main() -> ExitCode {
@@ -150,11 +155,16 @@ fn run_tasks(root: &Path) -> ExitCode {
     ExitCode::SUCCESS
 }
 
-/// Resolve one pair to its unique 1-based line, or explain why it did not.
+/// Resolve one pair to the first of exactly `pair.lines` matching lines (its
+/// unique line when `lines` is 1), or explain why it did not.
 fn resolve(root: &Path, pair: &NeedlePair) -> Result<usize, String> {
     let path = root.join(&pair.file);
     if !path.is_file() {
         return Err("file missing".to_string());
+    }
+
+    if pair.lines == 0 {
+        return Err("repeated site without a positive lines count".to_string());
     }
 
     let content = std::fs::read_to_string(&path).map_err(|_| "unreadable".to_string())?;
@@ -166,8 +176,9 @@ fn resolve(root: &Path, pair: &NeedlePair) -> Result<usize, String> {
         .collect();
 
     match hits.len() {
-        1 => Ok(hits[0]),
-        n => Err(format!("found {n} times")),
+        n if n == pair.lines => Ok(hits[0]),
+        n if pair.lines == 1 => Err(format!("found {n} times")),
+        n => Err(format!("found {n} times, expected {}", pair.lines)),
     }
 }
 
@@ -180,6 +191,7 @@ fn collect_needle_pairs(task: &Json) -> Vec<NeedlePair> {
             file: file.to_string(),
             needle: needle.to_string(),
             role: Role::From,
+            lines: 1,
         });
     }
 
@@ -192,6 +204,7 @@ fn collect_needle_pairs(task: &Json) -> Vec<NeedlePair> {
             file: file.to_string(),
             needle: needle.to_string(),
             role: Role::Expect,
+            lines: 1,
         });
     }
 
@@ -206,6 +219,7 @@ fn collect_needle_pairs(task: &Json) -> Vec<NeedlePair> {
                     file: file.to_string(),
                     needle: needle.to_string(),
                     role: Role::Expect,
+                    lines: 1,
                 });
             }
         }
@@ -216,7 +230,23 @@ fn collect_needle_pairs(task: &Json) -> Vec<NeedlePair> {
             file: file.to_string(),
             needle: needle.to_string(),
             role: Role::Expect,
+            lines: 1,
         });
+    }
+
+    // A repeated site is one needle that matches several identical lines in
+    // one file; `lines` says how many, and exactly that many must match.
+    if let Some(items) = expect.get("repeated_sites").and_then(Json::as_array) {
+        for item in items {
+            if let Some((file, needle)) = item.file_needle() {
+                pairs.push(NeedlePair {
+                    file: file.to_string(),
+                    needle: needle.to_string(),
+                    role: Role::Expect,
+                    lines: item.get("lines").and_then(Json::as_count).unwrap_or(0),
+                });
+            }
+        }
     }
 
     // Non-needle expect keys (contains, behavior, must_include, min_*, kind,

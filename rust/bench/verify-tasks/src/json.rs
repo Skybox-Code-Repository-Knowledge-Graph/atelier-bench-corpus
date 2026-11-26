@@ -44,6 +44,14 @@ impl Json {
         }
     }
 
+    /// A count of at least one, truncated to a whole number; `None` otherwise.
+    pub fn as_count(&self) -> Option<usize> {
+        match self {
+            Json::Number(value) if *value >= 1.0 => Some(*value as usize),
+            _ => None,
+        }
+    }
+
     /// Both `file` and `needle` as strings, or `None` when either is missing.
     pub fn file_needle(&self) -> Option<(&str, &str)> {
         Some((self.get("file")?.as_str()?, self.get("needle")?.as_str()?))
