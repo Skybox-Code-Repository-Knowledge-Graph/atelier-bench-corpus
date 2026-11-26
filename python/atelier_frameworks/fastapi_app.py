@@ -15,7 +15,7 @@ from sqlalchemy.orm import Session
 
 from atelier_app.state import seeded_state
 
-from .orm import PartRow, low_stock_skus, seeded_session
+from .orm import PartRow, StockMovementRow, low_stock_skus, seeded_session
 from .schemas import PartOut, StockAdjustment
 
 router = APIRouter(prefix="/api/parts")
@@ -33,7 +33,14 @@ SessionDep = Annotated[Session, Depends(parts_session)]
 
 
 def part_out(row: PartRow) -> PartOut:
-    return PartOut(sku=row.sku, name=row.name, unit_price_cents=row.unit_price_cents, stock=row.stock, low_stock=row.stock <= row.reorder_level)
+    return PartOut(
+        sku=row.sku,
+        name=row.name,
+        unit_price_cents=row.unit_price_cents,
+        stock=row.stock,
+        low_stock=row.stock <= row.reorder_level,
+        movements=len(row.movements),
+    )
 
 
 @router.get("/low-stock")
@@ -55,6 +62,7 @@ def adjust_stock(sku: str, adjustment: StockAdjustment, session: SessionDep) -> 
     if row is None:
         raise HTTPException(status_code=404, detail=f"unknown part {sku}")
     row.stock += adjustment.quantity
+    row.movements.append(StockMovementRow(quantity=adjustment.quantity, reason=adjustment.reason))
     session.commit()
     return part_out(row)
 

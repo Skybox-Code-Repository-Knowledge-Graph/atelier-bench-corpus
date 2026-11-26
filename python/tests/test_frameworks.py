@@ -25,7 +25,7 @@ class FastApiRoutesTest(unittest.TestCase):
     def test_show_part_serves_the_seeded_row(self) -> None:
         response = self.client.get("/api/parts/BAT-55")
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.json(), {"sku": "BAT-55", "name": "Battery 55Wh", "unit_price_cents": 8900, "stock": 1, "low_stock": True})
+        self.assertEqual(response.json(), {"sku": "BAT-55", "name": "Battery 55Wh", "unit_price_cents": 8900, "stock": 1, "low_stock": True, "movements": 0})
         self.assertEqual(self.client.get("/api/parts/NOPE-00").status_code, 404)
 
     def test_low_stock_route_reads_through_the_sqlalchemy_model(self) -> None:
@@ -34,7 +34,7 @@ class FastApiRoutesTest(unittest.TestCase):
     def test_adjustment_body_is_validated_by_the_pydantic_model(self) -> None:
         response = self.client.post("/api/parts/BAT-55/adjustments", json={"quantity": 3, "reason": " restock "})
         self.assertEqual(response.status_code, 200)
-        self.assertEqual((response.json()["stock"], response.json()["low_stock"]), (4, False))
+        self.assertEqual({key: response.json()[key] for key in ("stock", "low_stock", "movements")}, {"stock": 4, "low_stock": False, "movements": 1})
         self.assertEqual(self.client.post("/api/parts/BAT-55/adjustments", json={"quantity": 0, "reason": "recount"}).status_code, 422)
         self.assertEqual(self.client.post("/api/parts/NOPE-00/adjustments", json={"quantity": 1, "reason": "recount"}).status_code, 404)
 

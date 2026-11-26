@@ -1,8 +1,7 @@
 """
 Pydantic models of the parts API. A field is declared by an annotation in the BaseModel class
-body: the model class builds __init__ and validation from those annotations, so a read of
-`adjustment.quantity` lands on the annotated line, and `@field_validator("reason")` binds a
-validator to a field by naming it in a string.
+body: the model class builds __init__ and validation from those annotations, and a
+field_validator decorator binds the method under it to a field by naming the field in a string.
 """
 
 from __future__ import annotations
@@ -16,6 +15,7 @@ class PartOut(BaseModel):
     unit_price_cents: int
     stock: int
     low_stock: bool
+    movements: int
 
 
 class StockAdjustment(BaseModel):

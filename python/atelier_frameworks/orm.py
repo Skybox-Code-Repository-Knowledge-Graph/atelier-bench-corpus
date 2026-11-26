@@ -1,15 +1,16 @@
 """
-SQLAlchemy 2.x declarative model of the seed's parts. `PartRow.stock`, read on the class inside a
-select(), is an instrumented column attribute: the `Mapped[int]` annotation in the class body
-declares it, and no __init__ or assignment statement names it.
+SQLAlchemy 2.x declarative models of the seed's parts and their stock movements. Each column is
+declared by a `Mapped[...]` annotation in the class body; `ForeignKey("parts.sku")` names the
+column it points at as text, by the target table's __tablename__ and the column's attribute
+name, and `relationship(back_populates=...)` names the attribute on the other side as text.
 """
 
 from __future__ import annotations
 
 from collections.abc import Iterable
 
-from sqlalchemy import Integer, String, create_engine, select
-from sqlalchemy.orm import DeclarativeBase, Mapped, Session, mapped_column
+from sqlalchemy import ForeignKey, Integer, String, create_engine, select
+from sqlalchemy.orm import DeclarativeBase, Mapped, Session, mapped_column, relationship
 
 from atelier_core import Part
 
@@ -26,6 +27,17 @@ class PartRow(Base):
     unit_price_cents: Mapped[int] = mapped_column(Integer)
     stock: Mapped[int] = mapped_column(Integer)
     reorder_level: Mapped[int] = mapped_column(Integer)
+    movements: Mapped[list[StockMovementRow]] = relationship(back_populates="part")
+
+
+class StockMovementRow(Base):
+    __tablename__ = "stock_movements"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    sku: Mapped[str] = mapped_column(ForeignKey("parts.sku"))
+    quantity: Mapped[int] = mapped_column(Integer)
+    reason: Mapped[str] = mapped_column(String(80))
+    part: Mapped[PartRow] = relationship(back_populates="movements")
 
 
 def seeded_session(parts: Iterable[Part]) -> Session:
