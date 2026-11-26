@@ -4,7 +4,7 @@ Server: `typescript-language-server` 6.1.0 (exact-pinned devDependency) driving 
 
 Command: `node bench/lsp-check.mjs`, run from `javascript/` after `npm ci`; it rewrites the table below and keeps the hand-written part. Each task is asked at its `from` position (hover, prepareCallHierarchy + outgoing/incoming calls, implementation) or on its file (documentSymbol), twice: the first pass warms the project (every file opened, every question asked once) and only the second is reported.
 
-15 tasks: 7 agrees, 6 disagrees, 2 server has no answer.
+16 tasks: 8 agrees, 6 disagrees, 2 server has no answer.
 
 | task | surface | verdict | what the server returned |
 | --- | --- | --- | --- |
@@ -23,6 +23,7 @@ Command: `node bench/lsp-check.mjs`, run from `javascript/` after `npm ci`; it r
 | `impl-exporter-contract` | implementation | server has no answer | no locations |
 | `hover-setter-clamp` | hover | agrees | hover holds "never drops an already booked slot" |
 | `hover-prototype-method` | hover | agrees | hover holds "Human label such as `Framework 13 (SER-0001)`." |
+| `hover-exports-assignment` | hover | agrees | hover holds "Suffix appended to a metric's rendered number." |
 
 First-pass verdicts that differ from the reported pass: 3.
 - `hover-free-function`: pass 1 disagrees, pass 2 agrees

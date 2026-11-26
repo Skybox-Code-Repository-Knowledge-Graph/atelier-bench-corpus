@@ -55,7 +55,7 @@ on a bench machine if you need bit-stable ground truth.
 | Prototype property installed at run time | `packages/core/src/concerns/hasReference.js`: `withReference` assigns `Target.prototype.referencePrefix`, which no class or mixin declares |
 | `Object.assign` source order | `packages/bench/src/support/abstractNotifier.cjs`: the third source restores the class's `validate` over the mixin's |
 | `module.exports = class` / `module.exports.X =` | `packages/bench/src/reports/gross-profit.cjs` (bound by `require` in `index.cjs`); `packages/bench/src/rules/index.cjs` (`RuleRegistry`, read in `app/src/seed.js`) |
-| require(esm) | `packages/bench/src/dataset.cjs`: `require("@atelier/core")` from CommonJS |
+| require(esm) | `packages/bench/src/dataset.cjs`: `require("@atelier/core")` from CommonJS; the reverse, an ESM named import of a CommonJS export (`MetricUnit`, found by Node in the `exports.X =` assignments), in `packages/app/tests/console.test.js` |
 | Module picked by a runtime string | `packages/app/src/commands/exportReport.js`: `EXPORTER_MODULES[format]` through `createRequire`, the class read off `module.exports` by position |
 | JSDoc-only declarations and edges | `@callback RecalculateCallback` (`app/src/jobs.js`), `@import { AppState }` (`app/src/commands/exportReport.js`), `@import { Formatter as BillingFormatter }` (`core/tests/shadowPair.test.js`), `@this {SlotBoard}` (`core/src/support/slotBoard.js`), the `AppState` `@typedef` referenced only from comments |
 | Route modules, one per route parser | `packages/routes` (see Route parsers) |
@@ -81,7 +81,7 @@ on a bench machine if you need bit-stable ground truth.
 | Enum as a frozen object | `packages/core/src/support/status.js`, `packages/core/src/support/priority.js`: the members (`RepairStatus.Completed`, `Priority.Rush`) and the behaviour over them (`label`, `transitionsTo`, `surchargeBp`) are sibling properties of one `Object.freeze({ ... })` declaration |
 | Contract with no `implements` keyword | `packages/core/src/contracts/invoiceCalculator.js`, `packages/bench/src/contracts/reportContract.cjs`, `packages/bench/src/contracts/notifierContract.cjs`: each contract is a JSDoc `@typedef` with no runtime declaration, so its 2 / 24 / 8 implementors satisfy it structurally through the prototype chain |
 | Deterministic seed | `packages/bench/src/dataset.cjs`: revenue `58325`c, part cost `46300`c, gross profit `12025`c |
-| Tests (incl. request-level) | 139 tests: domain lifecycle, prototypes, Proxy forwarding, shadow pair, breadth registry, rules, CJS/ESM interop, express routes, console commands, the three job styles, slot board and day summary; every exporter, notifier, repository and service against a hand-derived table (`packages/bench/tests/components.test.cjs`); every source module loaded and the CLI entry run (`bench/tests/load.test.mjs`); every module specifier resolved (`bench/tests/specifiers.test.mjs`); every answer-key needle resolved (`bench/tests/sites.test.mjs`); every route module driven (`packages/routes/tests`); the language-server report pinned (`bench/tests/lsp-check.test.mjs`) |
+| Tests (incl. request-level) | 140 tests: domain lifecycle, prototypes, Proxy forwarding, shadow pair, breadth registry, rules, CJS/ESM interop, express routes, console commands, the three job styles, slot board and day summary; every exporter, notifier, repository and service against a hand-derived table (`packages/bench/tests/components.test.cjs`); every source module loaded and the CLI entry run (`bench/tests/load.test.mjs`); every module specifier resolved (`bench/tests/specifiers.test.mjs`); every answer-key needle resolved (`bench/tests/sites.test.mjs`); every route module driven (`packages/routes/tests`); the language-server report pinned (`bench/tests/lsp-check.test.mjs`) |
 | Broken-syntax fixtures | `fixtures/broken-syntax`, **DO NOT FIX** (negative cases; nothing imports them): an unclosed class, an unbalanced CommonJS destructuring, and TypeScript-only syntax in a `.js` file |
 | Document-symbol + call-hierarchy | `packages/core/src/models/repairOrder.js` (9 named symbols) and `packages/bench/src/index.cjs` (6) for the symbol listing; `complete` → `transitionTo`, three callers of `transitionTo`, and `@atelier/app` `recalculateInventory` → `@atelier/core` `SendCompletionNotice.subscribe` for the call graph |
 
@@ -95,8 +95,8 @@ Local use:
 
 ```bash
 npm ci
-npm test                             # node --test, 139 tests
-npm run verify                       # 117 ground-truth tasks
+npm test                             # node --test, 140 tests
+npm run verify                       # 119 ground-truth tasks
 npm run verify:lint                  # node --check over packages/ + broken-fixture guard + checkJs allowlist gate
 npm run typecheck                    # the pinned tsc on jsconfig.json, raw output (exits 2: the 60 allowlisted diagnostics)
 node packages/app/src/main.js serve 8080
@@ -175,18 +175,18 @@ No ORM, schema or serialization integration is listed for JavaScript, and the la
 
 ## Lane-local ids (D.2)
 
-Sorted under rulings R10 and R13. Language-specific (30, counted toward the floor): the CommonJS, prototype, JSDoc and runtime-only tasks, each `note` ending in a "Language-specific mechanism" sentence. Common candidates (18, kept unchanged and not counted, for a follow-up lane that gives each one id across javascript and typescript): `def-static-block-init`, `def-getter-private-field`, `def-class-field-arrow`, `def-computed-method-name`, `def-symbol-keyed-method`, `def-tagged-template`, `def-default-export`, `def-event-emitter-subclass`, `def-promise-style`, `def-setter-accessor`, `hover-setter-clamp`, `def-generator-iterator`, `def-dynamic-import`, `resolution-this-rebinding`, `resolution-calculate-through-binding`, `refs-format-reference`, `refs-with-reference`, `parse-negative-bad-destructure`. The eight `def-route-*` ids are shared with typescript (R12) and counted toward neither.
+Sorted under rulings R10 and R13. Language-specific (32, counted toward the floor of 30): the CommonJS, prototype, JSDoc and runtime-only tasks, each `note` ending in a "Language-specific mechanism" sentence. Common candidates (18, kept unchanged and not counted, for a follow-up lane that gives each one id across javascript and typescript): `def-static-block-init`, `def-getter-private-field`, `def-class-field-arrow`, `def-computed-method-name`, `def-symbol-keyed-method`, `def-tagged-template`, `def-default-export`, `def-event-emitter-subclass`, `def-promise-style`, `def-setter-accessor`, `hover-setter-clamp`, `def-generator-iterator`, `def-dynamic-import`, `resolution-this-rebinding`, `resolution-calculate-through-binding`, `refs-format-reference`, `refs-with-reference`, `parse-negative-bad-destructure`. The eight `def-route-*` ids are shared with typescript (R12) and counted toward neither.
 
 ## Language server (E.5)
 
-`typescript-language-server` 6.1.0 (exact-pinned devDependency) starting the TypeScript language service of the pinned `typescript` 5.7.3 over `jsconfig.json`. `node bench/lsp-check.mjs` asks it every hover, document_symbol, call_hierarchy and implementation key and writes `bench/lsp-check.md`: 15 tasks, 7 agree, 6 disagree, 2 get no answer (asked twice: the first pass, before the project has loaded, answers three tasks differently, and the report lists them). Each disagreement is read against the tree there; no key was changed to match the server.
+`typescript-language-server` 6.1.0 (exact-pinned devDependency) starting the TypeScript language service of the pinned `typescript` 5.7.3 over `jsconfig.json`. `node bench/lsp-check.mjs` asks it every hover, document_symbol, call_hierarchy and implementation key and writes `bench/lsp-check.md`: 16 tasks, 8 agree, 6 disagree, 2 get no answer (asked twice: the first pass, before the project has loaded, answers three tasks differently, and the report lists them). Each disagreement is read against the tree there; no key was changed to match the server.
 
 ## Ground truth
 
 | Artifact | Role |
 | --- | --- |
-| `bench/tasks.json` | 117 needle-based accuracy tasks (`from` → `expect` file/needle pairs). Surfaces: definition 60, resolution 16, references 10, import-precision 5, implementation 5, hover 5, direction 4, call_hierarchy 3, parse-negative 3, cardinality 2, multi-parent 2, document_symbol 2. Every canonical id carried by three or more lanes is carried here. |
-| `bench/lsp-check.md` | One run of the pinned language server over the 15 hover, document_symbol, call_hierarchy and implementation keys, each disagreement read against the tree (regenerate with `node bench/lsp-check.mjs`) |
+| `bench/tasks.json` | 119 needle-based accuracy tasks (`from` → `expect` file/needle pairs). Surfaces: definition 61, resolution 16, references 10, import-precision 5, implementation 5, hover 6, direction 4, call_hierarchy 3, parse-negative 3, cardinality 2, multi-parent 2, document_symbol 2. Every canonical id carried by three or more lanes is carried here. |
+| `bench/lsp-check.md` | One run of the pinned language server over the 16 hover, document_symbol, call_hierarchy and implementation keys, each disagreement read against the tree (regenerate with `node bench/lsp-check.mjs`) |
 | `bench/checkjs-allowlist.txt` | The exact `tsc -p jsconfig.json` diagnostics the gate accepts (60 at the pinned versions); regenerate with `--lint --write-allowlist` |
 | `bench/verify-tasks/verify.mjs` | Self-check that every task needle still resolves to exactly one line |
 | `bench/tests/sites.test.mjs` | Resolves every `{file, needle}` in `tasks.json` under any key, including `optional_sites` (exactly one line) and `repeated_sites` (exactly `lines` lines), which the verifier does not read |

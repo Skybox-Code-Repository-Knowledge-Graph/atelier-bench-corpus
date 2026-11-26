@@ -6,6 +6,7 @@ import { DEFAULT_PORT, parseCommand } from "@atelier/app/commands/index.js";
 import { exportReport } from "@atelier/app/commands/exportReport.js";
 import { recalculateInventory } from "@atelier/app/commands/recalculateInventory.js";
 import { metricLines, ruleLine, summarize } from "@atelier/app/seed.js";
+import { MetricUnit, suffix } from "@atelier/bench/contracts/metricContract.cjs";
 
 describe("console surface", () => {
     it("parses every subcommand", () => {
@@ -31,6 +32,11 @@ describe("console surface", () => {
         assert.match(exportReport(state, "gross-profit", "json"), /"cents":12025/);
         assert.throws(() => exportReport(state, "nope"), /unknown report/);
         assert.throws(() => exportReport(state, "gross-profit", "pdf"), /unknown export format/);
+    });
+
+    it("reads named exports of a CommonJS module from ESM", () => {
+        // Node finds MetricUnit and suffix by scanning the exports.X assignments of the .cjs file.
+        assert.equal(suffix(MetricUnit.Percent), "%");
     });
 
     it("reports the frozen seed numbers", () => {

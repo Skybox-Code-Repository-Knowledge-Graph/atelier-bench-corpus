@@ -3276,6 +3276,34 @@
             "expect": {
                 "contains": "Human label such as `Framework 13 (SER-0001)`."
             }
+        },
+        {
+            "id": "def-cjs-named-import",
+            "surface": "definition",
+            "note": "An ESM test imports MetricUnit by name from a CommonJS file: Node offers a CommonJS module's names to an ESM named import only where its lexer finds them statically, here the exports.MetricUnit assignment, which is also the declaration. Language-specific mechanism: an ESM named import of a CommonJS export, resolved through the static `exports.X =` names Node detects in the .cjs file.",
+            "from": {
+                "file": "packages/app/tests/console.test.js",
+                "needle": "        assert.equal(suffix(MetricUnit.Percent), \"%\");",
+                "symbol": "MetricUnit"
+            },
+            "expect": {
+                "file": "packages/bench/src/contracts/metricContract.cjs",
+                "needle": "exports.MetricUnit = Object.freeze({"
+            }
+        },
+        {
+            "id": "hover-exports-assignment",
+            "surface": "hover",
+            "note": "The doc comment documents a CommonJS exports assignment, not a declaration statement. Language-specific mechanism: a JSDoc comment attached to `exports.suffix = function suffix(unit)`.",
+            "from": {
+                "file": "packages/bench/src/contracts/metricContract.cjs",
+                "needle": "exports.suffix = function suffix(unit) {",
+                "symbol": "suffix",
+                "occurrence": 1
+            },
+            "expect": {
+                "contains": "Suffix appended to a metric's rendered number."
+            }
         }
     ]
 }
