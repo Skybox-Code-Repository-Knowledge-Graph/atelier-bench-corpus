@@ -156,6 +156,25 @@ Laravel routes is the one route parser listed for PHP. It is scored by `def-rout
 | Generated code | Blade templates run only as the PHP Blade compiles them to: `def-blade-model-method`, `def-accessor-attribute`, `lw-sfc-computed`, `parse-negative-unclosed-blade` |
 | Conditional compilation | PHP has none (no preprocessor and no build-time flags), so no task |
 
+### E.5 Language server
+
+Pinned: **phpactor 2026.11.22.0**, the release phar (sha256 `1ae84e18348754a94ad28b14d3ec341aded0d2c082be61e155bc33fc42690659`). It answers `hover`, `document_symbol` and `implementation`. No installable PHP language server answers `call_hierarchy`: phpactor 2026.11.22.0 and intelephense 1.18.5 (npm) both answer `textDocument/prepareCallHierarchy` with -32601 and neither advertises `callHierarchyProvider` in `initialize` (intelephense 1.18.5 advertises no `implementationProvider` either, and answers every implementation query with null). So the four `call_hierarchy` keys (`card-complete-hub`, `hierarchy-complete-chain`, `hierarchy-incoming-transition`, `hierarchy-cross-package`) have no server second opinion and rest on reading both bodies.
+
+Install and run (no secret, nothing added to `composer.json`; the server indexes the lane's own `vendor/`):
+
+```bash
+composer install
+curl -fsSL -o /tmp/phpactor.phar https://github.com/phpactor/phpactor/releases/download/2026.11.22.0/phpactor.phar
+shasum -a 256 /tmp/phpactor.phar     # 1ae84e18348754a94ad28b14d3ec341aded0d2c082be61e155bc33fc42690659
+php bench/lsp_check.php --server 'php /tmp/phpactor.phar language-server' --name phpactor --server-version 2026.11.22.0 --wait 45
+# second server, appended to the same report:
+(cd /tmp && npm pack intelephense@1.18.5 && tar xzf intelephense-1.18.5.tgz)
+php bench/lsp_check.php --server 'node /tmp/package/lib/intelephense.js --stdio' --name intelephense --server-version 1.18.5 --wait 45 --append
+php bench/lsp_check.php --plan       # no server: the request each task makes (tests/Feature/LspCheckPlanTest.php runs it)
+```
+
+The report is [`bench/lsp-check.md`](bench/lsp-check.md), one line per `hover`, `document_symbol`, `call_hierarchy` and `implementation` task (18). phpactor 2026.11.22.0: 13 agree, 4 have no answer (the `call_hierarchy` tasks), 1 disagrees. intelephense 1.18.5: 8 agree (the hover and document_symbol tasks), 10 have no answer. The one disagreement, read against the tree: `vendor-shouldbroadcast-contract` keys the interface `ShouldBroadcast` (a definition answer) on the `implementation` surface, and phpactor returns its implementors (`RepairCompleted` and five vendor classes); the tree sides with the server, the key is unchanged here and stays refused by the scorer, and the task moves to the `definition` surface in a separate change of issue #223. No key was changed because of a server's reply.
+
 ## Deliberate differences from the other lanes
 
 The shared set every lane carries is `GET /health`, `GET /report/{reference}`, `GET /api/orders`, `POST /api/orders/{key}/notes`, `GET /api/reports/{slug}`, the export-report and recalculate-inventory commands, and the recalculate-inventory job. This lane carries all of it. These differences are deliberate and stay:
