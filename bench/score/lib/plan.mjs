@@ -287,7 +287,6 @@ export const RULES = [
  */
 export const LIST_NOT_TYPES = {
     "card-rule-contract": "half the list is rule values (instances, object literals, macro arms), and an implementation query returns types",
-    "go:impl-structural-no-assertion": "the list is struct-literal values, and an implementation query returns types",
     "go:card-embedded-promotion": "the list is promoted methods, not implementing types",
     "rust:def-async-trait-method": "the list is methods, not implementing types",
     "php:impl-trait-abstract": "the list is methods, not implementing types",
@@ -346,7 +345,7 @@ export const UNRULED_SHAPES = [
         kind: "shadow_alias",
         keys: ["contains", "kind", "must_not_include", "resolution"],
         tasks: new Set(["go:resolution-shadowed-stdlib-package"]),
-        reason: "kind shadow_alias with `contains` and no candidate: the declaration is in the Go standard library, outside the repository, so no lane-relative location names it (gopls v0.24.0 answers a GOROOT path); `contains` is defined for hover text only, and the one exclusion can trip only on the line asked from, so it alone would pass an empty answer",
+        reason: "kind shadow_alias with `contains` and no candidate: the declaration is in the Go standard library, outside the repository, so no lane-relative location names it (gopls v0.24.0 answers a GOROOT path); `contains` is defined for hover text only, and the one exclusion, app/http's own NewServeMux (router.go), only says what the answer is not: with nothing required, it alone would pass an empty answer",
     },
     {
         surface: "definition",

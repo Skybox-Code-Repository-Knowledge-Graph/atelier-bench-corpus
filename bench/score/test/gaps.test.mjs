@@ -31,7 +31,7 @@ const DECIDED = {
     ...Object.fromEntries(["calculate", "customer", "dataset", "formatter-billing", "money", "ref-prefix"]
         .map((name) => [`go:lane-local-${name}`, { reason: /^kind lane_local with only `contains`: .* names no declaration and excludes no sibling lane/ }])),
     // contains on resolution, kind shadow_alias, target outside the repository (go)
-    "go:resolution-shadowed-stdlib-package": { reason: /^kind shadow_alias with `contains` and no candidate: the declaration is in the Go standard library/ },
+    "go:resolution-shadowed-stdlib-package": { reason: /^kind shadow_alias with `contains` and no candidate: the declaration is in the Go standard library.* the one exclusion, app\/http's own NewServeMux \(router\.go\), only says what the answer is not/ },
     // definition with only implementations, asked from Cargo.toml (rust)
     "rust:def-cfg-gated": { reason: /^a definition asked from a Cargo.toml feature line with only `implementations`/ },
     // definition with exact_count, kind and known_sites

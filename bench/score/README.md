@@ -223,7 +223,7 @@ not changed to fit a rule.
 | Shape | Tasks | Why no rule |
 | --- | --- | --- |
 | `resolution`, kind `lane_local`, keys `contains`, `kind` | go `lane-local-calculate`, `-customer`, `-dataset`, `-formatter-billing`, `-money`, `-ref-prefix` | The lane notes ask that resolution land on this lane's own declaration and never a sibling lane's. These keys name no declaration and exclude no sibling lane (the same ids in the other lanes carry a `candidate` and lane-prefix `must_not_include` entries). `contains` is defined for hover text only; gopls v0.24.0's hover holds the string on one of the six, the one where it is the asked symbol itself (`Calculator`), and `AT-2026-` is not the value of `AtelierPrefix` (`"AT"`) |
-| `resolution`, kind `shadow_alias`, keys `contains`, `kind`, `must_not_include`, `resolution` | go `resolution-shadowed-stdlib-package` | The answer, `net/http`'s `NewServeMux`, is in the Go standard library, outside the repository: no lane-relative location names it (gopls v0.24.0 answers a GOROOT path, and an absolute path is an invalid answer). `contains` (`net/http`) is defined for hover text only, and the package's own `app/http` declares no `NewServeMux`, so the exclusion `app/http#NewServeMux` can trip only on the line asked from: on its own it would pass an empty answer |
+| `resolution`, kind `shadow_alias`, keys `contains`, `kind`, `must_not_include`, `resolution` | go `resolution-shadowed-stdlib-package` | The answer, `net/http`'s `NewServeMux`, is in the Go standard library, outside the repository: no lane-relative location names it (gopls v0.24.0 answers a GOROOT path, and an absolute path is an invalid answer). `contains` (`net/http`) is defined for hover text only. The exclusion `app/http#NewServeMux` names a real namesake, the package's own `func NewServeMux` (the application mux constructor, `app/http/router.go`), but it only says what the answer is not: with no location required, it alone would pass an empty answer |
 | `definition`, keys `implementations` only | rust `def-cfg-gated` | Asked from the `Cargo.toml` line `extra-rules = []` (no symbol). No `kind` and no count say what the question returns or that the list is complete, and the list holds `ExperimentalRule` (behind `feature = "extra-rules"`) and `AlwaysTrueRule` (behind `#[cfg(test)]`, which the feature does not gate). rust-analyzer 1.96.0 answers no definition in `Cargo.toml` |
 | `definition`, kind `unresolvable_static`, keys `exact_count`, `kind`, `known_sites` | javascript `def-dynamic-require`, python `def-dynamic-import-module` | The answer is each candidate module (lane notes: "the honest result is every candidate module, and exact_count counts them"), and the key anchors each module on a line inside it, its `SLUG` line, so no line of the key names the module. A module answer lands on the file's first line (typescript-language-server 6.1.0 and pyright 1.1.414 on a static specifier; at the runtime-built specifier both return nothing). Matching by file is a mode the key does not state: the same class as the targets anchored inside their declaration |
 | `import-precision`, kind `visibility_boundary`, keys `contains`, `kind`, `known_sites` | go `imp-internal-package` | Asked from the package clause of `internal/audit` (note: "only atelier.example/lane/... may import this package"). No source says what the question returns; `known_sites` with no target has no stated role (above), and `contains` (`internal`) is defined for hover text only. The key lists one importer, `tests/structure_test.go`, and no count; gopls v0.24.0, asked for references at the package clause, answers three importers (`cmd/atelier/main.go` and `tests/events_test.go` blank-import it), so a rule over the list could only be recall |
@@ -311,9 +311,11 @@ interface that extends it). The other sub-counts (`nominal_count`, `structural_c
 
 Some lists are not implementing types, and their tasks are `UNSCORABLE` under these rules
 (`LIST_NOT_TYPES` in `lib/plan.mjs`): `card-rule-contract` in every lane, whose list is half rule
-values (instances, object literals, macro arms); go `impl-structural-no-assertion` (struct-literal
-values); and the method lists of go `card-embedded-promotion`, rust `def-async-trait-method` and
-php `impl-trait-abstract`.
+values (instances, object literals, macro arms), and the method lists of go `card-embedded-promotion`,
+rust `def-async-trait-method` and php `impl-trait-abstract`. go `impl-structural-no-assertion` was
+listed while its key named 24 struct-literal values; since PR #230 the key lists the 25 type
+declarations (`AdHocRule` and the 24 rule structs, `RuleContract` an optional site), and
+`implementation/list` scores it.
 
 ### Document symbols
 
