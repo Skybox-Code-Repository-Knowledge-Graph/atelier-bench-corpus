@@ -487,9 +487,16 @@ func implementationVerdict(returned []string, implementations []string, optional
 			extra = append(extra, location)
 		}
 	}
-	detail := fmt.Sprintf("%d locations for %d keyed implementors", len(returned), len(implementations))
+	optionalReturned := []string{}
+	keyed := set(implementations)
+	for _, location := range returned {
+		if allowed[location] && !keyed[location] {
+			optionalReturned = append(optionalReturned, location)
+		}
+	}
+	detail := fmt.Sprintf("%d locations for %d keyed implementors; beyond them only optional_sites [%s]", len(returned), len(implementations), strings.Join(optionalReturned, " "))
 	if len(missing) == 0 && len(extra) == 0 {
-		return "agrees", detail + " (+ optional sites only)"
+		return "agrees", detail
 	}
 	return "disagrees", detail + "; missing [" + strings.Join(missing, " ") + "]; not in the key [" + strings.Join(extra, " ") + "]"
 }
@@ -530,11 +537,18 @@ func hierarchyVerdict(outgoing []call, incoming []call, outgoingKeys []string, i
 			}
 		}
 	}
-	detail := fmt.Sprintf("%d outgoing, %d incoming callers", len(outgoing), len(incoming))
+	namesOf := func(list []call) string {
+		out := []string{}
+		for _, c := range list {
+			out = append(out, c.Name+" "+c.Decl)
+		}
+		return strings.Join(out, ", ")
+	}
+	detail := fmt.Sprintf("outgoing [%s]; incoming callers [%s]", namesOf(outgoing), namesOf(incoming))
 	if len(problems) > 0 {
 		return "disagrees", detail + "; " + strings.Join(problems, "; ")
 	}
-	return "agrees", detail + "; every keyed callee and call site returned, no excluded callee"
+	return "agrees", detail
 }
 
 // methodName drops the receiver of a server-side method name:

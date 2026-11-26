@@ -100,7 +100,9 @@ from the module proxy and nothing else; the yamlish module is an in-tree `replac
 `--lint` also resolves every module specifier written anywhere in the lane, whatever the build
 constraint: import specs (broken fixtures and the darwin half of the build-tag pair included), the
 package of each `//go:generate go run` directive, each `//go:embed` pattern, lane module paths and
-doc links in comments, `go.mod`'s require and replace lines, and the package path of each
+doc links in comments, `go.mod`'s require and replace directives (single-line or in blocks; a
+require resolves through `go list -m`, or, for a module the platform build never downloads, through
+the `go.sum` line that locks its version's `go.mod`), and the package path of each
 `resolution` key in `bench/tasks.json`.
 
 ## Ground truth
@@ -178,7 +180,8 @@ string-keyed link from a JSON wire name (`body["reference"]` in a test) to the s
 ## Language server (E.5)
 
 The language server this lane's stack starts is **gopls v0.24.0**
-(`go install golang.org/x/tools/gopls@v0.24.0`). `bench/lspcheck` runs it over stdio, with
+(the binary used was built by `go install golang.org/x/tools/gopls@v0.24.0` with go1.27.4,
+as `go version -m` on it reports). `bench/lspcheck` runs it over stdio, with
 `GOOS=linux` (the CI platform), on every `hover`, `document_symbol`, `call_hierarchy` and
 `implementation` task, and `bench/lsp-check.md` is its committed report:
 
