@@ -140,11 +140,12 @@ change (bench lane owns `bench/`; crate lanes keep needles green).
 
 ## One-lane ids (box D.2)
 
-Each of the 42 ids only this lane carries is sorted under ruling R13. Outcome 1 (33): the path from
-the asked line to the keyed answer applies a resolution rule only Rust has, and the task's note
-names it in one sentence. Outcome 2 (8, common candidates other lanes could carry unchanged):
+Each of the 42 ids only this lane carries is sorted under ruling R13. Outcome 1 (32): the path from
+the asked line to the keyed answer applies a resolution rule only Rust (or axum) has, and the task's
+note names it in one sentence. Outcome 2 (9, common candidates other lanes could carry unchanged):
 `def-cross-crate-trait`, `def-error-conversion`, `def-registry-entry`, `def-serde-tagged-enum`,
-`def-impl-trait-return`, `def-lifetime-struct`, `def-hrtb-bound`, `def-reexport-two-levels`.
+`def-impl-trait-return`, `def-lifetime-struct`, `def-hrtb-bound`, `def-reexport-two-levels`,
+`imp-trait-in-scope`.
 Route variant (1): `def-route-axum-generic-handler`. Ids that only repeated a question the lane
 already asks were retired in wave 3.
 

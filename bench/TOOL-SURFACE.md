@@ -85,7 +85,7 @@ ends with the lane's language-server line (E.5, below).
 | Axum routes | route parser | `def-route-to-handler`, `def-route-axum-generic-handler` | | |
 | Reqwest HTTP | other | | "Reqwest HTTP is a deliberate gap: the lane makes no outbound HTTP call" | |
 
-Language server (E.5): rust-analyzer 1.96.0 (ac68faa 2026-05-25); source "The stack starts rust-analyzer `1.96.0 (ac68faa 2026-05-25)`, the"
+Language server (E.5): rust-analyzer 1.96.0 (ac68faa 2026-05-25); source "The stack starts rust-analyzer `1.96.0 (ac68faa 2026-05-25)`"
 
 ### php
 
