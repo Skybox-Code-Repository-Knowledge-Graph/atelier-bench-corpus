@@ -42,11 +42,20 @@ export class RecalculateInventory {
 }
 
 /**
+ * What the callback-style job reports back: an error, or the recount.
+ *
+ * @callback RecalculateCallback
+ * @param {Error | null} error
+ * @param {number} [count]
+ * @returns {void}
+ */
+
+/**
  * Callback style: node-order `(error, count)`, called on the next tick.
  *
  * @param {import("@atelier/bench/dataset.cjs").Dataset} data
  * @param {import("@atelier/core").Dispatcher} dispatcher
- * @param {(error: Error | null, count?: number) => void} callback
+ * @param {RecalculateCallback} callback
  * @returns {void}
  */
 export function recalculateInventory(data, dispatcher, callback) {

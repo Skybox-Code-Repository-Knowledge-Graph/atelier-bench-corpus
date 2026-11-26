@@ -11,6 +11,8 @@ import { createRequire } from "node:module";
 
 import bench from "@atelier/bench";
 
+/** @import { AppState } from "../state.js" */
+
 const require = createRequire(import.meta.url);
 
 const { report: findReport } = bench;
@@ -25,7 +27,7 @@ const EXPORTER_MODULES = Object.freeze({
 /**
  * Render `slug` in `format`; throws when either is unknown.
  *
- * @param {import("../state.js").AppState} state
+ * @param {AppState} state
  * @param {string} slug
  * @param {"csv" | "json" | "md"} [format]
  * @returns {string}
