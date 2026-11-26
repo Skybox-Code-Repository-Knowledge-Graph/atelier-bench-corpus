@@ -1,6 +1,6 @@
 """
 Every source file the lane adds is loaded, and every function body in it that does something runs, under this suite
-(the `...`-only stubs of abstract and overload declarations, 17 of 555 bodies, have nothing to run)
+(the `...`-only stubs of abstract and overload declarations, 17 of 566 bodies, have nothing to run)
 (issue #223, F.5). The other test files exercise the behaviour the tasks ask about; this one is the
 sweep that leaves no file silently wrong: it imports each module found on disk, runs the console
 entry point for every command, and calls each breadth class and helper the rest of the suite

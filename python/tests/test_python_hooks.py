@@ -9,7 +9,18 @@ import unittest
 
 from atelier_app.state import seeded_state
 from atelier_bench.support.abstract_notifier import AbstractNotifier
-from atelier_core.support.stock_ledger import Ledger, MovementTotals, Sku, StockLevel, recount, recount_async
+from atelier_core.support.stock_ledger import (
+    Bin,
+    Countable,
+    Ledger,
+    MovementTotals,
+    Shelf,
+    Sku,
+    StockLevel,
+    recount,
+    recount_async,
+    units_on_hand,
+)
 
 
 class StockLedgerTest(unittest.TestCase):
@@ -39,6 +50,30 @@ class StockLedgerTest(unittest.TestCase):
     def test_async_recount_enters_through_aenter(self) -> None:
         moved = asyncio.run(recount_async(self.parts, [("scr-13", -2), ("scr-13", 1), ("kbd-eu", 4)]))
         self.assertEqual(moved, {"SCR-13": -1, "KBD-EU": 4})
+
+
+class ClassLevelHookTest(unittest.TestCase):
+    def setUp(self) -> None:
+        self.ledger = Ledger(seeded_state().data.parts)
+
+    def test_metaclass_call_interns_bins(self) -> None:
+        self.assertIs(self.ledger.bin_of("scr-13"), self.ledger.bin_of("SCR-99"))
+        self.assertEqual(self.ledger.bin_of("kbd-eu").label, "KBD")
+        self.assertIs(Bin("FAN"), Bin("FAN"))
+
+    def test_class_getitem_names_a_shelf(self) -> None:
+        shelf = Shelf["scr"]
+        self.assertEqual(shelf.family, "SCR")
+
+    def test_subclasshook_decides_isinstance(self) -> None:
+        self.assertTrue(isinstance(StockLevel("SCR-13", 4), Countable))
+        self.assertFalse(isinstance(Sku("SCR-13"), Countable))
+        self.assertEqual(self.ledger.units(), 14)
+        self.assertEqual(units_on_hand([StockLevel("FAN-A1", 2), "not countable"]), 2)
+
+    def test_reversed_runs_the_ledger_hook(self) -> None:
+        self.assertEqual(self.ledger.newest_first(), ["FAN-A1", "KBD-EU", "BAT-55", "SCR-13"])
+        self.assertEqual([level.sku for level in self.ledger][0], "SCR-13")
 
 
 class GeneratedComparisonTest(unittest.TestCase):

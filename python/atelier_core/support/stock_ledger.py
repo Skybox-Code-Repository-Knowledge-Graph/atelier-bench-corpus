@@ -8,13 +8,18 @@ a protocol the interpreter calls on its own, with no call site that names the me
 - `sku in ledger` runs `__contains__`;
 - `moved[sku] += n` on a MovementTotals reads a missing key through `__missing__`;
 - a StockLevel in an `if` runs `__bool__`, in an f-string with a format spec runs `__format__`,
-  and `sum()` over levels starts from 0, so `int + StockLevel` falls back to `__radd__`.
+  and `sum()` over levels starts from 0, so `int + StockLevel` falls back to `__radd__`;
+- calling Bin runs its metaclass's `__call__`, subscripting the Shelf class runs
+  `__class_getitem__`, an isinstance test against Countable asks its `__subclasshook__`, and the
+  reversed() builtin over a Ledger runs `__reversed__`.
 """
 
 from __future__ import annotations
 
-from collections.abc import Iterable
+from abc import ABC
+from collections.abc import Iterable, Iterator
 from types import TracebackType
+from typing import Any
 
 from ..models.part import Part
 
@@ -33,7 +38,54 @@ class MovementTotals(dict[str, int]):
         return 0
 
 
+class Interned(type):
+    """Calling a class built by this metaclass runs this __call__ first: one instance per label."""
+
+    def __call__(cls, *args: Any, **kwargs: Any) -> Any:
+        key = (cls, args, tuple(sorted(kwargs.items())))
+        if key not in _INTERNED:
+            _INTERNED[key] = super().__call__(*args, **kwargs)
+        return _INTERNED[key]
+
+
+_INTERNED: dict[tuple[Any, ...], Any] = {}
+
+
+class Bin(metaclass=Interned):
+    """A storage bin, named by the first three letters of the SKUs it holds."""
+
+    def __init__(self, label: str) -> None:
+        self.label = label
+
+
+class Shelf:
+    """`Shelf["scr"]` names the shelf of one part family: subscripting the class runs __class_getitem__."""
+
+    def __init__(self, family: str) -> None:
+        self.family = family
+
+    def __class_getitem__(cls, family: str) -> Shelf:
+        return cls(family.strip().upper())
+
+
+class Countable(ABC):
+    """Anything that annotates an on_hand count is Countable: no base class or registration needed."""
+
+    on_hand: int
+
+    @classmethod
+    def __subclasshook__(cls, candidate: type) -> bool:
+        return "on_hand" in getattr(candidate, "__annotations__", {})
+
+
+def units_on_hand(items: Iterable[object]) -> int:
+    return sum(item.on_hand for item in items if isinstance(item, Countable))
+
+
 class StockLevel:
+    sku: str
+    on_hand: int
+
     def __init__(self, sku: str, on_hand: int) -> None:
         self.sku = sku
         self.on_hand = on_hand
@@ -73,6 +125,21 @@ class Ledger:
         """One movement in a session of its own."""
         with self as session:
             return session.record(Sku(sku), quantity)
+
+    def bin_of(self, sku: str) -> Bin:
+        return Bin(Sku(sku)[:3])
+
+    def newest_first(self) -> list[str]:
+        return [level.sku for level in reversed(self)]
+
+    def units(self) -> int:
+        return units_on_hand(self.levels.values())
+
+    def __iter__(self) -> Iterator[StockLevel]:
+        return iter(self.levels.values())
+
+    def __reversed__(self) -> Iterator[StockLevel]:
+        return reversed(list(self.levels.values()))
 
     def __contains__(self, sku: object) -> bool:
         return sku in self.levels
