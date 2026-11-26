@@ -1,0 +1,70 @@
+<?php
+
+namespace Tests\Feature;
+
+use App\Filament\Pages\InventoryReport;
+use App\Filament\Widgets\RepairStats;
+use App\Models\Part;
+use App\Models\RepairOrder;
+use App\Models\User;
+use Filament\Facades\Filament;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Livewire\Livewire;
+use Tests\TestCase;
+
+/**
+ * The admin panel discovers the RepairStats widget and the InventoryReport page; nothing else
+ * renders them. These tests render both against the seeded dataset: the widget's open() and
+ * rush() scope counts, and the page's Blade view reading the #[Computed] lowStockParts list.
+ */
+class FilamentSurfacesTest extends TestCase
+{
+    use RefreshDatabase;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+        $this->seed();
+        $this->actingAs(User::query()->firstOrFail());
+        Filament::setCurrentPanel(Filament::getPanel('admin'));
+    }
+
+    public function test_repair_stats_widget_counts_the_seeded_orders(): void
+    {
+        // Two more open, normal-priority orders and one delivered order beside the seed, so the
+        // open count differs from both the rush count and the count of all orders.
+        RepairOrder::factory()->count(2)->create(['status' => 'received', 'priority' => 'normal']);
+        RepairOrder::factory()->create(['status' => 'delivered', 'priority' => 'normal']);
+        $open = RepairOrder::query()->where('status', '!=', 'delivered')->count();
+        $this->assertLessThan(RepairOrder::query()->count(), $open);
+        $rush = RepairOrder::query()->where('priority', 'rush')->count();
+        $this->assertGreaterThan(0, $rush);
+        $this->assertNotSame($open, $rush);
+
+        Livewire::test(RepairStats::class)->assertOk();
+        $stats = new class extends RepairStats {
+            public function values(): array
+            {
+                return collect($this->getStats())
+                    ->mapWithKeys(fn ($stat) => [(string) $stat->getLabel() => (string) $stat->getValue()])
+                    ->all();
+            }
+        };
+        $values = $stats->values();
+        $this->assertSame((string) $open, $values['Open orders']);
+        $this->assertSame((string) $rush, $values['Rush orders']);
+    }
+
+    public function test_inventory_report_lists_parts_at_or_below_the_threshold(): void
+    {
+        $part = Part::query()->orderBy('sku')->firstOrFail();
+
+        Livewire::test(InventoryReport::class)
+            ->set('lowStockThreshold', $part->stock - 1)
+            ->assertSee('All parts sufficiently stocked.')
+            ->assertDontSee("{$part->sku}: {$part->name}")
+            ->set('lowStockThreshold', $part->stock)
+            ->assertSee("{$part->sku}: {$part->name} ({$part->stock} left)")
+            ->assertDontSee('All parts sufficiently stocked.');
+    }
+}

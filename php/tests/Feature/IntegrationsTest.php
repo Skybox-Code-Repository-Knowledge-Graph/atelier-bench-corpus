@@ -53,6 +53,19 @@ class IntegrationsTest extends TestCase
             ->assertStatus(201);
     }
 
+    public function test_a_created_note_locates_its_order_through_the_named_api_route(): void
+    {
+        $reference = RepairOrder::query()->firstOrFail()->reference;
+        Sanctum::actingAs(User::query()->firstOrFail());
+
+        $location = $this->postJson("/api/orders/{$reference}/notes", ['body' => 'Located note.', 'author' => 'tester'])
+            ->assertStatus(201)
+            ->assertHeader('Location', url("/api/orders/{$reference}"))
+            ->headers->get('Location');
+
+        $this->getJson($location)->assertOk()->assertJsonPath('data.reference', $reference);
+    }
+
     public function test_scout_database_driver_finds_the_seeded_part(): void
     {
         $skus = Part::search('screen')->get()->pluck('sku');
