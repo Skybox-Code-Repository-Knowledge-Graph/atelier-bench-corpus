@@ -90,7 +90,7 @@ function countedSymbols(source: ts.SourceFile): string[] {
             declare(statement, "namespace");
             // The notes count a namespace as one symbol and do not count what is declared inside it.
             if (statement.body !== undefined && ts.isModuleBlock(statement.body) && statement.body.statements.length > 0) {
-                throw new Error(`namespace ${statement.name.getText(source)} declares members: the notes' rule does not say how to count them`);
+                throw new Error(`namespace ${statement.name.getText(source)} declares members: the notes count a namespace as one symbol and do not count what is inside it`);
             }
         } else if (ts.isFunctionDeclaration(statement) || ts.isTypeAliasDeclaration(statement)) {
             declare(statement, "declaration");

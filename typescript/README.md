@@ -57,7 +57,7 @@ on a bench machine if you need bit-stable ground truth.
 | HTTP surface (express 5) | `packages/app/src/index.ts` router; handlers in `http/{report,api}.ts` |
 | Wide contract implementation | 24 reports, 16 metrics, 8 exporters, 8 notifiers, 8 repositories, 12 services |
 | Deterministic seed | `packages/bench/src/dataset.ts` `Dataset.seeded()` — revenue `58325`c, part cost `46300`c, gross profit `12025`c |
-| Tests (incl. request-level) | 99 vitest tests in 21 files: lifecycle, money, shadow pair, Proxy forwarding, breadth registry and every breadth component (exporters, notifiers, repositories, services, concerns), augmentation, express routes, console commands and the `main.ts` entrypoint, TSX views, async loaders, ambient declarations (type-checked), issue-#9 surfaces and a use of every lane-only fixture; plus the key and graph guards below |
+| Tests (incl. request-level) | 100 vitest tests in 21 files: lifecycle, money, shadow pair, Proxy forwarding, breadth registry and every breadth component (exporters, notifiers, repositories, services, concerns), augmentation, express routes, console commands and the `main.ts` entrypoint, TSX views, async loaders, ambient declarations (type-checked), issue-#9 surfaces and a use of every lane-only fixture; plus the key and graph guards below |
 | TSX + JSX factory | `packages/app/src/views/{h.ts,reportCard.tsx,reportPage.tsx}`: `jsxFactory: "h"` (no framework), component + intrinsic elements + fragment |
 | Ambient declarations | `packages/app/src/types/jsx.d.ts` (global `JSX` namespace), `packages/app/src/types/legacy-formatting.d.ts` (`declare module "atelier-legacy-formatting"`, type-only consumer in `http/legacy.ts`) |
 | `paths` alias | `tsconfig.base.json` maps `@app/*` → `packages/app/src/*`; type-only import in `http/reportLoader.ts` |
@@ -83,7 +83,7 @@ Local use:
 
 ```bash
 npm run typecheck               # tsc --noEmit -p tsconfig.json
-npm test                        # 99 tests in 21 files
+npm test                        # 100 tests in 21 files
 ```
 
 The console entrypoint is `packages/app/src/main.ts` (`serve [port]`, `seed`, `report [slug]`,
@@ -125,8 +125,9 @@ count and list in the same change.
 recounts every `references` task and `packages/bench/tests/documentSymbols.test.ts` every
 `document_symbol` task under the counting rules in the `notes` of `bench/tasks.json`;
 `packages/bench/tests/moduleSpecifiers.test.ts` resolves every module specifier written in the lane
-(type-only, type-level and docblock `{@link import(...)}` ones included) and fails when a file under
-`packages/*/src` is reached by no test.
+(type-only, type-level, docblock `{@link import(...)}` ones and quoted `./` or `../` paths written in
+comments included) and fails when a file under `packages/*/src` is reached by no test, or holds runtime
+code and is reached only through `import type` edges.
 
 A language server used as a second opinion on these keys should run against the root
 `tsconfig.json`, or have the consuming package's files opened first: each `packages/*/tsconfig.json`
