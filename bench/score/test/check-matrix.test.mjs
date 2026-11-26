@@ -9,7 +9,7 @@
 
 import test from "node:test";
 import assert from "node:assert/strict";
-import { cpSync, existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { closeSync, cpSync, existsSync, mkdtempSync, openSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { basename, dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -61,11 +61,23 @@ function scratch(t) {
 }
 
 function run(root, ...args) {
-    const result = spawnSync(process.execPath, [join(root, "bench", "check-matrix.mjs"), ...args], { cwd: root, encoding: "utf8" });
+    // stdout goes to a file, not a pipe: check-matrix.mjs ends in process.exit() right after printing
+    // its grid (~25 KB), and through a pipe on Linux CI the tail of it was lost (the #221 pattern,
+    // seen on PR #236's first run). Writes to a file are synchronous, so the test reads all of it.
+    const outPath = join(root, "check-matrix.stdout");
+    const out = openSync(outPath, "w");
+    let result;
+    try {
+        result = spawnSync(process.execPath, [join(root, "bench", "check-matrix.mjs"), ...args], { cwd: root, encoding: "utf8", stdio: ["ignore", out, "pipe"] });
+    } finally {
+        closeSync(out);
+    }
+    const stdout = readFileSync(outPath, "utf8");
+    rmSync(outPath, { force: true });
     const log = join(root, "verifier-calls.log");
     const calls = existsSync(log) ? readFileSync(log, "utf8").split("\n").filter(Boolean) : [];
     rmSync(log, { force: true });
-    return { status: result.status, stdout: result.stdout, stderr: result.stderr, calls };
+    return { status: result.status, stdout, stderr: result.stderr, calls };
 }
 
 const matrixOf = (root) => readFileSync(join(root, "bench", "matrix.json"), "utf8");
