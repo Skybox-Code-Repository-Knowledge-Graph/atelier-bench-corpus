@@ -28,6 +28,7 @@ const SURFACES = ["hover", "document_symbol", "call_hierarchy", "implementation"
 
 /** The tree's reading of every task the server disagrees with, written after reading the tree. */
 const DISPOSITIONS = {
+    "impl-invoice-calculator": "key right, unchanged. The extra line is `export type CalculatorRef = import(\"../contracts/invoiceCalculator\").InvoiceCalculator;`, a type alias that names the contract; it declares no type that implements it, and the notes count only implementing types.",
     "impl-report-contract": "key right, unchanged. The extra line is `export const REPORTS: readonly ReportContract[] = [`, the registry array; the notes say a value that only holds implementors is not an implementor.",
     "impl-repository-generic": "key right, unchanged. All 8 files under packages/bench/src/repositories declare `implements Repository<...>` (grep: 8 of 8); the contract lives in packages/core, whose tsconfig.json includes only core, so the server answers from a project that holds none of them.",
     "docsym-repair-order": "key right, unchanged. The extras are an anonymous `parts.map()` callback and the function-local `order`, which the counting rule in the notes leaves out (also recorded in bench/score as DOCSYM_REFERENCE_DISAGREES, issue #208).",
