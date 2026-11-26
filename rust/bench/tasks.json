@@ -680,7 +680,7 @@
                     {
                         "file": "crates/atelier-bench/tests/breadth.rs",
                         "needle": "let data = Dataset::seeded();",
-                        "lines": 6
+                        "lines": 5
                     },
                     {
                         "file": "crates/atelier-bench/tests/wave2_iteration.rs",
