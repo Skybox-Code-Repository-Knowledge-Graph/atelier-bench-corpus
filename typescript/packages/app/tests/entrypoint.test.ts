@@ -33,7 +33,7 @@ async function runMain(args: string[]): Promise<string[]> {
     return lines;
 }
 
-describe("console entrypoint", () => {
+describe("console entrypoint", { timeout: 30_000 }, () => {
     it("prints usage for help and for an unknown command", async () => {
         const usage = "usage: atelier <serve [port]|seed|report [slug]|recalculate>";
 

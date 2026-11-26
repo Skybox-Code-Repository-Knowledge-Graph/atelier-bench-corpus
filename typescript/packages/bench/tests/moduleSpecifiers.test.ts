@@ -69,9 +69,6 @@ function collect(path: string): Specifier[] {
     const comments = new Map<number, string>();
 
     const visit = (node: ts.Node): void => {
-        for (const range of [...(ts.getLeadingCommentRanges(text, node.pos) ?? []), ...(ts.getTrailingCommentRanges(text, node.end) ?? [])]) {
-            comments.set(range.pos, text.slice(range.pos, range.end));
-        }
         if ((ts.isImportDeclaration(node) || ts.isExportDeclaration(node)) && node.moduleSpecifier !== undefined && ts.isStringLiteral(node.moduleSpecifier)) {
             const typeOnly = ts.isImportDeclaration(node) ? node.importClause?.isTypeOnly === true : node.isTypeOnly;
             add(typeOnly ? "type-only" : "static", node.moduleSpecifier, node.moduleSpecifier.text);
@@ -88,6 +85,29 @@ function collect(path: string): Specifier[] {
         ts.forEachChild(node, visit);
     };
     visit(source);
+
+    // Comments are trivia: each one leads or trails some token, and a comment that leads only a
+    // closing brace or the end of the file belongs to no node forEachChild visits. So walk every
+    // token (getChildren), skipping JSDoc nodes (their comment is the next token's leading trivia)
+    // and tokens whose leading text is literal text, not trivia (JSX text, template continuations).
+    const NOT_TRIVIA = new Set<ts.SyntaxKind>([ts.SyntaxKind.JsxText, ts.SyntaxKind.JsxTextAllWhiteSpaces, ts.SyntaxKind.TemplateMiddle, ts.SyntaxKind.TemplateTail]);
+    const tokens = (node: ts.Node): void => {
+        const children = node.getChildren(source);
+        if (children.length === 0) {
+            const leading = NOT_TRIVIA.has(node.kind) ? [] : (ts.getLeadingCommentRanges(text, node.pos) ?? []);
+            for (const range of [...leading, ...(ts.getTrailingCommentRanges(text, node.end) ?? [])]) {
+                comments.set(range.pos, text.slice(range.pos, range.end));
+            }
+
+            return;
+        }
+        for (const child of children) {
+            if (child.kind < ts.SyntaxKind.FirstJSDocNode || child.kind > ts.SyntaxKind.LastJSDocNode) {
+                tokens(child);
+            }
+        }
+    };
+    tokens(source);
 
     for (const [pos, comment] of comments) {
         for (const match of comment.matchAll(COMMENT_IMPORT)) {
