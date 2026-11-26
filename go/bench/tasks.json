@@ -531,7 +531,7 @@
         {
             "id": "impl-structural-no-assertion",
             "surface": "implementation",
-            "note": "RuleLike declares the same method set as RuleContract, and nothing anywhere asserts RuleLike: every type with that method set satisfies it by shape alone. That is adhoc.AdHocRule (its 24 values assert nothing) and the 24 nominal rule structs (each asserts RuleContract only), 25 types under the lane's counting rule; RuleContract, an interface with the same method set, is an optional site.",
+            "note": "RuleLike declares the same method set as RuleContract, and no `var _` assertion names RuleLike (its only use is as the constraint of SatisfiedBy): every type with that method set satisfies it by shape alone. That is adhoc.AdHocRule (its 24 values assert nothing) and the 24 nominal rule structs (each asserts RuleContract only), 25 types under the lane's counting rule; RuleContract, an interface with the same method set, is an optional site.",
             "from": {"file": "atelier/contracts/rule.go", "needle": "type RuleLike interface {", "symbol": "RuleLike"},
             "expect": {
                 "exact_count": 25,

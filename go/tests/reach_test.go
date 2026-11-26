@@ -2,7 +2,8 @@ package tests
 
 // These tests reach the files no other test executes: the seed command's
 // helpers, the twelve services, the repositories over package-local records,
-// the five behaviour concerns no type embeds, the contract enums and the three
+// the behaviour concerns, driven directly rather than through an embedding
+// type, the contract enums and the three
 // small models. Each asserts a value, so a wrong file fails here.
 
 import (

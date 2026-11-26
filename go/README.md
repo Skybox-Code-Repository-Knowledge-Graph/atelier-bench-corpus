@@ -100,6 +100,9 @@ its stdout contract is byte-identical to the other five lanes' verifiers, which
 `node bench/check-matrix.mjs` proves against `bench/conformance/expected.txt` and
 `bench/verify`'s own test checks in this lane's CI job.
 
+Lane-only extra: `go run ./cmd/atelier seed` prints 16 `service <name>: <label> = <value>` rows (one or
+more per service, 12 services) after the rule tally; no other lane's seed command prints service rows.
+
 Lane-specific `kind` strings used in `expect` blocks: `structural`, `shadow_alias`, `same_name`,
 `path_name_divergence`, `receiver`, `arity`, `init_order`, `lane_local`, `syntax_error`,
 `parent_of`, `child_of`, `uses_self`, `one_of_two`, `dot_import`, `side_effect_only`,

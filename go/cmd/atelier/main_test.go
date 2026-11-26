@@ -49,7 +49,7 @@ func TestEveryConsoleVerbDispatches(t *testing.T) {
 	if code, _, errOut := runCommand("nope"); code != 1 || !strings.Contains(errOut, `unknown command "nope"`) {
 		t.Errorf("unknown verb = %d, %q", code, errOut)
 	}
-	if code, out, _ := runCommand(); code != 2 || !strings.HasPrefix(out, "usage: atelier") {
+	if code, out, _ := runCommand(); code != 2 || out != "usage: atelier <seed|report|export|recalculate>\n" {
 		t.Errorf("no verb = %d, %q", code, out)
 	}
 }
