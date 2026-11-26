@@ -22,15 +22,15 @@ def parse_command(args: list[str]) -> Command:
             return Command("serve")
         case ["seed", *_]:
             return Command("seed")
-        case ["report", slug, *_]:
+        case ["export-report" | "report", slug, *_]:
             return Command("report", slug=slug)
-        case ["report"]:
+        case ["export-report" | "report"]:
             return Command("report")
-        case ["recalculate", *_]:
+        case ["recalculate-inventory" | "recalculate", *_]:
             return Command("recalculate")
         case _:
             return Command("help")
 
 
 def usage() -> str:
-    return "usage: atelier <serve [port]|seed|report [slug]|recalculate>"
+    return "usage: atelier <serve [port]|seed|export-report [slug]|recalculate-inventory> (lane-only aliases: report, recalculate)"

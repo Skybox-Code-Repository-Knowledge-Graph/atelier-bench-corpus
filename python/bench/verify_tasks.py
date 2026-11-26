@@ -26,7 +26,7 @@ from pathlib import Path
 
 NESTED_KEYS = ("known_sites", "implementations", "known_callers", "outgoing_includes", "incoming_includes")
 SPLIT = re.compile(r"\r\n|\n|\r")
-PACKAGES = ("atelier_core", "atelier_bench", "atelier_app")
+PACKAGES = ("atelier_core", "atelier_bench", "atelier_app", "atelier_frameworks")
 
 
 def resolve_root(flags: list[str]) -> Path:

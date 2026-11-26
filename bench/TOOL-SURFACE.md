@@ -138,13 +138,13 @@ Language server (E.5): the TypeScript language service of `typescript` 5.7.3, st
 
 | Extractor | Class | Scored by (task ids) | Deliberate gap (README line) | Not yet |
 | --- | --- | --- | --- | --- |
-| FastAPI | route parser | | | not yet |
+| FastAPI | route parser | `def-route-fastapi` | | |
 | Flask | route parser | `def-route-to-handler` | | |
-| Django | route parser | | | not yet |
-| SQLAlchemy | ORM, schema or serialization | | | not yet |
-| Pydantic | ORM, schema or serialization | | | not yet |
+| Django | route parser | `def-route-django` | | |
+| SQLAlchemy | ORM, schema or serialization | `resolution-sqlalchemy-foreign-key` | | |
+| Pydantic | ORM, schema or serialization | `resolution-pydantic-field-validator` | | |
 
-Language server (E.5): not pinned yet
+Language server (E.5): pyright 1.1.414 (the PyPI wheel `pyright==1.1.414`, which bundles that build); source "`pyright==1.1.414` in `requirements-dev.txt`; the wheel bundles that pyright build and runs it on node"
 
 ### go
 

@@ -32,7 +32,7 @@ import unittest
 from pathlib import Path
 
 LANE_ROOT = Path(__file__).resolve().parent.parent
-SOURCE_DIRS = ("atelier_core", "atelier_bench", "atelier_app", "tests", "bench")
+SOURCE_DIRS = ("atelier_core", "atelier_bench", "atelier_app", "atelier_frameworks", "tests", "bench")
 DOTTED = re.compile(r"\batelier_[A-Za-z0-9_]+(?:\.[A-Za-z_][A-Za-z0-9_]*)+")
 PY_PATH = re.compile(r"(?:[A-Za-z0-9_*./-]|\{[A-Za-z0-9_*./,-]*\})*[A-Za-z0-9_*}]\.py\b")
 MODULE_NAME = re.compile(r"[A-Za-z_][A-Za-z0-9_]*(?:\.[A-Za-z_][A-Za-z0-9_]*)+")

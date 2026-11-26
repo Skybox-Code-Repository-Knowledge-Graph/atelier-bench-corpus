@@ -13,7 +13,7 @@ One directory per language lane; each lane is self-contained and carries its own
 | `rust/` | Rust 2024 edition · cargo workspace | repair atelier (same domain) | `rust/bench/tasks.json` | `cargo run -p bench-verify` |
 | `typescript/` | Node 22 · TypeScript 5.7 · npm workspaces | repair atelier (same domain) | `typescript/bench/tasks.json` | `npm run verify` |
 | `javascript/` | Node 22 · mixed CJS/ESM · npm workspaces · JSDoc-only typing · Express app + one route fixture per listed JavaScript route parser | repair atelier (same domain) | `javascript/bench/tasks.json` | `npm run verify` |
-| `python/` | Python 3.12+ · Flask 3.1 · three packages, no build step · type hints + mypy allowlist gate | repair atelier (same domain) | `python/bench/tasks.json` | `python3 bench/verify_tasks.py` |
+| `python/` | Python 3.12+ · Flask 3.1 (main framework), plus FastAPI, Django, SQLAlchemy and Pydantic in the lane-only `atelier_frameworks/` · four packages, no build step · type hints + mypy allowlist gate · pinned pyright 1.1.414 check | repair atelier (same domain) | `python/bench/tasks.json` | `python3 bench/verify_tasks.py` |
 | `go/` | Go 1.23 · one module, stdlib only · `net/http` · embedding, generics, build tags | repair atelier (same domain) | `go/bench/tasks.json` | `go run ./bench/verify` |
 
 All lanes model the **same** domain (customers, devices, repair orders, parts, technicians) so a

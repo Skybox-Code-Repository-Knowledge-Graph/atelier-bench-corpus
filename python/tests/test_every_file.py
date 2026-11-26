@@ -1,11 +1,12 @@
 """
 Every source file the lane adds is loaded, and every function body in it that does something runs, under this suite
-(the `...`-only stubs of abstract and overload declarations, 17 of 525 bodies, have nothing to run)
+(the `...`-only stubs of abstract and overload declarations, 17 of 582 bodies, have nothing to run)
 (issue #223, F.5). The other test files exercise the behaviour the tasks ask about; this one is the
 sweep that leaves no file silently wrong: it imports each module found on disk, runs the console
 entry point for every command, and calls each breadth class and helper the rest of the suite
-never reaches. Measured with sys.settrace over the whole suite (see the PR): before this file,
-3 of 192 files were never loaded and 163 function bodies never ran; after it, none.
+never reaches. Measured with sys.settrace over the whole suite: before this file (wave 2), 3 of
+192 files were never loaded and 163 function bodies never ran; re-measured in wave 3 over the
+201 files of atelier_core, atelier_bench, atelier_app and atelier_frameworks, none.
 """
 
 import contextlib
@@ -75,7 +76,7 @@ from atelier_core.support.intake import DEFAULT_ROUTER, IntakeChannelKind, OnSit
 from atelier_core.support.reference import Reference
 
 LANE_ROOT = Path(__file__).resolve().parent.parent
-PACKAGES = ("atelier_core", "atelier_bench", "atelier_app")
+PACKAGES = ("atelier_core", "atelier_bench", "atelier_app", "atelier_frameworks")
 
 
 def module_names_on_disk() -> list[str]:
@@ -97,7 +98,7 @@ class EveryFileTest(unittest.TestCase):
 
     def test_every_module_on_disk_imports(self) -> None:
         on_disk = module_names_on_disk()
-        self.assertEqual(len(on_disk), 192)
+        self.assertEqual(len(on_disk), 201)
         walked = set(PACKAGES)
         for package in PACKAGES:
             walked |= {info.name for info in pkgutil.walk_packages(importlib.import_module(package).__path__, f"{package}.")}
