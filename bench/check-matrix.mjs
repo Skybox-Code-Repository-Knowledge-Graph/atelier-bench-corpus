@@ -170,7 +170,8 @@ function staticProblem(lanes) {
  *       file git tracks under <lane>/ outside <lane>/bench/, Markdown excluded. The fallback exists
  *       because a hover asked at a call site shows the doc comment of a declaration in another file,
  *       and the key does not name that file;
- *   (b) a hover id carried by two or more lanes uses one `contains` string in all of them.
+ *   (b) a hover id carried by two or more lanes states a `contains` string in every lane that
+ *       carries it, and the same one (an absent string never passes as agreement).
  * NOT proven: that the string sits in the doc comment of the hovered symbol, or anywhere a hover
  * would show it. (a) proves only that the lane's source quotes the string somewhere; reading the
  * declaration is still the reviewer's job.
@@ -184,14 +185,17 @@ function hoverContainsProblem(lanes) {
         }
         let sources;
         for (const task of JSON.parse(readFileSync(manifestPath, "utf8")).tasks) {
-            const contains = task.expect?.contains;
-            if (task.surface !== "hover" || typeof contains !== "string") {
+            if (task.surface !== "hover") {
                 continue;
             }
+            const contains = typeof task.expect?.contains === "string" ? task.expect.contains : undefined;
             if (!stringsById.has(task.id)) {
                 stringsById.set(task.id, []);
             }
             stringsById.get(task.id).push([lane.name, contains]);
+            if (contains === undefined) {
+                continue;
+            }
 
             const fromFile = typeof task.from?.file === "string" ? join(REPO_ROOT, lane.name, task.from.file) : undefined;
             if (fromFile !== undefined && existsSync(fromFile) && readFileSync(fromFile, "utf8").includes(contains)) {
@@ -207,6 +211,13 @@ function hoverContainsProblem(lanes) {
         }
     }
     for (const [id, stated] of [...stringsById].sort(([a], [b]) => a.localeCompare(b))) {
+        if (stated.length < 2) {
+            continue;
+        }
+        const missing = stated.filter(([, contains]) => contains === undefined).map(([name]) => name);
+        if (missing.length > 0) {
+            return `${id}: shared hover id states no contains string in ${missing.join(", ")} (every lane carrying it must state the same one)`;
+        }
         if (new Set(stated.map(([, contains]) => contains)).size > 1) {
             const detail = stated.map(([name, contains]) => `${name}=${JSON.stringify(contains)}`).join(", ");
             return `${id}: shared hover id uses more than one contains string (${detail})`;

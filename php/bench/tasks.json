@@ -1013,7 +1013,7 @@
         {
             "id": "hover-frozen-seed",
             "surface": "hover",
-            "note": "Hover on the frozen dataset must surface the determinism warning, not just the class name.",
+            "note": "Hover on the frozen dataset must surface the ground-truth warning, not just the class name.",
             "from": { "file": "database/seeders/DatabaseSeeder.php", "needle": "class DatabaseSeeder extends Seeder", "symbol": "DatabaseSeeder" },
             "expect": { "contains": "Changing these rows changes bench ground truth" }
         },
