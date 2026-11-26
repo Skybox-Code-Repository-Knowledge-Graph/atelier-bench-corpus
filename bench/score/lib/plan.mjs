@@ -375,6 +375,20 @@ export const UNRULED_SHAPES = [
         tasks: new Set(["rust:imp-glob-import"]),
         reason: `${GLOB_NO_READING}; the rust key lists both public items of the module, so its list is complete and only the reading is open`,
     },
+    {
+        surface: "import-precision",
+        kind: "glob",
+        keys: ["exact_count", "kind", "known_sites", "must_include"],
+        tasks: new Set(["python:imp-glob-import"]),
+        reason: `${GLOB_NO_READING}; the python key lists 2 of the 16 names, each on its \`from .x import X\` line in metrics/__init__.py, while pyright 1.1.414 resolves a name the star import brings in to its class (metrics/margin.py) and the lane's barrel note says such an import lands on the submodule, never on __init__.py`,
+    },
+    {
+        surface: "import-precision",
+        kind: "glob",
+        keys: ["exact_count", "kind", "known_sites", "must_include"],
+        tasks: new Set(["typescript:imp-glob-import"]),
+        reason: `${GLOB_NO_READING}; the typescript key lists 2 of the 4 exported names by line and the other 2 only by name (must_include), so no line of it states the whole answer`,
+    },
 ];
 
 /**
