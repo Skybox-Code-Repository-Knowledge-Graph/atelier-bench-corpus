@@ -179,7 +179,7 @@ Sorted under rulings R10 and R13. Language-specific (30, counted toward the floo
 
 ## Language server (E.5)
 
-`typescript-language-server` 6.1.0 (exact-pinned devDependency) starting the TypeScript language service of the pinned `typescript` 5.7.3 over `jsconfig.json`. `node bench/lsp-check.mjs` asks it every hover, document_symbol, call_hierarchy and implementation key and writes `bench/lsp-check.md`: 15 tasks, 6 agree, 5 disagree, 4 get no answer. Each disagreement is read against the tree there; no key was changed to match the server.
+`typescript-language-server` 6.1.0 (exact-pinned devDependency) starting the TypeScript language service of the pinned `typescript` 5.7.3 over `jsconfig.json`. `node bench/lsp-check.mjs` asks it every hover, document_symbol, call_hierarchy and implementation key and writes `bench/lsp-check.md`: 15 tasks, 7 agree, 6 disagree, 2 get no answer (asked twice: the first pass, before the project has loaded, answers three tasks differently, and the report lists them). Each disagreement is read against the tree there; no key was changed to match the server.
 
 ## Ground truth
 

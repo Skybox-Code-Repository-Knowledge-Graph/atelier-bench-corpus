@@ -175,6 +175,13 @@ async function main(root = LANE_ROOT) {
     };
     const span = (uri, range) => ({ file: laneRelative(root, uri), start: range.start.line + 1, end: range.end.line + 1 });
     const rows = [];
+    const firstPass = [];
+    // Two passes over the same questions. The service answers before its project has loaded
+    // (an early hover stops at an import binding, an early implementation query finds nothing),
+    // so pass 1 opens every file and asks every question once, and only pass 2 is reported.
+    // Pass-1 verdicts that differ are listed under the table.
+    for (const pass of [1, 2]) {
+    if (pass === 2) firstPass.push(...rows.splice(0));
     for (const task of tasks) {
         const uri = open(task.from.file);
         const position = positionOf(readFileSync(join(root, task.from.file), "utf8"), task.from);
@@ -208,6 +215,9 @@ async function main(root = LANE_ROOT) {
         }
         rows.push(`| \`${task.id}\` | ${task.surface} | ${judged.verdict} | ${judged.returned.replace(/\|/g, "\\|")} |`);
     }
+    }
+    const changed = rows.filter((row, index) => row.split(" | ")[2] !== firstPass[index]?.split(" | ")[2])
+        .map((row) => `- \`${row.split("`")[1]}\`: pass 1 ${firstPass[rows.indexOf(row)].split(" | ")[2]}, pass 2 ${row.split(" | ")[2]}`);
     await client.request("shutdown", null);
     client.notify("exit", null);
     child.kill();
@@ -218,13 +228,16 @@ async function main(root = LANE_ROOT) {
         "",
         `Server: \`typescript-language-server\` ${pinned(root, "typescript-language-server")} (exact-pinned devDependency) driving the TypeScript language service of \`typescript\` ${pinned(root, "typescript")} (\`node_modules/typescript/lib/tsserver.js\`, exact-pinned); project \`jsconfig.json\` (\`packages/*/src\` only, so test files are outside it).`,
         "",
-        "Command: `node bench/lsp-check.mjs`, run from `javascript/` after `npm ci`; it rewrites the table below and keeps the hand-written part. Each task is asked at its `from` position (hover, prepareCallHierarchy + outgoing/incoming calls, implementation) or on its file (documentSymbol).",
+        "Command: `node bench/lsp-check.mjs`, run from `javascript/` after `npm ci`; it rewrites the table below and keeps the hand-written part. Each task is asked at its `from` position (hover, prepareCallHierarchy + outgoing/incoming calls, implementation) or on its file (documentSymbol), twice: the first pass warms the project (every file opened, every question asked once) and only the second is reported.",
         "",
         `${tasks.length} tasks: ${["agrees", "disagrees", "server has no answer"].map((verdict) => `${rows.filter((row) => row.includes(`| ${verdict} |`)).length} ${verdict}`).join(", ")}.`,
         "",
         "| task | surface | verdict | what the server returned |",
         "| --- | --- | --- | --- |",
         ...rows,
+        "",
+        `First-pass verdicts that differ from the reported pass: ${changed.length === 0 ? "none." : `${changed.length}.`}`,
+        ...changed,
         "",
         HAND_MARKER,
     ].join("\n");
