@@ -7,6 +7,8 @@
 //
 // Node built-ins only, run from the repository root. CI runs the default (read-only) mode.
 //
+// 0. Static guards, before any verifier runs: bench/conformance/src/crlf.txt still ends every line
+//    in CRLF (the c-crlf case is no CRLF test otherwise; issue #223).
 // 1. For each lane in matrix.json's `lanes`, runs its verifier from the lane directory and
 //    requires exit 0.
 // 2. Cross-checks the ids each verifier reported against that lane's bench/tasks.json, then
@@ -29,6 +31,7 @@ const REPO_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const MATRIX_PATH = join(REPO_ROOT, "bench", "matrix.json");
 const CONFORMANCE_DIR = join(REPO_ROOT, "bench", "conformance");
 const EXPECTED_PATH = join(CONFORMANCE_DIR, "expected.txt");
+const CRLF_FIXTURE_PATH = join(CONFORMANCE_DIR, "src", "crlf.txt");
 
 // Known lane verify commands. A lane is included only when its directory carries
 // bench/tasks.json on disk -- a lane that does not exist yet is simply omitted (issue #5).
@@ -47,6 +50,11 @@ process.exit(write ? runWrite() : runCheck());
 
 function runWrite() {
     const lanes = presentLanes();
+
+    const problem = staticProblem();
+    if (problem !== undefined) {
+        return fail(problem);
+    }
 
     for (const lane of lanes) {
         const result = runVerifier(lane);
@@ -78,6 +86,12 @@ function runCheck() {
     }
 
     const committed = JSON.parse(readFileSync(MATRIX_PATH, "utf8"));
+
+    const problem = staticProblem();
+    if (problem !== undefined) {
+        return fail(problem);
+    }
+
     const lanes = Object.keys(committed.lanes).map((name) => {
         const known = LANE_DEFS.find((lane) => lane.name === name);
         return known ?? { name, verify: committed.lanes[name].verify };
@@ -141,6 +155,31 @@ function runCheck() {
     printGrid(built.matrix);
     report(built.matrix);
     return 0;
+}
+
+/** The first static guard that fails, or undefined. Reads files only; spawns nothing. */
+function staticProblem() {
+    return crlfFixtureProblem();
+}
+
+/**
+ * bench/conformance/src/crlf.txt exists for the c-crlf case ("CRLF line endings resolve like LF"), so
+ * its bytes are the point: every line must end in CRLF. `.gitattributes` marks it `-text` so git
+ * never normalizes it; this catches a recommit that loses the CR bytes anyway (it was committed
+ * LF-only from 9d9e6d4 until issue #223).
+ */
+function crlfFixtureProblem() {
+    if (!existsSync(CRLF_FIXTURE_PATH)) {
+        return `missing ${relative(CRLF_FIXTURE_PATH)}`;
+    }
+    const text = readFileSync(CRLF_FIXTURE_PATH, "latin1");
+    const crlf = text.split("\r\n").length - 1;
+    const bareLf = text.replaceAll("\r\n", "").split("\n").length - 1;
+    const bareCr = text.replaceAll("\r\n", "").split("\r").length - 1;
+    if (crlf === 0 || bareLf > 0 || bareCr > 0 || !text.endsWith("\r\n")) {
+        return `${relative(CRLF_FIXTURE_PATH)} must end every line in CRLF (found ${crlf} CRLF, ${bareLf} bare LF, ${bareCr} bare CR); keep it -text in .gitattributes and recommit the CR bytes`;
+    }
+    return undefined;
 }
 
 /** Lanes whose directory carries bench/tasks.json, in LANE_DEFS order. */
