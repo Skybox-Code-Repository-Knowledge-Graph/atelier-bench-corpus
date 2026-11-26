@@ -123,6 +123,17 @@ jobs:
           RUSTDOCFLAGS: -D rustdoc::broken_intra_doc_links
         run: cargo doc --workspace --no-deps --document-private-items --all-features --locked
 
+      # Box E.5: the language server the lane's stack starts, at the version the pinned toolchain
+      # ships, over the lane's hover, document_symbol, call_hierarchy and implementation keys.
+      # The report is printed, not judged: a disagreement never fails the job, a server that
+      # cannot load the workspace does. rust/bench/lsp-check.md is this step's output.
+      - name: rust-analyzer over the language-server keys (report)
+        run: |
+          rustup component add rust-analyzer
+          rust-analyzer --version
+          node --test bench/lsp-check.test.mjs
+          node bench/lsp-check.mjs --server rust-analyzer
+
       - name: Upload verifier output
         if: always()
         uses: actions/upload-artifact@v7.0.1
