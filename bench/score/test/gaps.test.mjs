@@ -31,6 +31,10 @@ const DECIDED = {
     "go:resolution-shadowed-stdlib-package": { reason: /^kind shadow_alias with `contains` and no candidate: the declaration is in the Go standard library/ },
     // definition with only implementations, asked from Cargo.toml (rust)
     "rust:def-cfg-gated": { reason: /^a definition asked from a Cargo.toml feature line with only `implementations`/ },
+    // definition with exact_count, kind and known_sites
+    "python:def-string-key-dispatch": { rule: "definition/string-key" },
+    "javascript:def-dynamic-require": { reason: /^kind unresolvable_static: .* anchors each module on a line inside it/ },
+    "python:def-dynamic-import-module": { reason: /^kind unresolvable_static: .* anchors each module on a line inside it/ },
 };
 
 const tasksOf = new Map();
@@ -73,4 +77,11 @@ test("definition/overloads needs exact_count to count the listed signatures", ()
     assert.equal(plan.scorable, false);
     assert.match(plan.reason, /exact_count 3, but the key lists 2 in known_sites/);
     assert.equal(planTask(taskOf("python", "def-overload"), null).scorable, false, "the rule is keyed by lane:id; without the lane it does not apply");
+});
+
+test("a list rule for a definition or resolution question does not make the asked line neutral", () => {
+    // The line asked from is a use (a getattr call), or itself a listed declaration; either way the
+    // rule must not accept it as a free extra, as a references question does.
+    assert.equal(planTask(taskOf("python", "def-string-key-dispatch"), "python").from, null);
+    assert.equal(planTask(taskOf("typescript", "resolution-class-interface-merge"), "typescript").from, null);
 });

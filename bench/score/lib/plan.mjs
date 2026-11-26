@@ -86,6 +86,7 @@ export function asksMergedName(task) {
  *   allowKnownSites  for check "target": false when `known_sites` answer another question and are
  *             therefore not allowed beside the target (default true)
  *   neutralFrom  for check "sites": false when the line asked from is not neutral (default true)
+ *   absent    the rule passes a task by when any of these expect keys is present
  */
 export const RULES = [
     {
@@ -101,6 +102,24 @@ export const RULES = [
         target: fileAndNeedle,
         countOf: "known_sites",
         uses: ["file", "needle", "known_sites", "exact_count", "must_not_include"],
+    },
+    {
+        // A name built from a string at run time: the answer is every declaration the string can
+        // select (known_sites, exact_count of them), each by its line, and nothing else. The line
+        // asked from (the getattr call) is not one of them.
+        name: "definition/string-key",
+        surface: "definition",
+        kinds: ["string_key"],
+        requires: ["known_sites", "exact_count"],
+        absent: ["file", "needle", "candidate"],
+        forbids: [],
+        check: "sites",
+        class: "exact",
+        list: "known_sites",
+        neutralLists: ["optional_sites"],
+        neutralFrom: false,
+        noun: "declaration",
+        uses: ["known_sites", "exact_count", "optional_sites", "must_not_include"],
     },
     {
         // Asked about a merged name: the answer is every declaration of it (known_sites, exact_count).
@@ -349,6 +368,12 @@ export const UNRULED_SHAPES = [
         keys: ["implementations"],
         reason: "a definition asked from a Cargo.toml feature line with only `implementations`: no kind and no count say what the question returns or that the list is complete, the list holds an item the feature does not gate (one behind #[cfg(test)]), and rust-analyzer 1.96.0 answers no definition in Cargo.toml",
     },
+    {
+        surface: "definition",
+        kind: "unresolvable_static",
+        keys: ["exact_count", "kind", "known_sites"],
+        reason: "kind unresolvable_static: the answer is each candidate module, and the key anchors each module on a line inside it (its SLUG line), so no line of the key names the module; a module answer lands on the file's first line (typescript-language-server 6.1.0 and pyright 1.1.414 on a static specifier), and matching by file is a mode the key does not state",
+    },
 ];
 
 /**
@@ -412,6 +437,9 @@ export function planTask(task, lane = null) {
             continue;
         }
         if (rule.asks !== undefined && (rule.asks === "name") !== asksMergedName(task)) {
+            continue;
+        }
+        if (Array.isArray(rule.absent) && rule.absent.some((key) => key in expect)) {
             continue;
         }
         if (!rule.requires.every((key) => key in expect)) {

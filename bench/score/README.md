@@ -229,6 +229,22 @@ not changed to fit a rule.
 | `resolution`, kind `lane_local`, keys `contains`, `kind` | go `lane-local-calculate`, `-customer`, `-dataset`, `-formatter-billing`, `-money`, `-ref-prefix` | The lane notes ask that resolution land on this lane's own declaration and never a sibling lane's. These keys name no declaration and exclude no sibling lane (the same ids in the other lanes carry a `candidate` and lane-prefix `must_not_include` entries). `contains` is defined for hover text only; gopls v0.24.0's hover holds the string on one of the six, the one where it is the asked symbol itself (`Calculator`), and `AT-2026-` is not the value of `AtelierPrefix` (`"AT"`) |
 | `resolution`, kind `shadow_alias`, keys `contains`, `kind`, `must_not_include`, `resolution` | go `resolution-shadowed-stdlib-package` | The answer, `net/http`'s `NewServeMux`, is in the Go standard library, outside the repository: no lane-relative location names it (gopls v0.24.0 answers a GOROOT path, and an absolute path is an invalid answer). `contains` (`net/http`) is defined for hover text only, and the package's own `app/http` declares no `NewServeMux`, so the exclusion `app/http#NewServeMux` can trip only on the line asked from: on its own it would pass an empty answer |
 | `definition`, keys `implementations` only | rust `def-cfg-gated` | Asked from the `Cargo.toml` line `extra-rules = []` (no symbol). No `kind` and no count say what the question returns or that the list is complete, and the list holds `ExperimentalRule` (behind `feature = "extra-rules"`) and `AlwaysTrueRule` (behind `#[cfg(test)]`, which the feature does not gate). rust-analyzer 1.96.0 answers no definition in `Cargo.toml` |
+| `definition`, kind `unresolvable_static`, keys `exact_count`, `kind`, `known_sites` | javascript `def-dynamic-require`, python `def-dynamic-import-module` | The answer is each candidate module (lane notes: "the honest result is every candidate module, and exact_count counts them"), and the key anchors each module on a line inside it, its `SLUG` line, so no line of the key names the module. A module answer lands on the file's first line (typescript-language-server 6.1.0 and pyright 1.1.414 on a static specifier; at the runtime-built specifier both return nothing). Matching by file is a mode the key does not state: the same class as the targets anchored inside their declaration |
+
+### String-keyed definitions
+
+| Rule | Surface | Serves | Pass when | Class |
+| --- | --- | --- | --- | --- |
+| `definition/string-key` | `definition` | kind `string_key`, with `known_sites` and `exact_count` and no target | every declaration the string can select (`known_sites`) is returned, and nothing else | exact |
+
+The lane notes: "a method or class named only by a string built or looked up at runtime and passed
+to getattr or importlib: the answer is what the string selects, and no import or call names it".
+python `def-string-key-dispatch` asks `getattr(self, f"scope_{scope}")`; the key lists the two
+`def scope_...` methods, the only ones in the lane, and `exact_count` 2. Each is matched by its line,
+like a `references` site; the line asked from (the `getattr` call) is not neutral, so returning it
+fails. The lane's own language server gives no reference answer here: pyright 1.1.414 returns no
+location at the string, so this task is beyond its reference, as the kind says. A `string_key` task
+that names a target (`file` and `needle`, or `candidate`) keeps the target rules.
 
 ### References
 
