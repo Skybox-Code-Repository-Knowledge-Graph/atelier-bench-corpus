@@ -12,3 +12,19 @@ pub trait CompositeContract: ReportContract + CacheableContract + ScheduleContra
 pub fn as_report_contract(component: &dyn CompositeContract) -> &dyn ReportContract {
     component
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn upcast_keeps_the_report_view() {
+        let report = crate::reports::cash_flow_report::CashFlowReport::new();
+        let composite: &dyn CompositeContract = &report;
+
+        assert_eq!(
+            as_report_contract(composite).slug(),
+            crate::reports::cash_flow_report::CashFlowReport::SLUG
+        );
+    }
+}
