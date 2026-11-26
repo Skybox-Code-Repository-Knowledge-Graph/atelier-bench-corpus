@@ -1,6 +1,6 @@
 //! Declarative macros that generate methods.
 //!
-//! Methods produced by [`forwards_to_schedule!`] have no textual declaration
+//! Methods produced by [`forwards_to_schedule!`](crate::forwards_to_schedule) have no textual declaration
 //! at their call site, so a name-based lookup can only report the macro.
 
 /// Generate schedule-forwarding inherent methods on a type that owns a
