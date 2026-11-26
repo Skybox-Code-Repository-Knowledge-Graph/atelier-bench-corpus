@@ -24,6 +24,9 @@ const DECIDED = {
     "typescript:def-method-overload": { reason: /returns only the overload signature the call matches/ },
     "typescript:def-overload": { reason: /parameter line inside the implementation signature/ },
     "javascript:resolution-calculate-through-binding": { reason: /default binding's implementation .* or both implementations/ },
+    // contains on resolution, kind lane_local (go)
+    ...Object.fromEntries(["calculate", "customer", "dataset", "formatter-billing", "money", "ref-prefix"]
+        .map((name) => [`go:lane-local-${name}`, { reason: /^kind lane_local with only `contains`: .* names no declaration and excludes no sibling lane/ }])),
 };
 
 const tasksOf = new Map();

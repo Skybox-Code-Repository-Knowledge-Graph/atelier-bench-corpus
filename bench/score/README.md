@@ -216,6 +216,18 @@ Left `UNSCORABLE`, with the reason printed:
 | typescript `def-overload` (`TARGET_COUNT_UNSCORABLE`) | the candidate is a parameter line inside the implementation signature, not the line that names it, and the server returns only the overload signature the call matches |
 | javascript `resolution-calculate-through-binding` (`TARGET_COUNT_UNSCORABLE`) | no `kind` says whether the answer is the default binding's implementation (the candidate) or both implementations (`exact_count` 2); the server returns neither, only the `@typedef` property of the contract |
 
+### Key shapes no rule scores
+
+Issue #135 also found key shapes no rule names. Where no sound rule can be stated from the primary
+sources, the task stays `UNSCORABLE` and the reason names the gap (`UNRULED_SHAPES` in
+`lib/plan.mjs`: a surface, a kind, and the exact set of `expect` keys). These entries are matched
+only after every rule has passed a task by, so they never take a task a rule scores. The key is
+not changed to fit a rule.
+
+| Shape | Tasks | Why no rule |
+| --- | --- | --- |
+| `resolution`, kind `lane_local`, keys `contains`, `kind` | go `lane-local-calculate`, `-customer`, `-dataset`, `-formatter-billing`, `-money`, `-ref-prefix` | The lane notes ask that resolution land on this lane's own declaration and never a sibling lane's. These keys name no declaration and exclude no sibling lane (the same ids in the other lanes carry a `candidate` and lane-prefix `must_not_include` entries). `contains` is defined for hover text only; gopls v0.24.0's hover holds the string on one of the six, the one where it is the asked symbol itself (`Calculator`), and `AT-2026-` is not the value of `AtelierPrefix` (`"AT"`) |
+
 ### References
 
 | Rule | Surface | Needs | Pass when |

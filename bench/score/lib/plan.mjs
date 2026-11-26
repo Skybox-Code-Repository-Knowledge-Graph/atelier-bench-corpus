@@ -327,6 +327,20 @@ export const TARGET_COUNT_UNSCORABLE = {
 };
 
 /**
+ * Key shapes no rule scores, with the reason (issue #135): a surface, an optional kind, and the exact
+ * set of expect keys. Matched only after every rule has passed a task by, so an entry can never take
+ * a task a rule scores; it replaces "no rule for surface ..." with why there is none.
+ */
+export const UNRULED_SHAPES = [
+    {
+        surface: "resolution",
+        kind: "lane_local",
+        keys: ["contains", "kind"],
+        reason: "kind lane_local with only `contains`: the lane notes ask that resolution land on this lane's own declaration and never a sibling lane's, but the key names no declaration and excludes no sibling lane; `contains` is defined for hover text only, and gopls v0.24.0's hover holds the string on one of the six go tasks, the one where it is the asked symbol itself",
+    },
+];
+
+/**
  * The number of entries a list task states: `exact_count`, or `extends_count` plus
  * `implements_count` where a parents task splits it. null when it states none (the list is not
  * known to be complete); undefined when the two disagree.
@@ -505,5 +519,12 @@ export function planTask(task, lane = null) {
         };
     }
 
+    const unruled = UNRULED_SHAPES.find((shape) => shape.surface === task.surface
+        && (shape.kind === undefined || shape.kind === expect.kind)
+        && shape.keys.length === keys.length
+        && shape.keys.every((key) => key in expect));
+    if (unruled !== undefined) {
+        return { scorable: false, reason: unruled.reason };
+    }
     return { scorable: false, reason: `no rule for surface ${task.surface} with keys ${keys.sort().join(", ")}` };
 }
