@@ -95,7 +95,7 @@ def check_site_lists(root: Path, task: dict) -> list[str]:
             failures.append(f"{task['id']}: FAIL {item['file']} needle {summarize(item['needle'])} (file missing)")
             continue
         hits = sum(1 for line in SPLIT.split(path.read_text(encoding="utf-8")) if item["needle"] in line)
-        if not isinstance(lines, int) or isinstance(lines, bool) or hits != lines:
+        if not isinstance(lines, int) or isinstance(lines, bool) or lines < 2 or hits != lines:
             failures.append(f"{task['id']}: FAIL {item['file']} needle {summarize(item['needle'])} (found {hits} times, repeated_sites says {lines})")
     return failures
 

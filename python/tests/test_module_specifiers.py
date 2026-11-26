@@ -10,12 +10,16 @@ design) and resolves:
   function, under `if TYPE_CHECKING:`), relative ones against the importing package, and every
   name a from-import binds (an attribute of the module, a submodule, or a name in `__all__`
   for a star import);
-* every dotted `atelier_core` / `atelier_bench` / `atelier_app` path written in a string
-  (docstrings, importlib tables, the literal prefix of an f-string) or a comment: the longest
-  importable prefix is the module, the rest must be attributes of it;
-* every `.py` path written in a docstring or comment (atelier_core/support/schedule.py names its
-  forwarding mixin by such a path): it must match a file, read from the writing file's directory
-  or any directory above it up to the lane root, where `*` in the path is a glob.
+* every dotted `atelier_*` path (any top-level name, so a misspelt package is caught) written in
+  a string (docstrings, importlib tables, the literal prefix of an f-string) or a comment: the
+  longest importable prefix is the module, the rest must be attributes of it;
+* the literal prefix (up to its last dot) of the first argument of every `import_module(...)`
+  call, and every dotted string held in a module-path table (an assignment to a name containing
+  `MODULES`), whatever package it names: it must resolve as a module;
+* every `.py` path written in any string constant or comment (atelier_core/support/schedule.py
+  names its forwarding mixin by such a path): it must match a file, read from the writing file's
+  directory or any directory above it up to the lane root, where `*` is a glob and a brace list
+  is expanded, every alternative having to match.
 """
 
 import ast
@@ -29,8 +33,27 @@ from pathlib import Path
 
 LANE_ROOT = Path(__file__).resolve().parent.parent
 SOURCE_DIRS = ("atelier_core", "atelier_bench", "atelier_app", "tests", "bench")
-DOTTED = re.compile(r"\batelier_(?:core|bench|app)(?:\.[A-Za-z_][A-Za-z0-9_]*)+")
-PY_PATH = re.compile(r"[A-Za-z0-9_*{}./-]*[A-Za-z0-9_*}]\.py\b")
+DOTTED = re.compile(r"\batelier_[A-Za-z0-9_]+(?:\.[A-Za-z_][A-Za-z0-9_]*)+")
+PY_PATH = re.compile(r"(?:[A-Za-z0-9_*./-]|\{[A-Za-z0-9_*./,-]*\})*[A-Za-z0-9_*}]\.py\b")
+MODULE_NAME = re.compile(r"[A-Za-z_][A-Za-z0-9_]*(?:\.[A-Za-z_][A-Za-z0-9_]*)+")
+
+
+def is_import_module(func: ast.expr) -> bool:
+    return (isinstance(func, ast.Attribute) and func.attr == "import_module") or (isinstance(func, ast.Name) and func.id == "import_module")
+
+
+def literal_module(arg: ast.expr) -> str:
+    """The module named by a literal first argument, or by an f-string's literal prefix up to its last dot."""
+    if isinstance(arg, ast.Constant) and isinstance(arg.value, str):
+        return arg.value
+    if isinstance(arg, ast.JoinedStr) and arg.values and isinstance(arg.values[0], ast.Constant) and isinstance(arg.values[0].value, str):
+        return arg.values[0].value.rpartition(".")[0]
+    return ""
+
+
+def module_table(node: ast.Assign | ast.AnnAssign) -> bool:
+    targets = node.targets if isinstance(node, ast.Assign) else [node.target]
+    return any(isinstance(t, ast.Name) and "MODULES" in t.id for t in targets)
 
 
 def lane_sources() -> list[Path]:
@@ -67,9 +90,22 @@ def resolve_dotted(path: str) -> bool:
     return False
 
 
+def expand_braces(written: str) -> list[str]:
+    match = re.search(r"\{([^{}]*)\}", written)
+    if match is None:
+        return [written]
+    return [
+        expanded
+        for option in match.group(1).split(",")
+        for expanded in expand_braces(written[: match.start()] + option + written[match.end() :])
+    ]
+
+
 def resolve_py_path(source: Path, written: str) -> bool:
-    if "{" in written:
-        return True  # brace alternatives are prose, not a path; none are written in .py files today
+    return all(resolve_one_py_path(source, alternative) for alternative in expand_braces(written))
+
+
+def resolve_one_py_path(source: Path, written: str) -> bool:
     directory = source.parent
     while True:
         if any(directory.glob(written)):
@@ -77,16 +113,6 @@ def resolve_py_path(source: Path, written: str) -> bool:
         if directory == LANE_ROOT:
             return False
         directory = directory.parent
-
-
-def docstring_nodes(tree: ast.Module) -> set[int]:
-    found = set()
-    for node in ast.walk(tree):
-        if isinstance(node, (ast.Module, ast.ClassDef, ast.FunctionDef, ast.AsyncFunctionDef)) and node.body:
-            first = node.body[0]
-            if isinstance(first, ast.Expr) and isinstance(first.value, ast.Constant) and isinstance(first.value.value, str):
-                found.add(id(first.value))
-    return found
 
 
 def check_file(path: Path) -> tuple[int, list[str]]:
@@ -118,7 +144,6 @@ def check_file(path: Path) -> tuple[int, list[str]]:
                 elif not binds(module_name, alias.name):
                     problems.append(f"{where}:{node.lineno}: from {module_name} import {alias.name} (no such name)")
 
-    docstrings = docstring_nodes(tree)
     prose: list[tuple[int, str]] = []
     for node in ast.walk(tree):
         if isinstance(node, ast.Constant) and isinstance(node.value, str):
@@ -126,8 +151,19 @@ def check_file(path: Path) -> tuple[int, list[str]]:
                 checked += 1
                 if not resolve_dotted(match.group(0)):
                     problems.append(f"{where}:{node.lineno}: string names {match.group(0)} (does not resolve)")
-            if id(node) in docstrings:
-                prose.append((node.lineno, node.value))
+            prose.append((node.lineno, node.value))
+        elif isinstance(node, ast.Call) and is_import_module(node.func) and node.args:
+            prefix = literal_module(node.args[0])
+            if prefix:
+                checked += 1
+                if not resolve_dotted(prefix):
+                    problems.append(f"{where}:{node.lineno}: import_module names {prefix} (does not resolve)")
+        elif isinstance(node, (ast.Assign, ast.AnnAssign)) and node.value is not None and module_table(node):
+            for item in ast.walk(node.value):
+                if isinstance(item, ast.Constant) and isinstance(item.value, str) and MODULE_NAME.fullmatch(item.value):
+                    checked += 1
+                    if not resolve_dotted(item.value):
+                        problems.append(f"{where}:{item.lineno}: module table names {item.value} (does not resolve)")
     for token in tokenize.generate_tokens(io.StringIO(text).readline):
         if token.type == tokenize.COMMENT:
             for match in DOTTED.finditer(token.string):
@@ -155,6 +191,22 @@ class ModuleSpecifierTest(unittest.TestCase):
         self.assertEqual(problems, [])
         self.assertGreater(len(sources), 200)
         self.assertGreater(total, 1000)
+
+    def test_the_checks_bite(self) -> None:
+        source = LANE_ROOT / "atelier_core" / ("__init__" + ".py")
+        suffix = "." + "py"
+        brace = "{" + ",".join(["forwards_to_schedule", "has_reference"]) + "}"
+        ghost = "{" + ",".join(["has_reference", "ghost_concern"]) + "}"
+        self.assertTrue(resolve_py_path(source, "concerns/" + brace + suffix))
+        self.assertFalse(resolve_py_path(source, "concerns/" + ghost + suffix))
+        self.assertEqual(len(PY_PATH.findall("see concerns/" + ghost + suffix + " now")), 1)
+        self.assertFalse(resolve_py_path(source, "concerns/ghost_module" + suffix))
+        misspelt = ast.parse("importlib.import_module(f'atelier_" + "bnech.reports.{slug}')", mode="eval").body
+        assert isinstance(misspelt, ast.Call)
+        self.assertTrue(is_import_module(misspelt.func))
+        self.assertEqual(literal_module(misspelt.args[0]), "atelier_" + "bnech.reports")
+        self.assertFalse(resolve_dotted(literal_module(misspelt.args[0])))
+        self.assertTrue(resolve_dotted(literal_module(ast.parse("m(f'atelier_bench.reports.{s}')", mode="eval").body.args[0])))  # type: ignore[attr-defined]
 
 
 if __name__ == "__main__":
