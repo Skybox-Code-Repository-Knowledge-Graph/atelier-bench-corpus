@@ -1285,28 +1285,28 @@
         {
             "id": "def-callable-array",
             "surface": "definition",
-            "note": "A callable array [BadgeCss::class, 'forKind'] names a static method by a class constant and a string; the string is the method. PHP-specific: array_map takes it as a callable. BadgeShelf::cssForKinds reaches it (tests/Feature/PhpMechanicsTest.php).",
+            "note": "A callable array [BadgeCss::class, 'forKind'] names a static method by a class constant and a string; the string is the method. PHP-specific: array_map takes it as a callable. BadgeShelf::cssForKinds reaches it (tests/Feature/PhpMechanicsTest.php). LegacyBadgeCss declares a forKind of its own (the old label spelling, reached by BadgeShelf::legacyCss), so the name alone does not say which class the array names.",
             "from": { "file": "app/Support/Mechanics/BadgeShelf.php", "needle": "[BadgeCss::class, 'forKind']", "symbol": "forKind" },
-            "expect": { "file": "app/Support/Mechanics/BadgeCss.php", "needle": "public static function forKind(string $kind): string" }
+            "expect": { "file": "app/Support/Mechanics/BadgeCss.php", "needle": "public static function forKind(string $kind): string", "must_not_include": ["app/Support/Mechanics/LegacyBadgeCss.php"] }
         },
         {
             "id": "def-callable-string",
             "surface": "definition",
-            "note": "A callable string 'Class::method' (a fully qualified class name, then ::, then the static method) passed to call_user_func. PHP-specific: the method is named inside a string literal. BadgeShelf::cssForPriority reaches it (tests/Feature/PhpMechanicsTest.php).",
+            "note": "A callable string 'Class::method' (a fully qualified class name, then ::, then the static method) passed to call_user_func. PHP-specific: the method is named inside a string literal. BadgeShelf::cssForPriority reaches it (tests/Feature/PhpMechanicsTest.php). LegacyBadgeCss declares a forPriority of its own, so the name alone does not say which class the string names.",
             "from": { "file": "app/Support/Mechanics/BadgeShelf.php", "needle": "'App\\Support\\Mechanics\\BadgeCss::forPriority'", "symbol": "forPriority" },
-            "expect": { "file": "app/Support/Mechanics/BadgeCss.php", "needle": "public static function forPriority(string $priority): string" }
+            "expect": { "file": "app/Support/Mechanics/BadgeCss.php", "needle": "public static function forPriority(string $priority): string", "must_not_include": ["app/Support/Mechanics/LegacyBadgeCss.php"] }
         },
         {
             "id": "def-trait-alias",
             "surface": "definition",
-            "note": "A trait method taken under another name: `use RendersBadge { render as protected renderBadge; }` makes renderBadge() the trait's render() while the class declares a render() of its own (must_not_include: that one). PHP-specific: the answer line is the trait's declaration of a name the call never uses. BadgePanel::render reaches it (tests/Feature/PhpMechanicsTest.php).",
+            "note": "A trait method taken under another name: `use RendersBadge { render as protected renderBadge; }` makes renderBadge() the trait's render() while the class declares a render() of its own (must_not_include: that one, `BadgePanel.php#render`; the alias clause itself is a known_site). PHP-specific: the answer line is the trait's declaration of a name the call never uses. BadgePanel::render reaches it (tests/Feature/PhpMechanicsTest.php).",
             "from": { "file": "app/Support/Mechanics/BadgePanel.php", "needle": "return '<div class=\"panel\">' . $this->renderBadge() . '</div>';", "symbol": "renderBadge" },
-            "expect": { "file": "app/Support/Mechanics/RendersBadge.php", "needle": "public function render(): string", "must_not_include": ["app/Support/Mechanics/BadgePanel.php"] }
+            "expect": { "file": "app/Support/Mechanics/RendersBadge.php", "needle": "public function render(): string", "must_not_include": ["app/Support/Mechanics/BadgePanel.php#render"], "known_sites": [ { "file": "app/Support/Mechanics/BadgePanel.php", "needle": "render as protected renderBadge;" } ] }
         },
         {
             "id": "def-static-creating",
             "surface": "definition",
-            "note": "static::creating(...) inside a trait: `static` is the using model, and creating() is a static method of the framework's HasEvents trait, reached through Model's trait list (VENDOR file; resolves after composer install). A declaration in a dependency's source, so a common candidate (not counted as language-specific, ruling R18). HasReference::bootHasReference runs it on every create (tests/Feature/PhpMechanicsTest.php).",
+            "note": "static::creating(...) inside a trait: `static` is the using model, and creating() is a static method of the framework's HasEvents trait, reached through Model's trait list (VENDOR file; resolves after composer install). Close call, so a common candidate and not counted as language-specific: python has a native construct, `cls` inside a mixin classmethod binding the using class (sibling lane: python). HasReference::bootHasReference runs it on every create (tests/Feature/PhpMechanicsTest.php).",
             "from": { "file": "app/Concerns/HasReference.php", "needle": "static::creating(function ($model): void {", "symbol": "creating" },
             "expect": { "file": "vendor/laravel/framework/src/Illuminate/Database/Eloquent/Concerns/HasEvents.php", "needle": "public static function creating($callback)" }
         }

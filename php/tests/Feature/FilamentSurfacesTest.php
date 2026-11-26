@@ -31,9 +31,12 @@ class FilamentSurfacesTest extends TestCase
 
     public function test_repair_stats_widget_counts_the_seeded_orders(): void
     {
-        // Two more open, normal-priority orders beside the seed, so the two counts differ.
+        // Two more open, normal-priority orders and one delivered order beside the seed, so the
+        // open count differs from both the rush count and the count of all orders.
         RepairOrder::factory()->count(2)->create(['status' => 'received', 'priority' => 'normal']);
+        RepairOrder::factory()->create(['status' => 'delivered', 'priority' => 'normal']);
         $open = RepairOrder::query()->where('status', '!=', 'delivered')->count();
+        $this->assertLessThan(RepairOrder::query()->count(), $open);
         $rush = RepairOrder::query()->where('priority', 'rush')->count();
         $this->assertGreaterThan(0, $rush);
         $this->assertNotSame($open, $rush);

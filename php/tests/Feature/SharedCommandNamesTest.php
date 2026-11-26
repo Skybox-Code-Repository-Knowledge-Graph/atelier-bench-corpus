@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\Part;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\DB;
 use Tests\TestCase;
 
 /**
@@ -53,13 +54,23 @@ class SharedCommandNamesTest extends TestCase
             ->expectsOutputToContain("Recalculated stock for {$parts} parts.")
             ->assertExitCode(0);
 
-        // The forwarded level reaches the job: stock is max(level - consumed, 0), so a level of 5
-        // caps every part at 5, and a level of 500 lifts at least one part above it.
-        $this->assertLessThanOrEqual(5, (int) Part::max('stock'));
+        // The forwarded level reaches the job: every part's stock is exactly max(5 - consumed, 0),
+        // consumed summed from the pivot table (not through Part::consumedQuantity()).
+        $this->assertExactStock(5);
         $this->artisan('recalculate-inventory', ['--restock' => 500])->assertExitCode(0);
-        $this->assertGreaterThan(5, (int) Part::max('stock'));
+        $this->assertExactStock(500);
     }
 
+    private function assertExactStock(int $level): void
+    {
+        $checked = 0;
+        foreach (Part::query()->get() as $part) {
+            $consumed = (int) DB::table('part_repair_order')->where('part_id', $part->id)->sum('quantity');
+            $this->assertSame(max($level - $consumed, 0), (int) $part->stock, "part {$part->id} at level {$level}");
+            $checked++;
+        }
+        $this->assertGreaterThan(0, $checked);
+    }
     private function withoutTimestamp(string $output): string
     {
         return (string) preg_replace('/^at=\d+$/m', 'at=', $output);

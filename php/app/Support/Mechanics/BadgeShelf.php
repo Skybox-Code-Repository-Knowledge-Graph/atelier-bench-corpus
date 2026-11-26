@@ -23,4 +23,10 @@ final class BadgeShelf
     {
         return call_user_func('App\Support\Mechanics\BadgeCss::forPriority', $priority);
     }
+
+    /** The old board markup still asks for the label spelling of both lookups. */
+    public static function legacyCss(string $kind, string $priority): array
+    {
+        return [LegacyBadgeCss::forKind($kind), LegacyBadgeCss::forPriority($priority)];
+    }
 }

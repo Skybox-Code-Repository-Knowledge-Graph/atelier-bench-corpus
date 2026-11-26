@@ -33,6 +33,7 @@ class PhpMechanicsTest extends TestCase
         $this->assertSame(['badge badge-open', 'badge badge-rush'], BadgeShelf::cssForKinds(['open', 'rush']));
         $this->assertSame('badge badge-rush', BadgeShelf::cssForPriority('rush'));
         $this->assertSame('badge', BadgeShelf::cssForPriority('normal'));
+        $this->assertSame(['label label-open', 'label'], BadgeShelf::legacyCss('open', 'normal'));
     }
 
     public function test_trait_alias_keeps_the_original_and_hides_the_alias(): void
