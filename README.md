@@ -11,7 +11,7 @@ One directory per language lane; each lane is self-contained and carries its own
 | --- | --- | --- | --- | --- |
 | `php/` | PHP 8.3+ · Laravel 13.20 · Filament 5.6 | repair atelier | `php/bench/tasks.json` | `php bench/verify_tasks.php` |
 | `rust/` | Rust 2024 edition · cargo workspace | repair atelier (same domain) | `rust/bench/tasks.json` | `cargo run -p bench-verify` |
-| `typescript/` | Node 22 · TypeScript 5.7 · npm workspaces · express 5, plus route fixtures for NestJS, Hono, Fastify, Remix, SvelteKit, Nuxt (h3) and Expo (convention-only) | repair atelier (same domain) | `typescript/bench/tasks.json` | `npm run verify` |
+| `typescript/` | Node 22 · TypeScript 5.7 · npm workspaces · express 5, plus route fixtures for NestJS, Hono, Fastify, Remix, SvelteKit, Nuxt (nitropack) and Expo (convention-only) | repair atelier (same domain) | `typescript/bench/tasks.json` | `npm run verify` |
 | `javascript/` | Node 22 · mixed CJS/ESM · npm workspaces · JSDoc-only typing | repair atelier (same domain) | `javascript/bench/tasks.json` | `npm run verify` |
 | `python/` | Python 3.12+ · Flask 3.1 · three packages, no build step · type hints + mypy allowlist gate | repair atelier (same domain) | `python/bench/tasks.json` | `python3 bench/verify_tasks.py` |
 | `go/` | Go 1.23 · one module, stdlib only · `net/http` · embedding, generics, build tags | repair atelier (same domain) | `go/bench/tasks.json` | `go run ./bench/verify` |

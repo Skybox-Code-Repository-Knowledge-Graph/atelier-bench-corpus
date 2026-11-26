@@ -1,19 +1,20 @@
 /**
  * Every framework route fixture of @atelier/routes but NestJS (tests/nest.test.ts) is driven here
  * with a URL from src/client.ts, through the framework's own in-process dispatcher where it has
- * one (Hono's app.request, Fastify's inject, h3's web handler) and otherwise by the framework's file
- * convention: the test derives each route's URL pattern from its module's path under the
- * framework's naming rule, reads the URL against it and calls the export the convention names (Remix
- * `loader`, SvelteKit `GET`, Expo Router `GET`; Nuxt's derived pattern is registered on h3). The
- * answer is the seed: AT-2026-000001 is completed with 120 labour minutes.
+ * one (Hono's app.request, Fastify's inject; Nuxt's routes come from Nitro's own scanner over the
+ * server/ directory, served on h3) and otherwise by the framework's file convention: the test
+ * derives each route's URL pattern from its module's path under the framework's naming rule, reads
+ * the URL against it and calls the export the convention names (Remix `loader`, SvelteKit `GET`,
+ * Expo Router `GET`). The answer is the seed: AT-2026-000001 is completed with 120 labour minutes.
  */
 import { readdirSync } from "node:fs";
-import { join, sep } from "node:path";
+import { join, relative, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 
 import type { RequestEvent } from "@sveltejs/kit";
-import { createApp, createRouter, toWebHandler } from "h3";
-import { describe, expect, it } from "vitest";
+import { createApp, createRouter, type RouterMethod, toWebHandler } from "h3";
+import { createNitro, scanHandlers } from "nitropack";
+import { beforeAll, describe, expect, it } from "vitest";
 
 import { RepairStatus } from "@atelier/core";
 
@@ -45,13 +46,6 @@ function sveltekitPath(file: string): string | undefined {
     const dir = /^src\/routes\/(.+)\/\+server\.ts$/.exec(file)?.[1];
 
     return dir === undefined ? undefined : bracketParams(`/${dir}`);
-}
-
-/** Nuxt: server/api/<path>.<method>.ts serves /api/<path> for that method. */
-function nuxtPath(file: string): string | undefined {
-    const path = /^server\/(api\/.+)\.get\.ts$/.exec(file)?.[1];
-
-    return path === undefined ? undefined : bracketParams(`/${path}`);
 }
 
 /** Expo Router: app/<path>+api.ts serves /<path>. */
@@ -174,22 +168,32 @@ describe("sveltekit endpoint", () => {
 });
 
 describe("nuxt server route", () => {
-    // Registered on h3, the server engine Nuxt runs on, at the path derived from the file's name.
-    const route = conventionRoute("nuxt", nuxtPath);
-    const app = createApp().use(createRouter().get(route.pattern, nuxtHandler));
-    const web = toWebHandler(app);
-    const fetcher: Fetcher = (url) => {
-        route.params(url);
+    // Nitro, the server engine Nuxt runs on, reads the routes off the server/ file names with its own
+    // scanner; each is then served through h3 the way Nitro's runtime serves it.
+    const serverDir = join(SRC, "nuxt", "server");
+    let scanned: Awaited<ReturnType<typeof scanHandlers>> = [];
+    let web: (request: Request) => Promise<Response>;
+    const fetcher: Fetcher = (url) => web(new Request(BASE + url));
 
-        return web(new Request(BASE + url));
-    };
-
-    it("binds its URL to the one route module of the nuxt directory", async () => {
-        expect(route.pattern).toBe("/api/nuxt/orders/:reference");
-        expect((await import(route.absolute)).default).toBe(nuxtHandler);
+    beforeAll(async () => {
+        const nitro = await createNitro({ rootDir: serverDir, srcDir: serverDir, dev: false, preset: "node-server", logLevel: 0, compatibilityDate: "2026-11-26" });
+        scanned = await scanHandlers(nitro);
+        await nitro.close();
+        const router = createRouter();
+        for (const entry of scanned) {
+            router.use(entry.route!, (await import(entry.handler)).default, entry.method as RouterMethod);
+        }
+        web = toWebHandler(createApp().use(router));
     });
 
-    it("serves the seeded order through h3's web handler", async () => {
+    it("binds its URL to the one route module Nitro scans under server/", async () => {
+        const routes = scanned.map((entry) => `${entry.method} ${entry.route} ${relative(SRC, entry.handler).split(sep).join("/")}`);
+
+        expect(routes).toEqual(["get /api/nuxt/orders/:reference nuxt/server/api/nuxt/orders/[reference].get.ts"]);
+        expect((await import(scanned[0]!.handler)).default).toBe(nuxtHandler);
+    });
+
+    it("serves the seeded order through Nitro's routes on h3", async () => {
         expect(await fetchOrder(fetcher, nuxtOrderUrl("AT-2026-000001"))).toEqual(SEED);
         expect((await fetcher(nuxtOrderUrl("AT-2026-999999"))).status).toBe(404);
     });
