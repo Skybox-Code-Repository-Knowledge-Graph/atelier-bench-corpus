@@ -300,9 +300,14 @@ function reachedFromTests(kinds: Set<Kind>): Set<string> {
             continue;
         }
         for (const statement of source.statements) {
-            const name = (statement as ts.Statement & { name?: ts.Node }).name;
-            if (name !== undefined && ts.isIdentifier(name)) {
-                globals.set(name.text, laneRelative(path));
+            // A `declare const` (a VariableStatement) names its globals in its declaration list.
+            const names = ts.isVariableStatement(statement)
+                ? statement.declarationList.declarations.map((declaration) => declaration.name)
+                : [(statement as ts.Statement & { name?: ts.Node }).name];
+            for (const name of names) {
+                if (name !== undefined && ts.isIdentifier(name)) {
+                    globals.set(name.text, laneRelative(path));
+                }
             }
         }
     }

@@ -90,6 +90,12 @@
         "php"
       ]
     },
+    "def-ambient-declare-const": {
+      "surface": "definition",
+      "lanes": [
+        "typescript"
+      ]
+    },
     "def-ambient-global-namespace": {
       "surface": "definition",
       "lanes": [
@@ -520,6 +526,12 @@
         "javascript"
       ]
     },
+    "def-event-map-handler-param": {
+      "surface": "definition",
+      "lanes": [
+        "typescript"
+      ]
+    },
     "def-explicit-parent-method-call": {
       "surface": "definition",
       "lanes": [
@@ -589,6 +601,12 @@
       "surface": "definition",
       "lanes": [
         "go"
+      ]
+    },
+    "def-function-namespace-merge": {
+      "surface": "definition",
+      "lanes": [
+        "typescript"
       ]
     },
     "def-future-style": {
@@ -713,6 +731,30 @@
         "javascript",
         "python",
         "go"
+      ]
+    },
+    "def-import-equals-alias": {
+      "surface": "definition",
+      "lanes": [
+        "typescript"
+      ]
+    },
+    "def-import-type-expression": {
+      "surface": "definition",
+      "lanes": [
+        "typescript"
+      ]
+    },
+    "def-import-type-query-member": {
+      "surface": "definition",
+      "lanes": [
+        "typescript"
+      ]
+    },
+    "def-infer-type-variable": {
+      "surface": "definition",
+      "lanes": [
+        "typescript"
       ]
     },
     "def-inferred-type": {
@@ -1136,48 +1178,56 @@
     "def-route-expo": {
       "surface": "definition",
       "lanes": [
+        "typescript",
         "javascript"
       ]
     },
     "def-route-express-router": {
       "surface": "definition",
       "lanes": [
+        "typescript",
         "javascript"
       ]
     },
     "def-route-fastify": {
       "surface": "definition",
       "lanes": [
+        "typescript",
         "javascript"
       ]
     },
     "def-route-hono": {
       "surface": "definition",
       "lanes": [
+        "typescript",
         "javascript"
       ]
     },
     "def-route-nestjs": {
       "surface": "definition",
       "lanes": [
+        "typescript",
         "javascript"
       ]
     },
     "def-route-nuxt": {
       "surface": "definition",
       "lanes": [
+        "typescript",
         "javascript"
       ]
     },
     "def-route-remix": {
       "surface": "definition",
       "lanes": [
+        "typescript",
         "javascript"
       ]
     },
     "def-route-sveltekit": {
       "surface": "definition",
       "lanes": [
+        "typescript",
         "javascript"
       ]
     },
@@ -1327,6 +1377,24 @@
         "typescript"
       ]
     },
+    "def-this-parameter": {
+      "surface": "definition",
+      "lanes": [
+        "typescript"
+      ]
+    },
+    "def-this-predicate-method": {
+      "surface": "definition",
+      "lanes": [
+        "typescript"
+      ]
+    },
+    "def-this-type-marker": {
+      "surface": "definition",
+      "lanes": [
+        "typescript"
+      ]
+    },
     "def-through-barrel": {
       "surface": "definition",
       "lanes": [
@@ -1443,6 +1511,12 @@
       "surface": "direction",
       "lanes": [
         "go"
+      ]
+    },
+    "dir-interface-extends-class": {
+      "surface": "direction",
+      "lanes": [
+        "typescript"
       ]
     },
     "dir-mro-linearization": {
@@ -1798,6 +1872,12 @@
       "surface": "implementation",
       "lanes": [
         "php"
+      ]
+    },
+    "impl-type-alias-contract": {
+      "surface": "implementation",
+      "lanes": [
+        "typescript"
       ]
     },
     "int-folio-filename-binding": {
@@ -2223,6 +2303,12 @@
         "go"
       ]
     },
+    "resolution-assertion-narrowing": {
+      "surface": "resolution",
+      "lanes": [
+        "typescript"
+      ]
+    },
     "resolution-assoc-const-override": {
       "surface": "resolution",
       "lanes": [
@@ -2271,10 +2357,28 @@
         "rust"
       ]
     },
+    "resolution-enum-merge": {
+      "surface": "resolution",
+      "lanes": [
+        "typescript"
+      ]
+    },
+    "resolution-extract-union-member": {
+      "surface": "resolution",
+      "lanes": [
+        "typescript"
+      ]
+    },
     "resolution-foreign-bound-blanket": {
       "surface": "resolution",
       "lanes": [
         "rust"
+      ]
+    },
+    "resolution-indexed-access-type": {
+      "surface": "resolution",
+      "lanes": [
+        "typescript"
       ]
     },
     "resolution-init-ordering": {
@@ -2283,10 +2387,28 @@
         "go"
       ]
     },
+    "resolution-interface-merge": {
+      "surface": "resolution",
+      "lanes": [
+        "typescript"
+      ]
+    },
     "resolution-jsdoc-import-alias": {
       "surface": "resolution",
       "lanes": [
         "javascript"
+      ]
+    },
+    "resolution-keyof-argument": {
+      "surface": "resolution",
+      "lanes": [
+        "typescript"
+      ]
+    },
+    "resolution-mapped-utility-member": {
+      "surface": "resolution",
+      "lanes": [
+        "typescript"
       ]
     },
     "resolution-mixin-source-order": {
@@ -2399,6 +2521,12 @@
         "go"
       ]
     },
+    "resolution-template-index-signature": {
+      "surface": "resolution",
+      "lanes": [
+        "typescript"
+      ]
+    },
     "resolution-this-rebinding": {
       "surface": "resolution",
       "lanes": [
@@ -2422,6 +2550,12 @@
       "lanes": [
         "typescript",
         "python"
+      ]
+    },
+    "resolution-utility-return-type": {
+      "surface": "resolution",
+      "lanes": [
+        "typescript"
       ]
     },
     "vendor-sanctum-trait": {

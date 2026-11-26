@@ -30,6 +30,15 @@ describe("http surface", () => {
         expect(response.body.error).toContain("999999");
     });
 
+    it("serves one order through the router mounted at /api/orders", async () => {
+        const response = await request(createApp(seededState())).get("/api/orders/AT-2026-000001");
+        const missing = await request(createApp(seededState())).get("/api/orders/AT-2026-999999");
+
+        expect(response.status).toBe(200);
+        expect(response.body).toEqual({ reference: "AT-2026-000001", status: "completed", laborMinutes: 120 });
+        expect(missing.status).toBe(404);
+    });
+
     it("lists every seeded order", async () => {
         const response = await request(createApp(seededState())).get("/api/orders");
 

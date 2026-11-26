@@ -11,6 +11,7 @@ import express, { type Express } from "express";
 import { listOrders, showRegisteredReport, storeNote } from "./http/api";
 import { errorHandler } from "./http/errors";
 import { showReport } from "./http/report";
+import { orderRouter } from "./http/orderRouter";
 import { seededState, type AppState } from "./state";
 
 export { seededRushState, seededState, type AppState } from "./state";
@@ -28,6 +29,7 @@ export function createApp(state: AppState = seededState()): Express {
     app.get("/api/orders", listOrders(state));
     app.post("/api/orders/:id/notes", storeNote(state));
     app.get("/api/reports/:slug", showRegisteredReport(state));
+    app.use("/api/orders", orderRouter(state));
 
     app.use(errorHandler);
 
