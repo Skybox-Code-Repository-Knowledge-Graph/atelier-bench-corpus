@@ -174,8 +174,9 @@ For all four:
 - Nothing in `must_not_include` may be returned. A known site is never an excluded hit, since the
   key itself lists it.
 - A task that carries `exact_count` beside a target is `UNSCORABLE`, unless a rule below says what
-  the count means for it: the count is an overload count in one task and a parameter count in
-  another.
+  the count means for it. The count is not one thing: it is the number of declarations the key
+  lists in one task (`resolution/merged-name`) and a signature's parameter count in another (kind
+  `arity`, which stays `UNSCORABLE`).
 - `kind` and `resolution` are labels and are never scored. The kinds these four rules cover were
   reviewed against the lanes' `notes`. One, `build_generated`, is excluded (`KIND_UNSCORABLE` in
   `lib/plan.mjs`): its key names two places, so a tool that returns either one alone would fail.
@@ -225,6 +226,37 @@ not changed to fit a rule.
 | `resolution`, kind `shadow_alias`, keys `contains`, `kind`, `must_not_include`, `resolution` | go `resolution-shadowed-stdlib-package` | The answer, `net/http`'s `NewServeMux`, is in the Go standard library, outside the repository: no lane-relative location names it (gopls v0.24.0 answers a GOROOT path, and an absolute path is an invalid answer). `contains` (`net/http`) is defined for hover text only, and the package's own `app/http` declares no `NewServeMux`, so the exclusion `app/http#NewServeMux` can trip only on the line asked from: on its own it would pass an empty answer |
 | `definition`, keys `implementations` only | rust `def-cfg-gated` | Asked from the `Cargo.toml` line `extra-rules = []` (no symbol). No `kind` and no count say what the question returns or that the list is complete, and the list holds `ExperimentalRule` (behind `feature = "extra-rules"`) and `AlwaysTrueRule` (behind `#[cfg(test)]`, which the feature does not gate). rust-analyzer 1.96.0 answers no definition in `Cargo.toml` |
 | `definition`, kind `unresolvable_static`, keys `exact_count`, `kind`, `known_sites` | javascript `def-dynamic-require`, python `def-dynamic-import-module` | The answer is each candidate module (lane notes: "the honest result is every candidate module, and exact_count counts them"), and the key anchors each module on a line inside it, its `SLUG` line, so no line of the key names the module. A module answer lands on the file's first line (typescript-language-server 6.1.0 and pyright 1.1.414 on a static specifier; at the runtime-built specifier both return nothing). Matching by file is a mode the key does not state: the same class as the targets anchored inside their declaration |
+| `import-precision`, kind `visibility_boundary`, keys `contains`, `kind`, `known_sites` | go `imp-internal-package` | Asked from the package clause of `internal/audit` (note: "only atelier.example/lane/... may import this package"). No source says what the question returns; `known_sites` with no target has no stated role (above), and `contains` (`internal`) is defined for hover text only. The key lists one importer, `tests/structure_test.go`, and no count; gopls v0.24.0, asked for references at the package clause, answers three importers (`cmd/atelier/main.go` and `tests/events_test.go` blank-import it), so a rule over the list could only be recall |
+| `import-precision`, kind `glob`, keys `exact_count`, `kind`, `known_sites` | rust `imp-glob-import` | The shared id `imp-glob-import` has no single reading (below). The rust key lists both public items of `report_contract` (`ReportRow`, `ReportContract`, `exact_count` 2), so its list is complete; only what the answer is stays open |
+| `import-precision`, kind `glob`, keys `exact_count`, `kind`, `known_sites`, `must_include` | python `imp-glob-import`, typescript `imp-glob-import` | No single reading (below), and neither key lists its answer. python: 2 of the 16 names in `__all__`, each on its `from .x import X` line in `metrics/__init__.py`, while pyright 1.1.414 resolves a name the star import brings in to its class (`metrics/margin.py:14`), and the lane's `barrel` note says the same of `atelier_core`: an import through its `__init__.py` lands on the submodule that defines the name. typescript: 2 of the 4 exported names by line, the other 2 (`ReportContract`, `reportRow`) only by name in `must_include` |
+| `import-precision`, kind `glob` or `group_use`, keys `exact_count`, `kind`, `known_sites`, `must_not_include` | javascript `imp-glob-import`, php `imp-glob-import` | No single reading (below). javascript: the key lists the four declarations of `helpers.js` and counts them, while typescript-language-server 6.1.0 asked at `from.symbol` answers the module (`helpers.js:3`), which no line of the key names. php: the key has rust's form (the eight declarations the brace group-use binds, `exact_count` 8), phpactor 2026.11.22.0 answers no location at the namespace asked (`Repositories`), and the shared id still splits across the python, typescript and go keys |
+| `multi-parent`, keys `exact_count`, `must_include` | rust `parents-supertrait-send-sync` | Asked from `pub trait ReportContract: Send + Sync {`. The two parents, `Send` and `Sync`, are declared in the Rust core library, outside the repository, so no lane-relative location names them: rust-analyzer 1.96.0 answers `core/src/marker.rs` in the toolchain (an absolute path is an invalid answer) and has no type hierarchy (`textDocument/prepareTypeHierarchy` is an unknown request). The key names them only in `must_include`, which no rule scores on any surface, and judging a parents answer by name (the `names` field) is a mode no source states for this surface |
+| `implementation`, keys `file`, `needle` | php `vendor-shouldbroadcast-contract` | Asked from `class RepairCompleted implements ShouldBroadcast` (note: "VENDOR contract: RepairCompleted implements a framework interface"), the key names the interface itself, under `vendor/`, not an implementor. Measured on a copy with `composer install`: phpactor 2026.11.22.0 answers `implementation` at `ShouldBroadcast` with six implementors (`RepairCompleted` and five under `vendor/`, one an interface that extends it) and `definition` with the key's interface, so the key holds the definition answer on the implementation surface; the lane's other vendor targets (`vendor-scout-trait`, `vendor-sanctum-trait`) are `definition` tasks |
+
+**`imp-glob-import`.** Five lanes ask it with a key no rule names (rust, python, typescript and
+javascript kind `glob`, php kind `group_use`), and the lane notes say a shared id asks the same
+question in every lane. No reading of the answer is settled:
+
+- Asked at the import (`from.symbol`, the module), every lane's own server answers the module or
+  nothing, never the lines the keys list: rust-analyzer 1.96.0 `report_contract.rs:1`, pyright
+  1.1.414 `metrics/__init__.py:1`, typescript-language-server 6.1.0 the module's first statement
+  (`reportContract.ts:3`, `helpers.js:3`), phpactor 2026.11.22.0 no location at `Repositories`.
+  Asked at a name the import binds, the servers answer that name's declaration instead.
+- The javascript key lists the four declarations of `helpers.js` and counts them (the lane notes:
+  glob is `export *`, whose `exact_count` is the number of names crossing the re-export; the task
+  note says where the names are declared, not that the answer is one module location), and
+  typescript-language-server 6.1.0 asked at `from.symbol` answers the module (`helpers.js:3`),
+  which no line of the key names.
+- The keys of the shared id disagree: go's (kind `dot_import`, scored by
+  `import-precision/candidate` and not changed here) names one member the file uses
+  (`FormatReference`) as its candidate, though the file uses more than one; python's
+  anchors its names on their re-export lines in `metrics/__init__.py`, and typescript's lists half
+  its names by line and half by name only. php's key has rust's form (the eight declarations the
+  brace group-use binds, `exact_count` 8; its own source calls the group-use the lane's equivalent
+  of the glob question), so php is split only by the shared id and by phpactor answering no
+  location at `Repositories`.
+
+So the five stay `UNSCORABLE`, each with its lane's own detail, and the question is open on issue #135.
 
 ### String-keyed definitions
 
