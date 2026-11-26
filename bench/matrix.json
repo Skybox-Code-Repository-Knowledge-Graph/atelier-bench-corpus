@@ -108,6 +108,12 @@
         "typescript"
       ]
     },
+    "def-anonymous-interface-case": {
+      "surface": "definition",
+      "lanes": [
+        "go"
+      ]
+    },
     "def-anonymous-struct": {
       "surface": "definition",
       "lanes": [
@@ -390,7 +396,19 @@
         "javascript"
       ]
     },
+    "def-embed-directive-file": {
+      "surface": "definition",
+      "lanes": [
+        "go"
+      ]
+    },
     "def-embedded-asset": {
+      "surface": "definition",
+      "lanes": [
+        "go"
+      ]
+    },
+    "def-embedded-interface-method": {
       "surface": "definition",
       "lanes": [
         "go"
@@ -530,6 +548,12 @@
         "rust"
       ]
     },
+    "def-generate-directive-package": {
+      "surface": "definition",
+      "lanes": [
+        "go"
+      ]
+    },
     "def-generated-file": {
       "surface": "definition",
       "lanes": [
@@ -623,6 +647,12 @@
       "surface": "definition",
       "lanes": [
         "php"
+      ]
+    },
+    "def-goos-file-suffix": {
+      "surface": "definition",
+      "lanes": [
+        "go"
       ]
     },
     "def-goroutine-select": {
@@ -935,6 +965,12 @@
         "javascript"
       ]
     },
+    "def-promotion-depth-over-order": {
+      "surface": "definition",
+      "lanes": [
+        "go"
+      ]
+    },
     "def-property": {
       "surface": "definition",
       "lanes": [
@@ -1029,6 +1065,12 @@
         "go"
       ]
     },
+    "def-select-receive-ok": {
+      "surface": "definition",
+      "lanes": [
+        "go"
+      ]
+    },
     "def-serde-tagged-enum": {
       "surface": "definition",
       "lanes": [
@@ -1070,6 +1112,12 @@
       ]
     },
     "def-shadowing-promoted-method": {
+      "surface": "definition",
+      "lanes": [
+        "go"
+      ]
+    },
+    "def-short-var-redeclaration": {
       "surface": "definition",
       "lanes": [
         "go"
@@ -1117,6 +1165,12 @@
       ]
     },
     "def-struct-tag": {
+      "surface": "definition",
+      "lanes": [
+        "go"
+      ]
+    },
+    "def-struct-tag-embedded-flatten": {
       "surface": "definition",
       "lanes": [
         "go"
@@ -1201,6 +1255,12 @@
       ]
     },
     "def-type-switch": {
+      "surface": "definition",
+      "lanes": [
+        "go"
+      ]
+    },
+    "def-type-switch-guard-binding": {
       "surface": "definition",
       "lanes": [
         "go"
@@ -1619,7 +1679,19 @@
         "go"
       ]
     },
+    "impl-sealed-unexported-method": {
+      "surface": "implementation",
+      "lanes": [
+        "go"
+      ]
+    },
     "impl-structural-no-assertion": {
+      "surface": "implementation",
+      "lanes": [
+        "go"
+      ]
+    },
+    "impl-through-embedded-interface": {
       "surface": "implementation",
       "lanes": [
         "go"
@@ -1938,6 +2010,12 @@
         "go"
       ]
     },
+    "refs-promotion-depth-loser": {
+      "surface": "references",
+      "lanes": [
+        "go"
+      ]
+    },
     "refs-report-contract-registry": {
       "surface": "references",
       "lanes": [
@@ -1985,6 +2063,12 @@
         "go"
       ]
     },
+    "refs-short-var-redeclaration": {
+      "surface": "references",
+      "lanes": [
+        "go"
+      ]
+    },
     "refs-string-event-name": {
       "surface": "references",
       "lanes": [
@@ -2017,6 +2101,12 @@
       "surface": "references",
       "lanes": [
         "typescript"
+      ]
+    },
+    "refs-type-switch-guard": {
+      "surface": "references",
+      "lanes": [
+        "go"
       ]
     },
     "refs-with-reference": {
