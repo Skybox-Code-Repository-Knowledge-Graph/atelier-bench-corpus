@@ -29,6 +29,8 @@ const DECIDED = {
         .map((name) => [`go:lane-local-${name}`, { reason: /^kind lane_local with only `contains`: .* names no declaration and excludes no sibling lane/ }])),
     // contains on resolution, kind shadow_alias, target outside the repository (go)
     "go:resolution-shadowed-stdlib-package": { reason: /^kind shadow_alias with `contains` and no candidate: the declaration is in the Go standard library/ },
+    // definition with only implementations, asked from Cargo.toml (rust)
+    "rust:def-cfg-gated": { reason: /^a definition asked from a Cargo.toml feature line with only `implementations`/ },
 };
 
 const tasksOf = new Map();

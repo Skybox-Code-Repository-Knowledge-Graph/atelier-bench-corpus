@@ -344,6 +344,11 @@ export const UNRULED_SHAPES = [
         keys: ["contains", "kind", "must_not_include", "resolution"],
         reason: "kind shadow_alias with `contains` and no candidate: the declaration is in the Go standard library, outside the repository, so no lane-relative location names it (gopls v0.24.0 answers a GOROOT path); `contains` is defined for hover text only, and the one exclusion can trip only on the line asked from, so it alone would pass an empty answer",
     },
+    {
+        surface: "definition",
+        keys: ["implementations"],
+        reason: "a definition asked from a Cargo.toml feature line with only `implementations`: no kind and no count say what the question returns or that the list is complete, the list holds an item the feature does not gate (one behind #[cfg(test)]), and rust-analyzer 1.96.0 answers no definition in Cargo.toml",
+    },
 ];
 
 /**
