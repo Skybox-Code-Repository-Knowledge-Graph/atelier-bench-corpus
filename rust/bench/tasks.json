@@ -2819,7 +2819,7 @@
         {
             "id": "resolution-structural-concern",
             "surface": "resolution",
-            "note": "PlainRowFormatter declares format_value and format_label inherently and never names HasFormatting. Rust has no structural conformance, so it is NOT an implementor, and the blanket impl<T: ReportContract> does not reach it either.",
+            "note": "PlainRowFormatter declares format_value and format_label inherently and never names HasFormatting. Rust has no structural conformance, so it is NOT an implementor, and the blanket impl<T: ReportContract> does not reach it either. Two look-alikes are excluded: the anchor's own declaration (what a bare-name match on PlainRowFormatter returns) and the blanket impl line (what a bare-name match on HasFormatting returns beside the trait, and which does not apply: PlainRowFormatter implements no ReportContract).",
             "from": {
                 "file": "crates/atelier-bench/src/support/plain_row_formatter.rs",
                 "needle": "pub struct PlainRowFormatter;",
@@ -2832,7 +2832,8 @@
                     "needle": "pub trait HasFormatting {"
                 },
                 "must_not_include": [
-                    "crates/atelier-bench/src/support/plain_row_formatter.rs"
+                    "crates/atelier-bench/src/support/plain_row_formatter.rs",
+                    "impl<T: ReportContract> HasFormatting for T"
                 ]
             }
         },
