@@ -40,7 +40,7 @@ func run(args []string, stdout io.Writer, stderr io.Writer) int {
 
 // usage names the shared verbs first (export-report, recalculate-inventory),
 // then this lane's own spellings of the same two operations, then export.
-const usage = "usage: atelier <seed|export-report|recalculate-inventory|report|export|recalculate>"
+const usage = "usage: atelier <seed|export-report|recalculate-inventory|report|export|recalculate|jobs>"
 
 // dispatch selects a command by STRING, the way a console kernel does. A
 // shared verb shares its case clause with the lane's older spelling of the
@@ -71,6 +71,8 @@ func dispatch(state *app.State, command string, args []string) ([]string, error)
 		return strings.Split(rendered, "\n"), nil
 	case "export":
 		return strings.Split(commands.ExportManifest(state), "\n"), nil
+	case "jobs":
+		return app.JobLines(state.Data), nil
 	case "recalculate-inventory", "recalculate":
 		return []string{commands.RecalculateInventory(state)}, nil
 	default:

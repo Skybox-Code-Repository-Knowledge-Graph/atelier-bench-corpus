@@ -16,7 +16,7 @@ import path disagrees with its declared name, and a package that shadows a stand
 | Go | `go 1.23.0` with `toolchain go1.23.4` in `go.mod` (CI pins the same; `iter.Seq` and method-prefixed `ServeMux` patterns are used) |
 | Layout | one module, `atelier.example/lane`, packages under `core/`, `atelier/`, `app/`, `cmd/`, `internal/`, `tools/`; run every command from the lane root (`go/`) |
 | Dependencies | none over the network: the only `require` is the in-tree module `atelier.example/yamlish.v2`, resolved by a `replace` to `./third_party/yamlish.v2`, so there is no `go.sum` |
-| Test runner | `go test ./...` (stdlib `testing`): 60 tests, 47 in `tests/` plus in-package tests for the three `main` packages (`bench/verify` 9, `cmd/atelier` 3, `tools/statusgen` 1) |
+| Test runner | `go test ./...` (stdlib `testing`): 61 tests, 47 in `tests/` plus in-package tests for the three `main` packages (`bench/verify` 9, `cmd/atelier` 4, `tools/statusgen` 1) |
 | Dataset | `dataset.Seeded()` — fixed rows, **no randomness**; revenue `58325c`, part cost `46300c`, gross profit `12025c` |
 
 ## Packages
@@ -111,6 +111,9 @@ Lane-only extras:
   (the same operation as `export-report`, always markdown), `recalculate` (the same operation as
   `recalculate-inventory`; both verbs share one case clause in `cmd/atelier/main.go`) and `export`
   (the run manifest through `atelier.example/yamlish.v2`).
+- `go run ./cmd/atelier jobs`: the application caller of the callback, channel and goroutine job
+  shapes in `app/jobs.go` (the last under `SafeRun`): `job callback: 4 handled`,
+  `job channel: 1 handled`, `job goroutines x3: 12 handled`.
 
 Lane-specific `kind` strings used in `expect` blocks: `structural`, `shadow_alias`, `same_name`,
 `path_name_divergence`, `receiver`, `arity`, `init_order`, `embedded_field`, `lane_local`, `syntax_error`,

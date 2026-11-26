@@ -49,7 +49,7 @@ func TestEveryConsoleVerbDispatches(t *testing.T) {
 	if code, _, errOut := runCommand("nope"); code != 1 || !strings.Contains(errOut, `unknown command "nope"`) {
 		t.Errorf("unknown verb = %d, %q", code, errOut)
 	}
-	if code, out, _ := runCommand(); code != 2 || out != "usage: atelier <seed|export-report|recalculate-inventory|report|export|recalculate>\n" {
+	if code, out, _ := runCommand(); code != 2 || out != "usage: atelier <seed|export-report|recalculate-inventory|report|export|recalculate|jobs>\n" {
 		t.Errorf("no verb = %d, %q", code, out)
 	}
 }
@@ -58,6 +58,17 @@ func TestEveryConsoleVerbDispatches(t *testing.T) {
 // print values that come from the seed: the cash-flow report's outstanding
 // row is the seeded revenue (58325 cents), and two of the four seeded parts
 // sit below their reorder level.
+// The jobs verb is the application caller of the callback, channel and
+// goroutine job shapes and of SafeRun: 4 seeded orders, 1 of them completed,
+// three goroutine workers handling all 4 each.
+func TestJobsVerbRunsTheThreeJobShapes(t *testing.T) {
+	code, out, _ := runCommand("jobs")
+	want := "job callback: 4 handled\njob channel: 1 handled\njob goroutines x3: 12 handled\n"
+	if code != 0 || out != want {
+		t.Errorf("jobs = %d, %q, want %q", code, out, want)
+	}
+}
+
 func TestSharedVerbsPrintSeedValues(t *testing.T) {
 	code, out, _ := runCommand("export-report", "cash-flow")
 	if code != 0 || !strings.Contains(out, `{"Label":"outstanding","Value":58325,"Cents":58325}`) {
