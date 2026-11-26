@@ -8,8 +8,9 @@
 // Node built-ins only, run from the repository root. CI runs the default (read-only) mode.
 //
 // 0. Static guards, before any verifier runs: bench/conformance/src/crlf.txt still ends every line
-//    in CRLF (the c-crlf case is no CRLF test otherwise), and no lane's tasks.json repeats a task
-//    id (issue #223).
+//    in CRLF (the c-crlf case is no CRLF test otherwise), no lane's tasks.json repeats a task id,
+//    every hover `contains` string is byte-present in its lane's source, and a hover id shared by
+//    several lanes uses one string in all of them (issue #223).
 // 1. For each lane in matrix.json's `lanes`, runs its verifier from the lane directory and
 //    requires exit 0.
 // 2. Cross-checks the ids each verifier reported against that lane's bench/tasks.json, then
@@ -160,7 +161,72 @@ function runCheck() {
 
 /** The first static guard that fails, or undefined. Reads files only; spawns nothing. */
 function staticProblem(lanes) {
-    return crlfFixtureProblem() ?? duplicateIdProblem(lanes);
+    return crlfFixtureProblem() ?? duplicateIdProblem(lanes) ?? hoverContainsProblem(lanes);
+}
+
+/**
+ * Hover `contains` strings are a cross-lane string contract (issue #223, C.6 and F.3):
+ *   (a) every hover task's `contains` is byte-present in its lane: in from.file, or else in another
+ *       file git tracks under <lane>/ outside <lane>/bench/, Markdown excluded. The fallback exists
+ *       because a hover asked at a call site shows the doc comment of a declaration in another file,
+ *       and the key does not name that file;
+ *   (b) a hover id carried by two or more lanes uses one `contains` string in all of them.
+ * NOT proven: that the string sits in the doc comment of the hovered symbol, or anywhere a hover
+ * would show it. (a) proves only that the lane's source quotes the string somewhere; reading the
+ * declaration is still the reviewer's job.
+ */
+function hoverContainsProblem(lanes) {
+    const stringsById = new Map();
+    for (const lane of lanes) {
+        const manifestPath = join(REPO_ROOT, lane.name, "bench", "tasks.json");
+        if (!existsSync(manifestPath)) {
+            continue;
+        }
+        let sources;
+        for (const task of JSON.parse(readFileSync(manifestPath, "utf8")).tasks) {
+            const contains = task.expect?.contains;
+            if (task.surface !== "hover" || typeof contains !== "string") {
+                continue;
+            }
+            if (!stringsById.has(task.id)) {
+                stringsById.set(task.id, []);
+            }
+            stringsById.get(task.id).push([lane.name, contains]);
+
+            const fromFile = typeof task.from?.file === "string" ? join(REPO_ROOT, lane.name, task.from.file) : undefined;
+            if (fromFile !== undefined && existsSync(fromFile) && readFileSync(fromFile, "utf8").includes(contains)) {
+                continue;
+            }
+            sources ??= laneSources(lane.name);
+            if (sources.error !== undefined) {
+                return sources.error;
+            }
+            if (!sources.paths.some((path) => readFileSync(path, "utf8").includes(contains))) {
+                return `${lane.name}:${task.id}: hover contains ${JSON.stringify(contains)} is not byte-present in ${task.from?.file} or in any other tracked ${lane.name}/ source outside ${lane.name}/bench/`;
+            }
+        }
+    }
+    for (const [id, stated] of [...stringsById].sort(([a], [b]) => a.localeCompare(b))) {
+        if (new Set(stated.map(([, contains]) => contains)).size > 1) {
+            const detail = stated.map(([name, contains]) => `${name}=${JSON.stringify(contains)}`).join(", ");
+            return `${id}: shared hover id uses more than one contains string (${detail})`;
+        }
+    }
+    return undefined;
+}
+
+/** Absolute paths of the files git tracks under <lane>/, minus <lane>/bench/ and Markdown. */
+function laneSources(lane) {
+    const result = spawnSync("git", ["ls-files", "-z", "--", `${lane}/`], { cwd: REPO_ROOT, encoding: "utf8" });
+    if (result.error || result.status !== 0) {
+        return { error: `git ls-files ${lane}/ exited ${exitDescription(result)}: hover contains strings cannot be checked` };
+    }
+    const paths = result.stdout
+        .split("\0")
+        .filter((path) => path !== "" && !path.startsWith(`${lane}/bench/`) && !path.endsWith(".md"))
+        .map((path) => join(REPO_ROOT, path))
+        .filter((path) => existsSync(path));
+    return { paths };
 }
 
 /**

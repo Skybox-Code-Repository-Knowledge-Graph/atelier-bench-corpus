@@ -1788,7 +1788,7 @@
                 "symbol": "makeTechnician"
             },
             "expect": {
-                "contains": "resolves through the Proxy"
+                "contains": "forward to its Schedule"
             }
         },
         {

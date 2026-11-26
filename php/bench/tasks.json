@@ -1015,14 +1015,14 @@
             "surface": "hover",
             "note": "Hover on the frozen dataset must surface the determinism warning, not just the class name.",
             "from": { "file": "database/seeders/DatabaseSeeder.php", "needle": "class DatabaseSeeder extends Seeder", "symbol": "DatabaseSeeder" },
-            "expect": { "contains": "no faker randomness" }
+            "expect": { "contains": "Changing these rows changes bench ground truth" }
         },
         {
             "id": "hover-proxy-forwarding",
             "surface": "hover",
             "note": "Hover on the forwarding host must explain that undeclared methods reach Schedule through __call.",
             "from": { "file": "app/Models/Technician.php", "needle": "class Technician extends Model", "symbol": "Technician" },
-            "expect": { "contains": "resolve through __call" }
+            "expect": { "contains": "forward to its Schedule" }
         },
         {
             "id": "resolution-shadow-type-billing",
