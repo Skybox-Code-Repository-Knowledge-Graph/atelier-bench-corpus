@@ -131,6 +131,12 @@
         "rust"
       ]
     },
+    "def-async-enter": {
+      "surface": "definition",
+      "lanes": [
+        "python"
+      ]
+    },
     "def-async-function": {
       "surface": "definition",
       "lanes": [
@@ -243,6 +249,12 @@
       "surface": "definition",
       "lanes": [
         "javascript"
+      ]
+    },
+    "def-class-getitem": {
+      "surface": "definition",
+      "lanes": [
+        "python"
       ]
     },
     "def-closure-field": {
@@ -372,10 +384,46 @@
         "python"
       ]
     },
+    "def-dict-missing": {
+      "surface": "definition",
+      "lanes": [
+        "python"
+      ]
+    },
     "def-docblock-generic": {
       "surface": "definition",
       "lanes": [
         "php"
+      ]
+    },
+    "def-dunder-bool": {
+      "surface": "definition",
+      "lanes": [
+        "python"
+      ]
+    },
+    "def-dunder-contains": {
+      "surface": "definition",
+      "lanes": [
+        "python"
+      ]
+    },
+    "def-dunder-format": {
+      "surface": "definition",
+      "lanes": [
+        "python"
+      ]
+    },
+    "def-dunder-new": {
+      "surface": "definition",
+      "lanes": [
+        "python"
+      ]
+    },
+    "def-dunder-reversed": {
+      "surface": "definition",
+      "lanes": [
+        "python"
       ]
     },
     "def-dynamic-import": {
@@ -418,6 +466,12 @@
       "surface": "definition",
       "lanes": [
         "go"
+      ]
+    },
+    "def-enter-as-target": {
+      "surface": "definition",
+      "lanes": [
+        "python"
       ]
     },
     "def-enum-case": {
@@ -792,6 +846,12 @@
         "python"
       ]
     },
+    "def-metaclass-call": {
+      "surface": "definition",
+      "lanes": [
+        "python"
+      ]
+    },
     "def-metaclass-method": {
       "surface": "definition",
       "lanes": [
@@ -1000,6 +1060,12 @@
         "rust"
       ]
     },
+    "def-reflected-radd": {
+      "surface": "definition",
+      "lanes": [
+        "python"
+      ]
+    },
     "def-registry-entry": {
       "surface": "definition",
       "lanes": [
@@ -1010,6 +1076,18 @@
       "surface": "definition",
       "lanes": [
         "go"
+      ]
+    },
+    "def-route-django": {
+      "surface": "definition",
+      "lanes": [
+        "python"
+      ]
+    },
+    "def-route-fastapi": {
+      "surface": "definition",
+      "lanes": [
+        "python"
       ]
     },
     "def-route-to-handler": {
@@ -1029,7 +1107,7 @@
         "rust"
       ]
     },
-    "def-setattr-mixin": {
+    "def-set-name-hook": {
       "surface": "definition",
       "lanes": [
         "python"
@@ -1098,6 +1176,12 @@
         "go"
       ]
     },
+    "def-string-forward-annotation": {
+      "surface": "definition",
+      "lanes": [
+        "python"
+      ]
+    },
     "def-string-key-dispatch": {
       "surface": "definition",
       "lanes": [
@@ -1114,6 +1198,12 @@
       "surface": "definition",
       "lanes": [
         "go"
+      ]
+    },
+    "def-subclass-hook": {
+      "surface": "definition",
+      "lanes": [
+        "python"
       ]
     },
     "def-subpath-export": {
@@ -1163,6 +1253,12 @@
       "surface": "definition",
       "lanes": [
         "javascript"
+      ]
+    },
+    "def-total-ordering": {
+      "surface": "definition",
+      "lanes": [
+        "python"
       ]
     },
     "def-trait-method-scope": {
@@ -1216,6 +1312,12 @@
       "surface": "definition",
       "lanes": [
         "go"
+      ]
+    },
+    "def-with-enter": {
+      "surface": "definition",
+      "lanes": [
+        "python"
       ]
     },
     "dir-contract-parent": {
@@ -1890,6 +1992,12 @@
         "javascript"
       ]
     },
+    "refs-init-subclass-hook": {
+      "surface": "references",
+      "lanes": [
+        "python"
+      ]
+    },
     "refs-jsx-component-usage": {
       "surface": "references",
       "lanes": [
@@ -2120,6 +2228,12 @@
         "python"
       ]
     },
+    "resolution-pydantic-field-validator": {
+      "surface": "resolution",
+      "lanes": [
+        "python"
+      ]
+    },
     "resolution-receiver-pointer-vs-value": {
       "surface": "resolution",
       "lanes": [
@@ -2193,6 +2307,12 @@
       "surface": "resolution",
       "lanes": [
         "go"
+      ]
+    },
+    "resolution-sqlalchemy-foreign-key": {
+      "surface": "resolution",
+      "lanes": [
+        "python"
       ]
     },
     "resolution-structural-concern": {
