@@ -7,6 +7,7 @@
 // per task as "not scored".
 
 import { isFileNeedle } from "./resolve.mjs";
+import { symbolColumns } from "./symbol.mjs";
 
 export const LANES = ["php", "rust", "typescript", "javascript", "python", "go"];
 
@@ -25,17 +26,30 @@ export const KIND_UNSCORABLE = {
 export const SURFACE_KIND_UNSCORABLE = {
     "direction:mro": "the answer is an order (the method resolution order), which no list rule judges",
     "direction:inherent_impl": "the key requires nothing, it only excludes; a tool that returns nothing would pass",
+    "resolution:arity": "exact_count is the signature's parameter count, which no answer field carries; the candidate is the declaration asked from, so a location alone would pass an answer that returns the question",
 };
 
 const candidate = (expect) => expect.candidate;
 const fileAndNeedle = (expect) => ({ file: expect.file, needle: expect.needle });
 
 /**
+ * Does a `declaration_merge` task ask about the merged name itself, rather than a member? The lane
+ * notes: "the name resolves to both declarations, a member resolves to the half that declares it".
+ * The asked symbol is the merged name when it is written on every declaration the key lists.
+ */
+export function asksMergedName(task) {
+    const symbol = task?.from?.symbol;
+    const sites = Array.isArray(task?.expect?.known_sites) ? task.expect.known_sites : [];
+    return typeof symbol === "string"
+        && sites.length > 0
+        && sites.every((site) => isFileNeedle(site) && symbolColumns(site.needle, symbol).length > 0);
+}
+
+/**
  * The rules.
  *
  *   surface   the task surface the rule serves
  *   requires  expect keys that must be present
- *   forbids   expect keys whose presence makes the target's meaning depend on `kind`
  *   forbids   expect keys whose presence makes the target's meaning depend on `kind`
  *   check     how an answer is compared with the key:
  *               target    one declaration, by exact line (single-target rules)
@@ -52,8 +66,67 @@ const fileAndNeedle = (expect) => ({ file: expect.file, needle: expect.needle })
  *   neutralLists  for check "sites": expect keys whose lines may be returned or not
  *   noun      for check "sites": what one entry is, in reasons ("site", "declaration")
  *   uses      expect keys the rule reads (everything else is "not scored")
+ *
+ * Optional selectors and switches, for rules that serve one meaning of a shared key shape:
+ *
+ *   kinds     the rule serves only tasks of these `kind`s
+ *   asks      "name" or "member": a declaration_merge rule serves only that question (asksMergedName)
+ *   allowKnownSites  for check "target": false when `known_sites` answer another question and are
+ *             therefore not allowed beside the target (default true)
+ *   neutralFrom  for check "sites": false when the line asked from is not neutral (default true)
+ *   absent    the rule passes a task by when any of these expect keys is present
  */
 export const RULES = [
+    {
+        // A name built from a string at run time: the answer is every declaration the string can
+        // select (known_sites, exact_count of them), each by its line, and nothing else. The line
+        // asked from (the getattr call) is not one of them.
+        name: "definition/string-key",
+        surface: "definition",
+        kinds: ["string_key"],
+        requires: ["known_sites", "exact_count"],
+        absent: ["file", "needle", "candidate"],
+        forbids: [],
+        check: "sites",
+        class: "exact",
+        list: "known_sites",
+        neutralLists: ["optional_sites"],
+        neutralFrom: false,
+        noun: "declaration",
+        uses: ["known_sites", "exact_count", "optional_sites", "must_not_include"],
+    },
+    {
+        // Asked about a merged name: the answer is every declaration of it (known_sites, exact_count).
+        // The candidate is a member of one half, which this question does not ask about.
+        name: "resolution/merged-name",
+        surface: "resolution",
+        kinds: ["declaration_merge"],
+        asks: "name",
+        requires: ["known_sites", "exact_count"],
+        forbids: [],
+        check: "sites",
+        class: "exact",
+        list: "known_sites",
+        neutralLists: ["optional_sites"],
+        neutralFrom: false,
+        noun: "declaration",
+        uses: ["known_sites", "exact_count", "optional_sites", "must_not_include"],
+    },
+    {
+        // Asked about a member of a merged name: the answer is the half that declares it (the
+        // candidate). known_sites and exact_count are the merged name's declarations, another question.
+        name: "resolution/merged-member",
+        surface: "resolution",
+        kinds: ["declaration_merge"],
+        asks: "member",
+        requires: ["candidate"],
+        forbids: [],
+        check: "target",
+        class: "exact",
+        target: candidate,
+        allowKnownSites: false,
+        uses: ["candidate", "must_not_include"],
+    },
     {
         name: "definition/target",
         surface: "definition",
@@ -236,6 +309,55 @@ export const DOCSYM_REFERENCE_DISAGREES = {
 };
 
 /**
+ * Kind-less tasks with `exact_count` beside a target that no rule scores, keyed `lane:id`, with the
+ * reason (issue #135). Their notes or their lane's own language server leave the answer unsettled,
+ * and the key is not changed to fit a rule. Decided before any tool under test was measured on them.
+ */
+export const TARGET_COUNT_UNSCORABLE = {
+    "python:def-overload": "the key's sources disagree on what the answer is: its note says \"the definition is the implementation, the stubs are known_sites\", the typescript task def-overload, of the same shared id, says \"A tool that lists only one overload, or the implementation only, is incomplete\", and the python lane notes say \"exact_count gives the size of the answer, and known_sites ... list it\"; so an implementation-only answer is correct under one reading and incomplete under the other, and no rule the key states separates them (pyright 1.1.414 answers the implementation and both stubs)",
+    "typescript:def-method-overload": "typescript-language-server 6.1.0 (TypeScript 5.9.3) returns only the overload signature the call matches, not the implementation the key names as candidate, while the note asks for both signatures and the implementation",
+    "typescript:def-overload": "the candidate is a parameter line inside the implementation signature, not the line that names it, and typescript-language-server 6.1.0 (TypeScript 5.9.3) returns only the overload signature the call matches",
+    "javascript:resolution-calculate-through-binding": "no kind says whether the answer is the default binding's implementation (the candidate) or both implementations (exact_count 2), and typescript-language-server 6.1.0 (TypeScript 5.9.3) returns neither, only the @typedef property of the contract",
+};
+
+/**
+ * Key shapes no rule scores, with the reason (issue #135): a surface, an optional kind, the exact
+ * set of expect keys, and the tasks (`lane:id`) the reason is true of. Matched only after every rule
+ * has passed a task by, so an entry can never take a task a rule scores; a task of the same shape
+ * that is not listed falls through to the generic "no rule for surface ..." reason instead of one
+ * written for another lane's task.
+ */
+export const UNRULED_SHAPES = [
+    {
+        surface: "resolution",
+        kind: "lane_local",
+        keys: ["contains", "kind"],
+        tasks: new Set(["go:lane-local-calculate", "go:lane-local-customer", "go:lane-local-dataset", "go:lane-local-formatter-billing", "go:lane-local-money", "go:lane-local-ref-prefix"]),
+        reason: "kind lane_local with only `contains`: the lane notes ask that resolution land on this lane's own declaration and never a sibling lane's, but the key names no declaration and excludes no sibling lane; `contains` is defined for hover text only, and gopls v0.24.0's hover holds the string on one of the six go tasks, the one where it is the asked symbol itself",
+    },
+    {
+        surface: "resolution",
+        kind: "shadow_alias",
+        keys: ["contains", "kind", "must_not_include", "resolution"],
+        tasks: new Set(["go:resolution-shadowed-stdlib-package"]),
+        reason: "kind shadow_alias with `contains` and no candidate: the declaration is in the Go standard library, outside the repository, so no lane-relative location names it (gopls v0.24.0 answers a GOROOT path); `contains` is defined for hover text only, and the one exclusion can trip only on the line asked from, so it alone would pass an empty answer",
+    },
+    {
+        surface: "definition",
+        keys: ["implementations"],
+        tasks: new Set(["rust:def-cfg-gated"]),
+        reason: "a definition asked from a Cargo.toml feature line with only `implementations`: no kind and no count say what the question returns or that the list is complete, the list holds an item the feature does not gate (one behind #[cfg(test)]), and rust-analyzer 1.96.0 answers no definition in Cargo.toml",
+    },
+    {
+        surface: "definition",
+        kind: "unresolvable_static",
+        keys: ["exact_count", "kind", "known_sites"],
+        tasks: new Set(["javascript:def-dynamic-require", "python:def-dynamic-import-module"]),
+        reason: "kind unresolvable_static: the answer is each candidate module, and the key anchors each module on a line inside it (its SLUG line), so no line of the key names the module; a module answer lands on the file's first line (typescript-language-server 6.1.0 and pyright 1.1.414 on a static specifier), and matching by file is a mode the key does not state",
+    },
+];
+
+/**
  * The number of entries a list task states: `exact_count`, or `extends_count` plus
  * `implements_count` where a parents task splits it. null when it states none (the list is not
  * known to be complete); undefined when the two disagree.
@@ -283,9 +405,19 @@ export function planTask(task, lane = null) {
     if (Object.hasOwn(SURFACE_KIND_UNSCORABLE, surfaceKind)) {
         return { scorable: false, reason: `kind ${expect.kind}: ${SURFACE_KIND_UNSCORABLE[surfaceKind]}` };
     }
+    const unsettled = TARGET_COUNT_UNSCORABLE[`${lane}:${task.id}`];
+    if (unsettled !== undefined) {
+        return { scorable: false, reason: `exact_count beside a target: ${unsettled}` };
+    }
 
     for (const rule of candidates) {
         if (Array.isArray(rule.kinds) && !rule.kinds.includes(expect.kind)) {
+            continue;
+        }
+        if (rule.asks !== undefined && (rule.asks === "name") !== asksMergedName(task)) {
+            continue;
+        }
+        if (Array.isArray(rule.absent) && rule.absent.some((key) => key in expect)) {
             continue;
         }
         if (!rule.requires.every((key) => key in expect)) {
@@ -376,7 +508,7 @@ export function planTask(task, lane = null) {
                 repeated,
                 optional,
                 noun: rule.noun,
-                from: isFileNeedle(task.from) ? { file: task.from.file, needle: task.from.needle } : null,
+                from: rule.neutralFrom !== false && isFileNeedle(task.from) ? { file: task.from.file, needle: task.from.needle } : null,
                 exactCount: count,
                 allow: [],
             };
@@ -393,9 +525,17 @@ export function planTask(task, lane = null) {
         return {
             ...common,
             target,
-            allow: Array.isArray(expect.known_sites) ? expect.known_sites.filter(isFileNeedle) : [],
+            allow: rule.allowKnownSites !== false && Array.isArray(expect.known_sites) ? expect.known_sites.filter(isFileNeedle) : [],
         };
     }
 
+    const unruled = UNRULED_SHAPES.find((shape) => shape.tasks.has(`${lane}:${task.id}`)
+        && shape.surface === task.surface
+        && (shape.kind === undefined || shape.kind === expect.kind)
+        && shape.keys.length === keys.length
+        && shape.keys.every((key) => key in expect));
+    if (unruled !== undefined) {
+        return { scorable: false, reason: unruled.reason };
+    }
     return { scorable: false, reason: `no rule for surface ${task.surface} with keys ${keys.sort().join(", ")}` };
 }
