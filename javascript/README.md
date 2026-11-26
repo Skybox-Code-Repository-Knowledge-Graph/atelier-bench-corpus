@@ -118,7 +118,7 @@ gap — `@atelier/core/contracts/repository.js` was missing from the core `expor
 used only inside JSDoc `import(...)` types was unresolvable while every test, `node --check` and the
 needle verifier stayed green. `packages/bench/tests/interop.test.cjs` also resolves every `@atelier/*`
 specifier in the lane, and `bench/tests/specifiers.test.mjs` resolves every module specifier of any
-kind (relative, bare and `node:`, in code, type-only and docblock `import("...")` alike, tests and
+kind (relative, bare and `node:`, in code, type-only and docblock `import("...")` or `@import` tags alike, tests and
 fixtures included), so that class of defect fails a test as well as the gate.
 
 ## Ground truth

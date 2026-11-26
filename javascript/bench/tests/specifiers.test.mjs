@@ -2,7 +2,7 @@
 //
 // "Written" means: a static `import ... from` / `export ... from` / side-effect
 // `import`, a dynamic `import()` call, a `require()` / `require.resolve()` call,
-// and a JSDoc type `import()` (type-only and docblock-only specifiers, which no
+// a JSDoc type `import()` and a JSDoc `@import { X } from "..."` tag (type-only and docblock-only specifiers, which no
 // runtime ever loads and node --check never reads). The walk covers every
 // .js/.cjs/.mjs file under the lane root except node_modules: packages/*/src,
 // packages/*/tests, bench/ and the broken-syntax fixtures (which still parse far
@@ -87,6 +87,8 @@ function specifiersOf(file) {
             }
         } else if (ts.isImportTypeNode(node) && ts.isLiteralTypeNode(node.argument)) {
             record(node.argument.literal, "type");
+        } else if (ts.isJSDocImportTag(node)) {
+            record(node.moduleSpecifier, "type");
         }
         for (const doc of node.jsDoc ?? []) visit(doc);
         ts.forEachChild(node, visit);
