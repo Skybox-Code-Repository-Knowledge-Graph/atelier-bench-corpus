@@ -499,7 +499,7 @@
             "expect": {
                 "kind": "lane_local",
                 "candidate": { "file": "app/Casts/Money.php", "needle": "class Money implements CastsAttributes" },
-                "must_not_include": ["rust/", "typescript/", "javascript/"]
+                "must_not_include": ["rust/", "typescript/", "javascript/", "python/", "go/"]
             }
         },
         {
@@ -509,7 +509,7 @@
             "expect": {
                 "kind": "lane_local",
                 "candidate": { "file": "app/Models/Customer.php", "needle": "class Customer extends Model" },
-                "must_not_include": ["rust/", "typescript/", "javascript/"]
+                "must_not_include": ["rust/", "typescript/", "javascript/", "python/", "go/"]
             }
         },
         {
@@ -530,7 +530,7 @@
             "expect": {
                 "kind": "lane_local",
                 "candidate": { "file": "app/Support/helpers.php", "needle": "const ATELIER_REF_PREFIX = 'AT';" },
-                "must_not_include": ["rust/", "typescript/", "javascript/"]
+                "must_not_include": ["rust/", "typescript/", "javascript/", "python/"]
             }
         },
         {
@@ -540,7 +540,7 @@
             "expect": {
                 "kind": "lane_local",
                 "candidate": { "file": "app/Contracts/InvoiceCalculator.php", "needle": "public function calculate(RepairOrder $order): int;" },
-                "must_not_include": ["rust/", "typescript/", "javascript/"]
+                "must_not_include": ["rust/", "typescript/", "javascript/", "python/"]
             }
         },
         {
@@ -1013,16 +1013,16 @@
         {
             "id": "hover-frozen-seed",
             "surface": "hover",
-            "note": "Hover on the frozen dataset must surface the determinism warning, not just the class name.",
+            "note": "Hover on the frozen dataset must surface the ground-truth warning, not just the class name.",
             "from": { "file": "database/seeders/DatabaseSeeder.php", "needle": "class DatabaseSeeder extends Seeder", "symbol": "DatabaseSeeder" },
-            "expect": { "contains": "no faker randomness" }
+            "expect": { "contains": "Changing these rows changes bench ground truth" }
         },
         {
             "id": "hover-proxy-forwarding",
             "surface": "hover",
             "note": "Hover on the forwarding host must explain that undeclared methods reach Schedule through __call.",
             "from": { "file": "app/Models/Technician.php", "needle": "class Technician extends Model", "symbol": "Technician" },
-            "expect": { "contains": "resolve through __call" }
+            "expect": { "contains": "forward to its Schedule" }
         },
         {
             "id": "resolution-shadow-type-billing",

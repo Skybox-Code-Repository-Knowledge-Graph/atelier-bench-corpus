@@ -826,9 +826,9 @@
         {
             "id": "hover-free-function",
             "surface": "hover",
-            "from": {"file": "core/money/money.go", "needle": "func Sum(amounts []Money) Money {", "symbol": "Sum"},
+            "from": {"file": "core/concerns/reference.go", "needle": "return support.FormatReference(prefix, h.ReferenceNumber)", "symbol": "FormatReference"},
             "expect": {
-                "contains": "Sum folds any sequence of amounts into one."
+                "contains": "zero-padded width"
             }
         },
         {
@@ -836,7 +836,7 @@
             "surface": "hover",
             "from": {"file": "atelier/dataset/dataset.go", "needle": "func Seeded() *Dataset {", "symbol": "Seeded"},
             "expect": {
-                "contains": "Every number below is ground truth."
+                "contains": "Changing these rows changes bench ground truth"
             }
         },
         {
@@ -844,7 +844,7 @@
             "surface": "hover",
             "from": {"file": "core/models/technician.go", "needle": "type Technician struct {", "symbol": "Technician"},
             "expect": {
-                "contains": "Neither promoted method is declared anywhere in this file."
+                "contains": "forward to its Schedule"
             }
         },
         {
@@ -1308,6 +1308,7 @@
             "expect": {
                 "extends_count": 1,
                 "implements_count": 2,
+                "exact_count": 3,
                 "implementations": [
                     {"file": "atelier/support/periodic.go", "needle": "type PeriodicReport struct {"},
                     {"file": "atelier/concerns/audit.go", "needle": "type HasAudit struct {"},
