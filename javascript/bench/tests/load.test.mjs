@@ -66,7 +66,7 @@ describe("every source file", () => {
     });
 
     it("runs the CLI entry for each command that exits", () => {
-        assert.deepEqual(runCli(), ["usage: atelier <serve [port]|seed|report [slug]|recalculate>"]);
+        assert.deepEqual(runCli(), ["usage: atelier <serve [port]|seed|export-report [slug] [csv|json|md]|recalculate-inventory|report [slug]|recalculate>"]);
 
         const seed = runCli("seed");
         assert.equal(seed[0], "seeded: 3 customer(s), 4 order(s), 4 part(s), revenue 58325c");
@@ -75,5 +75,13 @@ describe("every source file", () => {
 
         assert.deepEqual(runCli("report", "gross-profit"), ["revenue,583.25", "part cost,463.00", "gross profit,120.25"]);
         assert.deepEqual(runCli("recalculate"), ["recalculated 1 part(s)"]);
+    });
+
+    it("runs the corpus-wide export-report and recalculate-inventory commands", () => {
+        assert.deepEqual(runCli("export-report", "gross-profit"), ["revenue,583.25", "part cost,463.00", "gross profit,120.25"]);
+        const rows = JSON.parse(runCli("export-report", "gross-profit", "json").join("\n"));
+        assert.deepEqual(rows.map((row) => row.cents), [58325, 46300, 12025]);
+        assert.deepEqual(runCli("export-report", "gross-profit", "md").at(-1), "| gross profit | 120.25 |");
+        assert.deepEqual(runCli("recalculate-inventory"), ["recalculated 1 part(s)"]);
     });
 });

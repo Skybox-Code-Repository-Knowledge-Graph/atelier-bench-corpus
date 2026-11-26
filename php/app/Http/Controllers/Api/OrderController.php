@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreNoteRequest;
 use App\Http\Resources\RepairOrderResource;
 use App\Models\RepairOrder;
+use App\Support\OrderLinks;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
@@ -46,9 +47,12 @@ class OrderController extends Controller
     {
         $note = $repairOrder->notes()->create($request->validated());
 
-        return response()->json([
-            'message' => __('atelier.note_created'),
-            'note' => $note,
-        ], 201);
+        // The created note's Location is its order's API link (App\Support\OrderLinks).
+        return response()
+            ->json([
+                'message' => __('atelier.note_created'),
+                'note' => $note,
+            ], 201)
+            ->header('Location', OrderLinks::apiUrl($repairOrder));
     }
 }
