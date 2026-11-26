@@ -8,6 +8,7 @@ pub mod abstract_service;
 pub mod audit_digest;
 pub mod closure_predicate;
 pub mod grid;
+pub mod method_pick;
 pub mod pair_map;
 pub mod plain_row_formatter;
 pub mod report_glob;

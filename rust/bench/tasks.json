@@ -2,7 +2,7 @@
     "version": 1,
     "corpus": "atelier-bench-corpus",
     "lane": "rust",
-    "notes": "Known-answer navigation tasks for the rust lane. Needle-based, not line-based: bench/verify-tasks resolves every needle to a unique line at the current SHA, so the manifest survives edits without stale line numbers. Paths are relative to the lane root (rust/), not to the repository root. 'expect' blocks carry the ground truth a harness scores against; counts are minimums where marked. exact_count is exact and counts concrete, non-generic, unconditionally compiled types that satisfy the contract directly or through inheritance; abstract bases, blanket impls and cfg-gated impls are excluded. On an implementation or cardinality list, optional_sites names declarations that satisfy the contract but are not counted (traits that extend it); a tool may return them or not. Blanket impls are not optional: where a key names one, it is in must_not_include. Counting rule for references: a site is one line of a .rs file under crates/ (src and tests alike) that names the anchored declaration by an identifier or path that resolves to it. use and pub use paths, type positions, expressions, impl headers and intra-doc links such as [`Money`] all count, and several mentions on one line count once; the declaration line itself (the from line), plain comments, code spans in doc comments that are not intra-doc links (a backticked name without brackets), string literals, the keyword Self, and same-named different symbols (the AtelierError::Money variant, Money::from_cents against ReportRow::from_cents, AppState::seeded against Dataset::seeded) do not. A references exact_count is the number of such lines: known_sites lists each one once, and repeated_sites names a needle that matches several identical lines in one file, its lines field giving how many, each of them a site, so exact_count = the known_sites entries + the sum of lines. For a name_only task a site is a line other than the from line that holds the string literal. A line compiled only under a cfg (a feature or cfg(test)) counts like any other line of the source, and a macro invocation is a site of the macro it names, never of an item its expansion declares without naming it. For an associated const, an overriding impl const is a site of the trait const (per the associated_const kind below, an override resolves to the trait const it overrides), and so is every Self:: read inside the trait's own default bodies. On a cardinality list, textual_count counts the implementors whose impl block is written out in a source file and generated_count those whose impl a macro_rules! repetition writes; the two sum to exact_count. On a multi-parent task other than parents-class-one-plus-two, exact_count is the number of direct supertraits the anchored declaration names in its own bounds (auto traits such as Send and Sync included, never their ancestors). Kinds added by the fifth wave: build_generated (item spliced in by include! from OUT_DIR), path_attribute (#[path]-declared module), gat (generic associated type). Kinds added by the canonical-parity wave: barrel (import resolved through the crate-root pub use re-export), type_only (a use consumed only in type position, carrying no value-level edge), structural (a type that carries a trait's method set inherently without implementing it), deref_forward (a method reached through a Deref impl). For parents-class-one-plus-two, extends_count is the trait named on the impl line, implements_count its supertraits, and exact_count their total. document_symbol tasks count every symbol the anchored FILE declares at any nesting depth: modules, structs, enums, traits, type aliases, their fields and variants, functions and methods, consts and statics, and impl blocks, each impl block one symbol named impl Type or impl Trait for Type that holds its items; use and pub use items, macro invocations, attributes, parameters, local variables, generic parameters and closure bindings are not symbols. Each task's note enumerates that count N and states min_symbols = floor(0.75 * N), the 25% margin absorbing listings that fold container nodes. call_hierarchy tasks name callees under outgoing_includes and callers under incoming_includes; both are file+needle pairs the verifier resolves. min_incoming is a floor, not a total: the number of distinct calling functions incoming_includes lists, one call line each; the tree may hold further callers, and an answer may include them. Kinds added by the wave-2 parity pass: namespace_import (a module bound as a namespace, with one member read from it), same_name (two identically named functions in different modules, separated only by the path the call site writes), name_only (a topic matched by string literal, with no type or symbol edge between the subscribe site and the dispatch that reaches it). Other kinds this lane uses: associated_const (a const declared in a trait with a default value: an impl that overrides it resolves to the trait const it overrides, and a type that does not override it reads the trait default), blanket_impl (a method the receiver type gets only through an impl<T: Bound> Trait for T block, including one keyed on a foreign bound such as serde::Serialize or written for a foreign generic such as Vec<T>; no impl block names the receiver, so the blanket impl line is the answer), derive_generated (a trait impl written by #[derive(...)]: there is no textual impl block, so the derive attribute line is the implementation site), dyn_upcast (a coercion from &dyn SubTrait to &dyn SuperTrait: the edge that permits it is the supertrait bound on the sub-trait's declaration, not an impl block), glob (use crate::contracts::report_contract::*: every public item of that module comes into scope without being named, and exact_count is the number of such items), inherent_impl (an impl Type { ... } block that names no trait: it adds methods to the type itself and is never an IMPLEMENTS edge against any trait), into_response (the error type an axum handler returns: axum turns a handler's return value into the HTTP response through the IntoResponse trait, so the answer is that type's impl IntoResponse block, never a From impl into it), question_mark_from (a ? applied to a Result whose error type is not the enclosing function's own: ? desugars to From::from on the error, so the answer is the impl From<Inner> for Outer block that converts it, never another From impl of the same target), struct (the symbol kind of the declaration answered: a pub struct, reached here through a use ... as alias of one of two same-name Formatter structs, so the aliased path decides which one and the name cannot), syntax_error (a file under fixtures/broken-syntax/ left invalid on purpose, an unterminated impl block or unbalanced generics, and kept outside every workspace member: parsing it must yield an error, not a partial tree), trait_default_method (a method called on a type whose impl of the trait does not override it: the answer is the default body in the trait declaration), trait_in_scope (a use that brings a trait into scope only for its methods: the name is never written again in the file, the method calls resolve because of it, and the import binds the trait declaration, never an impl of it). Kinds shared with other lanes, worded identically in every lane that uses them. child_of: the anchored declaration is the child end of a parent edge, and the answer is a direct parent it extends, implements or embeds, one level up, never a further ancestor and never one of its own children. imports: an import that binds only the names it lists; the answer is each named declaration in the file that declares it, never a sibling declared beside it and never every name the target module exports. lane_local: a symbol every lane carries under the same name or as its lane equivalent (Money, Customer, Dataset, the reference prefix, the invoice calculator's calculate, the billing Formatter); resolution must land on this lane's own declaration and never cross into a sibling lane. parent_of: a parent edge scored for direction, with the anchor at either end; the parent is the type that is extended, implemented or embedded, the child is the type that does so, and an answer that reports the child as the parent is wrong. uses_self: a type that refers to itself, such as a tree node holding children of its own type; the edge is a uses edge back to the declaring type, never extends, implements or embedding. from.symbol is the identifier a task asks about, exactly as written on the from line and with no qualifier: the alias where an alias is used, the member on a member access, null when the question has no single identifier. from.occurrence (1-based) says which one when it appears more than once on that line, and is then required. document_symbol, parse-negative and diagnostics tasks ask about a file and carry neither key.",
+    "notes": "Known-answer navigation tasks for the rust lane. Needle-based, not line-based: bench/verify-tasks resolves every needle to a unique line at the current SHA, so the manifest survives edits without stale line numbers. Paths are relative to the lane root (rust/), not to the repository root. 'expect' blocks carry the ground truth a harness scores against; counts are minimums where marked. exact_count is exact and counts concrete, non-generic, unconditionally compiled types that satisfy the contract directly or through inheritance; abstract bases, blanket impls and cfg-gated impls are excluded. On an implementation or cardinality list, optional_sites names declarations that satisfy the contract but are not counted (traits that extend it); a tool may return them or not. Blanket impls are not optional: where a key names one, it is in must_not_include. Counting rule for references: a site is one line of a .rs file under crates/ (src and tests alike) that names the anchored declaration by an identifier or path that resolves to it. use and pub use paths, type positions, expressions, impl headers and intra-doc links such as [`Money`] all count, and several mentions on one line count once; the declaration line itself (the from line), plain comments, code spans in doc comments that are not intra-doc links (a backticked name without brackets), string literals, the keyword Self, and same-named different symbols (the AtelierError::Money variant, Money::from_cents against ReportRow::from_cents, AppState::seeded against Dataset::seeded) do not. A references exact_count is the number of such lines: known_sites lists each one once, and repeated_sites names a needle that matches several identical lines in one file, its lines field giving how many, each of them a site, so exact_count = the known_sites entries + the sum of lines. For a name_only task a site is a line other than the from line that holds the string literal. A line compiled only under a cfg (a feature or cfg(test)) counts like any other line of the source, and a macro invocation is a site of the macro it names, never of an item its expansion declares without naming it. For an associated const, an overriding impl const is a site of the trait const (per the associated_const kind below, an override resolves to the trait const it overrides), and so is every Self:: read inside the trait's own default bodies. On a cardinality list, textual_count counts the implementors whose impl block is written out in a source file and generated_count those whose impl a macro_rules! repetition writes; the two sum to exact_count. On a multi-parent task other than parents-class-one-plus-two, exact_count is the number of direct supertraits the anchored declaration names in its own bounds (auto traits such as Send and Sync included, never their ancestors). Kinds added by the fifth wave: build_generated (item spliced in by include! from OUT_DIR), path_attribute (#[path]-declared module), gat (generic associated type). Kinds added by the canonical-parity wave: barrel (import resolved through the crate-root pub use re-export), type_only (a use consumed only in type position, carrying no value-level edge), structural (a type that carries a trait's method set inherently without implementing it), deref_forward (a method reached through a Deref impl). For parents-class-one-plus-two, extends_count is the trait named on the impl line, implements_count its supertraits, and exact_count their total. document_symbol tasks count every symbol the anchored FILE declares at any nesting depth: modules, structs, enums, traits, type aliases, their fields and variants, functions and methods, consts and statics, and impl blocks, each impl block one symbol named impl Type or impl Trait for Type that holds its items; use and pub use items, macro invocations, attributes, parameters, local variables, generic parameters and closure bindings are not symbols. Each task's note enumerates that count N and states min_symbols = floor(0.75 * N), the 25% margin absorbing listings that fold container nodes. call_hierarchy tasks name callees under outgoing_includes and callers under incoming_includes; both are file+needle pairs the verifier resolves. min_incoming is a floor, not a total: the number of distinct calling functions incoming_includes lists, one call line each; the tree may hold further callers, and an answer may include them. Kinds added by the wave-2 parity pass: namespace_import (a module bound as a namespace, with one member read from it), same_name (two identically named functions in different modules, separated only by the path the call site writes), name_only (a topic matched by string literal, with no type or symbol edge between the subscribe site and the dispatch that reaches it). Other kinds this lane uses: associated_const (a const declared in a trait with a default value: an impl that overrides it resolves to the trait const it overrides, and a type that does not override it reads the trait default), blanket_impl (a method the receiver type gets only through an impl<T: Bound> Trait for T block, including one keyed on a foreign bound such as serde::Serialize or written for a foreign generic such as Vec<T>; no impl block names the receiver, so the blanket impl line is the answer), derive_generated (a trait impl written by #[derive(...)]: there is no textual impl block, so the derive attribute line is the implementation site), dyn_upcast (a coercion from &dyn SubTrait to &dyn SuperTrait: the edge that permits it is the supertrait bound on the sub-trait's declaration, not an impl block), glob (use crate::contracts::report_contract::*: every public item of that module comes into scope without being named, and exact_count is the number of such items), inherent_impl (an impl Type { ... } block that names no trait: it adds methods to the type itself and is never an IMPLEMENTS edge against any trait), into_response (the error type an axum handler returns: axum turns a handler's return value into the HTTP response through the IntoResponse trait, so the answer is that type's impl IntoResponse block, never a From impl into it), question_mark_from (a ? applied to a Result whose error type is not the enclosing function's own: ? desugars to From::from on the error, so the answer is the impl From<Inner> for Outer block that converts it, never another From impl of the same target), struct (the symbol kind of the declaration answered: a pub struct, reached here through a use ... as alias of one of two same-name Formatter structs, so the aliased path decides which one and the name cannot), syntax_error (a file under fixtures/broken-syntax/ left invalid on purpose, an unterminated impl block or unbalanced generics, and kept outside every workspace member: parsing it must yield an error, not a partial tree), trait_default_method (a method called on a type whose impl of the trait does not override it: the answer is the default body in the trait declaration), trait_in_scope (a method call that the impls of two traits for the receiver type could both answer by name: a trait's methods are callable only where the trait is in scope, and the calling file imports one of the two, so the answer is the method of that trait's impl, never the other's). Kinds added by the wave-3 review: from_attribute (an .into() into a thiserror enum: the blanket impl<T, U: From<T>> Into<U> for T calls the target's From impl, which thiserror writes for each #[from] field, so the answer is the variant line whose #[from] names the converted type, never another #[from] variant), from_iterator (a collect() call: Iterator::collect::<B> calls B::from_iter, B being the type the result is bound to, so the answer is the from_iter method of that type's impl FromIterator block), from_str (a str::parse call: parse::<F> calls F::from_str, F being the type the result is bound to, so the answer is the from_str method of that type's impl FromStr block), receiver_step (a method call on an owned value where an inherent method and a trait method share the name but not the receiver: lookup tries the receiver type T before &T, so a trait method taking self is found before an inherent one taking &self, and the answer is the trait impl's method), return_type_impl (a method of a generic trait implemented for one type once per trait argument: the type the caller binds the result to picks the impl, so the answer is the method of the impl for that argument), sum_item (an Iterator::sum call into a type that implements both Sum<T> and Sum<&T>: the item type of the iterator, owned or borrowed, picks the impl), trait_path (a call written Trait::method(receiver) where two traits implemented for the receiver type declare a method of that name: the trait path picks the trait and the receiver type its impl, so the answer is the method of that impl), type_arg_impl (a method of a generic type declared in several impl blocks, one per concrete type argument, such as impl Tagged<u32> and impl Tagged<&str>: the type argument of the receiver picks the block). Kinds shared with other lanes, worded identically in every lane that uses them. child_of: the anchored declaration is the child end of a parent edge, and the answer is a direct parent it extends, implements or embeds, one level up, never a further ancestor and never one of its own children. imports: an import that binds only the names it lists; the answer is each named declaration in the file that declares it, never a sibling declared beside it and never every name the target module exports. lane_local: a symbol every lane carries under the same name or as its lane equivalent (Money, Customer, Dataset, the reference prefix, the invoice calculator's calculate, the billing Formatter); resolution must land on this lane's own declaration and never cross into a sibling lane. parent_of: a parent edge scored for direction, with the anchor at either end; the parent is the type that is extended, implemented or embedded, the child is the type that does so, and an answer that reports the child as the parent is wrong. uses_self: a type that refers to itself, such as a tree node holding children of its own type; the edge is a uses edge back to the declaring type, never extends, implements or embedding. from.symbol is the identifier a task asks about, exactly as written on the from line and with no qualifier: the alias where an alias is used, the member on a member access, null when the question has no single identifier. from.occurrence (1-based) says which one when it appears more than once on that line, and is then required. document_symbol, parse-negative and diagnostics tasks ask about a file and carry neither key.",
     "tasks": [
         {
             "id": "def-enum-method",
@@ -898,6 +898,201 @@
             }
         },
         {
+            "id": "resolution-parse-from-str",
+            "surface": "resolution",
+            "note": "FromStr dispatch: \"12.34\".parse() is str::parse::<F>, which calls F::from_str, and F is Money because of the let annotation, so the body that runs is from_str of the impl FromStr for Money block; the lane declares no parse fn.",
+            "from": {
+                "file": "crates/atelier-core/src/money.rs",
+                "needle": "let parsed: Money = \"12.34\".parse().expect(\"parses\");",
+                "symbol": "parse"
+            },
+            "expect": {
+                "kind": "from_str",
+                "candidate": {
+                    "file": "crates/atelier-core/src/money.rs",
+                    "needle": "fn from_str(raw: &str) -> Result<Self, Self::Err> {"
+                }
+            }
+        },
+        {
+            "id": "resolution-default-derive",
+            "surface": "resolution",
+            "note": "Default through derive: StandardInvoiceCalculator has no impl Default block, #[derive(Default)] writes it, so StandardInvoiceCalculator::default() resolves to the derive attribute line, never to a hand-written fn default of another type.",
+            "from": {
+                "file": "crates/atelier-core/src/container.rs",
+                "needle": "invoice_calculator: Arc::new(StandardInvoiceCalculator::default()),",
+                "symbol": "default"
+            },
+            "expect": {
+                "kind": "derive_generated",
+                "candidate": {
+                    "file": "crates/atelier-core/src/services/standard_invoice_calculator.rs",
+                    "needle": "#[derive(Debug, Clone, Copy, Default)]"
+                },
+                "must_not_include": [
+                    "fn default() -> Self"
+                ]
+            }
+        },
+        {
+            "id": "resolution-into-from-attribute",
+            "surface": "resolution",
+            "note": "Into through From, From through #[from]: .into() into AtelierError runs the blanket impl<T, U: From<T>> Into<U> for T, which calls From<NotFoundError> for AtelierError, and thiserror writes that impl for the #[from] field of the NotFound variant; the two other #[from] variants convert other types.",
+            "from": {
+                "file": "crates/atelier-core/tests/not_found.rs",
+                "needle": "let error: AtelierError = NotFoundError::new(\"repair order\", \"AT-2026-999999\").into();",
+                "symbol": "into"
+            },
+            "expect": {
+                "kind": "from_attribute",
+                "candidate": {
+                    "file": "crates/atelier-core/src/errors.rs",
+                    "needle": "NotFound(#[from] NotFoundError),"
+                },
+                "must_not_include": [
+                    "Money(#[from] ParseMoneyError),",
+                    "Payload(#[from] serde_json::Error),"
+                ]
+            }
+        },
+        {
+            "id": "resolution-trait-in-scope-method",
+            "surface": "resolution",
+            "note": "Trait in scope: Ticket implements Brief and Verbose, both with a caption method, and the test file imports Brief only, so ticket.caption() is Brief's; with both traits in scope the call would not compile.",
+            "from": {
+                "file": "crates/atelier-bench/tests/method_pick.rs",
+                "needle": "assert_eq!(ticket.caption(), \"AT-2026-000001\");",
+                "symbol": "caption"
+            },
+            "expect": {
+                "kind": "trait_in_scope",
+                "candidate": {
+                    "file": "crates/atelier-bench/src/support/method_pick.rs",
+                    "needle": "fn caption(&self) -> &str {"
+                },
+                "must_not_include": [
+                    "fn caption(&self) -> String"
+                ]
+            }
+        },
+        {
+            "id": "resolution-trait-path-call",
+            "surface": "resolution",
+            "note": "Trait-qualified call: method_pick.rs has Brief and Verbose both in scope, so Ticket::long_caption names the trait, Verbose::caption(self), and the impl Verbose for Ticket method runs, not Brief's.",
+            "from": {
+                "file": "crates/atelier-bench/src/support/method_pick.rs",
+                "needle": "Verbose::caption(self)",
+                "symbol": "caption"
+            },
+            "expect": {
+                "kind": "trait_path",
+                "candidate": {
+                    "file": "crates/atelier-bench/src/support/method_pick.rs",
+                    "needle": "fn caption(&self) -> String {"
+                },
+                "must_not_include": [
+                    "fn caption(&self) -> &str"
+                ]
+            }
+        },
+        {
+            "id": "resolution-by-value-receiver-trait",
+            "surface": "resolution",
+            "note": "Receiver order: method lookup tries the receiver type Ticket before &Ticket, so on an owned ticket closed.stamp() finds Stamp::stamp(self) before the inherent stamp(&self), whose receiver is &Ticket; inherent methods win only against trait methods of the same receiver type.",
+            "from": {
+                "file": "crates/atelier-bench/tests/method_pick.rs",
+                "needle": "assert_eq!(closed.stamp(), \"AT-2026-000003 (closed)\");",
+                "symbol": "stamp"
+            },
+            "expect": {
+                "kind": "receiver_step",
+                "candidate": {
+                    "file": "crates/atelier-bench/src/support/method_pick.rs",
+                    "needle": "fn stamp(self) -> String {"
+                },
+                "must_not_include": [
+                    "pub fn stamp(&self) -> String"
+                ]
+            }
+        },
+        {
+            "id": "resolution-impl-by-type-arg",
+            "surface": "resolution",
+            "note": "Impl blocks per type argument: Tagged<u32> and Tagged<&str> each declare describe in their own impl block, so Tagged(45_u32).describe() is the u32 block's.",
+            "from": {
+                "file": "crates/atelier-bench/tests/method_pick.rs",
+                "needle": "assert_eq!(Tagged(45_u32).describe(), \"45 min\");",
+                "symbol": "describe"
+            },
+            "expect": {
+                "kind": "type_arg_impl",
+                "candidate": {
+                    "file": "crates/atelier-bench/src/support/method_pick.rs",
+                    "needle": "pub fn describe(&self) -> String {"
+                },
+                "must_not_include": [
+                    "pub fn describe(&self) -> &'a str"
+                ]
+            }
+        },
+        {
+            "id": "resolution-return-type-impl",
+            "surface": "resolution",
+            "note": "Impl picked by the asked type: Ticket implements Measure<u32> and Measure<String>, and let minutes: u32 asks for the u32 one, so the body that runs is the impl Measure<u32> for Ticket method.",
+            "from": {
+                "file": "crates/atelier-bench/tests/method_pick.rs",
+                "needle": "let minutes: u32 = ticket.measure();",
+                "symbol": "measure"
+            },
+            "expect": {
+                "kind": "return_type_impl",
+                "candidate": {
+                    "file": "crates/atelier-bench/src/support/method_pick.rs",
+                    "needle": "fn measure(&self) -> u32 {"
+                },
+                "must_not_include": [
+                    "fn measure(&self) -> String"
+                ]
+            }
+        },
+        {
+            "id": "resolution-collect-from-iterator",
+            "surface": "resolution",
+            "note": "FromIterator dispatch: collect() is Iterator::collect::<B>, which calls B::from_iter, and B is Workload because of the let annotation, so the body that runs is from_iter of the impl FromIterator<Ticket> for Workload block.",
+            "from": {
+                "file": "crates/atelier-bench/tests/method_pick.rs",
+                "needle": "let collected: Workload = tickets.into_iter().collect();",
+                "symbol": "collect"
+            },
+            "expect": {
+                "kind": "from_iterator",
+                "candidate": {
+                    "file": "crates/atelier-bench/src/support/method_pick.rs",
+                    "needle": "fn from_iter<I: IntoIterator<Item = Ticket>>(tickets: I) -> Self {"
+                }
+            }
+        },
+        {
+            "id": "resolution-sum-by-item-type",
+            "surface": "resolution",
+            "note": "Sum dispatch by item type: Workload implements Sum<Ticket> and Sum<&Ticket>, and tickets.iter() yields &Ticket, so sum() runs the impl Sum<&'a Ticket> for Workload method.",
+            "from": {
+                "file": "crates/atelier-bench/tests/method_pick.rs",
+                "needle": "let summed: Workload = tickets.iter().sum();",
+                "symbol": "sum"
+            },
+            "expect": {
+                "kind": "sum_item",
+                "candidate": {
+                    "file": "crates/atelier-bench/src/support/method_pick.rs",
+                    "needle": "fn sum<I: Iterator<Item = &'a Ticket>>(tickets: I) -> Self {"
+                },
+                "must_not_include": [
+                    "fn sum<I: Iterator<Item = Ticket>>"
+                ]
+            }
+        },
+        {
             "id": "parse-negative-unclosed-impl",
             "surface": "parse-negative",
             "note": "Intentionally invalid fixture. A parser must report an error here, never a partial tree. DO NOT FIX. Rust has no classes: an impl block left open is the type body this grammar has, so this id stands in for parse-negative-unclosed-class (as go's parse-negative-unclosed-struct does).",
@@ -1335,24 +1530,6 @@
                     "needle": "pub struct Left;"
                 },
                 "must_not_include": ["pub struct Right"]
-            }
-        },
-        {
-            "id": "imp-trait-in-scope",
-            "surface": "import-precision",
-            "note": "Trait in scope: breadth.rs never writes HasFormatting again; this use line is what lets report.format_value(1.5) and report.format_label(..) resolve, because a trait's methods are callable only where the trait is in scope. The import binds the trait declaration, not the blanket impl that gives the reports those methods.",
-            "from": {
-                "file": "crates/atelier-bench/tests/breadth.rs",
-                "needle": "use atelier_bench::concerns::has_formatting::HasFormatting;",
-                "symbol": "HasFormatting"
-            },
-            "expect": {
-                "kind": "trait_in_scope",
-                "candidate": {
-                    "file": "crates/atelier-bench/src/concerns/has_formatting.rs",
-                    "needle": "pub trait HasFormatting {"
-                },
-                "must_not_include": ["impl<T: ReportContract> HasFormatting for T"]
             }
         },
         {

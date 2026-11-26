@@ -1486,12 +1486,6 @@
         "python"
       ]
     },
-    "imp-trait-in-scope": {
-      "surface": "import-precision",
-      "lanes": [
-        "rust"
-      ]
-    },
     "imp-type-only-no-value-edge": {
       "surface": "import-precision",
       "lanes": [
@@ -2049,6 +2043,12 @@
         "rust"
       ]
     },
+    "resolution-by-value-receiver-trait": {
+      "surface": "resolution",
+      "lanes": [
+        "rust"
+      ]
+    },
     "resolution-calculate-through-binding": {
       "surface": "resolution",
       "lanes": [
@@ -2059,6 +2059,18 @@
       "surface": "resolution",
       "lanes": [
         "typescript"
+      ]
+    },
+    "resolution-collect-from-iterator": {
+      "surface": "resolution",
+      "lanes": [
+        "rust"
+      ]
+    },
+    "resolution-default-derive": {
+      "surface": "resolution",
+      "lanes": [
+        "rust"
       ]
     },
     "resolution-diamond-mro": {
@@ -2085,10 +2097,22 @@
         "rust"
       ]
     },
+    "resolution-impl-by-type-arg": {
+      "surface": "resolution",
+      "lanes": [
+        "rust"
+      ]
+    },
     "resolution-init-ordering": {
       "surface": "resolution",
       "lanes": [
         "go"
+      ]
+    },
+    "resolution-into-from-attribute": {
+      "surface": "resolution",
+      "lanes": [
+        "rust"
       ]
     },
     "resolution-into-response": {
@@ -2109,6 +2133,12 @@
         "go"
       ]
     },
+    "resolution-parse-from-str": {
+      "surface": "resolution",
+      "lanes": [
+        "rust"
+      ]
+    },
     "resolution-property-setter": {
       "surface": "resolution",
       "lanes": [
@@ -2125,6 +2155,12 @@
       "surface": "resolution",
       "lanes": [
         "go"
+      ]
+    },
+    "resolution-return-type-impl": {
+      "surface": "resolution",
+      "lanes": [
+        "rust"
       ]
     },
     "resolution-route-model-binding": {
@@ -2207,6 +2243,12 @@
         "go"
       ]
     },
+    "resolution-sum-by-item-type": {
+      "surface": "resolution",
+      "lanes": [
+        "rust"
+      ]
+    },
     "resolution-this-rebinding": {
       "surface": "resolution",
       "lanes": [
@@ -2217,6 +2259,18 @@
       "surface": "resolution",
       "lanes": [
         "php"
+      ]
+    },
+    "resolution-trait-in-scope-method": {
+      "surface": "resolution",
+      "lanes": [
+        "rust"
+      ]
+    },
+    "resolution-trait-path-call": {
+      "surface": "resolution",
+      "lanes": [
+        "rust"
       ]
     },
     "resolution-type-only-import": {

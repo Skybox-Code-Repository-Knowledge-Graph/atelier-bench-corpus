@@ -23,7 +23,7 @@ Build from the **committed** `Cargo.lock` only (`cargo build --locked`). Do not 
 | Crate | Role | .rs files under `src/` |
 | --- | --- | --- |
 | `crates/atelier-core` | Domain: models, enums, traits, container bindings, money, errors | 45 |
-| `crates/atelier-bench` | Breadth subsystem: 8 contracts, 8 concerns, 7 bases, 76 implementors | 149 |
+| `crates/atelier-bench` | Breadth subsystem: 8 contracts, 8 concerns, 7 bases, 76 implementors | 150 |
 | `crates/atelier-app` | Application surface: axum router, console commands, jobs | 14 |
 | `bench/verify-tasks` | Ground-truth self-check; **zero third-party dependencies** | 2 |
 
@@ -74,7 +74,8 @@ Build from the **committed** `Cargo.lock` only (`cargo build --locked`). Do not 
 | String-keyed subscription | `atelier-core/src/events.rs`: `Dispatcher::on` matches on a topic literal; `DomainEvent::topic` writes the same literal per variant |
 | Axum route variant: generic handler | `atelier-app/src/lib.rs` registers `GET /api/exports/{slug}` as `get(export_rows::<CsvExporter>)` on one line, `export_rows` imported from `http::api`; `http/api.rs` declares `export_rows<E: ExporterContract + Default>` |
 | `?` conversion and `IntoResponse` | `http/report.rs` `show`: the `?` on a `NotFoundError` converts through `impl From<NotFoundError> for ApiError`, and axum turns the `ApiError` into the response through `impl IntoResponse for ApiError` (`http/errors.rs`) |
-| Trait brought into scope for its methods | `atelier-bench/tests/breadth.rs`: `use ...::has_formatting::HasFormatting;` is never written again; `report.format_value(1.5)` resolves because of it |
+| Method picked by a rule, not by its name | `atelier-bench/src/support/method_pick.rs`, run by `tests/method_pick.rs`: `caption` of `Brief` (the one of two traits the test imports) and of `Verbose` (through `Verbose::caption(self)`); `describe` per type argument (`impl Tagged<&str>`, `impl Tagged<u32>`); `measure` per asked type (`Measure<String>`, `Measure<u32>`); `Stamp::stamp(self)` found before the inherent `stamp(&self)`; `collect()` and `sum()` into `Workload` (`FromIterator<Ticket>`, `Sum<Ticket>`, `Sum<&Ticket>`). Each look-alike is written before its answer |
+| Std conversions reaching lane code | `"12.34".parse()` → `impl FromStr for Money`; `.into()` into `AtelierError` → `NotFound(#[from] NotFoundError)`; `StandardInvoiceCalculator::default()` → its `#[derive(Default)]` |
 | References of macro, macro-generated and cfg-gated items | `forwards_to_schedule!` (3 sites), the macro-generated `book_next_slot` (4 calls), the `extra-rules`-gated `ExperimentalRule` (2 sites) |
 
 ## Consumption (runner)
@@ -86,8 +87,8 @@ Build from the **committed** `Cargo.lock` only (`cargo build --locked`). Do not 
 Local use:
 
 ```bash
-cargo test --workspace          # 104 tests
-cargo test -p atelier-bench --features extra-rules   # 40 tests, incl. the feature-gated ExperimentalRule
+cargo test --workspace          # 109 tests
+cargo test -p atelier-bench --features extra-rules   # 45 tests, incl. the feature-gated ExperimentalRule
 RUSTDOCFLAGS="-D rustdoc::broken_intra_doc_links" \
   cargo doc --workspace --no-deps --document-private-items --all-features   # every intra-doc link resolves
 cargo clippy --workspace --all-targets -- -D warnings
@@ -107,7 +108,7 @@ HTTP surface: `GET /report/{reference}` (e.g. `AT-2026-000001`), `GET /api/order
 
 | Artifact | Role |
 | --- | --- |
-| `bench/tasks.json` | 104 needle-based accuracy tasks (`from` → `expect` file/needle pairs): 59 shared canonical ids (three or more lanes), 3 two-lane ids (`def-crate-const`, `parse-negative-bad-generics`, `refs-rule-registry`) and 42 one-lane ids (box D.2 below) |
+| `bench/tasks.json` | 113 needle-based accuracy tasks (`from` → `expect` file/needle pairs): 59 shared canonical ids (three or more lanes), 3 two-lane ids (`def-crate-const`, `parse-negative-bad-generics`, `refs-rule-registry`) and 51 one-lane ids (box D.2 below) |
 | `bench/lsp-check.mjs` | Runs rust-analyzer over the hover, document_symbol, call_hierarchy and implementation keys and prints one verdict per task; never changes a key. Its committed output is `bench/lsp-check.md` |
 | `bench/verify-tasks` | Self-check that every task needle still resolves to exactly one line (`optional_sites` included), every `repeated_sites` needle to exactly its `lines` count (a whole number, 2 or more), every references `exact_count` equals its `known_sites` entries plus the sum of `lines` with no line counted twice, and every `must_not_include` entry written as text or as a `.*` pattern occurs in the code of the lane's sources (outside `//` and `/* */` comments and string and char literals) |
 
@@ -140,14 +141,20 @@ change (bench lane owns `bench/`; crate lanes keep needles green).
 
 ## One-lane ids (box D.2)
 
-Each of the 42 ids only this lane carries is sorted under ruling R13. Outcome 1 (32): the path from
-the asked line to the keyed answer applies a resolution rule only Rust (or axum) has, and the task's
-note names it in one sentence. Outcome 2 (9, common candidates other lanes could carry unchanged):
-`def-cross-crate-trait`, `def-error-conversion`, `def-registry-entry`, `def-serde-tagged-enum`,
-`def-impl-trait-return`, `def-lifetime-struct`, `def-hrtb-bound`, `def-reexport-two-levels`,
-`imp-trait-in-scope`.
-Route variant (1): `def-route-axum-generic-handler`. Ids that only repeated a question the lane
-already asks were retired in wave 3.
+The 51 ids only this lane carries are sorted under rulings R13, R18 and R19 (54 when the three
+two-lane ids count too, the looser reading). Outcome 1, language-specific (38): a resolver blind to
+the mechanism the note names (receiver type, then member by name; the nearest preceding binding for
+a name) does not land on the keyed answer. 32 of them count toward the floor of 30. The 6 close
+calls do not: `def-cfg-gated` and `refs-cfg-gated-type` (go build tags),
+`resolution-assoc-const-override` and `refs-assoc-const-override` (php class constants),
+`def-async-trait-method` (named by the wave-3 review), and `resolution-trait-path-call` (php's
+`insteadof` picks between two traits' methods of one name natively). Outcome 2 (11, common
+candidates other lanes could carry unchanged): `def-cross-crate-trait`, `def-error-conversion`,
+`def-registry-entry`, `def-serde-tagged-enum`, `def-impl-trait-return`, `def-lifetime-struct`,
+`def-hrtb-bound`, `def-reexport-two-levels`, `def-operator-overload`, `def-closure-field`,
+`def-generic-impl-two-params`. Not sorted: the route variant `def-route-axum-generic-handler`, and
+`parse-negative-unclosed-impl`, the lane's stand-in for the shared `parse-negative-unclosed-class`
+(box B.1). Ids that only repeated a question the lane already asks were retired in wave 3.
 
 ## Indexer surface (box E)
 
