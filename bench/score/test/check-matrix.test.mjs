@@ -61,9 +61,9 @@ function scratch(t) {
 }
 
 function run(root, ...args) {
-    // stdout goes to a file, not a pipe: check-matrix.mjs ends in process.exit() right after printing
-    // its grid (~25 KB), and through a pipe on Linux CI the tail of it was lost (the #221 pattern,
-    // seen on PR #236's first run). Writes to a file are synchronous, so the test reads all of it.
+    // stdout goes to a file, not a pipe: check-matrix.mjs used to end in process.exit() right after
+    // printing its grid (~25 KB), and through a pipe on Linux CI the tail of it was lost (the #221
+    // pattern, seen on PR #236's first run). A file is written synchronously, whatever the script does.
     const outPath = join(root, "check-matrix.stdout");
     const out = openSync(outPath, "w");
     let result;
@@ -117,6 +117,24 @@ test("--matrix-only without --write is an error: exit 1, nothing spawned, nothin
     assert.equal(result.stdout, "");
     assert.deepEqual(result.calls, []);
     assert.equal(matrixOf(root), COMMITTED_MATRIX);
+});
+
+test("an argument check-matrix does not know is refused before anything runs (a typo never runs the full pass)", (t) => {
+    for (const argv of [["--write", "--matrix-onyl"], ["--bogus"], ["--write", "--write=1"], ["--matrix-only", "--WRITE"]]) {
+        const root = scratch(t);
+        const result = run(root, ...argv);
+        assert.equal(result.status, 1, argv.join(" "));
+        assert.match(result.stderr, /^matrix: FAIL unknown argument \S+ \(known: --write, --matrix-only\)\n$/);
+        assert.equal(result.stdout, "");
+        assert.deepEqual(result.calls, [], "no verifier spawned");
+        assert.equal(matrixOf(root), COMMITTED_MATRIX, "nothing written");
+    }
+});
+
+test("check-matrix.mjs sets process.exitCode and never calls process.exit() (piped output stays whole)", () => {
+    const code = SCRIPT.split("\n").filter((line) => !/^\s*(?:\/\/|\*|\/\*)/.test(line)).join("\n");
+    assert.doesNotMatch(code, /process\.exit\(/);
+    assert.match(SCRIPT, /^process\.exitCode = /m);
 });
 
 test("--write --matrix-only spawns no verifier, and writes what plain --write writes", (t) => {
@@ -222,7 +240,7 @@ test("guard: every hover task states a contains string, a lane-local one include
     const lanesOf = new Map(Object.entries(JSON.parse(COMMITTED_MATRIX).canonical).map(([id, entry]) => [id, entry.lanes]));
     for (const shared of [false, true]) {
         const [lane, task] = findTask((candidate) => candidate.surface === "hover" && (lanesOf.get(candidate.id).length > 1) === shared);
-        for (const value of [undefined, ""]) {
+        for (const value of [undefined, "", " \t "]) {
             assertRefused(t, (root) => editJson(root, `${lane}/bench/tasks.json`, (manifest) => {
                 const target = taskIn(manifest, task.id).expect;
                 if (value === undefined) {
@@ -275,21 +293,52 @@ test("guard: .gitattributes keeps crlf.txt -text, as the last line that sets tex
     assert.equal(result.status, 0, result.stderr);
 });
 
+test("guard: .gitattributes as git reads it: a double star matching no directory, and a nested .gitattributes", (t) => {
+    const cases = [
+        ["a /**/ pattern", (root) => appendText(root, ".gitattributes", "bench/conformance/src/**/crlf.txt text\n")],
+        ["a nested file", (root) => writeFileSync(join(root, "bench", "conformance", "src", ".gitattributes"), "crlf.txt text\n")],
+    ];
+    // Outside a work tree (the copy is no git repository): the parser reads every .gitattributes on the path.
+    for (const [label, mutate] of cases) {
+        assertRefused(t, mutate, /^matrix: FAIL \.gitattributes lets git normalise the line endings of bench\/conformance\/src\/crlf\.txt \(the last line setting text for it is /, label);
+    }
+    // In a work tree git itself is asked.
+    const gitInit = (root) => {
+        for (const argv of [["init", "-q"], ["add", "-A"]]) {
+            assert.equal(spawnSync("git", argv, { cwd: root }).status, 0, `git ${argv.join(" ")}`);
+        }
+    };
+    for (const [label, mutate] of cases) {
+        assertRefused(t, (root) => {
+            gitInit(root);
+            mutate(root);
+        }, /^matrix: FAIL \.gitattributes lets git normalise the line endings of bench\/conformance\/src\/crlf\.txt \(git check-attr says text: set\)/, label);
+    }
+    const root = scratch(t);
+    gitInit(root);
+    const result = run(root, "--write", "--matrix-only");
+    assert.equal(result.status, 0, result.stderr);
+});
+
 // bench/TOOL-SURFACE.md. The committed file passes (the tests above run on it); these tests write
 // their own file of the same shape into the copy, built from the copy's lane files, so that the
 // lanes filling in their rows never turns them red.
 const SURFACE = "bench/TOOL-SURFACE.md";
 const LANGUAGE = { php: "PHP", rust: "Rust", typescript: "TypeScript", javascript: "JavaScript", python: "Python", go: "Go" };
+// SKYBOX_EXTRACTORS in bench/check-matrix.mjs, the R2 list of the pinned version.
 const QUOTED = {
     Rust: ["Axum routes", "Reqwest HTTP"],
     PHP: ["Laravel routes", "Eloquent", "Guzzle", "Inertia (PHP side)", "Blade"],
-    TypeScript: ["Express", "NestJS"],
-    JavaScript: ["Express", "NestJS"],
-    Python: ["FastAPI", "Flask", "SQLAlchemy"],
-    Go: ["net/http", "chi", "resty"],
+    TypeScript: ["Express", "NestJS", "Hono", "Fastify", "Remix", "SvelteKit", "Nuxt", "Expo"],
+    JavaScript: ["Express", "NestJS", "Hono", "Fastify", "Remix", "SvelteKit", "Nuxt", "Expo"],
+    Python: ["FastAPI", "Flask", "Django", "SQLAlchemy", "Pydantic"],
+    Go: ["net/http", "gorilla/mux", "chi", "gin", "echo", "fiber", "resty"],
 };
+// README text a lane could write for a deliberate gap and for a server pin; appended to the copy's
+// README by the tests that quote it.
+const PYTHON_GAP = "SQLAlchemy is a deliberate gap: the lane has no database layer, only Flask.";
+const GO_PIN = "The language server this lane's stack starts is gopls v0.24.0.";
 const installedVersion = (root) => /inputs\.skybox_version \|\| '(\d+\.\d+\.\d+)'/.exec(readFileSync(join(root, ".github", "workflows", "score-tools.yml"), "utf8"))[1];
-const readmeTitle = (root, lane) => readFileSync(join(root, lane, "README.md"), "utf8").split("\n").find((line) => line.startsWith("# ")).slice(2);
 
 /**
  * Write a TOOL-SURFACE.md into the copy: each lane's first extractor is a route parser scored by the
@@ -298,35 +347,42 @@ const readmeTitle = (root, lane) => readFileSync(join(root, lane, "README.md"), 
  */
 function writeSurface(root, edit = () => {}) {
     const model = {
-        versionLine: `Pinned version: \`${installedVersion(root)}\``,
+        versionLines: [`Pinned version: \`${installedVersion(root)}\``],
         quoted: structuredClone(QUOTED),
         lanes: Object.fromEntries(LANES.map((lane) => {
             const first = readJson(root, `${lane}/bench/tasks.json`).tasks[0].id;
             const rows = QUOTED[LANGUAGE[lane]].map((extractor, index) => index === 0
                 ? { extractor, klass: "route parser", scoredBy: `\`${first}\``, gap: "", notYet: "" }
                 : { extractor, klass: "other", scoredBy: "", gap: "", notYet: "not yet" });
-            return [lane, { rows, servers: ["not pinned yet"] }];
+            return [lane, { rows, servers: ["not pinned yet"], extra: [] }];
         })),
+        separator: "| --- | --- | --- | --- | --- |",
     };
     edit(model);
-    const out = ["# Tool surface (test copy)", "", "## Scope (ruling R1)", "", model.versionLine, "", "## Framework extractors (ruling R2)", "",
-        "```", "npm view (not run by this test)", "```", "",
+    const out = ["# Tool surface (test copy)", "", "## Scope (ruling R1)", "", ...model.versionLines, "", "## Framework extractors (ruling R2)", "",
+        "```", "npm view (not run by this test)", "Pinned version: `0.0.1`", "```", "",
         "| Language | Framework extractors |", "| --- | --- |",
         ...Object.entries(model.quoted).map(([language, list]) => `| ${language} | ${list.join(", ")} |`), "", "## Per-lane coverage", ""];
-    for (const [lane, { rows, servers }] of Object.entries(model.lanes)) {
-        out.push(`### ${lane}`, "", "| Extractor | Class | Scored by (task ids) | Deliberate gap (README line) | Not yet |", "| --- | --- | --- | --- | --- |");
+    for (const [lane, { rows, servers, extra }] of Object.entries(model.lanes)) {
+        out.push(`### ${lane}`, "", "| Extractor | Class | Scored by (task ids) | Deliberate gap (README line) | Not yet |", model.separator);
         out.push(...rows.map((row) => `| ${row.extractor} | ${row.klass} | ${row.scoredBy} | ${row.gap} | ${row.notYet} |`), "");
-        out.push(...servers.map((server) => `Language server (E.5): ${server}`), "");
+        out.push(...extra, ...servers.map((server) => `Language server (E.5): ${server}`), "");
     }
     writeFileSync(join(root, SURFACE), `${out.join("\n")}\n`);
 }
+const row = (model, lane, extractor) => model.lanes[lane].rows.find((candidate) => candidate.extractor === extractor);
+const setGap = (model, lane, extractor, gap) => Object.assign(row(model, lane, extractor), { scoredBy: "", gap, notYet: "" });
 
 test("guard: TOOL-SURFACE.md of the checked shape passes, with a quoted gap and a quoted server pin", (t) => {
     const root = scratch(t);
+    appendText(root, "python/README.md", `\n${PYTHON_GAP}\n`);
+    appendText(root, "go/README.md", `\n${GO_PIN}\n`);
     writeSurface(root, (model) => {
-        const python = model.lanes.python.rows.find((row) => row.extractor === "SQLAlchemy");
-        Object.assign(python, { gap: `"${readmeTitle(root, "python")}"`, notYet: "" });
-        model.lanes.go.servers = [`gopls v0.0.0; source "${readmeTitle(root, "go")}"`];
+        setGap(model, "python", "SQLAlchemy", `"${PYTHON_GAP}"`);
+        model.lanes.go.servers = [`gopls v0.24.0; source "${GO_PIN}"`];
+        // A second table in a section is not read, and aligned separators are separators.
+        model.lanes.rust.extra = ["| Note | Text |", "| :--- | ---: |", "| a | b |", ""];
+        model.separator = "| :--- | :---: | --- | --- | ---: |";
     });
     const result = run(root, "--write", "--matrix-only");
     assert.equal(result.status, 0, result.stderr);
@@ -349,50 +405,77 @@ test("guard: TOOL-SURFACE.md names only task ids its lanes have", (t) => {
     }), /python FastAPI: Scored by must be backticked task ids/);
 });
 
-test("guard: TOOL-SURFACE.md rows follow the quoted list, one state each", (t) => {
+test("guard: TOOL-SURFACE.md rows and quoted list follow the pinned R2 list, one state each", (t) => {
     assertRefused(t, (root) => writeSurface(root, (model) => model.lanes.rust.rows.pop()),
-        /^matrix: FAIL bench\/TOOL-SURFACE\.md: rust rows are \[Axum routes\], but the quoted Rust list is \[Axum routes, Reqwest HTTP\]/);
-    assertRefused(t, (root) => writeSurface(root, (model) => model.quoted.Go.push("fiber")),
-        /go rows are \[net\/http, chi, resty\], but the quoted Go list is \[net\/http, chi, resty, fiber\]/);
+        /^matrix: FAIL bench\/TOOL-SURFACE\.md: rust rows are \[Axum routes\], but the Rust list is \[Axum routes, Reqwest HTTP\]/);
+    assertRefused(t, (root) => writeSurface(root, (model) => model.quoted.Go.push("httprouter")),
+        /the quoted Go list is \[net\/http, .*, resty, httprouter\], but skybox 0\.9\.0 ships \[net\/http, .*, resty\]/);
+    // Dropping an extractor from the quoted row and from the lane's rows together is still refused.
+    assertRefused(t, (root) => writeSurface(root, (model) => {
+        model.quoted.PHP = model.quoted.PHP.filter((extractor) => extractor !== "Guzzle");
+        model.lanes.php.rows = model.lanes.php.rows.filter((candidate) => candidate.extractor !== "Guzzle");
+    }), /the quoted PHP list is \[Laravel routes, Eloquent, Inertia \(PHP side\), Blade\], but skybox 0\.9\.0 ships/);
     assertRefused(t, (root) => writeSurface(root, (model) => {
         model.lanes.rust.rows[0].notYet = "not yet";
     }), /rust Axum routes: fill exactly one of Scored by, Deliberate gap and Not yet \(2 filled\)/);
     assertRefused(t, (root) => writeSurface(root, (model) => {
-        model.lanes.go.rows[1].notYet = "";
+        row(model, "go", "chi").notYet = "";
     }), /go chi: fill exactly one of Scored by, Deliberate gap and Not yet \(0 filled\)/);
     assertRefused(t, (root) => writeSurface(root, (model) => {
-        model.lanes.go.rows[2].notYet = "later";
+        row(model, "go", "resty").notYet = "later";
     }), /go resty: the Not yet cell reads "later"/);
     assertRefused(t, (root) => writeSurface(root, (model) => {
-        model.lanes.rust.rows[1].klass = "client";
+        row(model, "rust", "Reqwest HTTP").klass = "client";
     }), /rust Reqwest HTTP: class "client" is not one of/);
     assertRefused(t, (root) => writeSurface(root, (model) => {
         delete model.lanes.typescript;
     }), /no coverage table for lane typescript/);
 });
 
-test("guard: a deliberate gap quotes the lane README, and a route parser cannot be one", (t) => {
-    const gapOn = (index, cell) => (root) => writeSurface(root, (model) => {
-        Object.assign(model.lanes.python.rows[index], { scoredBy: "", gap: typeof cell === "function" ? cell(root) : cell, notYet: "" });
-    });
-    assertRefused(t, gapOn(2, '"no SQLAlchemy here, on purpose"'), /python SQLAlchemy: Deliberate gap must quote, in double quotes, a line of python\/README\.md/);
-    assertRefused(t, gapOn(2, (root) => readmeTitle(root, "python")), /python SQLAlchemy: Deliberate gap must quote/);
-    assertRefused(t, gapOn(0, (root) => `"${readmeTitle(root, "python")}"`), /python FastAPI: a route parser cannot be a deliberate gap/);
+test("guard: a deliberate gap quotes README text that names the extractor, and a route parser cannot be one", (t) => {
+    const gapRefused = /python SQLAlchemy: Deliberate gap must quote, in double quotes, python\/README\.md text of 5 or more words that names SQLAlchemy/;
+    const withGapText = (cell) => (root) => {
+        appendText(root, "python/README.md", `\n${PYTHON_GAP}\n`);
+        writeSurface(root, (model) => setGap(model, "python", "SQLAlchemy", cell));
+    };
+    assertRefused(t, withGapText('"a"'), gapRefused); // byte-present in any README
+    assertRefused(t, withGapText('"the lane has no database layer, only Flask."'), gapRefused); // README text, no name
+    assertRefused(t, withGapText('"SQLAlchemy is a deliberate"'), gapRefused); // names it, four words
+    assertRefused(t, withGapText('"SQLAlchemy is not used by this lane"'), gapRefused); // not README text
+    assertRefused(t, withGapText(PYTHON_GAP), gapRefused); // not double-quoted
+    assertRefused(t, (root) => {
+        appendText(root, "python/README.md", `\n${PYTHON_GAP}\n`);
+        writeSurface(root, (model) => setGap(model, "python", "FastAPI", `"${PYTHON_GAP}"`));
+    }, /python FastAPI: a route parser cannot be a deliberate gap/);
 });
 
-test("guard: TOOL-SURFACE.md pins the version score-tools.yml installs, and quotes each pinned server", (t) => {
+test("guard: TOOL-SURFACE.md pins the version score-tools.yml installs, once, and quotes each pinned server", (t) => {
     assertRefused(t, (root) => writeSurface(root, (model) => {
-        model.versionLine = "Pinned version: `999.0.0`";
+        model.versionLines = ["Pinned version: `999.0.0`"];
     }), /^matrix: FAIL bench\/TOOL-SURFACE\.md: pinned version 999\.0\.0 is not the one \.github\/workflows\/score-tools\.yml installs \(\d+\.\d+\.\d+\)/);
     assertRefused(t, (root) => writeSurface(root, (model) => {
-        model.versionLine = model.versionLine.replaceAll("`", "");
-    }), /pinned version \(no "Pinned version:" line\)/);
+        model.versionLines = [model.versionLines[0].replaceAll("`", "")];
+    }), /pinned version \(no "Pinned version: `x\.y\.z`" line\)/);
     assertRefused(t, (root) => writeSurface(root, (model) => {
-        model.lanes.go.servers = ["gopls v0.0.0"];
-    }), /go language server: end the line with ; source "<the go\/README\.md text that pins it>"/);
+        model.versionLines = [model.versionLines[0], "Pinned version: `0.8.0`"];
+    }), /needs exactly one "Pinned version:" line outside a code block \(2 found\)/);
+    // Only the copy inside the code block is left: that one does not count.
     assertRefused(t, (root) => writeSurface(root, (model) => {
-        model.lanes.go.servers = ['gopls v0.0.0; source "a pin no go README line holds"'];
-    }), /go language server: end the line with ; source/);
+        model.versionLines = [];
+    }), /needs exactly one "Pinned version:" line outside a code block \(0 found\)/);
+
+    const pinRefused = /go language server: name the server with its version, then end the line with ; source "<go\/README\.md text of 5 or more words that pins that version>"/;
+    const withPinText = (server) => (root) => {
+        appendText(root, "go/README.md", `\n${GO_PIN}\n`);
+        writeSurface(root, (model) => {
+            model.lanes.go.servers = [server];
+        });
+    };
+    assertRefused(t, withPinText("gopls v0.24.0"), pinRefused); // no source
+    assertRefused(t, withPinText('gopls v0.24.0; source "a"'), pinRefused); // byte-present in any README
+    assertRefused(t, withPinText('gopls v0.25.0; source "The language server this lane\'s stack starts is gopls"'), pinRefused); // source without the version
+    assertRefused(t, withPinText(`gopls; source "${GO_PIN}"`), pinRefused); // the line names no version
+    assertRefused(t, withPinText('gopls v0.24.0; source "a pin no go README line holds, 0.24.0"'), pinRefused); // not README text
     assertRefused(t, (root) => writeSurface(root, (model) => {
         model.lanes.php.servers = ["not pinned yet", "not pinned yet"];
     }), /the php section needs exactly one "Language server \(E\.5\): \.\.\." line \(2 found\)/);

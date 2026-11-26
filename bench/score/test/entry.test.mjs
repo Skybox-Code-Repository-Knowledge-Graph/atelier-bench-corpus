@@ -40,7 +40,8 @@ test("oracle.mjs runs through a symlink to the file and through a symlinked dire
 
 test("compare.mjs writes a stdout larger than a pipe buffer in full", (t) => {
     // 20,000 gained tasks print one line each, about 0.6 MB. With process.exit() after the write,
-    // a pipe on macOS (asynchronous pipes) received only the first 64 KB or so.
+    // a pipe received only the first 64 KB or so on macOS; on Linux CI a ~25 KB piped stdout lost
+    // its tail the same way (PR #236, check-matrix.mjs).
     const count = 20000;
     const task = (id, verdict) => ({ id, surface: "definition", protocol: "raw", rule: "definition/target", class: "exact", notScored: [], verdict, notes: [] });
     const ids = Array.from({ length: count }, (_, index) => `t${String(index).padStart(5, "0")}`);
@@ -57,7 +58,8 @@ test("compare.mjs writes a stdout larger than a pipe buffer in full", (t) => {
 });
 
 test("no entry script ends the process with process.exit()", () => {
-    // The pipe cut-off depends on the platform (Linux pipes are synchronous); this pin does not.
+    // How much of a piped stdout process.exit() loses depends on the platform and the reader (both
+    // macOS and Linux CI have lost output); this pin does not.
     for (const name of ENTRY_SCRIPTS) {
         const source = readFileSync(join(SCORE_DIR, name), "utf8");
         assert.doesNotMatch(source, /process\.exit\(/, `${name} calls process.exit()`);

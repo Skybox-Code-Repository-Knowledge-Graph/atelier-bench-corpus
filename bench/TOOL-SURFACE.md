@@ -8,11 +8,12 @@ It is a capability list only: no tool's answer to any task was read to build it,
 read to fill it.
 
 `node bench/check-matrix.mjs` (and `--write --matrix-only`) reads this file: every task id in a
-"Scored by" cell must exist in that lane's `bench/tasks.json`, every quoted README line must be in
-that lane's README, each lane's rows must equal the quoted list below, and the pinned version must
-equal the one `score-tools.yml` installs. A lane that renames or retires a task id named here
-updates its row in the same pull request. Each lane edits only its own section, so the lanes'
-pull requests do not conflict here.
+"Scored by" cell must exist in that lane's `bench/tasks.json`, every quote must be text of that
+lane's README, the quoted list below and each lane's rows must equal the list `check-matrix.mjs`
+pins for the version (`SKYBOX_EXTRACTORS`), and the pinned version must equal the one
+`score-tools.yml` installs. A lane that renames or retires a task id named here updates its row in
+the same pull request. Each lane edits only its own section, so the lanes' pull requests do not
+conflict here.
 
 ## Scope (ruling R1)
 
@@ -55,31 +56,27 @@ The repository's reading of ruling R3: the column read literally, then one step 
 
 | Class | Extractors | What it obliges the lane to carry |
 | --- | --- | --- |
-| Route parser (E.1) | Rust: Axum routes. PHP: Laravel routes. TypeScript and JavaScript: Express, NestJS, Hono, Fastify, Remix, SvelteKit, Nuxt, Expo. Python: FastAPI, Flask, Django. Go: net/http, gorilla/mux, chi, gin, echo, fiber | A route task for EVERY route parser listed for the language: `def-route-to-handler` on the lane's main framework, plus one lane-local route task per further parser, on a real, loadable, tested route file written in that framework's own convention. The key is which handler the tree says serves the route, never what a tool returns. A route parser cannot be a deliberate gap |
+| Route parser (E.1) | Rust: Axum routes. PHP: Laravel routes. TypeScript and JavaScript: Express, NestJS, Hono, Fastify, Remix, SvelteKit, Nuxt, Expo. Python: FastAPI, Flask, Django. Go: net/http, gorilla/mux, chi, gin, echo, fiber | A route task for EVERY route parser listed for the language: `def-route-to-handler` on the lane's main framework, plus one route task per further parser (lane-local, or for javascript and typescript the two-lane `def-route-*` id of ruling R12), on a real, loadable, tested route file written in that framework's own convention. The key is which handler the tree says serves the route, never what a tool returns. A route parser cannot be a deliberate gap |
 | ORM, schema or serialization (E.2) | PHP: Eloquent. Python: SQLAlchemy, Pydantic | At least one task scores it, or the lane README names its absence as a deliberate gap |
 | Other | Rust: Reqwest HTTP. PHP: Guzzle, Inertia (PHP side), Blade. Go: resty | E.2's wording does not cover these; ruling R3 does, with E.2's obligation: at least one task scores it, or the lane README names it as a deliberate gap |
 
-## What counts as scoring an extractor
+## What counts as scoring an extractor (ruling R16)
 
-A task scores an extractor when its `from` line is written in that extractor's own construct, so
-that answering the question goes through what the extractor parses:
-
-- a route parser: the `from` line is a route registration in that framework's convention;
-- Blade: `from.file` is a Blade template (`*.blade.php`);
-- Eloquent: the `from` line is an Eloquent construct (a relationship method or call, a query scope
-  call, an accessor read, an attribute cast);
-- any other library: the `from` line calls or declares that library's own API.
+A task scores an extractor when its `from` or `expect` sits on the construct that extractor reads,
+on a surface that asks about that construct. A broken-fixture `parse-negative` task does not score
+an extractor.
 
 ## Per-lane coverage
 
-Filled for the tree at main `7e67f55` from each lane's `bench/tasks.json` and README only (no tool
-output, adapter notes, grades or score reports were read). The lanes fill in the rest.
+First filled at main `7e67f55` (this file's base snapshot) from each lane's `bench/tasks.json` and
+README only (no tool output, adapter notes, grades or score reports were read). Each lane keeps
+its own section current from then on.
 
 Each lane has one section with one row per extractor of its language, in the order quoted above.
 Exactly one of the last three cells is filled: "Scored by" holds backticked task ids separated by
-commas; "Deliberate gap" holds a line of the lane README, quoted in double quotes (a `|` written
-`\|`); "Not yet" holds `not yet`. The section ends with the lane's language-server line (E.5,
-below).
+commas; "Deliberate gap" holds text of the lane README, quoted in double quotes (a `|` written
+`\|`), of five words or more, that names the extractor; "Not yet" holds `not yet`. The section
+ends with the lane's language-server line (E.5, below).
 
 ### rust
 
@@ -98,7 +95,7 @@ Language server (E.5): not pinned yet
 | Eloquent | ORM, schema or serialization | `rel-hasonethrough`, `rel-hasmanythrough`, `rel-ofmany-builder`, `rel-morphedbymany`, `def-query-scope`, `def-trait-method-scope`, `def-accessor-attribute`, `lane-local-money` | | |
 | Guzzle | other | | | not yet |
 | Inertia (PHP side) | other | | | not yet |
-| Blade | other | `def-blade-model-method`, `def-livewire-computed`, `def-accessor-attribute`, `lw-sfc-computed`, `lw-wireclick-method`, `lw-form-object-magic`, `lw-embed-tag`, `int-folio-filename-binding`, `int-volt-functional-prop`, `parse-negative-unclosed-blade` | | |
+| Blade | other | `def-blade-model-method`, `def-livewire-computed`, `def-accessor-attribute`, `lw-sfc-computed`, `lw-wireclick-method`, `lw-form-object-magic`, `lw-embed-tag`, `int-folio-filename-binding`, `int-volt-functional-prop` | | |
 
 Language server (E.5): not pinned yet
 
@@ -169,6 +166,6 @@ Language server (E.5): not pinned yet
 E.5 scores the language-server surfaces (`hover`, `document_symbol`, `call_hierarchy`,
 `implementation`) against the server the lane's stack starts. Ruling R5: each lane README pins that
 server with its version. Each lane section above ends with one line,
-`Language server (E.5): ...`. It names a server and version only where the lane README already
-pins one, followed by `; source "<the README text that pins it>"`; otherwise it reads
-`not pinned yet`. At main `7e67f55` only `javascript/README.md` pins one.
+`Language server (E.5): ...`. It names a server and its version only where the lane README already
+pins one, followed by `; source "<the README text that pins it>"`: five words or more of that
+README, carrying every version the line names. Otherwise it reads `not pinned yet`.
