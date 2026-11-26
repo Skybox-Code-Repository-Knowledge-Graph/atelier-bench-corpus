@@ -495,6 +495,12 @@
         "javascript"
       ]
     },
+    "def-event-map-handler-param": {
+      "surface": "definition",
+      "lanes": [
+        "typescript"
+      ]
+    },
     "def-export-star-as": {
       "surface": "definition",
       "lanes": [
@@ -540,6 +546,12 @@
       "surface": "definition",
       "lanes": [
         "go"
+      ]
+    },
+    "def-function-namespace-merge": {
+      "surface": "definition",
+      "lanes": [
+        "typescript"
       ]
     },
     "def-future-style": {
@@ -685,6 +697,12 @@
       ]
     },
     "def-import-type-expression": {
+      "surface": "definition",
+      "lanes": [
+        "typescript"
+      ]
+    },
+    "def-import-type-query-member": {
       "surface": "definition",
       "lanes": [
         "typescript"
@@ -1219,6 +1237,18 @@
       ]
     },
     "def-this-parameter": {
+      "surface": "definition",
+      "lanes": [
+        "typescript"
+      ]
+    },
+    "def-this-predicate-method": {
+      "surface": "definition",
+      "lanes": [
+        "typescript"
+      ]
+    },
+    "def-this-type-marker": {
       "surface": "definition",
       "lanes": [
         "typescript"
@@ -2186,6 +2216,18 @@
         "rust"
       ]
     },
+    "resolution-enum-merge": {
+      "surface": "resolution",
+      "lanes": [
+        "typescript"
+      ]
+    },
+    "resolution-extract-union-member": {
+      "surface": "resolution",
+      "lanes": [
+        "typescript"
+      ]
+    },
     "resolution-foreign-bound-blanket": {
       "surface": "resolution",
       "lanes": [
@@ -2324,6 +2366,12 @@
         "javascript",
         "python",
         "go"
+      ]
+    },
+    "resolution-template-index-signature": {
+      "surface": "resolution",
+      "lanes": [
+        "typescript"
       ]
     },
     "resolution-this-rebinding": {
