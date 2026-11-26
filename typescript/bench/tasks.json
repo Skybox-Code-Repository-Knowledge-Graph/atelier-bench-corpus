@@ -3125,15 +3125,15 @@
         {
             "id": "def-import-type-expression",
             "surface": "definition",
-            "note": "The alias names InvoiceCalculator through `import(...)` in a type position; the file has no import statement for it. TypeScript-only mechanism: an import type expression.",
+            "note": "The alias names Identified through `import(...)` in a type position; the file has no import statement for it. TypeScript-only mechanism: an import type expression.",
             "from": {
-                "file": "packages/core/src/support/calculatorRef.ts",
-                "needle": "export type CalculatorRef = import(\"../contracts/invoiceCalculator\").InvoiceCalculator;",
-                "symbol": "InvoiceCalculator"
+                "file": "packages/core/src/support/identifiedRef.ts",
+                "needle": "export type IdentifiedRef = import(\"../contracts/repository\").Identified;",
+                "symbol": "Identified"
             },
             "expect": {
-                "file": "packages/core/src/contracts/invoiceCalculator.ts",
-                "needle": "export interface InvoiceCalculator {"
+                "file": "packages/core/src/contracts/repository.ts",
+                "needle": "export interface Identified {"
             }
         },
         {
