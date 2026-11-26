@@ -389,6 +389,20 @@ export const UNRULED_SHAPES = [
         tasks: new Set(["typescript:imp-glob-import"]),
         reason: `${GLOB_NO_READING}; the typescript key lists 2 of the 4 exported names by line and the other 2 only by name (must_include), so no line of it states the whole answer`,
     },
+    {
+        surface: "import-precision",
+        kind: "glob",
+        keys: ["exact_count", "kind", "known_sites", "must_not_include"],
+        tasks: new Set(["javascript:imp-glob-import"]),
+        reason: `${GLOB_NO_READING}; the javascript note says "the answer is the declaring module", while its known_sites and exact_count list the module's four declarations`,
+    },
+    {
+        surface: "import-precision",
+        kind: "group_use",
+        keys: ["exact_count", "kind", "known_sites", "must_not_include"],
+        tasks: new Set(["php:imp-glob-import"]),
+        reason: `${GLOB_NO_READING}; the php statement is a brace group-use that names its eight classes, not a glob, and phpactor 2026.11.22.0 answers no location at the namespace asked (Repositories)`,
+    },
 ];
 
 /**

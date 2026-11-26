@@ -43,6 +43,8 @@ const DECIDED = {
     "rust:imp-glob-import": { reason: /^imp-glob-import has no single reading: .* the rust key lists both public items/ },
     "python:imp-glob-import": { reason: /^imp-glob-import has no single reading: .* the python key lists 2 of the 16 names, each on its `from \.x import X` line in metrics\/__init__\.py/ },
     "typescript:imp-glob-import": { reason: /^imp-glob-import has no single reading: .* the typescript key lists 2 of the 4 exported names by line and the other 2 only by name/ },
+    "javascript:imp-glob-import": { reason: /^imp-glob-import has no single reading: .* the javascript note says "the answer is the declaring module"/ },
+    "php:imp-glob-import": { reason: /^imp-glob-import has no single reading: .* the php statement is a brace group-use that names its eight classes, not a glob/ },
 };
 
 const tasksOf = new Map();
