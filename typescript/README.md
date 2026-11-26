@@ -12,7 +12,7 @@ tasks.
 | Node | `>=22` (`package.json` `engines`) |
 | TypeScript | `^5.7.2`, `strict`, `verbatimModuleSyntax` + `isolatedModules` on, `moduleResolution: bundler` |
 | Modules | ESM everywhere (`"type": "module"`), relative imports without extensions |
-| Layout | npm workspaces: 3 packages + 1 dependency-free verifier |
+| Layout | npm workspaces: 4 packages + 1 dependency-free verifier |
 | Tests | vitest `^2.1.8` (`npm test`), request-level tests through supertest |
 | Language server | typescript-language-server `6.1.0` (exact devDependency, pinned in `package-lock.json`) over the lane's own TypeScript 5.9.3; `bench/lsp-check.mjs` starts it as `node node_modules/typescript-language-server/lib/cli.mjs --stdio` with `initializationOptions.tsserver.path` = `node_modules/typescript/lib/tsserver.js` |
 | Dataset | `Dataset.seeded()` — fixed rows, **no randomness** in the corpus seed path |
@@ -25,9 +25,10 @@ on a bench machine if you need bit-stable ground truth.
 
 | Package | Role | .ts/.tsx files |
 | --- | --- | --- |
-| `packages/core` (`@atelier/core`) | Domain: models, enum/namespace merges, mixin + Proxy concerns, contracts, container binding, money, errors, events, policy, sibling pair, self-referential tree, type guard/assertion function | 32 src + 7 test |
-| `packages/bench` (`@atelier/bench`) | Breadth subsystem: 8 contracts, 8 concerns, 7 abstract bases, 76 implementors, 48 RuleContract implementors (cardinality), a three-parent contract, 15 language-breadth fixtures, module augmentation, frozen dataset | 166 src + 7 test |
-| `packages/app` (`@atelier/app`) | Application surface: express router, console commands, jobs, shadow-pair aliases, TSX views, ambient declarations | 18 src + 7 test |
+| `packages/core` (`@atelier/core`) | Domain: models, enum/namespace merges, mixin + Proxy concerns, contracts, container binding, money, errors, events, policy, sibling pair, self-referential tree, type guard/assertion function, an import type | 33 src + 8 test |
+| `packages/bench` (`@atelier/bench`) | Breadth subsystem: 8 contracts, 8 concerns, 7 abstract bases, 76 implementors, 48 RuleContract implementors (cardinality), a three-parent contract, 22 language-breadth fixtures, module augmentation, frozen dataset | 173 src + 8 test |
+| `packages/app` (`@atelier/app`) | Application surface: express router (plus a mounted order Router), console commands, jobs, shadow-pair aliases, TSX views, ambient declarations | 22 src + 8 test |
+| `packages/routes` (`@atelier/routes`) | Lane-only route fixtures: one route module per framework route parser (NestJS, Hono, Fastify, Remix, SvelteKit, Nuxt, Expo), each in its framework's own convention, and a client that addresses them by URL | 12 src + 2 test |
 | `bench/verify-tasks` | Ground-truth self-check; **zero third-party dependencies** (Node built-ins only) | 1 `.mjs` |
 
 ## Coverage map
@@ -58,7 +59,7 @@ on a bench machine if you need bit-stable ground truth.
 | HTTP surface (express 5) | `packages/app/src/index.ts` router; handlers in `http/{report,api}.ts` |
 | Wide contract implementation | 24 reports, 16 metrics, 8 exporters, 8 notifiers, 8 repositories, 12 services |
 | Deterministic seed | `packages/bench/src/dataset.ts` `Dataset.seeded()` — revenue `58325`c, part cost `46300`c, gross profit `12025`c |
-| Tests (incl. request-level) | 100 vitest tests in 21 files: lifecycle, money, shadow pair, Proxy forwarding, breadth registry and every breadth component (exporters, notifiers, repositories, services, concerns), augmentation, express routes, console commands and the `main.ts` entrypoint, TSX views, async loaders, ambient declarations (type-checked), issue-#9 surfaces and a use of every lane-only fixture; plus the key and graph guards below |
+| Tests (incl. request-level) | 121 vitest tests in 26 files: lifecycle, money, shadow pair, Proxy forwarding, breadth registry and every breadth component (exporters, notifiers, repositories, services, concerns), augmentation, express routes, every framework route fixture, console commands and the `main.ts` entrypoint, TSX views, async loaders, ambient declarations (type-checked), issue-#9 surfaces and a use of every lane-only fixture; plus the key and graph guards below |
 | TSX + JSX factory | `packages/app/src/views/{h.ts,reportCard.tsx,reportPage.tsx}`: `jsxFactory: "h"` (no framework), component + intrinsic elements + fragment |
 | Ambient declarations | `packages/app/src/types/jsx.d.ts` (global `JSX` namespace), `packages/app/src/types/legacy-formatting.d.ts` (`declare module "atelier-legacy-formatting"`, type-only consumer in `http/legacy.ts`) |
 | `paths` alias | `tsconfig.base.json` maps `@app/*` → `packages/app/src/*`; type-only import in `http/reportLoader.ts` |
@@ -70,6 +71,8 @@ on a bench machine if you need bit-stable ground truth.
 | Collision (lane-local) | 6 tasks pinning `Money`, `Customer`, `Dataset`, `ATELIER_REF_PREFIX`, `InvoiceCalculator.calculate`, the billing `Formatter` as this lane's own declarations |
 | Multi-parent | `packages/bench/src/contracts/compositeContract.ts` (`CompositeContract extends` 3 interfaces); `packages/bench/src/reports/dailyRevenueReport.ts` (1 `extends` + 2 `implements` on an existing report, so `ReportContract` stays at 24 implementors) |
 | Breadth (language-feature fixtures) | `packages/bench/src/support/{unwrap,flags,slug,rulesConfig,logged,arrayAugmentation,uniqueKey,severity,adhoc,keyedLookup,worker}.ts`, `packages/core/src/support/orderGuards.ts`, an overloaded `Money.plus`, and `export * as Rules from "./rules"` — conditional/mapped/template-literal types, `satisfies`, a standard TC39 decorator, global augmentation, type guard + assertion function, `unique symbol`, `const enum`, class expression, `keyof typeof`, class method overload, class/interface declaration merging, `export * as` |
+| TypeScript-only fixtures (wave 3, issue #223 D.2) | `packages/bench/src/support/{priceRule,thisParameter,orderFields,loadedOrder,workshopHours,elementOf,partLabel}.ts`, `packages/core/src/support/calculatorRef.ts`, `packages/app/src/{lane.ts,types/lane.d.ts}` and `RushOrder` in `core/src/support/orderGuards.ts` — a class implementing a type alias, a `this` parameter, indexed access / `Partial` / `keyof`-argument lookups, `ReturnType` + `Awaited`, an import-equals namespace alias, an `infer` variable, interface merging, an import type, a global `declare const` the build defines, an interface extending a class, assertion narrowing; used by `bench/tests/typescriptOnly.test.ts`, `core/tests/{calculatorRef,orderGuards}.test.ts`, `app/tests/lane.test.ts` |
+| Route parsers (lane-only extras, checklist E.1) | Express: `packages/app/src/http/orderRouter.ts` (a Router mounted at `/api/orders`). `packages/routes/src/`: `hono/app.ts`, `fastify/app.ts`, `nest/orders.controller.ts` (decorators; `nest/tsconfig.json` turns on legacy decorators), `remix/app/routes/api.remix.orders.$reference.ts`, `sveltekit/src/routes/api/sveltekit/orders/[reference]/+server.ts`, `nuxt/server/api/nuxt/orders/[reference].get.ts`, `expo/app/api/expo/orders/[reference]+api.ts`; `client.ts` addresses the convention routes by URL. Pinned in `package-lock.json`: hono 4.13, fastify 5.12, @nestjs/common + core + platform-fastify 12.6 (+ reflect-metadata, rxjs), @remix-run/node 2.17, @sveltejs/kit 2.70.4 (kit 3 peers TypeScript 6) with svelte 5 and @sveltejs/vite-plugin-svelte 4 (for the vite 5 vitest brings), h3 1.15 (the server engine Nuxt 4 runs on; `nuxt` itself is not installed). Expo is convention-only, a declared deviation (ruling R15): `expo-router` pulls react-native and `expo-server` does not load under plain Node, so the API route uses web Request / Response and no Expo package is installed. Installing them took `node_modules` from 89M to 161M. Tests: `packages/routes/tests/{routes,nest}.test.ts`, `packages/app/tests/http.test.ts` |
 | Document-symbol + call-hierarchy | `packages/core/src/models/repairOrder.ts` (27 named symbols) and `packages/bench/src/index.ts` (4) for the symbol listing; `complete` → `transitionTo`, three callers of `transitionTo`, and `@atelier/app` `recalculateInventory` → `@atelier/core` `Dispatcher.register` for the call graph |
 | String-keyed events (name-only resolution) | `packages/core/src/events.ts`: `StringBus` plus the `REPAIR_COMPLETED` / `STATUS_CHANGED` / `STOCK_DEPLETED` literals, subscribed in `SendCompletionNotice.subscribe` and exercised by `packages/core/tests/events.test.ts`; nothing declares the string as a symbol |
 | Same name in two modules | `packages/app/src/jobs.ts` (callback job) and `packages/app/src/commands/recalculateInventory.ts` (console command) both export `recalculateInventory`; `main.ts` picks the command by module path |
@@ -77,14 +80,15 @@ on a bench machine if you need bit-stable ground truth.
 ## Consumption (runner)
 
 1. Check out the pinned SHA.
-2. `npm ci` (no unlock, no update).
+2. `npm ci` (no unlock, no update): it installs every framework the route fixtures use, from the committed lockfile alone.
 3. No remote artifacts beyond the npm registry, no SSH private remotes, no secrets.
 
 Local use:
 
 ```bash
-npm run typecheck               # tsc --noEmit -p tsconfig.json
-npm test                        # 100 tests in 21 files
+npm run typecheck               # tsc over tsconfig.json, then over packages/routes/src/nest/tsconfig.json (legacy decorators)
+npm test                        # 121 tests in 26 files
+node bench/lsp-check.mjs        # rewrites bench/lsp-check.md (language-server check, E.5)
 ```
 
 The console entrypoint is `packages/app/src/main.ts` (`serve [port]`, `seed`, `export-report [slug]`,
@@ -96,7 +100,8 @@ the same two commands, kept as aliases (`packages/app/src/commands/index.ts`), a
 run by `entrypoint.test.ts`.
 
 HTTP surface: `GET /report/:reference` (e.g. `AT-2026-000001`), `GET /api/orders`,
-`GET /api/reports/:slug`, `POST /api/orders/:id/notes`, `GET /health`. The shared set writes the
+`GET /api/orders/:reference` (the mounted order Router, a lane-only extra), `GET /api/reports/:slug`,
+`POST /api/orders/:id/notes`, `GET /health`. The shared set writes the
 notes route as `POST /api/orders/{key}/notes`; this lane binds the order by its numeric id, in
 express `:id` syntax, as the rust, javascript, python and go lanes do (php binds by reference).
 
@@ -104,7 +109,7 @@ express `:id` syntax, as the rust, javascript, python and go lanes do (php binds
 
 | Artifact | Role |
 | --- | --- |
-| `bench/tasks.json` | 99 needle-based accuracy tasks (`from` → `expect` file/needle pairs): 44 original + 34 failure-mode surfaces (issue #9) + 9 TSX/ambient/paths/async edges + 5 document-symbol/call-hierarchy surfaces + 7 shared-id parity and depth-floor tasks |
+| `bench/tasks.json` | 120 needle-based accuracy tasks (`from` → `expect` file/needle pairs): 44 original + 34 failure-mode surfaces (issue #9) + 9 TSX/ambient/paths/async edges + 5 document-symbol/call-hierarchy surfaces + 7 shared-id parity and depth-floor tasks + 13 TypeScript-only one-lane tasks and 8 route tasks (issue #223, wave 3) |
 | `bench/verify-tasks/verify.mjs` | Self-check that every task needle still resolves to exactly one line |
 
 ```bash
