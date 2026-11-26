@@ -49,6 +49,20 @@ func runLint(root string) int {
 	}
 	fmt.Println("lint: OK (go vet clean)")
 
+	specifiers, err := collectSpecifiers(root)
+	if err != nil {
+		fmt.Printf("lint: FAIL (cannot collect module specifiers: %v)\n", err)
+		return 1
+	}
+	if failures := checkSpecifiers(root, specifiers); len(failures) > 0 {
+		for _, failure := range failures {
+			fmt.Printf("lint: UNRESOLVED %s\n", failure)
+		}
+		fmt.Printf("lint: FAIL (%d of %d module specifier(s) do not resolve)\n", len(failures), len(specifiers))
+		return 1
+	}
+	fmt.Printf("lint: OK (%d module specifier(s) resolve: %s)\n", len(specifiers), specifierSummary(specifiers))
+
 	unformatted, err := gofmtDrift(root)
 	if err != nil {
 		fmt.Printf("lint: FAIL (gofmt could not run: %v)\n", err)
