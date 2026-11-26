@@ -164,3 +164,31 @@ test("a class outside the scorer's classes is refused as a malformed report (M3)
         assert.match(stderr, /^compare: .* is not a score report: a has an unknown class\n$/);
     }
 });
+
+test("a surface that is not a plain string key is refused, so summarize never writes onto Object.prototype (#221)", () => {
+    for (const bad of ["__proto__", "constructor", "toString", "", 7, null]) {
+        const { status, stdout, stderr } = run(report([task("a", "PASS")]), report([task("a", "PASS", { surface: bad })]));
+        assert.equal(status, 2, stderr);
+        assert.equal(stdout, "");
+        assert.match(stderr, /^compare: .* is not a score report: a has no valid surface\n$/);
+    }
+});
+
+test("a class change counts not compared on both lines (#221)", () => {
+    const out = JSON.parse(run(report([task("cls", "PASS")]), report([task("cls", "FAIL", { class: "recall" })]), "--format", "json").stdout);
+    assert.deepEqual(out.lines.map((line) => [line.class, line.protocol, line.before, line.after, line.notCompared]), [
+        ["exact", "raw", { pass: 1, scorable: 1 }, { pass: 0, scorable: 0 }, 1],
+        ["recall", "raw", { pass: 0, scorable: 0 }, { pass: 0, scorable: 1 }, 1],
+    ]);
+});
+
+test("a line present on one side only keeps its summarize position (#221)", () => {
+    const before = report([task("a", "PASS"), task("c", "PASS", { class: "behaviour", protocol: "anchored" })]);
+    const after = report([task("a", "PASS"), task("b", "FAIL", { class: "recall", protocol: "anchored" })]);
+    const out = JSON.parse(run(before, after, "--format", "json").stdout);
+    assert.deepEqual(out.lines.map((line) => [line.class, line.protocol, line.before, line.after, line.notCompared]), [
+        ["exact", "raw", { pass: 1, scorable: 1 }, { pass: 1, scorable: 1 }, 0],
+        ["recall", "anchored", { pass: 0, scorable: 0 }, { pass: 0, scorable: 1 }, 1],
+        ["behaviour", "anchored", { pass: 1, scorable: 1 }, { pass: 0, scorable: 0 }, 1],
+    ]);
+});

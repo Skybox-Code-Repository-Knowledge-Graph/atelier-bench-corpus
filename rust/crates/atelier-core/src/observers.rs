@@ -2,7 +2,9 @@
 
 use crate::models::device::Device;
 
-/// Lifecycle hooks for [`Device`]; the app registers one implementor.
+/// Lifecycle hooks for [`Device`]. [`AuditingDeviceObserver`] is the one
+/// implementor; no app code registers it, the atelier-bench component tests
+/// drive it.
 pub trait DeviceObserver: Send + Sync {
     fn created(&self, device: &Device);
 
