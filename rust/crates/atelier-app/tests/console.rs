@@ -53,3 +53,15 @@ fn seed_summary_reports_the_frozen_numbers() {
     );
     assert_eq!(atelier_app::seed::metric_lines(&state).len(), 16);
 }
+
+#[test]
+fn the_binary_prints_the_seed_summary() {
+    let output = std::process::Command::new(env!("CARGO_BIN_EXE_atelier-app"))
+        .arg("seed")
+        .output()
+        .expect("binary runs");
+    let stdout = String::from_utf8_lossy(&output.stdout);
+
+    assert!(output.status.success());
+    assert!(stdout.starts_with("seeded: "));
+}
