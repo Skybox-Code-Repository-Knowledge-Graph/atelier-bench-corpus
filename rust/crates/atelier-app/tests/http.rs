@@ -88,6 +88,36 @@ async fn unknown_report_slug_is_a_422() {
 }
 
 #[tokio::test]
+async fn the_generic_export_route_renders_the_seed_as_csv() {
+    let response = router(AppState::seeded())
+        .oneshot(
+            Request::builder()
+                .uri("/api/exports/gross-profit")
+                .body(Body::empty())
+                .expect("request builds"),
+        )
+        .await
+        .expect("router responds");
+
+    let status = response.status();
+    let bytes = axum::body::to_bytes(response.into_body(), usize::MAX)
+        .await
+        .expect("body reads");
+    let body = String::from_utf8_lossy(&bytes);
+
+    assert_eq!(status, StatusCode::OK);
+    assert!(body.lines().any(|line| line == "gross profit,120.25"));
+}
+
+#[tokio::test]
+async fn the_generic_export_route_rejects_an_unknown_slug() {
+    let (status, body) = get(AppState::seeded(), "/api/exports/no-such-report").await;
+
+    assert_eq!(status, StatusCode::UNPROCESSABLE_ENTITY);
+    assert_eq!(body["field"], "slug");
+}
+
+#[tokio::test]
 async fn empty_note_body_is_rejected() {
     let response = router(AppState::seeded())
         .oneshot(

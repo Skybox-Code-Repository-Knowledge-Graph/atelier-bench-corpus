@@ -12,6 +12,7 @@ pub mod rules_probe;
 pub mod seed;
 pub mod state;
 
+use atelier_bench::exporters::csv_exporter::CsvExporter;
 use axum::Router;
 use axum::routing::{get, post};
 
@@ -25,6 +26,10 @@ pub fn router(state: AppState) -> Router {
         .route("/api/orders", get(http::api::list_orders))
         .route("/api/orders/{id}/notes", post(http::api::store_note))
         .route("/api/reports/{slug}", get(http::api::show_report))
+        .route(
+            "/api/exports/{slug}",
+            get(http::api::export_rows::<CsvExporter>),
+        )
         .with_state(state)
 }
 
