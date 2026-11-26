@@ -1617,6 +1617,7 @@
         {
             "id": "dir-contract-parent",
             "surface": "direction",
+            "note": "The excluded line is the blanket impl of HasFormatting over every ReportContract: a bare-name match on ReportContract returns it, yet it names ReportContract only as a bound and is no child of it.",
             "from": {
                 "file": "crates/atelier-bench/src/contracts/report_contract.rs",
                 "needle": "pub trait ReportContract: Send + Sync {",
@@ -1628,7 +1629,7 @@
                     "file": "crates/atelier-bench/src/reports/cash_flow_report.rs",
                     "needle": "impl ReportContract for CashFlowReport {"
                 },
-                "must_not_include": ["impl .* for ReportContract"]
+                "must_not_include": ["impl<T: ReportContract> HasFormatting for T"]
             }
         },
         {
@@ -1650,7 +1651,7 @@
         {
             "id": "dir-self-reference",
             "surface": "direction",
-            "note": "Expr::Add holds two Box<Expr>: a self type reference, not an IMPLEMENTS edge.",
+            "note": "Expr::Add holds two Box<Expr>: a self type reference, not an IMPLEMENTS edge. The excluded line is the inherent impl Expr block, which a bare-name match on Expr also returns: neither the declaration nor an edge back to it.",
             "from": {
                 "file": "crates/atelier-core/src/support/expr.rs",
                 "needle": "Add(Box<Expr>, Box<Expr>),",
@@ -1663,7 +1664,7 @@
                     "file": "crates/atelier-core/src/support/expr.rs",
                     "needle": "pub enum Expr {"
                 },
-                "must_not_include": ["impl .* for Expr"]
+                "must_not_include": ["impl Expr {"]
             }
         },
         {

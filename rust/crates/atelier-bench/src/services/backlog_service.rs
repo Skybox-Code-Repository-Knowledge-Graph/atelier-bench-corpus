@@ -34,7 +34,9 @@ impl BacklogService {
         data.open_orders().len()
     }
 
-    /// Deepest lifecycle state currently occupied.
+    /// Status label of the last open order in dataset order (the newest one
+    /// taken in), or `None` with nothing open. Despite the name it does not
+    /// rank lifecycle states: on the seed it is order 4's `Received`.
     pub fn deepest_state(&self, data: &Dataset) -> Option<&'static str> {
         data.open_orders()
             .iter()

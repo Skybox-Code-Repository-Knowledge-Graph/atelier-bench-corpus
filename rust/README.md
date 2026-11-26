@@ -99,7 +99,7 @@ HTTP surface: `GET /report/{reference}` (e.g. `AT-2026-000001`), `GET /api/order
 | Artifact | Role |
 | --- | --- |
 | `bench/tasks.json` | 104 needle-based accuracy tasks (`from` → `expect` file/needle pairs): 44 original + 30 failure-mode surfaces (issue #8) + 5 build-script/#[path]/lifetime/HRTB/GAT edges + 12 shared canonical ids + 5 document-symbol/call-hierarchy surfaces + 8 go-wave canonical ids |
-| `bench/verify-tasks` | Self-check that every task needle still resolves to exactly one line (`optional_sites` included), every `repeated_sites` needle to exactly its `lines` count (a whole number, 2 or more), every references `exact_count` equals its `known_sites` entries plus the sum of `lines`, and every `must_not_include` entry written as text occurs on a line of the lane's sources |
+| `bench/verify-tasks` | Self-check that every task needle still resolves to exactly one line (`optional_sites` included), every `repeated_sites` needle to exactly its `lines` count (a whole number, 2 or more), every references `exact_count` equals its `known_sites` entries plus the sum of `lines` with no line counted twice, and every `must_not_include` entry written as text or as a `.*` pattern occurs on a code line (not a `//` comment) of the lane's sources |
 
 ```bash
 cargo run -p bench-verify           # resolve every file+needle pair

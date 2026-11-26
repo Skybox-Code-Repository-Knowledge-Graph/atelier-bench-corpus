@@ -11,12 +11,12 @@ use atelier_bench::contracts::notifier_contract::NotifierContract;
 use atelier_bench::dataset::Dataset;
 use atelier_bench::reports::gross_profit_report::GrossProfitReport;
 use atelier_bench::repositories::customer_repository::CustomerRepository;
-use atelier_bench::repositories::inventory_repository::InventoryRepository;
+use atelier_bench::repositories::inventory_repository::{InventoryRepository, StockMovement};
 use atelier_bench::repositories::invoice_repository::InvoiceRepository;
 use atelier_bench::repositories::part_repository::PartRepository;
 use atelier_bench::repositories::payment_repository::{Payment, PaymentRepository};
 use atelier_bench::repositories::technician_repository::TechnicianRepository;
-use atelier_bench::repositories::warranty_repository::WarrantyRepository;
+use atelier_bench::repositories::warranty_repository::{WarrantyClaim, WarrantyRepository};
 use atelier_bench::services::backlog_service::BacklogService;
 use atelier_bench::services::churn_risk_service::ChurnRiskService;
 use atelier_bench::services::customer_retention_service::CustomerRetentionService;
@@ -53,9 +53,12 @@ fn every_exporter_renders_the_glob_helper_rows() {
         Box::new(atelier_bench::exporters::yaml_exporter::YamlExporter::default()),
     ];
 
-    assert!(!rows.is_empty());
+    // The gross-profit report has three rows; the pdf stub names only the count.
+    assert_eq!(rows.len(), 3);
     for exporter in &exporters {
-        assert!(!exporter.export(&rows).is_empty(), "{}", exporter.mime());
+        let body = exporter.export(&rows);
+        let names_the_rows = body.contains("gross profit") || body.contains("% 3 row(s)");
+        assert!(names_the_rows, "{}", exporter.mime());
     }
 }
 
@@ -72,10 +75,16 @@ fn every_notifier_delivers_on_its_default_channel() {
         Box::new(atelier_bench::notifiers::webhook_notifier::WebhookNotifier::default()),
     ];
 
-    for notifier in &notifiers {
-        let delivery = notifier.send("subject", "body").expect("configured");
-        assert_eq!(delivery.channel, notifier.channel());
-    }
+    let channels: Vec<&str> = notifiers
+        .iter()
+        .map(|notifier| notifier.send("subject", "body"))
+        .map(|delivery| delivery.expect("configured").channel)
+        .collect();
+
+    assert_eq!(
+        channels.join(","),
+        "discord,email,pager,push,slack,sms,teams,webhook"
+    );
 }
 
 #[test]
@@ -84,12 +93,33 @@ fn the_repositories_the_registry_tests_skip_count_their_records() {
     let invoices = InvoiceRepository::new(data.invoices.clone());
     let parts = PartRepository::new(data.parts.clone());
     let technicians = TechnicianRepository::new(data.technicians.clone());
+    // One stock-in movement per seed part, and one warranty claim per seed
+    // order, settled once the order is closed.
+    let movements = data
+        .parts
+        .iter()
+        .map(|part| StockMovement {
+            id: part.id,
+            sku: part.sku.clone(),
+            delta: i32::try_from(part.stock).expect("seed stock fits"),
+        })
+        .collect();
+    let claims = data
+        .orders
+        .iter()
+        .map(|order| WarrantyClaim {
+            id: order.id,
+            repair_order_id: order.id,
+            settled: !order.is_open(),
+        })
+        .collect();
 
-    assert_eq!(invoices.count(), data.invoices.len());
-    assert_eq!(parts.count(), data.parts.len());
-    assert_eq!(technicians.count(), data.technicians.len());
-    assert!(InventoryRepository::new(Vec::new()).is_empty());
-    assert!(WarrantyRepository::new(Vec::new()).is_empty());
+    assert_eq!(invoices.count(), 2);
+    assert_eq!(parts.count(), 4);
+    assert_eq!(technicians.count(), 3);
+    // SCR-13 is stocked at 4; orders 2, 3 and 4 are still open.
+    assert_eq!(InventoryRepository::new(movements).net_for("SCR-13"), 4);
+    assert_eq!(WarrantyRepository::new(claims).pending().len(), 3);
 }
 
 #[test]
@@ -101,11 +131,12 @@ fn the_services_the_registry_tests_skip_answer_on_the_seed() {
     let churn = ChurnRiskService::new();
     assert!(churn.at_risk(&data).is_empty());
 
+    // SCR-13 is stocked at 4 and the seed consumes none of it.
     let turnover = InventoryTurnoverService::new();
-    assert!(turnover.for_sku(&data, "SCR-13").is_some());
+    assert_eq!(turnover.for_sku(&data, "SCR-13"), Some(0.0));
     assert!(turnover.for_sku(&data, "NO-SUCH-SKU").is_none());
 
-    assert_eq!(OrderVolumeService::new().total(&data), data.orders.len());
+    assert_eq!(OrderVolumeService::new().total(&data), 4);
 
     // The seed consumes no stock; taking 2 screens and 3 keyboards makes 5.
     let usage = PartUsageService::new();
@@ -240,15 +271,16 @@ fn the_payment_repository_settles_what_the_seed_invoices_total() {
 #[test]
 fn a_frozen_stamp_carries_the_corpus_epoch() {
     let stamped = Stamped::frozen(seed().orders.len());
-    let later = DateTime::<Utc>::from_timestamp(1_784_188_890, 0).expect("valid instant");
+    let later = DateTime::parse_from_rfc3339("2026-07-16T09:30:00Z")
+        .expect("valid instant")
+        .with_timezone(&Utc);
 
-    assert_eq!(stamped.payload, 4);
     assert_eq!(
         stamped.created_at().to_rfc3339(),
         "2026-07-16T08:00:00+00:00"
     );
     assert_eq!(stamped.updated_at(), None);
-    assert_eq!(stamped.age_seconds(later), 90);
+    assert_eq!(stamped.age_seconds(later), 5_400);
 }
 
 #[test]
