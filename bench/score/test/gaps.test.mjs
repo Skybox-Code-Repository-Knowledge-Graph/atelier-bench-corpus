@@ -1,8 +1,9 @@
-// The definition and resolution tasks that issue #135 found UNSCORABLE only because no rule named
-// their key shape. Each is either scored by the rule decided for it, or still UNSCORABLE with the
-// reason decided for it (README.md, "Counts beside a target" and the sections after it). A change
-// to either shows here first: the decisions were taken before any tool under test was measured on
-// these tasks, and moving one is a decision too.
+// The tasks that issue #135 found UNSCORABLE only because no rule named their key shape, on the
+// definition, resolution, import-precision, multi-parent and implementation surfaces. Each is either
+// scored by the rule decided for it, or still UNSCORABLE with the reason decided for it (README.md,
+// "Counts beside a target" and the sections after it). A change to either shows here first: the
+// decisions were taken before any tool under test was measured on these tasks, and moving one is a
+// decision too.
 
 import test from "node:test";
 import assert from "node:assert/strict";
@@ -10,7 +11,7 @@ import { readFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
-import { asksMergedName, planTask } from "../lib/plan.mjs";
+import { LANES, UNRULED_SHAPES, asksMergedName, planTask } from "../lib/plan.mjs";
 import { resolveNeedle } from "../lib/resolve.mjs";
 import { scoreTask } from "../lib/score.mjs";
 
@@ -37,6 +38,18 @@ const DECIDED = {
     "python:def-string-key-dispatch": { rule: "definition/string-key" },
     "javascript:def-dynamic-require": { reason: /^kind unresolvable_static: .* anchors each module on a line inside it/ },
     "python:def-dynamic-import-module": { reason: /^kind unresolvable_static: .* anchors each module on a line inside it/ },
+    // import-precision, kind visibility_boundary, with contains and one known site (go)
+    "go:imp-internal-package": { reason: /^kind visibility_boundary with `contains` and one known site and no count: no source says what the question returns, .* three importers/ },
+    // import-precision, the shared id imp-glob-import: no single reading
+    "rust:imp-glob-import": { reason: /^imp-glob-import has no single reading: .* the rust key lists both public items/ },
+    "python:imp-glob-import": { reason: /^imp-glob-import has no single reading: .* the python key lists 2 of the 16 names, each on its `from \.x import X` line in metrics\/__init__\.py/ },
+    "typescript:imp-glob-import": { reason: /^imp-glob-import has no single reading: .* the typescript key lists 2 of the 4 exported names by line and the other 2 only by name/ },
+    "javascript:imp-glob-import": { reason: /^imp-glob-import has no single reading: .* the javascript key lists the four declarations of helpers\.js and counts them .* answers the module \(helpers\.js:3\), which no line of the key names$/ },
+    "php:imp-glob-import": { reason: /^imp-glob-import has no single reading: .* the php key has rust's form .* the shared id, whose python, typescript and go keys read differently$/ },
+    // multi-parent with only exact_count and must_include, parents outside the repository (rust)
+    "rust:parents-supertrait-send-sync": { reason: /^parents with only `exact_count` and `must_include`: the two parents, Send and Sync, are declared in the Rust core library/ },
+    // implementation with a single target under vendor/ (php)
+    "php:vendor-shouldbroadcast-contract": { reason: /^an implementation question whose key names the contract, not an implementor: phpactor 2026\.11\.22\.0 answers implementation .* six implementors/ },
 };
 
 const tasksOf = new Map();
@@ -126,6 +139,39 @@ test("definition/string-key: both selected declarations pass; one, or with the a
     assert.equal(verdictOf("python", task, []), "FAIL");
 });
 
+test("definition/string-key passes a task by when it names a target: file, needle or candidate (absent)", () => {
+    // README: "A string_key task that names a target (file and needle, or candidate) keeps the
+    // target rules." A synthetic task: the real one plus a target taken from its own key.
+    const task = taskOf("python", "def-string-key-dispatch");
+    assert.equal(planTask(task, "python").rule, "definition/string-key");
+    const [site] = task.expect.known_sites;
+    for (const extra of [{ file: site.file }, { needle: site.needle }, { file: site.file, needle: site.needle }, { candidate: site }]) {
+        const synthetic = structuredClone(task);
+        Object.assign(synthetic.expect, extra);
+        const plan = planTask(synthetic, "python");
+        assert.notEqual(plan.rule, "definition/string-key", `with ${Object.keys(extra).join(" and ")}`);
+    }
+    const targeted = structuredClone(task);
+    Object.assign(targeted.expect, { file: site.file, needle: site.needle });
+    delete targeted.expect.exact_count;
+    assert.equal(planTask(targeted, "python").rule, "definition/target", "with a target and no count, the target rule takes it");
+});
+
+test("resolution/merged-member reads must_not_include: an excluded entry fails the member's own declaration", () => {
+    // The real task carries no must_not_include; a synthetic one adds an entry the answer's text can trip.
+    const task = structuredClone(taskOf("typescript", "resolution-namespace-vs-enum"));
+    task.expect.must_not_include = ["zz excluded by the key"];
+    const plan = planTask(task, "typescript");
+    assert.equal(plan.rule, "resolution/merged-member");
+    assert.ok(!plan.notScored.includes("must_not_include"), "must_not_include is read, not reported as not scored");
+    const member = at("typescript", task.expect.candidate);
+    const context = { root: ROOT_OF("typescript"), lane: "typescript", scope: "repo" };
+    assert.equal(scoreTask(task, { locations: [member] }, context).verdict, "PASS");
+    const tripped = scoreTask(task, { locations: [member], text: "zz excluded by the key" }, context);
+    assert.equal(tripped.verdict, "FAIL");
+    assert.match(tripped.detail, /excluded "zz excluded by the key" returned/);
+});
+
 test("a declaration_merge task asks about the member unless the symbol is on every listed declaration", () => {
     // `abstract` is written on 1 of the 2 known sites (the class line), not on both: `every`, not `some`.
     const task = structuredClone(taskOf("typescript", "resolution-class-interface-merge"));
@@ -136,10 +182,68 @@ test("a declaration_merge task asks about the member unless the symbol is on eve
     assert.equal(planTask(task, "typescript").rule, "resolution/merged-name");
 });
 
+test("every refused shape lists its tasks as a non-empty set of lane:id, and an entry without one matches nothing", () => {
+    const laneId = new RegExp(`^(${LANES.join("|")}):[a-z0-9-]+$`);
+    for (const shape of UNRULED_SHAPES) {
+        const label = `${shape.surface} ${shape.kind ?? ""} ${shape.keys.join(",")}`;
+        assert.ok(shape.tasks instanceof Set && shape.tasks.size > 0, `${label}: tasks is not a non-empty Set`);
+        for (const key of shape.tasks) {
+            assert.match(key, laneId, label);
+        }
+        assert.ok(typeof shape.reason === "string" && shape.reason !== "", `${label}: no reason`);
+    }
+    // An entry written without `tasks` (or with a list in place of a Set) must neither throw for
+    // every later task nor take a task of its shape: it matches none.
+    const task = taskOf("go", "imp-internal-package");
+    for (const tasks of [undefined, ["go:imp-internal-package"]]) {
+        UNRULED_SHAPES.unshift({ surface: task.surface, kind: task.expect.kind, keys: Object.keys(task.expect), tasks, reason: "an entry without a Set of tasks" });
+        try {
+            assert.match(planTask(task, "go").reason, /^kind visibility_boundary with `contains`/);
+            assert.match(planTask({ ...structuredClone(task), id: "imp-not-listed" }, "go").reason, /^no rule for surface import-precision with keys contains, kind, known_sites$/);
+        } finally {
+            UNRULED_SHAPES.shift();
+        }
+    }
+});
+
 test("an unlisted task of a refused shape gets the generic reason, not another lane's", () => {
     const listed = taskOf("go", "lane-local-money");
     assert.match(planTask(listed, "go").reason, /^kind lane_local with only `contains`/);
     const unlisted = { ...structuredClone(listed), id: "lane-local-not-in-the-list" };
     assert.match(planTask(unlisted, "go").reason, /^no rule for surface resolution with keys contains, kind$/);
     assert.match(planTask(listed, "python").reason, /^no rule for surface resolution with keys contains, kind$/, "the same task under another lane is not the listed one");
+});
+
+test("a listed task carrying one key more than its refused shape gets the generic reason", () => {
+    const listed = taskOf("go", "lane-local-money");
+    assert.match(planTask(listed, "go").reason, /^kind lane_local with only `contains`/);
+    const extra = structuredClone(listed);
+    extra.expect.exact_count = 1;
+    assert.match(planTask(extra, "go").reason, /^no rule for surface resolution with keys contains, exact_count, kind$/);
+});
+
+// README "Exact rules" and the plan.mjs header say what `exact_count` beside a target means today:
+// the declarations a list names (resolution/merged-name, with merged-member reading the member
+// instead), or a parameter count (kind arity, refused). No rule reads it as an overload count.
+test("exact_count beside a target is scored only by the declaration_merge rules, and never as an overload count", () => {
+    const scoredBy = new Set();
+    for (const lane of LANES) {
+        for (const task of JSON.parse(readFileSync(join(REPO_ROOT, lane, "bench", "tasks.json"), "utf8")).tasks) {
+            const expect = task.expect ?? {};
+            if (!("exact_count" in expect) || !("candidate" in expect || ("file" in expect && "needle" in expect))) {
+                continue;
+            }
+            const plan = planTask(task, lane);
+            if (plan.scorable) {
+                scoredBy.add(plan.rule);
+            } else if (/overload/.test(task.id)) {
+                assert.match(plan.reason, /^exact_count beside a target: /, `${lane}:${task.id}`);
+            }
+        }
+    }
+    assert.deepEqual([...scoredBy].sort(), ["resolution/merged-member", "resolution/merged-name"]);
+    for (const file of ["README.md", "lib/plan.mjs"]) {
+        const text = readFileSync(join(REPO_ROOT, "bench", "score", file), "utf8");
+        assert.doesNotMatch(text, /overload count/, `${file} still gives exact_count an overload meaning`);
+    }
 });

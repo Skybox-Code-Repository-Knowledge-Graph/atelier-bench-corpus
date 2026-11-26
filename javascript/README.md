@@ -1,7 +1,7 @@
 # atelier-bench-corpus / javascript lane
 
 Accuracy-bench corpus for agent/tool evaluation over a real JavaScript application graph.
-Same repair-atelier domain as the `php/`, `rust/` and `typescript/` lanes (customers, devices,
+Same repair-atelier domain as the `php/`, `rust/`, `typescript/`, `python/` and `go/` lanes (customers, devices,
 repair orders, parts, technicians), with deliberate **JavaScript** edges for
 definition/reference/resolution tasks.
 
@@ -16,10 +16,12 @@ surface.
 | --- | --- |
 | Node | `>= 22.12` (`require(esm)` must be available: the CommonJS bench package requires the ESM core) |
 | Layout | npm workspaces, 3 packages + 1 dependency-free verifier |
-| Dependencies | `express@5` (runtime); dev: `supertest`, plus exact-pinned `typescript`, `@types/node`, `@types/express` for the checkJs gate only (no TypeScript sources, no `.d.ts`) |
+| Dependencies | `express@5` (runtime); dev: `supertest`, plus exact-pinned `typescript`, `@types/node`, `@types/express` for the checkJs gate (`typescript`'s parser also drives `bench/tests/specifiers.test.mjs`; no TypeScript sources, no `.d.ts`) |
 | Test runner | `node --test` (`node:test` + `node:assert/strict`), zero test-runner dependencies |
 | Build step | none: everything runs from source with `node` |
 | Dataset | `Dataset.seeded()` — fixed rows, **no randomness** in the corpus seed path |
+| Language server | the TypeScript language service of the pinned `typescript` 5.7.3 (graded through `typescript-language-server` 6.1.0); its project is `jsconfig.json`, which includes `packages/*/src` only, so tests are outside it |
+| ORM / schema / serialization | none, deliberately: `express@5` is the only runtime dependency, so there is no such integration to score |
 
 Install from the **committed** `package-lock.json` only (`npm ci`). Do not freestyle `npm update`
 on a bench machine if you need bit-stable ground truth.
@@ -28,10 +30,11 @@ on a bench machine if you need bit-stable ground truth.
 
 | Package | Module system | Role | Files |
 | --- | --- | --- | --- |
-| `packages/core` | ESM (`"type": "module"`, `.js`) | Domain: models, prototypes, mixins, container bindings, money, errors, events | 31 |
+| `packages/core` | ESM (`"type": "module"`, `.js`) | Domain: models, prototypes, mixins, container bindings, money, errors, events | 37 |
 | `packages/bench` | CommonJS (`.cjs`) | Breadth subsystem: 10 contracts, 8 concerns, 8 bases, 124 implementors | 131 |
-| `packages/app` | ESM, imports the CommonJS package | Application surface: express router, console commands, jobs | 11 |
+| `packages/app` | ESM, imports the CommonJS package | Application surface: express router, console commands, jobs | 12 |
 | `bench/verify-tasks` | ESM (`.mjs`) | Ground-truth self-check; **zero third-party dependencies** | 1 |
+| `bench/tests` | ESM (`.mjs`) | Lane-wide guard tests run by `npm test`: module specifiers, source loading, answer-key needles | 3 |
 
 ## Coverage map
 
@@ -40,7 +43,7 @@ on a bench machine if you need bit-stable ground truth.
 | Mixed module systems | `packages/core` is ESM, `packages/bench` is CommonJS, `packages/app` is ESM importing the CJS package |
 | Default-import interop (ESM ← CJS) | `packages/app/src/state.js`: `import bench from "@atelier/bench"`, destructured after the fact |
 | `require(esm)` (CJS → ESM) | `packages/bench/src/dataset.cjs`: `require("@atelier/core")` |
-| `createRequire` (exactly one site) | `packages/app/src/commands/exportReport.js`: exporter module picked by format at call time |
+| `createRequire` (two sites) | `packages/app/src/commands/exportReport.js`: exporter module picked by format at call time; `packages/app/src/reportsIndex.js` (below) |
 | `module.exports = { ... }` object | `packages/bench/src/contracts/reportContract.cjs` |
 | `exports.name =` assignments | `packages/bench/src/contracts/metricContract.cjs` |
 | `module.exports = class` | all 24 `packages/bench/src/reports/<slug>.cjs` and 24 `packages/bench/src/rules/<key>.cjs` |
@@ -69,7 +72,7 @@ on a bench machine if you need bit-stable ground truth.
 | Enum as a frozen object | `packages/core/src/support/status.js`, `packages/core/src/support/priority.js`: the members (`RepairStatus.Completed`, `Priority.Rush`) and the behaviour over them (`label`, `transitionsTo`, `surchargeBp`) are sibling properties of one `Object.freeze({ ... })` declaration |
 | Contract with no `implements` keyword | `packages/core/src/contracts/invoiceCalculator.js`, `packages/bench/src/contracts/reportContract.cjs`, `packages/bench/src/contracts/notifierContract.cjs`: each contract is a JSDoc `@typedef` with no runtime declaration, so its 2 / 24 / 8 implementors satisfy it structurally through the prototype chain |
 | Deterministic seed | `packages/bench/src/dataset.cjs`: revenue `58325`c, part cost `46300`c, gross profit `12025`c |
-| Tests (incl. request-level) | 78 tests: domain lifecycle, prototypes, Proxy forwarding, shadow pair, breadth registry, rules, CJS/ESM interop, express routes, console commands, the three job styles, slot board and day summary |
+| Tests (incl. request-level) | 123 tests: domain lifecycle, prototypes, Proxy forwarding, shadow pair, breadth registry, rules, CJS/ESM interop, express routes, console commands, the three job styles, slot board and day summary; every exporter, notifier, repository and service against a hand-derived table (`packages/bench/tests/components.test.cjs`); every source module loaded and the CLI entry run (`bench/tests/load.test.mjs`); every module specifier resolved (`bench/tests/specifiers.test.mjs`); every answer-key needle resolved (`bench/tests/sites.test.mjs`) |
 | Broken-syntax fixtures | `fixtures/broken-syntax`, **DO NOT FIX** (negative cases; nothing imports them) |
 | Document-symbol + call-hierarchy | `packages/core/src/models/repairOrder.js` (9 named symbols) and `packages/bench/src/index.cjs` (6) for the symbol listing; `complete` → `transitionTo`, three callers of `transitionTo`, and `@atelier/app` `recalculateInventory` → `@atelier/core` `SendCompletionNotice.subscribe` for the call graph |
 
@@ -83,9 +86,10 @@ Local use:
 
 ```bash
 npm ci
-npm test                             # node --test, 78 tests
-npm run verify                       # 95 ground-truth tasks
-npm run verify:lint                  # node --check over packages/ + broken-fixture guard
+npm test                             # node --test, 123 tests
+npm run verify                       # 96 ground-truth tasks
+npm run verify:lint                  # node --check over packages/ + broken-fixture guard + checkJs allowlist gate
+npm run typecheck                    # the pinned tsc on jsconfig.json, raw output (exits 2: the 60 allowlisted diagnostics)
 node packages/app/src/main.js serve 8080
 node packages/app/src/main.js seed
 node packages/app/src/main.js report gross-profit
@@ -113,7 +117,9 @@ variance). What the gate catches is anything NEW: an earlier head shipped 8 extr
 gap — `@atelier/core/contracts/repository.js` was missing from the core `exports` map, so a specifier
 used only inside JSDoc `import(...)` types was unresolvable while every test, `node --check` and the
 needle verifier stayed green. `packages/bench/tests/interop.test.cjs` also resolves every `@atelier/*`
-specifier in the lane, so that class of defect fails a test as well as the gate.
+specifier in the lane, and `bench/tests/specifiers.test.mjs` resolves every module specifier of any
+kind (relative, bare and `node:`, in code, type-only and docblock `import("...")` or `@import` tags alike, tests and
+fixtures included), so that class of defect fails a test as well as the gate.
 
 ## Ground truth
 
@@ -122,10 +128,11 @@ specifier in the lane, so that class of defect fails a test as well as the gate.
 | `bench/tasks.json` | 96 needle-based accuracy tasks (`from` → `expect` file/needle pairs). Surfaces: definition 42, resolution 14, references 10, import-precision 5, implementation 5, direction 4, hover 4, call_hierarchy 3, cardinality 2, multi-parent 2, document_symbol 2, parse-negative 3. Every canonical id carried by three or more lanes is carried here. |
 | `bench/checkjs-allowlist.txt` | The exact `tsc -p jsconfig.json` diagnostics the gate accepts (60 at the pinned versions); regenerate with `--lint --write-allowlist` |
 | `bench/verify-tasks/verify.mjs` | Self-check that every task needle still resolves to exactly one line |
+| `bench/tests/sites.test.mjs` | Resolves every `{file, needle}` in `tasks.json` under any key, including `optional_sites` (exactly one line) and `repeated_sites` (exactly `lines` lines), which the verifier does not read |
 
 ```bash
 node bench/verify-tasks/verify.mjs           # resolve every file+needle pair
-node bench/verify-tasks/verify.mjs --lint    # node --check + broken-fixture guard
+node bench/verify-tasks/verify.mjs --lint    # node --check + broken-fixture guard + checkJs allowlist gate
 node bench/verify-tasks/verify.mjs --root .  # verify another lane-shaped directory
 ```
 
