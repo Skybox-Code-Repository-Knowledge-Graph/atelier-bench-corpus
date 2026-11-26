@@ -12,7 +12,11 @@
  * constant holding it is an optional site.
  *
  * Comments and docblocks are not syntax nodes and a module specifier is a string, so walking the
- * parsed tree for identifiers applies the rule without a regular expression.
+ * parsed tree for identifiers applies the rule without a regular expression. The walk is syntax
+ * only: it matches the asked name, not the symbol it binds to. A same-name identifier bound to
+ * another declaration would land in the counted set, and the counted == keyed assertion below then
+ * fails, so such a stray surfaces here instead of passing silently. No references target in the lane
+ * is imported under an alias today.
  */
 import { readFileSync, readdirSync, statSync } from "node:fs";
 import { dirname, extname, join, relative } from "node:path";
