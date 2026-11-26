@@ -22,9 +22,12 @@ func (h Handler) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
 // Compile-time proof that the function type satisfies the stdlib interface.
 var _ http.Handler = Handler(nil)
 
-// NewRouter builds the application mux. The five routes are registered on an
-// explicit *http.ServeMux with Go 1.22 method-prefixed patterns.
-func NewRouter(state *app.State) *http.ServeMux {
+// NewServeMux builds the application mux. It shares its name with the standard
+// library's constructor, which it calls: inside this package the identifier
+// `http` is net/http, so `http.NewServeMux()` below never reaches this
+// function. The five routes are registered with Go 1.22 method-prefixed
+// patterns.
+func NewServeMux(state *app.State) *http.ServeMux {
 	mux := http.NewServeMux()
 	mux.Handle("GET /report/{reference}", ShowReport(state))
 	mux.Handle("GET /api/orders", ListOrders(state))

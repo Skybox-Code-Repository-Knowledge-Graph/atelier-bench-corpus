@@ -2,6 +2,8 @@ package main
 
 import (
 	"fmt"
+	"go/parser"
+	"go/token"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -41,13 +43,36 @@ func runLint(root string) int {
 		fmt.Printf("lint: FAIL (fixtures/broken-syntax compiled; it must not)\n")
 		return 1
 	}
-	fmt.Printf("lint: OK (%d broken fixture(s) still refuse to compile)\n", len(fixtures))
+	// The package build fails on its first broken file, so it cannot show that
+	// EACH fixture is still broken: every file must also fail to parse alone.
+	if parsed := parseableFixtures(root, fixtures); len(parsed) > 0 {
+		for _, name := range parsed {
+			fmt.Printf("lint: PARSES fixtures/broken-syntax/%s\n", name)
+		}
+		fmt.Printf("lint: FAIL (%d broken fixture(s) parse; each must not)\n", len(parsed))
+		return 1
+	}
+	fmt.Printf("lint: OK (%d broken fixture(s) still refuse to compile, each one fails to parse)\n", len(fixtures))
 
 	if output, err := runGo(root, "vet", "./..."); err != nil {
 		fmt.Printf("lint: FAIL (go vet ./... reported findings)\n%s", output)
 		return 1
 	}
 	fmt.Println("lint: OK (go vet clean)")
+
+	specifiers, err := collectSpecifiers(root)
+	if err != nil {
+		fmt.Printf("lint: FAIL (cannot collect module specifiers: %v)\n", err)
+		return 1
+	}
+	if failures := checkSpecifiers(root, specifiers); len(failures) > 0 {
+		for _, failure := range failures {
+			fmt.Printf("lint: UNRESOLVED %s\n", failure)
+		}
+		fmt.Printf("lint: FAIL (%d of %d module specifier(s) do not resolve)\n", len(failures), len(specifiers))
+		return 1
+	}
+	fmt.Printf("lint: OK (%d module specifier(s) resolve: %s)\n", len(specifiers), specifierSummary(specifiers))
 
 	unformatted, err := gofmtDrift(root)
 	if err != nil {
@@ -112,6 +137,18 @@ func brokenFixtures(root string) ([]string, error) {
 		found = append(found, entry.Name())
 	}
 	return found, nil
+}
+
+// parseableFixtures returns the broken fixtures that parse on their own.
+func parseableFixtures(root string, fixtures []string) []string {
+	parsed := []string{}
+	for _, name := range fixtures {
+		path := filepath.Join(root, "fixtures", "broken-syntax", name)
+		if _, err := parser.ParseFile(token.NewFileSet(), path, nil, parser.AllErrors); err == nil {
+			parsed = append(parsed, name)
+		}
+	}
+	return parsed
 }
 
 // gofmtDrift returns the files gofmt would rewrite.
