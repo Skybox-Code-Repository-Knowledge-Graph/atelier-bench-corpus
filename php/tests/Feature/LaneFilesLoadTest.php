@@ -52,12 +52,13 @@ class LaneFilesLoadTest extends TestCase
             }
 
             // No named class-like: a config/lang array, a route file, an anonymous
-            // migration class, or a function/const file. Load it unless the boot did.
-            if (! in_array(realpath($path), array_map('realpath', get_included_files()), true)) {
+            // migration class, or a function/const file. config/ and lang/ files are
+            // plain returns, safe to require again even when the boot already included
+            // them, so the array check always runs.
+            if (str_starts_with($relative, 'config/') || str_starts_with($relative, 'lang/')) {
+                $this->assertIsArray(require $path, "{$relative} must return an array");
+            } elseif (! in_array(realpath($path), array_map('realpath', get_included_files()), true)) {
                 $result = require_once $path;
-                if (str_starts_with($relative, 'config/') || str_starts_with($relative, 'lang/')) {
-                    $this->assertIsArray($result, "{$relative} must return an array");
-                }
                 if (str_starts_with($relative, 'database/migrations/')) {
                     $this->assertInstanceOf(Migration::class, $result, "{$relative} must return a Migration");
                 }
