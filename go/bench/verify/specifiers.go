@@ -173,16 +173,30 @@ func withoutMember(path string) string {
 	return path
 }
 
-// goModSpecifiers reads the require and replace lines of one go.mod.
+// goModSpecifiers reads the require and replace directives of one go.mod,
+// single-line or grouped in a `require (` / `replace (` block, with any
+// trailing `// indirect` comment dropped.
 func goModSpecifiers(path string, relative string) ([]specifier, error) {
 	raw, err := os.ReadFile(path)
 	if err != nil {
 		return nil, err
 	}
 	found := []specifier{}
+	block := ""
 	for index, line := range strings.Split(string(raw), "\n") {
-		fields := strings.Fields(line)
+		code, _, _ := strings.Cut(line, "//")
+		fields := strings.Fields(code)
 		where := fmt.Sprintf("%s:%d", relative, index+1)
+		switch {
+		case len(fields) == 2 && fields[1] == "(":
+			block = fields[0]
+			continue
+		case len(fields) == 1 && fields[0] == ")":
+			block = ""
+			continue
+		case block != "" && len(fields) > 0:
+			fields = append([]string{block}, fields...)
+		}
 		switch {
 		case len(fields) >= 3 && fields[0] == "require":
 			found = append(found, specifier{kind: "go.mod", value: fields[1], where: where})

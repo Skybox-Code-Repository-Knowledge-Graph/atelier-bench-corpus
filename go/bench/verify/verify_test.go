@@ -158,6 +158,30 @@ func TestSpecifierGuardBites(t *testing.T) {
 	}
 }
 
+// go.mod require and replace directives are read single-line and in blocks,
+// so every module a lockfile pins is a specifier the guard resolves.
+func TestGoModBlocksAreRead(t *testing.T) {
+	root := t.TempDir()
+	gomod := "module example.test/blocks\n\ngo 1.23\n\nrequire example.test/one v1.0.0\n\n" +
+		"require (\n\texample.test/two v1.2.0\n\texample.test/three v0.1.0 // indirect\n)\n\n" +
+		"replace (\n\texample.test/two => ./two\n)\n"
+	if err := os.WriteFile(filepath.Join(root, "go.mod"), []byte(gomod), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	found, err := goModSpecifiers(filepath.Join(root, "go.mod"), "go.mod")
+	if err != nil {
+		t.Fatal(err)
+	}
+	got := []string{}
+	for _, spec := range found {
+		got = append(got, spec.value+"@"+spec.where)
+	}
+	want := "example.test/one@go.mod:5 example.test/two@go.mod:8 example.test/three@go.mod:9 replace example.test/two => ./two@go.mod:13"
+	if strings.Join(got, " ") != want {
+		t.Errorf("go.mod specifiers = %q, want %q", strings.Join(got, " "), want)
+	}
+}
+
 func TestWithoutMemberKeepsLowercaseSegments(t *testing.T) {
 	cases := map[string]string{
 		"atelier.example/lane/core/money.Money": "atelier.example/lane/core/money",

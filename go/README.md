@@ -14,9 +14,9 @@ import path disagrees with its declared name, and a package that shadows a stand
 | Piece | Pin / constraint |
 | --- | --- |
 | Go | `go 1.23.0` with `toolchain go1.23.4` in `go.mod` (CI pins the same; `iter.Seq` and method-prefixed `ServeMux` patterns are used) |
-| Layout | one module, `atelier.example/lane`, packages under `core/`, `atelier/`, `app/`, `cmd/`, `internal/`, `tools/`; run every command from the lane root (`go/`) |
-| Dependencies | none over the network: the only `require` is the in-tree module `atelier.example/yamlish.v2`, resolved by a `replace` to `./third_party/yamlish.v2`, so there is no `go.sum` |
-| Test runner | `go test ./...` (stdlib `testing`): 61 tests, 47 in `tests/` plus in-package tests for the three `main` packages (`bench/verify` 9, `cmd/atelier` 4, `tools/statusgen` 1) |
+| Layout | one module, `atelier.example/lane`, packages under `core/`, `atelier/`, `app/`, `cmd/`, `internal/`, `tools/`, and the lane-only route modules under `frameworks/`; run every command from the lane root (`go/`) |
+| Dependencies | the in-tree module `atelier.example/yamlish.v2`, resolved by a `replace` to `./third_party/yamlish.v2`, and the router frameworks the lane-only route modules under `frameworks/` are written against, each pinned in `go.mod` and locked in `go.sum`: `github.com/gorilla/mux v1.8.1`. Install step: `go mod download` (fetches exactly the `go.sum` versions from the module proxy; `go build` does the same on first use) |
+| Test runner | `go test ./...` (stdlib `testing`): 64 tests, 47 in `tests/`, in-package tests for the three `main` packages (`bench/verify` 10, `cmd/atelier` 4, `tools/statusgen` 1) and 2 per route module under `frameworks/` |
 | Dataset | `dataset.Seeded()` — fixed rows, **no randomness**; revenue `58325c`, part cost `46300c`, gross profit `12025c` |
 
 ## Packages
@@ -33,6 +33,7 @@ import path disagrees with its declared name, and a package that shadows a stand
 | `bench/` | `tasks.json` + `verify/` (stdlib only) and its test | 4 |
 | `third_party/yamlish.v2/` | In-tree module whose import path last segment (`yamlish.v2`) differs from its package name (`yamlish`) | 1 |
 | `fixtures/broken-syntax/` | Intentionally invalid Go, **DO NOT FIX** (build-tag gated) | 3 |
+| `frameworks/` | Lane-only route modules, one per Go route parser beyond `net/http`, each in its framework's own convention and driven by its own request-level test: `muxroutes/` (gorilla/mux); `orderview/` is the payload they share | 3 |
 
 ## Coverage map
 
@@ -75,17 +76,20 @@ import path disagrees with its declared name, and a package that shadows a stand
 
 ```
 cd go
+go mod download                # the pinned framework modules of go.sum (go build fetches them too)
 go build ./...
 go test ./...
-go run ./bench/verify          # 105 tasks, exit 0
+go run ./bench/verify          # 106 tasks, exit 0
 go run ./bench/verify --lint   # build + broken-fixture guard (each file must fail to parse) + go vet + module specifiers + gofmt
 go run ./cmd/atelier seed      # seeded: 3 customer(s), 4 order(s), 4 part(s), revenue 58325c, then one line per metric, the rule tally and one line per service row
 go run ./cmd/atelier export-report cash-flow [json|csv|md|...]   # the shared command; json unless a format is named
 go run ./cmd/atelier recalculate-inventory                       # the shared command: recalculate-inventory: 2 part(s) below reorder level, ...
 ```
 
-No network access is needed: the single dependency is replaced by an in-tree path, so `go build`
-never contacts a module proxy. `go generate ./core/support` must reproduce
+The only network access is the module download: `go.mod` pins every framework module and `go.sum`
+locks its hashes, so `go mod download` (or the first `go build`) fetches exactly those versions
+from the module proxy and nothing else; the yamlish module is an in-tree `replace`.
+`go generate ./core/support` must reproduce
 `core/support/status_labels_gen.go` byte for byte; `tools/statusgen`'s test checks it.
 
 `--lint` also resolves every module specifier written anywhere in the lane, whatever the build
@@ -96,7 +100,7 @@ doc links in comments, `go.mod`'s require and replace lines, and the package pat
 
 ## Ground truth
 
-`bench/tasks.json` carries 105 needle-based tasks. `bench/verify` resolves every `file` + `needle`
+`bench/tasks.json` carries 106 needle-based tasks. `bench/verify` resolves every `file` + `needle`
 pair to exactly one line, checks that each `repeated_sites` needle matches exactly its `lines`
 lines, and prints one `<id>: OK (from <file>:<line> -> <n> expect needles resolved)` line per task;
 its stdout contract is byte-identical to the other five lanes' verifiers, which

@@ -88,6 +88,13 @@
             "expect": {"file": "app/http/router.go", "needle": "func Health(state *app.State) Handler {"}
         },
         {
+            "id": "def-route-gorilla-mux",
+            "surface": "definition",
+            "note": "gorilla/mux route parser: the route is registered with HandleFunc and narrowed to GET by the chained .Methods call; the {id} parameter is read back through mux.Vars. Keyed like def-route-to-handler: the handler factory the registration line names. A route variant (counted on the definition row, not toward the lane-only floor).",
+            "from": {"file": "frameworks/muxroutes/routes.go", "needle": "router.HandleFunc(\"/api/orders/{id}\", ShowOrder(state)).Methods(http.MethodGet)", "symbol": "ShowOrder"},
+            "expect": {"file": "frameworks/muxroutes/routes.go", "needle": "func ShowOrder(state *app.State) http.HandlerFunc {"}
+        },
+        {
             "id": "def-shadow-alias-billing",
             "surface": "definition",
             "note": "Two packages export a type named Formatter; the alias at the import site is the only clue.",
