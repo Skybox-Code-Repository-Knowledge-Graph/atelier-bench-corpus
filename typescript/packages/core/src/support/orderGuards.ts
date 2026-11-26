@@ -3,8 +3,13 @@
 import type { RepairOrder } from "../models/repairOrder";
 import { Priority } from "./priority";
 
-/** A RepairOrder narrowed to rush priority. */
-export type RushOrder = RepairOrder & { priority: Priority.Rush };
+/**
+ * A RepairOrder narrowed to rush priority. It is an interface that extends the RepairOrder class:
+ * TypeScript lets an interface name a class as its parent and inherit the class's members.
+ */
+export interface RushOrder extends RepairOrder {
+    priority: Priority.Rush;
+}
 
 /** Type guard: true only for rush-priority orders. */
 export function isRush(order: RepairOrder): order is RushOrder {
