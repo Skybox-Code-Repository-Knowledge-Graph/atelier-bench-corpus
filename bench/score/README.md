@@ -174,8 +174,9 @@ For all four:
 - Nothing in `must_not_include` may be returned. A known site is never an excluded hit, since the
   key itself lists it.
 - A task that carries `exact_count` beside a target is `UNSCORABLE`, unless a rule below says what
-  the count means for it: the count is an overload count in one task and a parameter count in
-  another.
+  the count means for it. The count is not one thing: it is the number of declarations the key
+  lists in one task (`resolution/merged-name`) and a signature's parameter count in another (kind
+  `arity`, which stays `UNSCORABLE`).
 - `kind` and `resolution` are labels and are never scored. The kinds these four rules cover were
   reviewed against the lanes' `notes`. One, `build_generated`, is excluded (`KIND_UNSCORABLE` in
   `lib/plan.mjs`): its key names two places, so a tool that returns either one alone would fail.

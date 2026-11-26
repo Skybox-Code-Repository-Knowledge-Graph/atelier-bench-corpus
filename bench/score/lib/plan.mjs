@@ -1,10 +1,10 @@
 // The rule table: which tasks this version of the scorer can score, and how.
 //
 // Semantics come from this table, never from the shape of an `expect` block. The same key means
-// different things in different tasks (`exact_count` is an overload count in one task, a parameter
-// count in another), so a task is scored only when a rule names its surface and its keys. Every
-// other task is reported UNSCORABLE with the reason, and every key a rule does not use is listed
-// per task as "not scored".
+// different things in different tasks (`exact_count` counts the declarations a list names in one
+// task, a signature's parameters in another), so a task is scored only when a rule names its
+// surface and its keys. Every other task is reported UNSCORABLE with the reason, and every key a
+// rule does not use is listed per task as "not scored".
 
 import { isFileNeedle } from "./resolve.mjs";
 import { symbolColumns } from "./symbol.mjs";

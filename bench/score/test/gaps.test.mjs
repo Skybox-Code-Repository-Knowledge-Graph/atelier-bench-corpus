@@ -1,8 +1,9 @@
-// The definition and resolution tasks that issue #135 found UNSCORABLE only because no rule named
-// their key shape. Each is either scored by the rule decided for it, or still UNSCORABLE with the
-// reason decided for it (README.md, "Counts beside a target" and the sections after it). A change
-// to either shows here first: the decisions were taken before any tool under test was measured on
-// these tasks, and moving one is a decision too.
+// The tasks that issue #135 found UNSCORABLE only because no rule named their key shape, on the
+// definition, resolution, import-precision, multi-parent and implementation surfaces. Each is either
+// scored by the rule decided for it, or still UNSCORABLE with the reason decided for it (README.md,
+// "Counts beside a target" and the sections after it). A change to either shows here first: the
+// decisions were taken before any tool under test was measured on these tasks, and moving one is a
+// decision too.
 
 import test from "node:test";
 import assert from "node:assert/strict";
@@ -10,7 +11,7 @@ import { readFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
-import { asksMergedName, planTask } from "../lib/plan.mjs";
+import { LANES, asksMergedName, planTask } from "../lib/plan.mjs";
 import { resolveNeedle } from "../lib/resolve.mjs";
 import { scoreTask } from "../lib/score.mjs";
 
@@ -154,4 +155,30 @@ test("an unlisted task of a refused shape gets the generic reason, not another l
     const unlisted = { ...structuredClone(listed), id: "lane-local-not-in-the-list" };
     assert.match(planTask(unlisted, "go").reason, /^no rule for surface resolution with keys contains, kind$/);
     assert.match(planTask(listed, "python").reason, /^no rule for surface resolution with keys contains, kind$/, "the same task under another lane is not the listed one");
+});
+
+// README "Exact rules" and the plan.mjs header say what `exact_count` beside a target means today:
+// the declarations a list names (resolution/merged-name, with merged-member reading the member
+// instead), or a parameter count (kind arity, refused). No rule reads it as an overload count.
+test("exact_count beside a target is scored only by the declaration_merge rules, and never as an overload count", () => {
+    const scoredBy = new Set();
+    for (const lane of LANES) {
+        for (const task of JSON.parse(readFileSync(join(REPO_ROOT, lane, "bench", "tasks.json"), "utf8")).tasks) {
+            const expect = task.expect ?? {};
+            if (!("exact_count" in expect) || !("candidate" in expect || ("file" in expect && "needle" in expect))) {
+                continue;
+            }
+            const plan = planTask(task, lane);
+            if (plan.scorable) {
+                scoredBy.add(plan.rule);
+            } else if (/overload/.test(task.id)) {
+                assert.match(plan.reason, /^exact_count beside a target: /, `${lane}:${task.id}`);
+            }
+        }
+    }
+    assert.deepEqual([...scoredBy].sort(), ["resolution/merged-member", "resolution/merged-name"]);
+    for (const file of ["README.md", "lib/plan.mjs"]) {
+        const text = readFileSync(join(REPO_ROOT, "bench", "score", file), "utf8");
+        assert.doesNotMatch(text, /overload count/, `${file} still gives exact_count an overload meaning`);
+    }
 });
