@@ -1594,7 +1594,9 @@
                 "must_not_include": [
                     "php/",
                     "rust/",
-                    "typescript/"
+                    "typescript/",
+                    "python/",
+                    "go/"
                 ]
             }
         },
@@ -1616,7 +1618,9 @@
                 "must_not_include": [
                     "php/",
                     "rust/",
-                    "typescript/"
+                    "typescript/",
+                    "python/",
+                    "go/"
                 ]
             }
         },
@@ -1636,9 +1640,10 @@
                     "needle": "class Dataset {"
                 },
                 "must_not_include": [
-                    "php/",
                     "rust/",
-                    "typescript/"
+                    "typescript/",
+                    "python/",
+                    "go/"
                 ]
             }
         },
@@ -1660,7 +1665,8 @@
                 "must_not_include": [
                     "php/",
                     "rust/",
-                    "typescript/"
+                    "typescript/",
+                    "python/"
                 ]
             }
         },
@@ -1682,7 +1688,8 @@
                 "must_not_include": [
                     "php/",
                     "rust/",
-                    "typescript/"
+                    "typescript/",
+                    "python/"
                 ]
             }
         },
@@ -1748,6 +1755,7 @@
                 "kind": "mixin_parents",
                 "extends_count": 1,
                 "implements_count": 2,
+                "exact_count": 3,
                 "implementations": [
                     {
                         "file": "packages/bench/src/support/abstractPeriodicReport.cjs",
@@ -1785,7 +1793,7 @@
                 "symbol": "makeTechnician"
             },
             "expect": {
-                "contains": "resolves through the Proxy"
+                "contains": "forward to its Schedule"
             }
         },
         {
