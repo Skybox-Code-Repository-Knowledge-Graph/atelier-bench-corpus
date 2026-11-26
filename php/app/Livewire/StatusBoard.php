@@ -20,7 +20,7 @@ class StatusBoard extends Component
 {
     use WithPagination;
 
-    /** Filter synced to the ?status= query string. */
+    /** Filter synced to the ?status= query string by the #[Url] attribute. */
     #[Url(as: 'status')]
     public string $statusFilter = '';
 

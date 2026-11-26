@@ -15,18 +15,18 @@ tasks.
 | Layout | npm workspaces: 3 packages + 1 dependency-free verifier |
 | Tests | vitest `^2.1.8` (`npm test`), request-level tests through supertest |
 | Dataset | `Dataset.seeded()` — fixed rows, **no randomness** in the corpus seed path |
-| Vendor breadth | express 5, zod, date-fns, uuid, supertest — present so resolution into `node_modules` is exercised, not for domain depth |
+| Vendor breadth | express 5, zod, date-fns, uuid, supertest — real dependencies the app, services and tests import, typed from `node_modules`; no task asks for a definition inside `node_modules` (the one task that names it, `def-ambient-module-declaration`, excludes it) |
 
 Install from the **committed** `package-lock.json` only (`npm ci`). Do not freestyle `npm update`
 on a bench machine if you need bit-stable ground truth.
 
 ## Packages
 
-| Package | Role | .ts files |
+| Package | Role | .ts/.tsx files |
 | --- | --- | --- |
-| `packages/core` (`@atelier/core`) | Domain: models, enum/namespace merges, mixin + Proxy concerns, contracts, container binding, money, errors, events, policy, sibling pair, self-referential tree, type guard/assertion function | 32 src + 4 test |
-| `packages/bench` (`@atelier/bench`) | Breadth subsystem: 8 contracts, 8 concerns, 7 abstract bases, 76 implementors, 48 RuleContract implementors (cardinality), a three-parent contract, 15 language-breadth fixtures, module augmentation, frozen dataset | 167 src + 2 test |
-| `packages/app` (`@atelier/app`) | Application surface: express router, console commands, jobs, shadow-pair aliases | 11 src + 2 test |
+| `packages/core` (`@atelier/core`) | Domain: models, enum/namespace merges, mixin + Proxy concerns, contracts, container binding, money, errors, events, policy, sibling pair, self-referential tree, type guard/assertion function | 32 src + 7 test |
+| `packages/bench` (`@atelier/bench`) | Breadth subsystem: 8 contracts, 8 concerns, 7 abstract bases, 76 implementors, 48 RuleContract implementors (cardinality), a three-parent contract, 15 language-breadth fixtures, module augmentation, frozen dataset | 166 src + 7 test |
+| `packages/app` (`@atelier/app`) | Application surface: express router, console commands, jobs, shadow-pair aliases, TSX views, ambient declarations | 18 src + 7 test |
 | `bench/verify-tasks` | Ground-truth self-check; **zero third-party dependencies** (Node built-ins only) | 1 `.mjs` |
 
 ## Coverage map
@@ -57,7 +57,7 @@ on a bench machine if you need bit-stable ground truth.
 | HTTP surface (express 5) | `packages/app/src/index.ts` router; handlers in `http/{report,api}.ts` |
 | Wide contract implementation | 24 reports, 16 metrics, 8 exporters, 8 notifiers, 8 repositories, 12 services |
 | Deterministic seed | `packages/bench/src/dataset.ts` `Dataset.seeded()` — revenue `58325`c, part cost `46300`c, gross profit `12025`c |
-| Tests (incl. request-level) | 48 vitest tests: lifecycle, money, shadow pair, Proxy forwarding, breadth registry, augmentation, express routes, console commands, TSX views, async loaders, issue-#9 surfaces |
+| Tests (incl. request-level) | 100 vitest tests in 21 files: lifecycle, money, shadow pair, Proxy forwarding, breadth registry and every breadth component (exporters, notifiers, repositories, services, concerns), augmentation, express routes, console commands and the `main.ts` entrypoint, TSX views, async loaders, ambient declarations (type-checked), issue-#9 surfaces and a use of every lane-only fixture; plus the key and graph guards below |
 | TSX + JSX factory | `packages/app/src/views/{h.ts,reportCard.tsx,reportPage.tsx}`: `jsxFactory: "h"` (no framework), component + intrinsic elements + fragment |
 | Ambient declarations | `packages/app/src/types/jsx.d.ts` (global `JSX` namespace), `packages/app/src/types/legacy-formatting.d.ts` (`declare module "atelier-legacy-formatting"`, type-only consumer in `http/legacy.ts`) |
 | `paths` alias | `tsconfig.base.json` maps `@app/*` → `packages/app/src/*`; type-only import in `http/reportLoader.ts` |
@@ -69,7 +69,7 @@ on a bench machine if you need bit-stable ground truth.
 | Collision (lane-local) | 6 tasks pinning `Money`, `Customer`, `Dataset`, `ATELIER_REF_PREFIX`, `InvoiceCalculator.calculate`, the billing `Formatter` as this lane's own declarations |
 | Multi-parent | `packages/bench/src/contracts/compositeContract.ts` (`CompositeContract extends` 3 interfaces); `packages/bench/src/reports/dailyRevenueReport.ts` (1 `extends` + 2 `implements` on an existing report, so `ReportContract` stays at 24 implementors) |
 | Breadth (language-feature fixtures) | `packages/bench/src/support/{unwrap,flags,slug,rulesConfig,logged,arrayAugmentation,uniqueKey,severity,adhoc,keyedLookup,worker}.ts`, `packages/core/src/support/orderGuards.ts`, an overloaded `Money.plus`, and `export * as Rules from "./rules"` — conditional/mapped/template-literal types, `satisfies`, a standard TC39 decorator, global augmentation, type guard + assertion function, `unique symbol`, `const enum`, class expression, `keyof typeof`, class method overload, class/interface declaration merging, `export * as` |
-| Document-symbol + call-hierarchy | `packages/core/src/models/repairOrder.ts` (24 named symbols) and `packages/bench/src/index.ts` (4) for the symbol listing; `complete` → `transitionTo`, three callers of `transitionTo`, and `@atelier/app` `recalculateInventory` → `@atelier/core` `Dispatcher.register` for the call graph |
+| Document-symbol + call-hierarchy | `packages/core/src/models/repairOrder.ts` (27 named symbols) and `packages/bench/src/index.ts` (4) for the symbol listing; `complete` → `transitionTo`, three callers of `transitionTo`, and `@atelier/app` `recalculateInventory` → `@atelier/core` `Dispatcher.register` for the call graph |
 | String-keyed events (name-only resolution) | `packages/core/src/events.ts`: `StringBus` plus the `REPAIR_COMPLETED` / `STATUS_CHANGED` / `STOCK_DEPLETED` literals, subscribed in `SendCompletionNotice.subscribe` and exercised by `packages/core/tests/events.test.ts`; nothing declares the string as a symbol |
 | Same name in two modules | `packages/app/src/jobs.ts` (callback job) and `packages/app/src/commands/recalculateInventory.ts` (console command) both export `recalculateInventory`; `main.ts` picks the command by module path |
 
@@ -83,15 +83,18 @@ Local use:
 
 ```bash
 npm run typecheck               # tsc --noEmit -p tsconfig.json
-npm test                        # 48 tests
+npm test                        # 100 tests in 21 files
 ```
 
 The console entrypoint is `packages/app/src/main.ts` (`serve [port]`, `seed`, `report [slug]`,
-`recalculate`); the request-level and console tests in `packages/app/tests/` drive both surfaces
-without a TS loader, so no runtime loader is pinned.
+`recalculate`); `packages/app/tests/entrypoint.test.ts` imports it under vitest with each command
+but `serve`, and the request-level tests in `packages/app/tests/http.test.ts` drive the router, so
+no runtime loader is pinned.
 
 HTTP surface: `GET /report/:reference` (e.g. `AT-2026-000001`), `GET /api/orders`,
-`GET /api/reports/:slug`, `POST /api/orders/:id/notes`, `GET /health`.
+`GET /api/reports/:slug`, `POST /api/orders/:id/notes`, `GET /health`. The shared set writes the
+notes route as `POST /api/orders/{key}/notes`; this lane binds the order by its numeric id, in
+express `:id` syntax, as the rust, javascript, python and go lanes do (php binds by reference).
 
 ## Ground truth
 
@@ -114,7 +117,22 @@ The verifier uses **Node built-ins only** (`node:fs`, `node:path`, `node:url`, `
 Task `file` paths are relative to this lane root (`typescript/`), not to the repository root.
 
 **Regenerate discipline:** any edit under `packages/` or `fixtures/` must leave
-`npm run verify` at **exit 0**. If needles move, update `bench/tasks.json` in the same change.
+`npm run verify` at **exit 0** and `npm test` green. If needles move, update `bench/tasks.json` in
+the same change; if a reference site or a document symbol is added or removed, update the key's
+count and list in the same change.
+
+**Key and graph guards (run by `npm test`):** `packages/bench/tests/referenceCounts.test.ts`
+recounts every `references` task and `packages/bench/tests/documentSymbols.test.ts` every
+`document_symbol` task under the counting rules in the `notes` of `bench/tasks.json`;
+`packages/bench/tests/moduleSpecifiers.test.ts` resolves every module specifier written in the lane
+(type-only, type-level, docblock `{@link import(...)}` ones and quoted `./` or `../` paths written in
+comments included) and fails when a file under `packages/*/src` is reached by no test, or holds runtime
+code and is reached only through `import type` edges.
+
+A language server used as a second opinion on these keys should run against the root
+`tsconfig.json`, or have the consuming package's files opened first: each `packages/*/tsconfig.json`
+includes only its own package, so a server that answers from the core project misses every site in
+`bench` and `app` (for example 6 of the 57 `refs-money-class` lines, all in `bench/src/dataset.ts`).
 
 ## License
 
