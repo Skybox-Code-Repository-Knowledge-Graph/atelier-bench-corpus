@@ -52,6 +52,12 @@ class SharedCommandNamesTest extends TestCase
         $this->artisan('recalculate-inventory', ['--restock' => 5])
             ->expectsOutputToContain("Recalculated stock for {$parts} parts.")
             ->assertExitCode(0);
+
+        // The forwarded level reaches the job: stock is max(level - consumed, 0), so a level of 5
+        // caps every part at 5, and a level of 500 lifts at least one part above it.
+        $this->assertLessThanOrEqual(5, (int) Part::max('stock'));
+        $this->artisan('recalculate-inventory', ['--restock' => 500])->assertExitCode(0);
+        $this->assertGreaterThan(5, (int) Part::max('stock'));
     }
 
     private function withoutTimestamp(string $output): string

@@ -210,6 +210,18 @@
         "go"
       ]
     },
+    "def-callable-array": {
+      "surface": "definition",
+      "lanes": [
+        "php"
+      ]
+    },
+    "def-callable-string": {
+      "surface": "definition",
+      "lanes": [
+        "php"
+      ]
+    },
     "def-callback-style": {
       "surface": "definition",
       "lanes": [
@@ -738,6 +750,12 @@
         "php"
       ]
     },
+    "def-late-static-return": {
+      "surface": "definition",
+      "lanes": [
+        "php"
+      ]
+    },
     "def-lifetime-struct": {
       "surface": "definition",
       "lanes": [
@@ -1099,6 +1117,12 @@
         "php"
       ]
     },
+    "def-static-creating": {
+      "surface": "definition",
+      "lanes": [
+        "php"
+      ]
+    },
     "def-static-factory": {
       "surface": "definition",
       "lanes": [
@@ -1175,6 +1199,12 @@
       "surface": "definition",
       "lanes": [
         "javascript"
+      ]
+    },
+    "def-trait-alias": {
+      "surface": "definition",
+      "lanes": [
+        "php"
       ]
     },
     "def-trait-method-through-binding": {

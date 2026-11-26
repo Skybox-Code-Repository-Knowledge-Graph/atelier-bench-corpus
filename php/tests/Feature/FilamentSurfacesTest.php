@@ -38,8 +38,18 @@ class FilamentSurfacesTest extends TestCase
         $this->assertGreaterThan(0, $rush);
         $this->assertNotSame($open, $rush);
 
-        Livewire::test(RepairStats::class)
-            ->assertSeeInOrder(['Open orders', (string) $open, 'Rush orders', (string) $rush]);
+        Livewire::test(RepairStats::class)->assertOk();
+        $stats = new class extends RepairStats {
+            public function values(): array
+            {
+                return collect($this->getStats())
+                    ->mapWithKeys(fn ($stat) => [(string) $stat->getLabel() => (string) $stat->getValue()])
+                    ->all();
+            }
+        };
+        $values = $stats->values();
+        $this->assertSame((string) $open, $values['Open orders']);
+        $this->assertSame((string) $rush, $values['Rush orders']);
     }
 
     public function test_inventory_report_lists_parts_at_or_below_the_threshold(): void
