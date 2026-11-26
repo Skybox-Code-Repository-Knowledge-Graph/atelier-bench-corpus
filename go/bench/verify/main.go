@@ -33,18 +33,29 @@ func (f *fileNeedle) ok() bool {
 	return f != nil && f.File != "" && f.Needle != ""
 }
 
+// repeatedSite is a needle that matches exactly `lines` lines of one file,
+// every one of them a site (references lists, see the lane notes).
+type repeatedSite struct {
+	File   string `json:"file"`
+	Needle string `json:"needle"`
+	Lines  int    `json:"lines"`
+}
+
 // expectBlock is the ground truth of one task. Non-needle keys (contains,
 // behavior, must_include, must_not_include, min_*, exact_count, kind,
-// resolution) are ignored by design.
+// resolution) are ignored by design. repeated_sites is checked for its line
+// count only and never counted among the resolved needles, so the OK line,
+// the cross-lane stdout contract, is the same with or without it.
 type expectBlock struct {
-	File             string       `json:"file"`
-	Needle           string       `json:"needle"`
-	KnownSites       []fileNeedle `json:"known_sites"`
-	Implementations  []fileNeedle `json:"implementations"`
-	KnownCallers     []fileNeedle `json:"known_callers"`
-	OutgoingIncludes []fileNeedle `json:"outgoing_includes"`
-	IncomingIncludes []fileNeedle `json:"incoming_includes"`
-	Candidate        *fileNeedle  `json:"candidate"`
+	File             string         `json:"file"`
+	Needle           string         `json:"needle"`
+	KnownSites       []fileNeedle   `json:"known_sites"`
+	Implementations  []fileNeedle   `json:"implementations"`
+	KnownCallers     []fileNeedle   `json:"known_callers"`
+	OutgoingIncludes []fileNeedle   `json:"outgoing_includes"`
+	IncomingIncludes []fileNeedle   `json:"incoming_includes"`
+	Candidate        *fileNeedle    `json:"candidate"`
+	RepeatedSites    []repeatedSite `json:"repeated_sites"`
 }
 
 // task is one entry of bench/tasks.json.
@@ -142,16 +153,17 @@ func collectPairs(entry task) []pair {
 	return pairs
 }
 
-// resolveNeedle resolves one pair to its unique 1-based line, or explains why not.
-func resolveNeedle(root string, file string, needle string) (int, string) {
+// matchingLines lists the 1-based lines of a file that contain the needle,
+// or explains why the file cannot be read.
+func matchingLines(root string, file string, needle string) ([]int, string) {
 	path := filepath.Join(root, file)
 	info, err := os.Stat(path)
 	if err != nil || info.IsDir() {
-		return 0, "file missing"
+		return nil, "file missing"
 	}
 	content, err := os.ReadFile(path)
 	if err != nil {
-		return 0, "unreadable"
+		return nil, "unreadable"
 	}
 	hits := []int{}
 	for index, line := range lineSplit.Split(string(content), -1) {
@@ -159,10 +171,40 @@ func resolveNeedle(root string, file string, needle string) (int, string) {
 			hits = append(hits, index+1)
 		}
 	}
+	return hits, ""
+}
+
+// resolveNeedle resolves one pair to its unique 1-based line, or explains why not.
+func resolveNeedle(root string, file string, needle string) (int, string) {
+	hits, reason := matchingLines(root, file, needle)
+	if reason != "" {
+		return 0, reason
+	}
 	if len(hits) != 1 {
 		return 0, fmt.Sprintf("found %d times", len(hits))
 	}
 	return hits[0], ""
+}
+
+// repeatedFailures checks each repeated_sites entry: the needle must match
+// exactly `lines` lines of its file.
+func repeatedFailures(root string, entry task) []string {
+	failures := []string{}
+	if entry.Expect == nil {
+		return failures
+	}
+	for _, site := range entry.Expect.RepeatedSites {
+		hits, reason := matchingLines(root, site.File, site.Needle)
+		switch {
+		case site.File == "" || site.Needle == "" || site.Lines < 2:
+			failures = append(failures, fmt.Sprintf("%s: FAIL %s repeated needle %s (needs file, needle and lines >= 2)", entry.ID, site.File, summarize(site.Needle)))
+		case reason != "":
+			failures = append(failures, fmt.Sprintf("%s: FAIL %s repeated needle %s (%s)", entry.ID, site.File, summarize(site.Needle), reason))
+		case len(hits) != site.Lines:
+			failures = append(failures, fmt.Sprintf("%s: FAIL %s repeated needle %s (found %d times, lines says %d)", entry.ID, site.File, summarize(site.Needle), len(hits), site.Lines))
+		}
+	}
+	return failures
 }
 
 // runTasks is the default mode: resolve every needle of every task.
@@ -199,6 +241,7 @@ func runTasks(root string) int {
 				expectResolved++
 			}
 		}
+		failures = append(failures, repeatedFailures(root, entry)...)
 		if len(failures) > 0 {
 			anyFail = true
 			for _, failure := range failures {

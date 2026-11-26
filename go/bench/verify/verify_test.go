@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"io"
 	"os"
 	"path/filepath"
@@ -149,5 +150,65 @@ func TestWithoutMemberKeepsLowercaseSegments(t *testing.T) {
 		if got := withoutMember(in); got != want {
 			t.Errorf("withoutMember(%q) = %q, want %q", in, got, want)
 		}
+	}
+}
+
+// writeLane writes a lane-shaped directory: one source file and a manifest.
+func writeLane(t *testing.T, manifestJSON string) string {
+	t.Helper()
+	root := t.TempDir()
+	if err := os.MkdirAll(filepath.Join(root, "bench"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	source := "package x\n\nfunc use() {\n\tdata := seed()\n\tdata = seed()\n\t_ = data\n}\n"
+	if err := os.WriteFile(filepath.Join(root, "x.go"), []byte(source), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(root, "bench", "tasks.json"), []byte(manifestJSON), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	return root
+}
+
+// repeated_sites is checked for its line count, and the OK line does not
+// change with it (the conformance contract counts needles only).
+func TestRepeatedSitesLinesAreChecked(t *testing.T) {
+	manifest := func(lines int) string {
+		return `{"tasks": [{"id": "refs-seed", "surface": "references",
+			"from": {"file": "x.go", "needle": "func use() {"},
+			"expect": {"exact_count": 2, "known_sites": [],
+				"repeated_sites": [{"file": "x.go", "needle": "seed()", "lines": ` + fmt.Sprint(lines) + `}]}}]}`
+	}
+	out, code := captureStdout(t, func() int { return run([]string{"--root", writeLane(t, manifest(2))}) })
+	if code != 0 || out != "refs-seed: OK (from x.go:3 -> 0 expect needles resolved)\n" {
+		t.Errorf("right count: exit %d, %q", code, out)
+	}
+	out, code = captureStdout(t, func() int { return run([]string{"--root", writeLane(t, manifest(3))}) })
+	if code != 1 || out != "refs-seed: FAIL x.go repeated needle seed() (found 2 times, lines says 3)\n" {
+		t.Errorf("wrong count: exit %d, %q", code, out)
+	}
+}
+
+// Each broken fixture must fail to parse on its own; one that parses is named.
+func TestParseableFixturesAreNamed(t *testing.T) {
+	root := t.TempDir()
+	dir := filepath.Join(root, "fixtures", "broken-syntax")
+	if err := os.MkdirAll(dir, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	files := map[string]string{
+		"still_broken.go": "//go:build brokenfixtures\n\npackage brokensyntax\n\ntype S struct {\n\tslots [8]bool\n",
+		"fixed.go":        "//go:build brokenfixtures\n\npackage brokensyntax\n\ntype T struct{}\n",
+	}
+	for name, content := range files {
+		if err := os.WriteFile(filepath.Join(dir, name), []byte(content), 0o644); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if got := parseableFixtures(root, []string{"fixed.go", "still_broken.go"}); len(got) != 1 || got[0] != "fixed.go" {
+		t.Errorf("parseable fixtures = %v, want [fixed.go]", got)
+	}
+	if got := parseableFixtures(laneRoot, []string{"bad_receiver.go", "unclosed_struct.go"}); len(got) != 0 {
+		t.Errorf("the lane's broken fixtures parse: %v", got)
 	}
 }
