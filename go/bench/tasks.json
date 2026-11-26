@@ -49,7 +49,7 @@
         {
             "id": "def-package-var-block",
             "surface": "definition",
-            "note": "Package-level var declared inside a grouped var block. Go-specific: a factored `var ( ... )` block declares several package-level variables under one keyword, so the declaration is the spec line inside the parentheses, never a line that starts with var. Outcome 1 under R13: the answer line itself, a spec line inside the parentheses with no var keyword, is what the factored block changes.",
+            "note": "Package-level var declared inside a grouped var block. Close call under R18, not counted toward the lane-only floor: the answer is a spec line inside the factored block that does not start with the var keyword, and javascript's multi-declarator `var a = 1, b = 2` declares a second name the same way, a detail apart.",
             "from": {"file": "core/support/priority.go", "needle": "return surchargeBasisPoints[p]", "symbol": "surchargeBasisPoints"},
             "expect": {"file": "core/support/priority.go", "needle": "\tsurchargeBasisPoints = map[Priority]int64{"}
         },
@@ -203,7 +203,7 @@
         {
             "id": "def-func-type-implements-interface",
             "surface": "definition",
-            "note": "The http.HandlerFunc pattern: the method set hangs off a named FUNCTION type. Go-specific: only Go attaches methods to a named function type, so the type that satisfies http.Handler is a func, not a struct or class.",
+            "note": "The http.HandlerFunc pattern: the method set hangs off a named FUNCTION type. Common candidate (R13/R18 outcome 2): the from line is a plain type reference in a conversion and the answer the type declaration line; that the type is a func type carrying a method lives only in its declaration, so a sibling lane can ask it unchanged of a callable type alias (typescript, python, rust).",
             "from": {"file": "app/http/router.go", "needle": "var _ http.Handler = Handler(nil)", "symbol": "Handler", "occurrence": 2},
             "expect": {
                 "file": "app/http/router.go",
@@ -216,7 +216,7 @@
         {
             "id": "def-generic-constraint-union",
             "surface": "definition",
-            "note": "One type parameter constrained by a union of approximated types. Go-specific: the constraint is a type-set union of ~ (underlying-type) terms, a form only Go's generics have.",
+            "note": "One type parameter constrained by a union of approximated types. Common candidate (R13/R18 outcome 2): the from line is a plain call and the answer its func line; the type-set constraint lives only in the signature, so a sibling lane can ask it unchanged of a generic function with a bounded type parameter (typescript, rust, python).",
             "from": {"file": "tests/interfaces_test.go", "needle": "if support.SumOf([]float64{1.5, 2.5}) != 4 {", "symbol": "SumOf"},
             "expect": {
                 "file": "core/support/helpers.go",
@@ -257,14 +257,14 @@
         {
             "id": "def-init-registration",
             "surface": "definition",
-            "note": "Registration happens in init(), so no call site outside the package mentions the report. Go-specific: no statement calls an init function; the runtime runs every init at package load, so Register's callers sit in bodies no call reaches.",
+            "note": "Registration happens in init(), so no call site outside the package mentions the report. Common candidate (R13/R18 outcome 2): the from line is a plain call of a package-level function and the answer its func line; that the call sits in an init body changes neither, so a sibling lane can ask it unchanged of a registration call in module top-level code (typescript, javascript, python, php, rust).",
             "from": {"file": "atelier/reports/gross_profit.go", "needle": "\tRegister(NewGrossProfitReport())", "symbol": "Register"},
             "expect": {"file": "atelier/reports/registry.go", "needle": "func Register(report contracts.ReportContract) {"}
         },
         {
             "id": "def-generated-file",
             "surface": "definition",
-            "note": "Label() exists only in the committed generated file; the generator that writes it is in tools/. Go-specific: the //go:generate directive and the `Code generated ... DO NOT EDIT.` header are the Go toolchain's own convention for committed generated code.",
+            "note": "Label() exists only in the committed generated file; the generator that writes it is in tools/. Common candidate (R13/R18 outcome 2): the from line is a plain method call and the answer its declaration; that the declaration sits in a generated file lives only in the surrounding file, so a sibling lane can ask it unchanged of a method declared in committed generated code (typescript, rust, php, python).",
             "from": {"file": "core/reporting/formatter.go", "needle": "\t\treturn status.Label()", "symbol": "Label"},
             "expect": {
                 "file": "core/support/status_labels_gen.go",
@@ -279,7 +279,7 @@
         {
             "id": "def-embedded-asset",
             "surface": "definition",
-            "note": "go:embed binds a file to a package variable at build time; no file is read at run time. Go-specific: //go:embed fills the package variable at compile time; no statement assigns it.",
+            "note": "go:embed binds a file to a package variable at build time; no file is read at run time. Common candidate (R13/R18 outcome 2): the from line is a plain read of a package-level var and the answer its declaration line; the //go:embed directive lives only in the surrounding file, so a sibling lane can ask it unchanged of a module-level constant (typescript, javascript, python, rust, php).",
             "from": {"file": "internal/audit/audit.go", "needle": "\treturn strings.TrimSpace(banner)", "symbol": "banner"},
             "expect": {
                 "file": "internal/audit/audit.go",
@@ -306,7 +306,7 @@
         {
             "id": "def-defer-recover",
             "surface": "definition",
-            "note": "A deferred closure turns a panic into a named return value. Go-specific: recover stops a panic only inside a deferred function, which then rewrites the named result err.",
+            "note": "A deferred closure turns a panic into a named return value. Common candidate (R13/R18 outcome 2): the from line is a plain call and the answer its func line; defer and recover live only in the body, so a sibling lane can ask it unchanged of a function that catches an exception into its result (typescript, javascript, python, rust, php).",
             "from": {"file": "tests/jobs_test.go", "needle": "result, err := app.SafeRun(func() app.JobResult {", "symbol": "SafeRun"},
             "expect": {
                 "file": "app/jobs.go",
@@ -333,14 +333,14 @@
         {
             "id": "def-channel-job",
             "surface": "definition",
-            "note": "Second of the trio: the result arrives on a receive-only channel closed by a goroutine. Go-specific: the result arrives on the receive-only channel the function returns and is received with <-; Go has no async functions, and the README maps the shared def-async-function to this id as its nearest question.",
+            "note": "Second of the trio: the result arrives on a receive-only channel closed by a goroutine. Common candidate (R13/R18 outcome 2): the from line is a plain package-qualified call and the answer its func line; the receive-only channel lives only in the result type, so a sibling lane asks the same question of a function that returns a promise or a future (typescript, javascript, python, rust). The README maps the shared def-async-function to this id as its nearest question, since Go has no async functions.",
             "from": {"file": "tests/jobs_test.go", "needle": "\tfromChannel := <-app.RunWithChannel(data)", "symbol": "RunWithChannel"},
             "expect": {"file": "app/jobs.go", "needle": "func RunWithChannel(data *dataset.Dataset) <-chan JobResult {"}
         },
         {
             "id": "def-goroutine-select",
             "surface": "definition",
-            "note": "Third of the trio: three goroutines, a WaitGroup and a select with a timeout arm. Go-specific: goroutines, a WaitGroup and a select over a result channel and a timer channel.",
+            "note": "Third of the trio: three goroutines, a WaitGroup and a select with a timeout arm. Common candidate (R13/R18 outcome 2): the from line is a plain call and the answer its func line; the goroutines, the WaitGroup and the select live only in the body, so a sibling lane can ask it unchanged of a function that runs workers (typescript, javascript, python, rust, php).",
             "from": {"file": "tests/jobs_test.go", "needle": "\tfromGoroutines := app.RunWithGoroutines(data)", "symbol": "RunWithGoroutines"},
             "expect": {
                 "file": "app/jobs.go",
@@ -519,7 +519,7 @@
         {
             "id": "impl-structural-no-assertion",
             "surface": "implementation",
-            "note": "RuleLike declares the same method set as RuleContract, and no `var _` assertion names RuleLike (its only use is as the constraint of SatisfiedBy): every type with that method set satisfies it by shape alone. That is adhoc.AdHocRule (its 24 values assert nothing) and the 24 nominal rule structs (each asserts RuleContract only), 25 types under the lane's counting rule; RuleContract, an interface with the same method set, is an optional site. Go-specific: no Go type names the interfaces it satisfies, and RuleLike is named by no type and no assertion, so only a method-set comparison finds its 25 implementors.",
+            "note": "RuleLike declares the same method set as RuleContract, and no `var _` assertion names RuleLike (its only use is as the constraint of SatisfiedBy): every type with that method set satisfies it by shape alone. That is adhoc.AdHocRule (its 24 values assert nothing) and the 24 nominal rule structs (each asserts RuleContract only), 25 types under the lane's counting rule; RuleContract, an interface with the same method set, is an optional site. Close call under R18, not counted toward the lane-only floor: satisfaction by method set with no assertion is the lane's structural hook, and a typescript class satisfies an interface it never names the same way, a detail apart.",
             "from": {"file": "atelier/contracts/rule.go", "needle": "type RuleLike interface {", "symbol": "RuleLike"},
             "expect": {
                 "exact_count": 25,
@@ -736,7 +736,7 @@
         {
             "id": "refs-func-type-handler",
             "surface": "references",
-            "note": "References to a named FUNCTION TYPE that carries a method: the five handler factories name it as their result type, the ServeHTTP receiver names it, and the compile-time assertion converts nil to it. The returned func literals convert to Handler implicitly and spell no identifier, so they hold no use; `http.Handler` on the assertion line is net/http's interface, a different declaration, and the line counts once for its Handler(nil). Go-specific: only Go attaches methods to a function type, so the receiver line is a use of a func type.",
+            "note": "References to a named FUNCTION TYPE that carries a method: the five handler factories name it as their result type, the ServeHTTP receiver names it, and the compile-time assertion converts nil to it. The returned func literals convert to Handler implicitly and spell no identifier, so they hold no use; `http.Handler` on the assertion line is net/http's interface, a different declaration, and the line counts once for its Handler(nil). Close call under R18, not counted toward the lane-only floor: references to a named function type ask what typescript asks of references to a function type alias; only the receiver line, a method on the type, is Go's, one line of seven.",
             "from": {"file": "app/http/router.go", "needle": "type Handler func(writer http.ResponseWriter, request *http.Request)", "symbol": "Handler"},
             "expect": {
                 "exact_count": 7,
@@ -883,7 +883,7 @@
         {
             "id": "resolution-receiver-pointer-vs-value",
             "surface": "resolution",
-            "note": "Money has VALUE receivers throughout, so the original is never mutated; RepairOrder has pointer receivers. Go-specific: a method's receiver is declared as a value or a pointer, and the method set of T and of *T differ by that choice; Times on a value receiver works on a copy.",
+            "note": "Money has VALUE receivers throughout, so the original is never mutated; RepairOrder has pointer receivers. Common candidate (R13/R18 outcome 2): the from line is a plain method call and the answer its declaration; the value receiver lives only in the method signature, so a sibling lane can ask it unchanged of a method on an immutable value type (rust, typescript, python).",
             "from": {"file": "tests/promotion_test.go", "needle": "\tdoubled := amount.Times(2)", "symbol": "Times"},
             "expect": {
                 "kind": "receiver",
@@ -1203,7 +1203,7 @@
         {
             "id": "imp-blank-import-side-effect",
             "surface": "import-precision",
-            "note": "Blank import: no identifier is bound, and the only effect is the package's init. Left unscorable: a definition query on the blank import returns the package clause (audit.go:4-12 `package audit`), not init, and the answer is a statement (RegisterSink, audit.go:49), so no definition query returns the answer line. Go-specific: the blank identifier as an import name, `_ \"path\"`, imports a package for its init functions alone.",
+            "note": "Blank import: no identifier is bound, and the only effect is the package's init. Left unscorable: a definition query on the blank import returns the package clause (audit.go:4-12 `package audit`), not init, and the answer is a statement (RegisterSink, audit.go:49), so no definition query returns the answer line. Close call under R18, not counted toward the lane-only floor: a blank import binds no identifier, and javascript's bare `import \"./audit.js\"` and python's import of a module for its side effects ask the same question natively, a detail apart.",
             "from": {"file": "cmd/atelier/main.go", "needle": "\t_ \"atelier.example/lane/internal/audit\"", "symbol": "audit"},
             "expect": {
                 "kind": "side_effect_only",

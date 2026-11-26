@@ -128,15 +128,20 @@ Lane-only extras:
 - The five route modules under `frameworks/` (gorilla/mux, chi, gin, echo, fiber), each serving
   `GET /api/orders` and `GET /api/orders/{id}` over the seeded state; no other lane carries them.
 
-Lane-only ids (carried by this lane alone): 50. Sorted under rulings R13 and R14 of issue #223:
-32 score a Go mechanism and carry a "Go-specific:" sentence in their note (the ids that count
-toward the floor of 30); 12 are common candidates a sibling lane could carry unchanged
-(`def-error-sentinel`, `def-method-value`, `def-method-expression`, `def-generic-two-params`,
-`def-generic-struct-method`, `def-generic-free-function-extra-param`,
-`def-generic-registry-instantiation`, `def-type-switch`, `def-anonymous-struct`,
-`dir-interface-embeds-interface`, `def-shadowing-promoted-method`,
-`resolution-same-name-package-support`); 6 are route variants (`def-route-default-mux` and the
-five framework tasks), counted on the definition row only.
+Lane-only ids (carried by this lane alone): 50, sorted under rulings R13, R14, R18 and R19 of
+issue #223 (does the answer line depend on the mechanism the note names; does a mechanism-blind
+resolver land on it):
+
+| Sort | Ids | Count |
+| --- | --- | --- |
+| Language-specific unaided (the Go construct is on the from or the answer line) | `def-build-tag-gated`, `def-named-result-deferred`, `def-struct-tag`, `resolution-embedded-field-name`, `resolution-arity-parameter-groups`, `resolution-init-ordering`, `parse-negative-bad-receiver`, `imp-internal-package`, `hierarchy-init-outgoing` | 9 |
+| Language-specific by a note sentence (the lines read like a sibling's; the note's "Go-specific:" sentence names the rule) | `def-embedded-promotion-four-levels`, `refs-promoted-method-call`, `card-embedded-promotion`, `hierarchy-promoted-callee`, `resolution-shadowed-stdlib-package`, `def-vendored-package-name` | 6 |
+| Route variant (counted on the definition row only) | `def-route-default-mux`, `def-route-gorilla-mux`, `def-route-chi`, `def-route-gin`, `def-route-echo`, `def-route-fiber` | 6 |
+| Close call (named in its note, not counted) | `def-package-var-block`, `imp-blank-import-side-effect`, `impl-structural-no-assertion`, `refs-func-type-handler`, `resolution-package-path-vs-name` | 5 |
+| Common candidate (a sibling lane could ask it unchanged; not counted) | `def-error-sentinel`, `def-method-value`, `def-method-expression`, `def-generic-two-params`, `def-generic-struct-method`, `def-generic-free-function-extra-param`, `def-generic-registry-instantiation`, `def-type-switch`, `def-anonymous-struct`, `dir-interface-embeds-interface`, `def-shadowing-promoted-method`, `resolution-same-name-package-support`, `def-channel-job`, `def-goroutine-select`, `def-defer-recover`, `def-init-registration`, `def-generic-constraint-union`, `def-embedded-asset`, `resolution-receiver-pointer-vs-value`, `def-func-type-implements-interface`, `def-generated-file`, `hover-generated-marker`, `hover-receive-only-channel`, `hover-struct-tag` | 24 |
+
+The 15 language-specific ids are below the floor of 30 that section D of
+`bench/S-PLUS-CHECKLIST.md` asks for, so that row stays open for this lane.
 
 Lane-specific `kind` strings used in `expect` blocks: `structural`, `shadow_alias`, `same_name`,
 `path_name_divergence`, `receiver`, `arity`, `init_order`, `embedded_field`, `lane_local`, `syntax_error`,
@@ -204,7 +209,12 @@ never used to make one; how each difference reads against the tree:
 - `hover-generated-marker` was re-anchored in this wave, from the tree, not from the server: the
   task sat on the `// Code generated ... DO NOT EDIT.` header line with a null symbol, and a
   comment holds no identifier to hover. The generator now writes the marker into the doc comment
-  of the generated `Label` method, and the task hovers `Label`.
+  of the generated `Label` method, and the task hovers `Label`. That doc comment is written for
+  this question, so the task is sorted a common candidate in the lane-only table above.
+- `hover-receive-only-channel` and `hover-struct-tag` are asked at a use (`app/jobs.go`'s
+  `range RunWithChannel(data)`, the `Reference:` key of `app/http/report.go`'s composite
+  literal), not at the declaration line that holds the `contains` string; the server's answer is
+  the same.
 
 `bench/lspcheck`'s own test covers its framing, position, path, verdict and report logic with
 recorded reply shapes, so it runs in CI, where no gopls is installed.
