@@ -119,6 +119,24 @@ for (const lane of LANES) {
             const withSites = scoreTask(task, { locations: [target, ...sites] }, context);
             assert.equal(withSites.verdict, "PASS", `${label} target with known sites: ${withSites.detail ?? ""}`);
 
+            // A known site is allowed beside the target, never in its place: one of two same-named
+            // declarations (an overload signature without its implementation) is the wrong one.
+            for (const site of sites.filter((site) => site.file !== target.file || site.line !== target.line)) {
+                assert.equal(scoreTask(task, { locations: [site] }, context).verdict, "FAIL", `${label} known site ${site.file}:${site.line} without the target`);
+            }
+
+            // known_sites a rule does not allow answer another question (the declarations of a merged
+            // name, asked about a member): returned beside the target, each fails it.
+            if (plan.allow.length === 0 && Array.isArray(task.expect.known_sites)) {
+                for (const pair of task.expect.known_sites) {
+                    const resolved = resolveNeedle(root, pair);
+                    if (resolved.ok && !(pair.file === target.file && resolved.line === target.line)) {
+                        const outcome = scoreTask(task, { locations: [target, { file: pair.file, line: resolved.line }] }, context);
+                        assert.equal(outcome.verdict, "FAIL", `${label} a known site of another question beside the target`);
+                    }
+                }
+            }
+
             // A range that starts above the target and covers it is an enclosing scope, and fails.
             if (target.line > 1) {
                 const enclosing = scoreTask(task, { locations: [{ file: target.file, line: target.line - 1, end_line: target.line + 40 }] }, context);
@@ -283,6 +301,21 @@ function checkSitesRule(task, plan, answer, context, label, counts) {
         const line = freeLine(anchorFile, 1);
         if (line !== null) {
             assert.equal(verdict({ locations: [...listed, { file: anchorFile, line }] }).verdict, "FAIL", `${label} a line that is not a site`);
+        }
+    }
+    // A rule whose asked line is not neutral (a definition or resolution question asked from a use):
+    // the line asked from, returned beside the list, fails it.
+    if (plan.from === null && task.from && typeof task.from.needle === "string") {
+        const asked = resolveNeedle(context.root, task.from);
+        if (asked.ok && !taken.has(`${task.from.file}:${asked.line}`)) {
+            assert.equal(verdict({ locations: [...listed, { file: task.from.file, line: asked.line }] }).verdict, "FAIL", `${label} the line asked from`);
+        }
+    }
+    // A candidate the rule does not read (a member, when the merged name is asked) is not in the list.
+    if (plan.notScored.includes("candidate")) {
+        const member = resolveNeedle(context.root, task.expect.candidate);
+        if (member.ok && !taken.has(`${task.expect.candidate.file}:${member.line}`)) {
+            assert.equal(verdict({ locations: [...listed, { file: task.expect.candidate.file, line: member.line }] }).verdict, "FAIL", `${label} the candidate, which this question does not ask about`);
         }
     }
 

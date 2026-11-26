@@ -7,6 +7,7 @@
 // per task as "not scored".
 
 import { isFileNeedle } from "./resolve.mjs";
+import { symbolColumns } from "./symbol.mjs";
 
 export const LANES = ["php", "rust", "typescript", "javascript", "python", "go"];
 
@@ -25,10 +26,32 @@ export const KIND_UNSCORABLE = {
 export const SURFACE_KIND_UNSCORABLE = {
     "direction:mro": "the answer is an order (the method resolution order), which no list rule judges",
     "direction:inherent_impl": "the key requires nothing, it only excludes; a tool that returns nothing would pass",
+    "resolution:arity": "exact_count is the signature's parameter count, which no answer field carries; the candidate is the declaration asked from, so a location alone would pass an answer that returns the question",
 };
 
 const candidate = (expect) => expect.candidate;
 const fileAndNeedle = (expect) => ({ file: expect.file, needle: expect.needle });
+
+/**
+ * Kind-less tasks whose `exact_count` beside a target counts the overload signatures the key lists
+ * as `known_sites`, keyed `lane:id`. The task's own note says so ("the definition is the
+ * implementation, the stubs are known_sites"), and the lane's language server answers the target
+ * with the signatures beside it. Other kind-less counts beside a target stay UNSCORABLE.
+ */
+export const OVERLOAD_COUNT = new Set(["python:def-overload"]);
+
+/**
+ * Does a `declaration_merge` task ask about the merged name itself, rather than a member? The lane
+ * notes: "the name resolves to both declarations, a member resolves to the half that declares it".
+ * The asked symbol is the merged name when it is written on every declaration the key lists.
+ */
+export function asksMergedName(task) {
+    const symbol = task?.from?.symbol;
+    const sites = Array.isArray(task?.expect?.known_sites) ? task.expect.known_sites : [];
+    return typeof symbol === "string"
+        && sites.length > 0
+        && sites.every((site) => isFileNeedle(site) && symbolColumns(site.needle, symbol).length > 0);
+}
 
 /**
  * The rules.
@@ -52,8 +75,65 @@ const fileAndNeedle = (expect) => ({ file: expect.file, needle: expect.needle })
  *   neutralLists  for check "sites": expect keys whose lines may be returned or not
  *   noun      for check "sites": what one entry is, in reasons ("site", "declaration")
  *   uses      expect keys the rule reads (everything else is "not scored")
+ *
+ * Optional selectors and switches, for rules that serve one meaning of a shared key shape:
+ *
+ *   kinds     the rule serves only tasks of these `kind`s
+ *   tasks     the rule serves only these tasks, keyed `lane:id` (a kind-less key whose meaning a
+ *             task's own note settles)
+ *   asks      "name" or "member": a declaration_merge rule serves only that question (asksMergedName)
+ *   countOf   for check "target": `exact_count` must equal the length of this list, or UNSCORABLE
+ *   allowKnownSites  for check "target": false when `known_sites` answer another question and are
+ *             therefore not allowed beside the target (default true)
+ *   neutralFrom  for check "sites": false when the line asked from is not neutral (default true)
  */
 export const RULES = [
+    {
+        // Overload signatures beside the implementation: the implementation is the target, each
+        // signature may be returned beside it, and exact_count counts the signatures.
+        name: "definition/overloads",
+        surface: "definition",
+        tasks: OVERLOAD_COUNT,
+        requires: ["file", "needle", "known_sites", "exact_count"],
+        forbids: [],
+        check: "target",
+        class: "exact",
+        target: fileAndNeedle,
+        countOf: "known_sites",
+        uses: ["file", "needle", "known_sites", "exact_count", "must_not_include"],
+    },
+    {
+        // Asked about a merged name: the answer is every declaration of it (known_sites, exact_count).
+        // The candidate is a member of one half, which this question does not ask about.
+        name: "resolution/merged-name",
+        surface: "resolution",
+        kinds: ["declaration_merge"],
+        asks: "name",
+        requires: ["known_sites", "exact_count"],
+        forbids: [],
+        check: "sites",
+        class: "exact",
+        list: "known_sites",
+        neutralLists: ["optional_sites"],
+        neutralFrom: false,
+        noun: "declaration",
+        uses: ["known_sites", "exact_count", "optional_sites", "must_not_include"],
+    },
+    {
+        // Asked about a member of a merged name: the answer is the half that declares it (the
+        // candidate). known_sites and exact_count are the merged name's declarations, another question.
+        name: "resolution/merged-member",
+        surface: "resolution",
+        kinds: ["declaration_merge"],
+        asks: "member",
+        requires: ["candidate"],
+        forbids: [],
+        check: "target",
+        class: "exact",
+        target: candidate,
+        allowKnownSites: false,
+        uses: ["candidate", "must_not_include"],
+    },
     {
         name: "definition/target",
         surface: "definition",
@@ -236,6 +316,17 @@ export const DOCSYM_REFERENCE_DISAGREES = {
 };
 
 /**
+ * Kind-less tasks with `exact_count` beside a target that no rule scores, keyed `lane:id`, with the
+ * reason (issue #135). Their notes or their lane's own language server leave the answer unsettled,
+ * and the key is not changed to fit a rule. Decided before any tool under test was measured on them.
+ */
+export const TARGET_COUNT_UNSCORABLE = {
+    "typescript:def-method-overload": "typescript-language-server 6.1.0 (TypeScript 5.9.3) returns only the overload signature the call matches, not the implementation the key names as candidate, while the note asks for both signatures and the implementation",
+    "typescript:def-overload": "the candidate is a parameter line inside the implementation signature, not the line that names it, and typescript-language-server 6.1.0 (TypeScript 5.9.3) returns only the overload signature the call matches",
+    "javascript:resolution-calculate-through-binding": "no kind says whether the answer is the default binding's implementation (the candidate) or both implementations (exact_count 2), and typescript-language-server 6.1.0 (TypeScript 5.9.3) returns neither, only the @typedef property of the contract",
+};
+
+/**
  * The number of entries a list task states: `exact_count`, or `extends_count` plus
  * `implements_count` where a parents task splits it. null when it states none (the list is not
  * known to be complete); undefined when the two disagree.
@@ -283,9 +374,19 @@ export function planTask(task, lane = null) {
     if (Object.hasOwn(SURFACE_KIND_UNSCORABLE, surfaceKind)) {
         return { scorable: false, reason: `kind ${expect.kind}: ${SURFACE_KIND_UNSCORABLE[surfaceKind]}` };
     }
+    const unsettled = TARGET_COUNT_UNSCORABLE[`${lane}:${task.id}`];
+    if (unsettled !== undefined) {
+        return { scorable: false, reason: `exact_count beside a target: ${unsettled}` };
+    }
 
     for (const rule of candidates) {
         if (Array.isArray(rule.kinds) && !rule.kinds.includes(expect.kind)) {
+            continue;
+        }
+        if (rule.tasks instanceof Set && !rule.tasks.has(`${lane}:${task.id}`)) {
+            continue;
+        }
+        if (rule.asks !== undefined && (rule.asks === "name") !== asksMergedName(task)) {
             continue;
         }
         if (!rule.requires.every((key) => key in expect)) {
@@ -376,7 +477,7 @@ export function planTask(task, lane = null) {
                 repeated,
                 optional,
                 noun: rule.noun,
-                from: isFileNeedle(task.from) ? { file: task.from.file, needle: task.from.needle } : null,
+                from: rule.neutralFrom !== false && isFileNeedle(task.from) ? { file: task.from.file, needle: task.from.needle } : null,
                 exactCount: count,
                 allow: [],
             };
@@ -390,10 +491,17 @@ export function planTask(task, lane = null) {
             return { scorable: false, reason: `${rule.name}: the key anchors the target inside its declaration, so no line names it; matched by containment, one range over the whole file would pass` };
         }
 
+        if (rule.countOf !== undefined) {
+            const listed = Array.isArray(expect[rule.countOf]) ? expect[rule.countOf].length : 0;
+            if (expect.exact_count !== listed) {
+                return { scorable: false, reason: `${rule.name}: exact_count ${expect.exact_count}, but the key lists ${listed} in ${rule.countOf}` };
+            }
+        }
+
         return {
             ...common,
             target,
-            allow: Array.isArray(expect.known_sites) ? expect.known_sites.filter(isFileNeedle) : [],
+            allow: rule.allowKnownSites !== false && Array.isArray(expect.known_sites) ? expect.known_sites.filter(isFileNeedle) : [],
         };
     }
 

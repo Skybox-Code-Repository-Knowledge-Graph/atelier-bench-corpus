@@ -96,8 +96,9 @@ function main(args) {
     }
 
     // The lane name is the manifest's own, which is what score.mjs checks an answer file against.
-    const oracle = buildOracle(root, manifest.tasks);
+    // The per-lane rule tables (keyed `lane:id`) read it too, so the oracle answers what score.mjs scores.
     const lane = typeof manifest.lane === "string" ? manifest.lane : flag === "--lane" ? value : basename(root);
+    const oracle = buildOracle(root, manifest.tasks, lane);
     process.stdout.write(`${JSON.stringify({ ...oracle, lane }, null, 2)}\n`);
     return 0;
 }

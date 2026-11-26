@@ -173,11 +173,48 @@ For all four:
   and an ambiguous answer fails.
 - Nothing in `must_not_include` may be returned. A known site is never an excluded hit, since the
   key itself lists it.
-- A task that carries `exact_count` beside a target is `UNSCORABLE`: the count is an overload
-  count in one task and a parameter count in another.
+- A task that carries `exact_count` beside a target is `UNSCORABLE`, unless a rule below says what
+  the count means for it: the count is an overload count in one task and a parameter count in
+  another.
 - `kind` and `resolution` are labels and are never scored. The kinds these four rules cover were
   reviewed against the lanes' `notes`. One, `build_generated`, is excluded (`KIND_UNSCORABLE` in
   `lib/plan.mjs`): its key names two places, so a tool that returns either one alone would fail.
+
+### Counts beside a target
+
+Issue #135. Each of these was decided from the task's own `expect`, `note` and `from`, its lane's
+`notes`, and the lane's own language server, before any tool under test was measured on it.
+
+| Rule | Surface | Serves | Pass when | Class |
+| --- | --- | --- | --- | --- |
+| `definition/overloads` | `definition` | `OVERLOAD_COUNT` in `lib/plan.mjs` (python `def-overload`) | the implementation (`file`, `needle`) is returned; each overload signature (`known_sites`) may be returned beside it, nothing else | exact |
+| `resolution/merged-name` | `resolution` | kind `declaration_merge`, the merged name asked | every declaration of the name (`known_sites`) is returned, and nothing else | exact |
+| `resolution/merged-member` | `resolution` | kind `declaration_merge`, a member asked | the half that declares the member (`candidate`) is returned, and nothing else | exact |
+
+- **Overloads.** The task has no `kind`; its note says "the definition is the implementation, the
+  stubs are known_sites", and `exact_count` counts the stubs, so the rule requires it to equal the
+  number of `known_sites` (else `UNSCORABLE`). A stub alone fails: it is one of three same-named
+  declarations, not the definition. pyright 1.1.414 answers the implementation and both stubs, which
+  passes. The rule is keyed by `lane:id`, so no other kind-less task falls under it by its shape.
+- **Declaration merging.** The lane notes: "the name resolves to both declarations, a member resolves
+  to the half that declares it". Which question a task asks is read from `from.symbol`: it is the
+  merged name when that symbol is written on every declaration the key lists (`asksMergedName`).
+  Asked about the name (typescript `resolution-class-interface-merge`, `Worker`), the answer is the
+  `known_sites`, `exact_count` of them; the line asked from is not neutral, and the `candidate` (a
+  member) is not read, so returning it fails. Asked about a member (typescript
+  `resolution-namespace-vs-enum`, `transitionsTo`), the answer is the `candidate`; `known_sites` and
+  `exact_count` describe the name, another question, so they are not read and returning one of them
+  beside the member fails. typescript-language-server 6.1.0 (TypeScript 5.9.3) answers both tasks
+  exactly so.
+
+Left `UNSCORABLE`, with the reason printed:
+
+| Task | Why |
+| --- | --- |
+| go `resolution-arity-parameter-groups` (kind `arity`, `SURFACE_KIND_UNSCORABLE`) | `exact_count` is the parameter count (lane notes), which no answer field carries; the candidate is the line asked from, so a location alone would pass an answer that returns the question |
+| typescript `def-method-overload` (`TARGET_COUNT_UNSCORABLE`) | typescript-language-server 6.1.0 returns only the overload signature the call matches, not the implementation the key names, while the note asks for both signatures and the implementation |
+| typescript `def-overload` (`TARGET_COUNT_UNSCORABLE`) | the candidate is a parameter line inside the implementation signature, not the line that names it, and the server returns only the overload signature the call matches |
+| javascript `resolution-calculate-through-binding` (`TARGET_COUNT_UNSCORABLE`) | no `kind` says whether the answer is the default binding's implementation (the candidate) or both implementations (`exact_count` 2); the server returns neither, only the `@typedef` property of the contract |
 
 ### References
 
@@ -314,8 +351,12 @@ body cannot trip an exclusion.
 By test, not by claim. `test/oracle.test.mjs` runs over every lane and requires, for every task a
 rule covers, that the oracle answer passes and that each mutation of it fails. For the exact rules:
 two richer forms pass as well (the target with its full range, and the target with every known
-site), and no location, the line shifted by one, an enclosing range, an unexpected extra location
-and one hit for every `must_not_include` entry each fail. For the recall rules: an empty answer,
+site), and no location, the line shifted by one, an enclosing range, an unexpected extra location,
+a known site returned alone in place of the target, a known site a rule does not allow (the
+merged name's declarations, asked about a member) beside the target, and one hit for every
+`must_not_include` entry each fail; on a list rule, so do the line asked from where it is not
+neutral, and a `candidate` the rule does not read. `test/gaps.test.mjs` pins each issue #135 task
+to the rule or the refusal decided for it. For the recall rules: an empty answer,
 one listed entry missing, one moved by a line, a truncated `contains` string and one hit for every
 `must_not_include` entry each fail, and the known limit is pinned as passing (extra text, an extra
 location, one range per file over every call site), so a change that closes or widens it shows.
