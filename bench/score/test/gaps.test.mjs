@@ -45,6 +45,8 @@ const DECIDED = {
     "typescript:imp-glob-import": { reason: /^imp-glob-import has no single reading: .* the typescript key lists 2 of the 4 exported names by line and the other 2 only by name/ },
     "javascript:imp-glob-import": { reason: /^imp-glob-import has no single reading: .* the javascript note says "the answer is the declaring module"/ },
     "php:imp-glob-import": { reason: /^imp-glob-import has no single reading: .* the php statement is a brace group-use that names its eight classes, not a glob/ },
+    // multi-parent with only exact_count and must_include, parents outside the repository (rust)
+    "rust:parents-supertrait-send-sync": { reason: /^parents with only `exact_count` and `must_include`: the two parents, Send and Sync, are declared in the Rust core library/ },
 };
 
 const tasksOf = new Map();

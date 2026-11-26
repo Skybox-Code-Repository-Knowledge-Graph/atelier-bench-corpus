@@ -403,6 +403,12 @@ export const UNRULED_SHAPES = [
         tasks: new Set(["php:imp-glob-import"]),
         reason: `${GLOB_NO_READING}; the php statement is a brace group-use that names its eight classes, not a glob, and phpactor 2026.11.22.0 answers no location at the namespace asked (Repositories)`,
     },
+    {
+        surface: "multi-parent",
+        keys: ["exact_count", "must_include"],
+        tasks: new Set(["rust:parents-supertrait-send-sync"]),
+        reason: "parents with only `exact_count` and `must_include`: the two parents, Send and Sync, are declared in the Rust core library, outside the repository, so no lane-relative location names them (rust-analyzer 1.96.0 answers core/src/marker.rs in the toolchain, and has no type hierarchy); the key names them only in `must_include`, which no rule scores, and judging a parents answer by name is a mode no source states for this surface",
+    },
 ];
 
 /**
