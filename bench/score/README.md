@@ -227,6 +227,7 @@ not changed to fit a rule.
 | Shape | Tasks | Why no rule |
 | --- | --- | --- |
 | `resolution`, kind `lane_local`, keys `contains`, `kind` | go `lane-local-calculate`, `-customer`, `-dataset`, `-formatter-billing`, `-money`, `-ref-prefix` | The lane notes ask that resolution land on this lane's own declaration and never a sibling lane's. These keys name no declaration and exclude no sibling lane (the same ids in the other lanes carry a `candidate` and lane-prefix `must_not_include` entries). `contains` is defined for hover text only; gopls v0.24.0's hover holds the string on one of the six, the one where it is the asked symbol itself (`Calculator`), and `AT-2026-` is not the value of `AtelierPrefix` (`"AT"`) |
+| `resolution`, kind `shadow_alias`, keys `contains`, `kind`, `must_not_include`, `resolution` | go `resolution-shadowed-stdlib-package` | The answer, `net/http`'s `NewServeMux`, is in the Go standard library, outside the repository: no lane-relative location names it (gopls v0.24.0 answers a GOROOT path, and an absolute path is an invalid answer). `contains` (`net/http`) is defined for hover text only, and the package's own `app/http` declares no `NewServeMux`, so the exclusion `app/http#NewServeMux` can trip only on the line asked from: on its own it would pass an empty answer |
 
 ### References
 

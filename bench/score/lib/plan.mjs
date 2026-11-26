@@ -338,6 +338,12 @@ export const UNRULED_SHAPES = [
         keys: ["contains", "kind"],
         reason: "kind lane_local with only `contains`: the lane notes ask that resolution land on this lane's own declaration and never a sibling lane's, but the key names no declaration and excludes no sibling lane; `contains` is defined for hover text only, and gopls v0.24.0's hover holds the string on one of the six go tasks, the one where it is the asked symbol itself",
     },
+    {
+        surface: "resolution",
+        kind: "shadow_alias",
+        keys: ["contains", "kind", "must_not_include", "resolution"],
+        reason: "kind shadow_alias with `contains` and no candidate: the declaration is in the Go standard library, outside the repository, so no lane-relative location names it (gopls v0.24.0 answers a GOROOT path); `contains` is defined for hover text only, and the one exclusion can trip only on the line asked from, so it alone would pass an empty answer",
+    },
 ];
 
 /**
