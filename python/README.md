@@ -1,7 +1,7 @@
 # atelier-bench-corpus / python lane
 
 Accuracy-bench corpus for agent/tool evaluation over a real Python application graph.
-Same repair-atelier domain as the other four lanes (customers, devices, repair orders, parts,
+Same repair-atelier domain as the other five lanes (customers, devices, repair orders, parts,
 technicians), with deliberate **Python** language edges for definition/reference/resolution tasks:
 the resolution problems Python creates that the other lanes cannot — decorators that graft
 methods, `__getattr__` forwarding, multiple inheritance and the MRO, Protocols vs ABCs, string-keyed
