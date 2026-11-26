@@ -511,7 +511,7 @@ fn continues_ident(chars: &[char], at: usize) -> bool {
     match at {
         0 => false,
         1 => ident(0) && !matches!(chars[0], 'b' | 'c'),
-        _ => ident(at - 1) && !(matches!(chars[at - 1], 'b' | 'c') && !ident(at - 2)),
+        _ => ident(at - 1) && (!matches!(chars[at - 1], 'b' | 'c') || ident(at - 2)),
     }
 }
 
