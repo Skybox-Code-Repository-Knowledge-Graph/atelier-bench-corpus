@@ -77,7 +77,7 @@ import path disagrees with its declared name, and a package that shadows a stand
 cd go
 go build ./...
 go test ./...
-go run ./bench/verify          # 101 tasks, exit 0
+go run ./bench/verify          # 105 tasks, exit 0
 go run ./bench/verify --lint   # build + broken-fixture guard (each file must fail to parse) + go vet + module specifiers + gofmt
 go run ./cmd/atelier seed      # seeded: 3 customer(s), 4 order(s), 4 part(s), revenue 58325c, then one line per metric, the rule tally and one line per service row
 go run ./cmd/atelier export-report cash-flow [json|csv|md|...]   # the shared command; json unless a format is named
@@ -96,7 +96,7 @@ doc links in comments, `go.mod`'s require and replace lines, and the package pat
 
 ## Ground truth
 
-`bench/tasks.json` carries 101 needle-based tasks. `bench/verify` resolves every `file` + `needle`
+`bench/tasks.json` carries 105 needle-based tasks. `bench/verify` resolves every `file` + `needle`
 pair to exactly one line, checks that each `repeated_sites` needle matches exactly its `lines`
 lines, and prints one `<id>: OK (from <file>:<line> -> <n> expect needles resolved)` line per task;
 its stdout contract is byte-identical to the other five lanes' verifiers, which
@@ -113,7 +113,7 @@ Lane-only extras:
   (the run manifest through `atelier.example/yamlish.v2`).
 
 Lane-specific `kind` strings used in `expect` blocks: `structural`, `shadow_alias`, `same_name`,
-`path_name_divergence`, `receiver`, `arity`, `init_order`, `lane_local`, `syntax_error`,
+`path_name_divergence`, `receiver`, `arity`, `init_order`, `embedded_field`, `lane_local`, `syntax_error`,
 `parent_of`, `child_of`, `uses_self`, `one_of_two`, `dot_import`, `side_effect_only`,
 `type_only`, `visibility_boundary`, `one_member`, `no_fanout`.
 
