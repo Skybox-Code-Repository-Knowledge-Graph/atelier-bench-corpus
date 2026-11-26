@@ -26,7 +26,7 @@ on a bench machine if you need bit-stable ground truth.
 | Package | Role | .ts/.tsx files |
 | --- | --- | --- |
 | `packages/core` (`@atelier/core`) | Domain: models, enum/namespace merges, mixin + Proxy concerns, contracts, container binding, money, errors, events, policy, sibling pair, self-referential tree, type guard/assertion function, an import type | 33 src + 8 test |
-| `packages/bench` (`@atelier/bench`) | Breadth subsystem: 8 contracts, 8 concerns, 7 abstract bases, 76 implementors, 48 RuleContract implementors (cardinality), a three-parent contract, 22 language-breadth fixtures, module augmentation, frozen dataset | 173 src + 8 test |
+| `packages/bench` (`@atelier/bench`) | Breadth subsystem: 8 contracts, 8 concerns, 7 abstract bases, 76 implementors, 48 RuleContract implementors (cardinality), a three-parent contract, 30 language-breadth fixtures, module augmentation, frozen dataset | 181 src + 8 test |
 | `packages/app` (`@atelier/app`) | Application surface: express router (plus a mounted order Router), console commands, jobs, shadow-pair aliases, TSX views, ambient declarations | 22 src + 8 test |
 | `packages/routes` (`@atelier/routes`) | Lane-only route fixtures: one route module per framework route parser (NestJS, Hono, Fastify, Remix, SvelteKit, Nuxt, Expo), each in its framework's own convention, and a client that addresses them by URL | 12 src + 2 test |
 | `bench/verify-tasks` | Ground-truth self-check; **zero third-party dependencies** (Node built-ins only) | 1 `.mjs` |
@@ -111,6 +111,19 @@ express `:id` syntax, as the rust, javascript, python and go lanes do (php binds
 | --- | --- |
 | `bench/tasks.json` | 128 needle-based accuracy tasks (`from` → `expect` file/needle pairs): 44 original + 34 failure-mode surfaces (issue #9) + 9 TSX/ambient/paths/async edges + 5 document-symbol/call-hierarchy surfaces + 7 shared-id parity and depth-floor tasks + 13 TypeScript-only one-lane tasks and 8 route tasks (issue #223, wave 3) + 8 TypeScript-only one-lane tasks (bounce 1, rulings R18 and R19) |
 | `bench/verify-tasks/verify.mjs` | Self-check that every task needle still resolves to exactly one line |
+
+**One-lane ids (checklist D, ruling R20).** (a) 61 ids in `bench/tasks.json` are carried by this lane
+alone in `bench/matrix.json`; 8 of them are the R12 route ids, shared with javascript once its PR
+lands, which leaves 53. (b) 42 of those 53 sit on a construct only TypeScript has (type-level and
+declaration-level syntax: conditional, mapped, template-literal and indexed-access types, `infer`,
+`keyof` / `typeof` in type positions, type predicates, `satisfies`, `ThisType`, pattern index
+signatures, declaration merging, ambient declarations, `paths`, import types); the 11 common
+candidates are left out, and no id duplicates another. Two of the 42 are close: `def-type-guard`
+and `def-this-predicate-method`, whose type predicates Python's TypeGuard / TypeIs imitate natively.
+(c) 33 of the 42 also pass the R19 trace (a resolver that ignores the mechanism does not land on the
+expect line): the review's 24 plus the 9 added in bounce 1; 27 when the six bounce-1 ids that R19's
+second clause makes close calls are left out. The PR body lists every id per number. Box D.2 stays
+open while the 11 common candidates wait for their follow-up lane.
 
 ```bash
 npm run verify                              # resolve every file+needle pair

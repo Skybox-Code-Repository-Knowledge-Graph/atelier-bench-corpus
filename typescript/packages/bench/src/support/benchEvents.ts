@@ -29,5 +29,5 @@ export class BenchEvents {
 
 /** Collect the SKU of every part that runs low. */
 export function watchStock(events: BenchEvents, low: string[]): void {
-    events.on("stock_low", (event) => low.push(event.sku));
+    events.on("stock_low", (event) => low.push(`${event.sku} x${event.onHand}`));
 }

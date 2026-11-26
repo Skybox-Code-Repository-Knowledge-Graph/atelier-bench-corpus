@@ -3420,7 +3420,7 @@
             "note": "on<K extends keyof BenchEventMap> takes a handler of BenchEventMap[K]; K is inferred from the string \"stock_low\", so the handler's `event.sku` reads the stock_low entry's sku, not the part_returned entry's sku on the line above (the look-alike; OrderPart and others declare more). Added in bounce 1 (R18). TypeScript-only mechanism: an indexed access type by a generic key inferred from a string literal argument, which types a callback's parameter.",
             "from": {
                 "file": "packages/bench/src/support/benchEvents.ts",
-                "needle": "events.on(\"stock_low\", (event) => low.push(event.sku));",
+                "needle": "events.on(\"stock_low\", (event) => low.push(`${event.sku} x${event.onHand}`));",
                 "symbol": "sku"
             },
             "expect": {

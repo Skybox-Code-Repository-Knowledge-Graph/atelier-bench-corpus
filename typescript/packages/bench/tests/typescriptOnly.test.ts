@@ -118,7 +118,7 @@ describe("TypeScript-only constructs are used", () => {
         events.emit("stock_low", { sku: "SCR-OLED-6", onHand: 1 });
         events.emit("part_returned", { sku: "BAT-IP12", bin: "B-04" });
 
-        expect(low).toEqual(["SCR-OLED-6"]);
+        expect(low).toEqual(["SCR-OLED-6 x1"]);
     });
 
     it("reads a module member through an import type query", async () => {
