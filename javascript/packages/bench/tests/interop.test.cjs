@@ -101,7 +101,8 @@ describe("package specifiers", () => {
         for (const file of files) {
             const source = fs.readFileSync(file, "utf8");
 
-            for (const match of source.matchAll(/@atelier\/[A-Za-z0-9._/-]+/g)) {
+            // `[`, `]`, `+` and `$` belong to file-convention route paths (packages/routes); `${` starts a template hole.
+            for (const match of source.matchAll(/@atelier\/(?:[A-Za-z0-9._/+[\]-]|\$(?!\{))+/g)) {
                 specifiers.add(match[0].replace(/\.+$/, ""));
             }
         }
