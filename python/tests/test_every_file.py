@@ -97,7 +97,7 @@ class EveryFileTest(unittest.TestCase):
 
     def test_every_module_on_disk_imports(self) -> None:
         on_disk = module_names_on_disk()
-        self.assertEqual(len(on_disk), 200)
+        self.assertEqual(len(on_disk), 201)
         walked = set(PACKAGES)
         for package in PACKAGES:
             walked |= {info.name for info in pkgutil.walk_packages(importlib.import_module(package).__path__, f"{package}.")}
