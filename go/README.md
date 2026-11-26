@@ -134,6 +134,37 @@ exception is `card-rule-contract`, which states `48` with `nominal_count: 24` (s
 matching the typescript, javascript and python lanes; `impl-structural-no-assertion` asks about
 the same method set by type and counts 25. A references `exact_count` counts lines, not uses.
 
+## Language server (E.5)
+
+The language server this lane's stack starts is **gopls v0.24.0**
+(`go install golang.org/x/tools/gopls@v0.24.0`). `bench/lspcheck` runs it over stdio, with
+`GOOS=linux` (the CI platform), on every `hover`, `document_symbol`, `call_hierarchy` and
+`implementation` task, and `bench/lsp-check.md` is its committed report:
+
+```
+cd go
+go run ./bench/lspcheck -gopls "$(go env GOPATH)/bin/gopls" -out bench/lsp-check.md
+```
+
+Result: 17 tasks, 17 agree, 0 disagree, 0 no answer. The server is compared with each key and
+never used to make one; how each difference reads against the tree:
+
+- `implementation`: where the server returns more locations than the key lists implementors
+  (`impl-report-contract` 25 for 24, `impl-repository-generic` 9 for 8,
+  `impl-structural-no-assertion` 26 for 25), every extra location is one of that task's
+  `optional_sites` interfaces (notes rule 2), so the key stands.
+- `document_symbol`: gopls names a method `(*RepairOrder).TransitionTo`; the key names the
+  identifier, `TransitionTo`. The check's first run reported six "missing" methods of
+  `docsym-repair-order` for that reason alone; the checker now matches the method name after the
+  receiver, and no key changed.
+- `hover-generated-marker` was re-anchored in this wave, from the tree, not from the server: the
+  task sat on the `// Code generated ... DO NOT EDIT.` header line with a null symbol, and a
+  comment holds no identifier to hover. The generator now writes the marker into the doc comment
+  of the generated `Label` method, and the task hovers `Label`.
+
+`bench/lspcheck`'s own test covers its framing, position, path, verdict and report logic with
+recorded reply shapes, so it runs in CI, where no gopls is installed.
+
 ## License
 
 MIT. Corpus content is clean-room for bench use.
