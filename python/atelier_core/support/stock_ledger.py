@@ -212,10 +212,12 @@ async def recount_async(parts: Iterable[Part], movements: Iterable[tuple[str, in
 
 
 def first_short(levels: Iterable[StockLevel], minimum: int) -> str | None:
-    """The SKU of the first level below minimum: any() stops there, and the walrus keeps it."""
-    if any((short := level).on_hand < minimum for level in levels):
-        return short.sku
-    return None
+    """The first SKU below minimum and how many more are short: any() stops at the first, and the walrus keeps it."""
+    stocked = list(levels)
+    if not any((short := level).on_hand < minimum for level in stocked):
+        return None
+    others = [short.sku for short in stocked if short.on_hand < minimum][1:]
+    return f"{short.sku} (+{len(others)})"
 
 
 class Aisle:
@@ -229,7 +231,7 @@ class Aisle:
 
 
 def walk(aisle: Aisle) -> list[str]:
-    return [sku for sku in aisle]  # type: ignore[attr-defined]  # mypy knows no __getitem__ iteration
+    return [sku for sku in aisle]  # type: ignore[attr-defined]  # mypy does not model the old sequence protocol
 
 
 class PartFamily:
@@ -280,5 +282,5 @@ class Columns(type):
 
 
 class CountSheet(metaclass=Columns):
-    sku = column("sku")  # type: ignore[name-defined]  # the module binds no such name; Columns.__prepare__ does
+    sku = column("sku")  # type: ignore[name-defined]  # the module binds no such name; the metaclass supplies it
     counted = column("counted")  # type: ignore[name-defined]

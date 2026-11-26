@@ -4,7 +4,9 @@ ledger (atelier_core/support/stock_ledger.py), the comparisons @total_ordering f
 and the __set_name__ hook of the notifiers' endpoint descriptor.
 """
 
+import ast
 import asyncio
+import inspect
 import unittest
 
 from atelier_app.state import seeded_state
@@ -29,6 +31,32 @@ from atelier_core.support.stock_ledger import (
     first_short,
     walk,
 )
+
+COMPREHENSIONS = (ast.ListComp, ast.SetComp, ast.DictComp, ast.GeneratorExp)
+NESTED_SCOPES = (ast.FunctionDef, ast.AsyncFunctionDef, ast.Lambda, ast.ClassDef)
+
+
+def function_scope_stores(function: ast.FunctionDef, name: str) -> list[str]:
+    """How the function's own scope binds name: "parameter", "walrus" per :=, "store" per other binding.
+
+    A comprehension's loop targets belong to the comprehension; a := inside one binds in the function.
+    """
+    found = ["parameter" for arg in function.args.args if arg.arg == name]
+
+    def visit(node: ast.AST, in_comprehension: bool) -> None:
+        for child in ast.iter_child_nodes(node):
+            if isinstance(child, NESTED_SCOPES):
+                continue
+            if isinstance(child, ast.NamedExpr) and child.target.id == name:
+                found.append("walrus")
+                visit(child.value, in_comprehension)
+                continue
+            if isinstance(child, ast.Name) and child.id == name and isinstance(child.ctx, ast.Store) and not in_comprehension:
+                found.append("store")
+            visit(child, in_comprehension or isinstance(child, COMPREHENSIONS))
+
+    visit(function, False)
+    return found
 
 
 class StockLedgerTest(unittest.TestCase):
@@ -86,16 +114,31 @@ class ClassLevelHookTest(unittest.TestCase):
 
 class ProtocolFallbackTest(unittest.TestCase):
     def test_truth_test_falls_back_to_len(self) -> None:
+        # The key holds only while Ledger declares no __bool__ of its own.
+        self.assertNotIn("__bool__", vars(Ledger))
         self.assertEqual(Ledger(seeded_state().data.parts).summary(), "4 SKU(s) on hand")
         self.assertEqual(Ledger([]).summary(), "nothing on hand")
 
     def test_for_loop_indexes_a_getitem_only_class(self) -> None:
+        # The key holds only while Aisle declares no __iter__ of its own.
+        self.assertNotIn("__iter__", vars(Aisle))
         self.assertEqual(walk(Aisle(["SCR-13", "KBD-EU"])), ["SCR-13", "KBD-EU"])
 
     def test_walrus_target_outlives_the_generator(self) -> None:
+        # BAT-55 is the first level below 3 and FAN-A1 the other one. Were the list
+        # comprehension's own `short` to leak, the result would name FAN-A1.
         levels = [StockLevel("SCR-13", 4), StockLevel("BAT-55", 1), StockLevel("FAN-A1", 2)]
-        self.assertEqual(first_short(levels, 2), "BAT-55")
+        self.assertEqual(first_short(levels, 3), "BAT-55 (+1)")
+        self.assertEqual(first_short(levels, 2), "BAT-55 (+0)")
         self.assertIsNone(first_short(levels, 1))
+
+    def test_walrus_is_the_only_function_scope_binding(self) -> None:
+        # The key's premise: inside first_short, `short` is bound in the function's scope by the
+        # walrus alone; the list comprehension's `short` lives in the comprehension's own scope.
+        tree = ast.parse(inspect.getsource(first_short))
+        function = tree.body[0]
+        assert isinstance(function, ast.FunctionDef)
+        self.assertEqual(function_scope_stores(function, "short"), ["walrus"])
 
     def test_class_keyword_reaches_init_subclass(self) -> None:
         self.assertIs(family_of("scr-13"), Screens)
