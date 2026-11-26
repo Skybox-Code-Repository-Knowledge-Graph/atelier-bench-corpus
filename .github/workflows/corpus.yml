@@ -106,6 +106,9 @@ jobs:
       - name: test (locked)
         run: cargo test --workspace --locked
 
+      - name: test extra-rules feature (locked)
+        run: cargo test -p atelier-bench --features extra-rules --locked
+
       - name: clippy
         run: cargo clippy --workspace --all-targets --all-features -- -D warnings
 
@@ -114,6 +117,11 @@ jobs:
 
       - name: Verify lint
         run: cargo run -q -p bench-verify -- --lint
+
+      - name: docs (broken intra-doc links denied)
+        env:
+          RUSTDOCFLAGS: -D rustdoc::broken_intra_doc_links
+        run: cargo doc --workspace --no-deps --document-private-items --all-features --locked
 
       - name: Upload verifier output
         if: always()

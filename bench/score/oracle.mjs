@@ -9,9 +9,9 @@
 // (bench/score/test/oracle.test.mjs). A task the oracle cannot answer is left out, so it scores
 // UNANSWERED.
 
-import { readFileSync } from "node:fs";
+import { readFileSync, realpathSync } from "node:fs";
 import { basename, dirname, join, resolve } from "node:path";
-import { fileURLToPath, pathToFileURL } from "node:url";
+import { fileURLToPath } from "node:url";
 import process from "node:process";
 
 import { LANES, planTask } from "./lib/plan.mjs";
@@ -70,8 +70,23 @@ export function buildOracle(root, tasks, lane = null) {
     return { version: 1, tool: { name: "oracle", version: "1" }, scope: "repo", answers };
 }
 
-if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1])).href) {
-    process.exit(main(process.argv.slice(2)));
+// Run only as a script (the tests import buildOracle). import.meta.url is realpath-resolved and
+// process.argv[1] is not, so the comparison resolves argv[1] too, or a symlinked path would run
+// nothing and exit 0 (issue #221). exitCode, not process.exit: a large stdout through a pipe is
+// written in full before the process ends.
+if (isEntryScript()) {
+    process.exitCode = main(process.argv.slice(2));
+}
+
+function isEntryScript() {
+    if (!process.argv[1]) {
+        return false;
+    }
+    try {
+        return realpathSync(process.argv[1]) === fileURLToPath(import.meta.url);
+    } catch {
+        return false;
+    }
 }
 
 function main(args) {

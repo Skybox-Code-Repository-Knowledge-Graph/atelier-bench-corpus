@@ -44,6 +44,17 @@ impl Json {
         }
     }
 
+    /// A whole number of zero or more; `None` for a fraction, a negative
+    /// number and every other kind.
+    pub fn as_whole(&self) -> Option<usize> {
+        match self {
+            Json::Number(value) if *value >= 0.0 && value.fract().abs() < f64::EPSILON => {
+                Some(*value as usize)
+            }
+            _ => None,
+        }
+    }
+
     /// Both `file` and `needle` as strings, or `None` when either is missing.
     pub fn file_needle(&self) -> Option<(&str, &str)> {
         Some((self.get("file")?.as_str()?, self.get("needle")?.as_str()?))
@@ -308,6 +319,19 @@ mod tests {
             doc.get("needle").and_then(Json::as_str),
             Some("let s = \"AT\";\nA")
         );
+    }
+
+    #[test]
+    fn a_whole_number_is_neither_negative_nor_fractional() {
+        let doc = parse(r#"[6, 0, 6.7, -2, "6"]"#).expect("parses");
+        let whole: Vec<Option<usize>> = doc
+            .as_array()
+            .expect("array")
+            .iter()
+            .map(Json::as_whole)
+            .collect();
+
+        assert_eq!(whole, [Some(6), Some(0), None, None, None]);
     }
 
     #[test]

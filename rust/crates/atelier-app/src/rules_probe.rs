@@ -8,3 +8,16 @@ use atelier_bench::RuleContract;
 pub fn passes(rule: &dyn RuleContract, data: &atelier_bench::Dataset) -> bool {
     rule.evaluate(data)
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::state::AppState;
+
+    #[test]
+    fn every_registered_rule_passes_on_the_seed() {
+        let state = AppState::seeded();
+
+        assert!(atelier_bench::rules::rules().all(|rule| passes(rule, &state.data)));
+    }
+}
