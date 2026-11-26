@@ -12,6 +12,7 @@ packages/bench/src/exporters/csvExporter.cjs: error TS2339: Property 'formatCent
 packages/bench/src/exporters/htmlExporter.cjs: error TS2339: Property 'formatCents' does not exist on type 'HtmlExporter'.
 packages/bench/src/exporters/markdownExporter.cjs: error TS2339: Property 'formatCents' does not exist on type 'MarkdownExporter'.
 packages/bench/src/exporters/pdfExporter.cjs: error TS2339: Property 'formatCount' does not exist on type 'PdfExporter'.
+packages/bench/src/interop/moduleThis.cjs: error TS2532: Object is possibly 'undefined'.
 packages/bench/src/metrics/warrantyRateMetric.cjs: error TS1479: The current file is a CommonJS module whose imports will produce 'require' calls; however, the referenced file is an ECMAScript module and cannot be imported with 'require'. Consider writing a dynamic 'import("@atelier/core")' call instead.
 packages/bench/src/reports/order-backlog.cjs: error TS1479: The current file is a CommonJS module whose imports will produce 'require' calls; however, the referenced file is an ECMAScript module and cannot be imported with 'require'. Consider writing a dynamic 'import("@atelier/core")' call instead.
 packages/bench/src/reports/order-volume.cjs: error TS1479: The current file is a CommonJS module whose imports will produce 'require' calls; however, the referenced file is an ECMAScript module and cannot be imported with 'require'. Consider writing a dynamic 'import("@atelier/core")' call instead.
