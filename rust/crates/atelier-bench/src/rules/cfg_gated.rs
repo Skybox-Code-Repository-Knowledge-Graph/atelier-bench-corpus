@@ -33,4 +33,10 @@ mod tests {
     fn always_true_rule_passes() {
         assert!(AlwaysTrueRule.evaluate(&Dataset::seeded()));
     }
+
+    #[cfg(feature = "extra-rules")]
+    #[test]
+    fn experimental_rule_passes() {
+        assert!(ExperimentalRule.evaluate(&Dataset::default()));
+    }
 }
