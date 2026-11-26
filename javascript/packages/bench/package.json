@@ -3,11 +3,15 @@
     "version": "0.1.0",
     "private": true,
     "type": "commonjs",
-    "description": "Breadth subsystem: reports, metrics, exporters, notifiers, repositories, services, rules. CommonJS only.",
+    "description": "Breadth subsystem: reports, metrics, exporters, notifiers, repositories, services, rules. CommonJS, plus one ES module (src/interop/centsLabel.mjs) reached through the exports map's import condition.",
     "license": "MIT",
     "main": "./src/index.cjs",
     "exports": {
         ".": "./src/index.cjs",
+        "./interop/cents-label": {
+            "import": "./src/interop/centsLabel.mjs",
+            "require": "./src/interop/centsLabel.cjs"
+        },
         "./*": "./src/*"
     },
     "dependencies": {

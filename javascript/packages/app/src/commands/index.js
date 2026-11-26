@@ -1,12 +1,17 @@
 /** Console command parsing and dispatch. */
 
 /**
- * Every subcommand the binary accepts.
+ * Every subcommand the binary accepts. `export-report` and
+ * `recalculate-inventory` are the command names every lane of the corpus
+ * shares; `report` and `recalculate` are this lane's own shorter spellings,
+ * kept beside them.
  *
  * @typedef {{ kind: "serve", port: number }
  *   | { kind: "seed" }
  *   | { kind: "report", slug: string }
+ *   | { kind: "export-report", slug: string, format: "csv" | "json" | "md" }
  *   | { kind: "recalculate" }
+ *   | { kind: "recalculate-inventory" }
  *   | { kind: "help" }} Command
  */
 
@@ -27,8 +32,16 @@ export function parseCommand(args) {
             return { kind: "seed" };
         case "report":
             return { kind: "report", slug: args[1] ?? "gross-profit" };
+        case "export-report":
+            return {
+                kind: "export-report",
+                slug: args[1] ?? "gross-profit",
+                format: /** @type {"csv" | "json" | "md"} */ (args[2] ?? "csv"),
+            };
         case "recalculate":
             return { kind: "recalculate" };
+        case "recalculate-inventory":
+            return { kind: "recalculate-inventory" };
         default:
             return { kind: "help" };
     }
@@ -40,5 +53,5 @@ export function parseCommand(args) {
  * @returns {string}
  */
 export function usage() {
-    return "usage: atelier <serve [port]|seed|report [slug]|recalculate>";
+    return "usage: atelier <serve [port]|seed|export-report [slug] [csv|json|md]|recalculate-inventory|report [slug]|recalculate>";
 }

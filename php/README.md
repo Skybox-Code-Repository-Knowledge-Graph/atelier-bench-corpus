@@ -30,8 +30,8 @@ Install from the **committed** `composer.lock` only (`composer install`). Do not
 | `database/` | Migrations, factories, deterministic `DatabaseSeeder`, delegating `CanonicalSeeder` | 41 |
 | `routes/` | `web.php`, `api.php`, `console.php` | 3 |
 | `resources/views/` | Report view, Blade components, Livewire SFC, Filament pages | 12 |
-| `tests/` | Feature + Unit suite (102 tests), Dusk scaffold | 23 |
-| `bench/` | `tasks.json` + `verify_tasks.php` self-check; the needle check has **zero composer dependencies** (the `--lint` Blade fixture check needs `vendor/`) | 1 |
+| `tests/` | Feature + Unit suite (115 tests), Dusk scaffold | 26 |
+| `bench/` | `tasks.json` + `verify_tasks.php` self-check; the needle check has **zero composer dependencies** (the `--lint` Blade fixture check needs `vendor/`); `lsp_check.php` and its report `lsp-check.md` (section E.5) | 2 |
 | `fixtures/broken-syntax/` | Intentionally invalid PHP + Blade, **DO NOT FIX** | 2 |
 
 ## Coverage map
@@ -59,7 +59,7 @@ Install from the **committed** `composer.lock` only (`composer install`). Do not
 | Class-based Blade component | `app/View/Components/StatusBadge` + `<x-status-badge>` in the report view |
 | Model factories + states | `database/factories/*Factory.php`, deterministic sequences; `RepairOrderFactory::rush()` / `::completed()` |
 | Observer via attribute | `app/Observers/DeviceObserver` registered with `#[ObservedBy]` on Device |
-| Feature tests (incl. Livewire::test) | `tests/Feature/*`: 101 tests / 892 assertions covering HTTP, lifecycle/events, all Livewire components, observer registration, the full relationship matrix, every package integration, the shared health, report-by-slug and export-report surfaces, and the guards below |
+| Feature tests (incl. Livewire::test) | `tests/`: 115 tests / 1026 assertions covering HTTP, lifecycle/events, all Livewire components, observer registration, the full relationship matrix, every package integration, the shared health, report-by-slug and export-report surfaces, and the guards below |
 | COMPLETE Eloquent relationship matrix | BelongsTo, HasOne, HasMany, BelongsToMany+pivot, HasOneThrough (Device→invoice), HasManyThrough (Customer→statusLogs), HasOne/MorphOne `ofMany`, MorphTo, MorphOne (Signature), MorphMany (Note), MorphToMany/MorphedByMany first-party (Label/labelables) AND vendor (spatie tags on Part). Proven in `tests/Feature/RelationshipsTest.php` |
 | First-party packages USED as intended (auth, billing, search, flags, broadcast) | sanctum guard on the API mutation + HasApiTokens · passport guard `api` · cashier Billable on User · scout Searchable on Part (database driver) · pennant `rush-surcharge` flag in RushInvoiceCalculator · reverb-ready ShouldBroadcast event + private channel · socialite login pair · fortify actions + TwoFactorAuthenticatable |
 | First-party packages USED as intended (pages, UI, ops, plugins) | folio pages (incl. filename binding) · volt functional component at /rush-counter · flux badge + layout · horizon/octane/telescope/pulse configured (recorders env-gated) · slack notification (guarded) · spatie media/tags/settings via Filament plugins. Proven in `tests/Feature/IntegrationsTest.php` |
@@ -79,9 +79,11 @@ Install from the **committed** `composer.lock` only (`composer install`). Do not
 | Document-symbol + call-hierarchy | `app/Bench/Reports/ReportRegistry` (4 named symbols) for the symbol listing; `complete` → `transitionTo`, three callers of `transitionTo` (model, seeder, feature test), and `ReportController::show` → both aliased `Formatter` halves for the call graph |
 | Wave-2 shared ids: language shapes | `app/Support/Canonical/Wave2/`: generator (`OrderStream::each`), brace group-use (`RepositoryGlob`), namespace-prefix import (`NamespaceOneMember`), namespace-level const (`constants.php`) |
 | Wave-2 shared ids: name collisions | `App\Console\Commands\RecalculateInventory` against `App\Jobs\RecalculateInventory` (aliased import), and `PricingPolicy` resolving two traits' `rate()` with `insteadof` |
+| PHP-only reaches (wave 3) | `app/Support/Mechanics/`: `RushBadge::make()` through `new static` / `: static` (`def-late-static-return`), `[BadgeCss::class, 'forKind']` and `'App\Support\Mechanics\BadgeCss::forPriority'` callables (`def-callable-array`, `def-callable-string`; `LegacyBadgeCss` declares the same two names as a look-alike), `use RendersBadge { render as protected renderBadge; }` (`def-trait-alias`); `static::creating` in `HasReference` (`def-static-creating`); all under `tests/Feature/PhpMechanicsTest` |
 | Generic contract | `app/Bench/Contracts/RepositoryContract`, a `@template` docblock generic with the 8 repositories as implementors |
 | Breadth (constructs that may be dropped) | `app/Support/Edge/`: enum-implements-interface, first-class callables, readonly promoted properties + readonly class, intersection types, `#[Attribute]` + reflection, `new` in initializer + `never` type, static closure + no-default `match`, named arguments, nullsafe chain, `@template`/`@extends` generics, trait with abstract method + static property, interface constant via implementor |
-| Guards no gate covers otherwise | `tests/Feature/SpecifierResolutionTest` (every module specifier written in the lane resolves: imports of every form, trait uses, qualified names in code, docblock types, Blade views compiled first), `tests/Feature/LaneFilesLoadTest` (every PHP file under `app/` `bootstrap/` `config/` `database/` `lang/` `routes/` loads, and every `app/Bench` component is called through each contract it implements), `tests/Feature/EdgeProbesTest` (each `app/Support/Edge` probe and the `Units` const/function pair is exercised), `php bench/verify_tasks.php --lint` (each broken fixture must still refuse to parse) |
+| Laravel registries, Blade components, relations by name (wave 3) | `view('report.summary')` -> the template (`def-view-name`); `<x-status-badge>` class component and `<x-layouts.app>` anonymous component (`def-blade-component-tag`, `def-anonymous-component`); `load([... 'device' ...])` and `$order->parts` (`def-relation-name`, `def-relation-property`); `$this->call('atelier:export-report')` -> the command's `$signature` (`def-artisan-command-name`); `new PrivateChannel('orders')` -> `Broadcast::channel` (`def-broadcast-channel`); `Feature::active('rush-surcharge')` -> `Feature::define` (`def-pennant-flag`); `route('api.orders.show')` -> its handler through `routes/api.php` (`def-named-route-api`) |
+| Guards no gate covers otherwise | `tests/Feature/SpecifierResolutionTest` (every module specifier written in the lane resolves: imports of every form, trait uses, qualified names in code, docblock types, Blade views compiled first), `tests/Feature/LaneFilesLoadTest` (every PHP file under `app/` `bootstrap/` `config/` `database/` `lang/` `routes/` loads, and every `app/Bench` component is called through each contract it implements), `tests/Feature/EdgeProbesTest` (each `app/Support/Edge` probe and the `Units` const/function pair is exercised), `tests/Feature/FilamentSurfacesTest` (the panel's discovered `RepairStats` widget and `InventoryReport` page render against the seed), `tests/Feature/SharedCommandNamesTest` (the shared command names run), `tests/Feature/LspCheckPlanTest` (`bench/lsp_check.php --plan` asks every language-server task at its symbol), `php bench/verify_tasks.php --lint` (each broken fixture must still refuse to parse) |
 
 ## Consumption (runner)
 
@@ -97,7 +99,7 @@ cp .env.example .env   # if needed
 php artisan key:generate
 php artisan migrate --force
 php artisan db:seed    # DatabaseSeeder — deterministic
-php artisan test       # 102 tests, sqlite :memory:
+php artisan test       # 115 tests, sqlite :memory:
 ```
 
 Admin UI: `/admin` (Filament). Sample report path: `GET /report/{repairOrder:reference}` (see `ReportController`).
@@ -106,16 +108,16 @@ Admin UI: `/admin` (Filament). Sample report path: `GET /report/{repairOrder:ref
 
 | Artifact | Role |
 | --- | --- |
-| `bench/tasks.json` | 119 needle-based accuracy tasks (`from` → `expect` file/needle pairs): 40 original + 29 for the cardinality/direction/import-precision/collision/multi-parent/breadth surfaces (issue #7) + 10 framework-magic string-keyed edges + 24 shared canonical ids carried by the other lanes + 3 document-symbol/call-hierarchy surfaces + 13 wave-2 ids (the last 13 entries, `def-module-const` through `parse-negative-unclosed-blade`; three of them, `resolution-trait-conflict-insteadof`, `dir-trait-user` and `parse-negative-unclosed-blade`, are php-only). By surface: definition 57, resolution 13, references 12, implementation 6, hover 7, import-precision 7, call_hierarchy 4, direction 4, document_symbol 2, cardinality 2, multi-parent 2, parse-negative 2, diagnostics 1. The counting rule for every count the keys state is in the `notes` field |
+| `bench/tasks.json` | 123 needle-based accuracy tasks (`from` → `expect` file/needle pairs): 30 of the 40 original (wave 3 of issue #223 retired ten, see Lane-local ids) + 29 for the cardinality/direction/import-precision/collision/multi-parent/breadth surfaces (issue #7) + 10 framework-magic string-keyed edges + 24 shared canonical ids carried by the other lanes + 3 document-symbol/call-hierarchy surfaces + 13 wave-2 ids (`def-module-const` through `parse-negative-unclosed-blade`; three of them, `resolution-trait-conflict-insteadof`, `dir-trait-user` and `parse-negative-unclosed-blade`, are php-only) + 14 wave-3 ids (the last 14 entries, `def-broadcast-channel` through `def-static-creating`, all php-only). By surface: definition 65, resolution 12, references 11, import-precision 7, hover 6, implementation 5, call_hierarchy 4, direction 4, document_symbol 2, cardinality 2, multi-parent 2, parse-negative 2, diagnostics 1. The counting rule for every count the keys state is in the `notes` field |
 | `bench/verify_tasks.php` | Self-check that every task needle still resolves to exactly one line |
 
 ```bash
-php bench/verify_tasks.php          # resolve every file+needle pair (4 tasks read vendor/: vendor-scout-trait, vendor-sanctum-trait, vendor-shouldbroadcast-contract, def-facade-static-call; run composer install first)
+php bench/verify_tasks.php          # resolve every file+needle pair (5 tasks read vendor/: vendor-scout-trait, vendor-sanctum-trait, vendor-shouldbroadcast-contract, def-facade-static-call, def-static-creating; run composer install first)
 php bench/verify_tasks.php --lint   # php -l over app/ bench/ config/ database/ routes/, then each fixtures/broken-syntax/* must refuse to parse
 ```
 
 The needle check has **no composer dependencies**, so it also runs on a machine that has never
-installed the corpus dependency tree (the four tasks that read `vendor/` then report `file missing`
+installed the corpus dependency tree (the five tasks that read `vendor/` then report `file missing`
 by design). `--lint` needs `vendor/` for one check: it compiles the broken Blade fixture with the
 Blade compiler before asserting that `php -l` refuses the compiled PHP.
 
@@ -128,16 +130,75 @@ task-target paths must leave `php bench/verify_tasks.php` at **exit 0**. If need
 Broken fixtures under `fixtures/broken-syntax/` are out of scope for "fix until green" — they are
 negative cases on purpose.
 
+## Lane-local ids (checklist D.2)
+
+A lane-local id is one only this lane carries (rulings R10, R13). Each is sorted into one of three outcomes; `bench/matrix.json` lists which lanes carry each id.
+
+- **Language- or framework-specific mechanism (38; 34 without the four route variants `lw-fullpage-route`, `int-folio-filename-binding`, `resolution-route-model-binding`, `def-named-route-api`).** Counts, in the three columns of ruling R20: (a) **63** one-lane ids in `bench/tasks.json`; (b) **38** of them on a construct unique to PHP or Laravel (common candidates and retired duplicates excluded; `def-attribute-class` and `refs-attribute-usage` included): 34 without the four route variants, which are shown separately (R14), so (b) reaches 30; (c) **28** of those also pass the R19 trace (a mechanism-blind resolver, receiver type then member by name, misses the expect line): `def-blade-model-method`, `def-livewire-computed`, `lw-sfc-computed`, `lw-wireclick-method`, `lw-form-object-magic`, `lw-embed-tag`, `int-volt-functional-prop`, `def-facade-static-call`, `def-policy-ability`, `def-query-scope`, `def-accessor-attribute`, `def-container-string-key`, `def-middleware-alias`, `def-config-key`, `def-lang-key`, `resolution-trait-conflict-insteadof`, `dir-trait-user`, `parse-negative-unclosed-blade`, `def-view-name`, `def-blade-component-tag`, `def-relation-name`, `def-artisan-command-name`, `def-broadcast-channel`, `def-pennant-flag`, `def-anonymous-component`, `def-relation-property`, `def-callable-string`, `def-trait-alias`. The other six of the 34: the close calls `imp-const-not-function` and `imp-function-not-const` (a grader may read them as a plain import lookup), `def-late-static-return` (python: a classmethod returning `cls()` typed `-> Self`) and `def-callable-array` (the same hook from the same kind of line as the shared `def-route-to-handler`); and `def-attribute-class` and `refs-attribute-usage`, where the R19 trace lands on the class itself but the ruling keeps the attribute construct PHP-only. **D.2 (R13): unticked while 25 common candidates wait for the follow-up lane.** The ids of (b), each note naming its mechanism: `def-blade-model-method`, `def-livewire-computed`, `lw-sfc-computed`, `lw-wireclick-method`, `lw-form-object-magic`, `lw-embed-tag`, `int-volt-functional-prop`, `imp-const-not-function`, `imp-function-not-const`, `def-attribute-class`, `refs-attribute-usage`, `def-facade-static-call`, `def-policy-ability`, `def-query-scope`, `def-accessor-attribute`, `def-container-string-key`, `def-middleware-alias`, `def-config-key`, `def-lang-key`, `resolution-trait-conflict-insteadof`, `dir-trait-user`, `parse-negative-unclosed-blade`, `def-view-name`, `def-blade-component-tag`, `def-relation-name`, `def-artisan-command-name`, `def-broadcast-channel`, `def-pennant-flag`, `def-anonymous-component`, `def-relation-property`, `def-late-static-return`, `def-callable-array`, `def-callable-string`, `def-trait-alias`, and the four route variants above (section E.1), which count on their surface rows only.
+- **Common candidates (25): the same question could be asked unchanged in a sibling lane; kept as they are, not counted as language-specific.** `refs-trait-usage` (rust, python), `hover-schedule-method`, `card-complete-hub` (every lane), `lw-di-in-mount`, `rel-hasonethrough`, `rel-hasmanythrough`, `rel-morphedbymany` (the scored question is a plain definition or references query: every lane), `lw-url-attribute`, `rel-ofmany-builder`, `int-pennant-flag` (a plain property or method is the answer line; the named mechanism sits only in the note or the body, ruling R18: every lane), `def-static-creating` (python: `cls` in a mixin classmethod binds the using class natively, so a close call under R19), `vendor-scout-trait`, `vendor-sanctum-trait`, `vendor-shouldbroadcast-contract` (a declaration in a dependency's source: every lane), `def-enum-implements` (python, rust), `def-first-class-callable` (typescript, javascript, python, go, rust), `def-readonly-promoted` (typescript, rust), `def-intersection-type` (typescript), `def-new-in-initializer` (typescript, javascript, python), `def-static-closure` (every lane), `def-named-args` (python), `def-nullsafe-chain` (typescript, javascript), `def-docblock-generic` (javascript, typescript), `impl-trait-abstract` (rust, python), `def-interface-const-via-impl` (rust, python).
+- **Retired in wave 3: a renamed copy of a shared id this lane carries, or a duplicate of a question the lane already asks.** `impl-interface` (= `impl-invoice-calculator`), `def-global-function` (= `def-free-function`), `hover-global-function` (= `hover-free-function`), `def-class-const` (= `def-assoc-const`), `def-enum-case` (= `def-enum-variant`), `def-interface-through-binding` (= `def-trait-method-through-binding`), `def-global-const` (the from line of `lane-local-ref-prefix`), `card-magic-forward` (= `def-proxy-forwarded-method`), `lw-on-listener-edge` (= `refs-string-event-name`), `def-trait-method-scope` (= the lane's own `def-query-scope`, same answer line).
+
+`def-nullsafe-chain` and `def-blade-model-method` both answer `Device::label`, from different mechanisms (a nullsafe chain in PHP; an expression in a Blade-compiled template), so neither duplicates the other.
+
+## Indexer surfaces (checklist section E)
+
+What the tools under test ship for PHP (ruling R2, `npm view @skylence-ai/skybox@0.9.0 readme`, column "Framework extractors", committed as `bench/TOOL-SURFACE.md`): Laravel routes, Eloquent, Guzzle, Inertia (PHP side), Blade.
+
+### E.1 Route parsers
+
+Laravel routes is the one route parser listed for PHP. It is scored by `def-route-to-handler` (shared: the `[ReportController::class, 'show']` action in `routes/web.php` -> `ReportController::show`) and by the lane-local `def-named-route-api` (`route('api.orders.show')` in `OrderLinks::apiUrl`, which `OrderController::storeNote` calls -> `OrderController::show`, through the `->name()` registration in `routes/api.php`), which also puts a task on `routes/api.php`. Three more lane-local tasks ask about a route registration in `routes/web.php`: `resolution-route-model-binding` (the `{repairOrder:reference}` binding), `def-middleware-alias` (the `->middleware('record.visit')` alias) and `lw-fullpage-route` (a Livewire component as the route action). Volt (`Volt::route`), Folio (file-based pages) and the Filament panel routes are not in the shipped list, so no route task is owed for them; the lane still scores those frameworks through `lw-fullpage-route`, `int-folio-filename-binding` and `int-volt-functional-prop`.
+
+### E.2 ORM and the other listed extractors
+
+| Listed | Scored by, or why not |
+| --- | --- |
+| Eloquent (ORM) | relations: `rel-hasonethrough`, `rel-hasmanythrough`, `rel-ofmany-builder`, `rel-morphedbymany`, `def-relation-name` (a relation named by a string in `load()`), `def-relation-property` (a relation read as a property through `__get`); local scope: `def-query-scope`; `Attribute` accessor: `def-accessor-attribute`; casts: `def-enum-method` (an enum attribute cast), `lane-local-money` and `refs-money-class` (the custom `Money` cast class) |
+| Blade | expressions in templates: `def-blade-model-method`, `def-accessor-attribute`, `def-livewire-computed`; view name to template: `def-view-name`; components: `def-blade-component-tag` (class component), `def-anonymous-component` (anonymous component); Livewire and Volt inside Blade: `lw-embed-tag`, `lw-sfc-computed`, `lw-wireclick-method`, `lw-form-object-magic`, `int-volt-functional-prop`; Folio page templates: `int-folio-filename-binding`. A broken template, `parse-negative-unclosed-blade`, is a parse-negative task and scores no extractor |
+| Guzzle | Deliberate gap: the lane's own code makes no outgoing HTTP call (no `Http::` client and no Guzzle client anywhere under `app/`, `routes/`, `config/` or `database/`); `guzzlehttp/guzzle` is in `composer.lock` only as a dependency of seven packages (`laravel/framework`, `laravel/socialite`, `laravel/slack-notification-channel`, `laravel/dusk`, `laravel/envoy`, `league/oauth1-client`, `pusher/pusher-php-server`), so there is no client call site to score. |
+| Inertia (PHP side) | Deliberate gap: Inertia (PHP side) goes unscored because Inertia is not installed (`composer.lock` has no `inertiajs/inertia-laravel` package); the lane's UI is Blade, Livewire and Filament, so there is no Inertia response to score. |
+
+### E.3 Known-hard resolution classes
+
+| Class | Tasks |
+| --- | --- |
+| Dynamic dispatch | `def-proxy-forwarded-method`, `hover-proxy-forwarding` (`__call` forwarding to `Schedule`), `def-facade-static-call` (a facade's `__callStatic` to the manager), `def-relation-property` (Eloquent `__get`), `lw-form-object-magic` (Livewire Form object) |
+| String-keyed lookup | `def-container-string-key`, `def-policy-ability`, `def-middleware-alias`, `def-config-key`, `def-lang-key`, `def-artisan-command-name`, `def-broadcast-channel`, `def-pennant-flag`, `def-named-route-api`, `def-view-name`, `def-relation-name`, `int-pennant-flag`, `refs-string-event-name` |
+| Alias divergence | `def-import-alias`, `def-shadow-alias-billing`, `def-shadow-alias-reporting`, `resolution-shadow-type-billing`, `resolution-shadow-type-reporting`, `lane-local-formatter-billing`, `resolution-same-name-command-vs-job` |
+| Re-export chain | `imp-barrel-no-fanout` (`app/Support/Canonical/Exports/barrel.php` aliases `Ledger` and declares nothing) |
+| Generated code | Blade templates run only as the PHP Blade compiles them to: `def-blade-model-method`, `def-accessor-attribute`, `lw-sfc-computed`, `parse-negative-unclosed-blade` |
+| Conditional compilation | PHP has none (no preprocessor and no build-time flags), so no task |
+
+### E.5 Language server
+
+Pinned: **phpactor 2026.11.22.0**, the release phar (sha256 `1ae84e18348754a94ad28b14d3ec341aded0d2c082be61e155bc33fc42690659`). It answers `hover`, `document_symbol` and `implementation`. Neither installable server tried (phpactor 2026.11.22.0, intelephense 1.18.5 (npm)) answers `call_hierarchy`: both answer `textDocument/prepareCallHierarchy` with -32601 and neither advertises `callHierarchyProvider` in `initialize` (intelephense 1.18.5 advertises no `implementationProvider` either, and answers every implementation query with null). So the four `call_hierarchy` keys (`card-complete-hub`, `hierarchy-complete-chain`, `hierarchy-incoming-transition`, `hierarchy-cross-package`) have no server second opinion and rest on reading both bodies.
+
+Install and run (no secret, nothing added to `composer.json`; the server indexes the lane's own `vendor/`):
+
+```bash
+composer install
+curl -fsSL -o /tmp/phpactor.phar https://github.com/phpactor/phpactor/releases/download/2026.11.22.0/phpactor.phar
+shasum -a 256 /tmp/phpactor.phar     # 1ae84e18348754a94ad28b14d3ec341aded0d2c082be61e155bc33fc42690659
+php bench/lsp_check.php --server 'php /tmp/phpactor.phar language-server' --name phpactor --server-version 2026.11.22.0 --wait 45
+# second server, appended to the same report:
+(cd /tmp && npm pack intelephense@1.18.5 && tar xzf intelephense-1.18.5.tgz)
+php bench/lsp_check.php --server 'node /tmp/package/lib/intelephense.js --stdio' --name intelephense --server-version 1.18.5 --wait 45 --append
+php bench/lsp_check.php --plan       # no server: the request each task makes (tests/Feature/LspCheckPlanTest.php runs it)
+```
+
+The report is [`bench/lsp-check.md`](bench/lsp-check.md), one line per `hover`, `document_symbol`, `call_hierarchy` and `implementation` task (17). phpactor 2026.11.22.0: 13 agree, 4 have no answer (the `call_hierarchy` tasks), none disagrees. intelephense 1.18.5: 8 agree (the hover and document_symbol tasks), 9 have no answer. An earlier run disagreed on one key, `vendor-shouldbroadcast-contract`, which keyed the interface `ShouldBroadcast` (a definition answer) on the `implementation` surface; read against the tree the server was right, and the task now sits on the `definition` surface, so it is no longer asked here. No key was changed because of a server's reply.
+
 ## Deliberate differences from the other lanes
 
 The shared set every lane carries is `GET /health`, `GET /report/{reference}`, `GET /api/orders`, `POST /api/orders/{key}/notes`, `GET /api/reports/{slug}`, the export-report and recalculate-inventory commands, and the recalculate-inventory job. This lane carries all of it. These differences are deliberate and stay:
 
 - **Seed.** `DatabaseSeeder` is framework-native and does not use the shared seed numbers (customers, order totals). Nine tasks anchor needles there, so it is not reseeded.
-- **Lane-only routes.** Order by reference (`GET /api/orders/{repairOrder:reference}`), `/board`, the two social-auth routes (`/auth/{provider}/redirect`, `/auth/{provider}/callback`) and the Volt route `/rush-counter`; Laravel's skeleton welcome page `GET /` (`routes/web.php:8`) and its `/up` health endpoint, which stays beside `/health`; the Folio pages `/about` and `/orders/{repairOrder:reference}` (`resources/views/pages/`); and the Filament panel under `/admin` (the customers, parts and repair-orders resources and the inventory-report page; `php artisan route:list` lists them), plus the routes the installed first-party packages register, which `route:list` lists too.
-- **Lane-only commands.** `atelier:prune-delivered`, a prune command no other lane has, and Laravel's skeleton `inspire` (`routes/console.php:6`).
+- **Lane-only routes.** Order by reference (`GET /api/orders/{repairOrder:reference}`), `/board`, the two social-auth routes (`/auth/{provider}/redirect`, `/auth/{provider}/callback`) and the Volt route `/rush-counter`; Laravel's skeleton welcome page `GET /` (`routes/web.php:8`) and its `/up` health endpoint, which stays beside `/health`; the Folio pages `/about` and `/orders/{repairOrder:reference}` (`resources/views/pages/`); and the Filament panel under `/admin` (the customers, parts and repair-orders resources and the inventory-report page; `php artisan route:list` lists them), plus the routes the installed first-party packages register, which `route:list` lists too. Section E added no route module: Laravel routes is the only route parser listed for PHP, and its lane-local task (`def-named-route-api`) reuses the existing `GET /api/orders/{repairOrder:reference}` route, now named `api.orders.show`.
+- **Commands.** The shared names `export-report` and `recalculate-inventory` are commands of their own (`routes/console.php`, `php artisan list` shows each as its own row); each hands its input to the lane's own spelling, and `tests/Feature/SharedCommandNamesTest.php` runs both. Lane-only commands: `atelier:export-report` and `atelier:recalculate-inventory` (the lane's original spellings of the shared pair, kept), `atelier:prune-delivered` (a prune command no other lane has) and Laravel's skeleton `inspire` (`routes/console.php:6`).
 - **Route parameter names.** `GET /report/{repairOrder:reference}` is the shared `GET /report/{reference}`: Laravel names the parameter after the model it binds and looks it up by the `reference` column.
 - **Notes bound by reference.** `POST /api/orders/{repairOrder:reference}/notes` binds the order by its `reference` key where the other lanes bind by id.
 - **Report payload.** `GET /api/reports/{slug}` returns the report's own `generate()` array as `rows`, a title derived from `name()` and Laravel's standard 404 body, where the other lanes return a row list, a human title and `{error, key}`.
+
+- **Shared ids this lane does not carry.** `def-async-function` (typescript, python, javascript): PHP has no async function and no `await` (a Fiber is a runtime class, not a function modifier), so no lane-local id is an honest stand-in and the lane carries none.
 
 Report slugs for `/api/reports/{slug}` and `atelier:export-report` are the kebab-cased class name without the `Report` suffix (`CashFlowReport` is `cash-flow`), resolved in `app/Support/ReportLookup.php`, not in `ReportRegistry`.
 
