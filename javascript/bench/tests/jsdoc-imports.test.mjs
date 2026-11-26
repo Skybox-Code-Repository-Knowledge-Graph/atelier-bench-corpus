@@ -50,11 +50,36 @@ export function jsdocImportNames(file, text) {
     return names;
 }
 
+/** Line indexes (0-based) of JSDoc comment lines outside an @import tag, as [{ index, content }]. */
+function jsdocTypeLines(file, text) {
+    const source = ts.createSourceFile(file, text, ts.ScriptTarget.ES2023, true, ts.ScriptKind.JS);
+    const importLines = new Set();
+    const lines = [];
+    const visit = (node) => {
+        if (ts.isJSDocImportTag(node)) {
+            const first = source.getLineAndCharacterOfPosition(node.getStart(source)).line;
+            const last = source.getLineAndCharacterOfPosition(node.getEnd()).line;
+            for (let index = first; index <= last; index++) importLines.add(index);
+        }
+        for (const doc of node.jsDoc ?? []) {
+            const first = source.getLineAndCharacterOfPosition(doc.getStart(source)).line;
+            const last = source.getLineAndCharacterOfPosition(doc.getEnd()).line;
+            for (let index = first; index <= last; index++) lines.push(index);
+        }
+        for (const doc of node.jsDoc ?? []) visit(doc);
+        ts.forEachChild(node, visit);
+    };
+    visit(source);
+    const rows = text.split("\n");
+    return [...new Set(lines)].filter((index) => !importLines.has(index)).map((index) => ({ index, content: rows[index] }));
+}
+
+/** @import names that no JSDoc type (a `{...}` in a JSDoc comment, outside the @import tag) mentions. */
 export function unusedJsdocImports(file, text) {
-    const lines = text.split("\n");
-    return jsdocImportNames(file, text).filter(({ name, line }) => {
-        const word = new RegExp(`(?<![A-Za-z0-9_$])${name.replace(/\$/g, "\\$")}(?![A-Za-z0-9_$])`);
-        return !lines.some((content, index) => index !== line && word.test(content));
+    const typeLines = jsdocTypeLines(file, text);
+    return jsdocImportNames(file, text).filter(({ name }) => {
+        const word = new RegExp(`\\{[^\\n]*(?<![A-Za-z0-9_$])${name.replace(/\$/g, "\\$")}(?![A-Za-z0-9_$])`);
+        return !typeLines.some(({ content }) => word.test(content));
     });
 }
 
@@ -63,6 +88,12 @@ describe("jsdoc @import tags", () => {
         const stale = "/** @import { Formatter as BillingFormatter } from \"x\" */\n/** @type {BillingFormatterX} */\nconst money = 1;\n";
         assert.deepEqual(unusedJsdocImports("a.js", stale).map((entry) => entry.name), ["BillingFormatter"]);
         assert.deepEqual(unusedJsdocImports("a.js", stale.replace("BillingFormatterX", "BillingFormatter")), []);
+    });
+
+    it("does not count a plain comment mention as a use", () => {
+        const used = "/** @import { Formatter as BillingFormatter } from \"x\" */\n/** @type {BillingFormatter} */\nconst money = 1;\n";
+        assert.deepEqual(unusedJsdocImports("a.js", used), []);
+        assert.deepEqual(unusedJsdocImports("a.js", used.replace("/** @type {BillingFormatter} */", "// BillingFormatter")).map((entry) => entry.name), ["BillingFormatter"]);
     });
 
     it("finds a use for every @import name in the lane", () => {

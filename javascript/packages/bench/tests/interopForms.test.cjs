@@ -11,8 +11,11 @@ const percentLabel = require("@atelier/bench/interop/percentLabel.cjs");
 describe("commonjs export forms", () => {
     it("takes the require condition of the exports map", () => {
         assert.equal(FLAVOUR, "require");
-        assert.ok(require.resolve("@atelier/bench/interop/cents-label").endsWith("centsLabel.cjs"));
         assert.equal(centsLabel(12025), "120.25 EUR");
+    });
+
+    it("resolves the specifier to the CommonJS file", () => {
+        assert.ok(require.resolve("@atelier/bench/interop/cents-label").endsWith("centsLabel.cjs"));
     });
 
     it("keeps only what the final module.exports carries", () => {

@@ -2964,7 +2964,7 @@
         {
             "id": "def-parent-constructor-call",
             "surface": "definition",
-            "note": "Re-pointed in review (ruling R18): the question is now what `this.brand` is for a Laptop, the receiver core/tests/prototype.test.js builds. Laptop's own constructor never assigns brand; the field reaches the instance only because Laptop runs `Device.call(this, ...)`, so the answer is the assignment inside Device. Language-specific mechanism: constructor-function inheritance, where a parent constructor run through `Device.call(this, ...)` assigns the child's fields.",
+            "note": "Re-pointed in review (ruling R18): the question is where `this.brand`, read in Device.prototype.label, is defined; no receiver is fixed. Its answer is the assignment `this.brand = brand;` inside the Device constructor function. Language-specific mechanism: a field a constructor function assigns on `this`, read through the prototype's method.",
             "from": {
                 "file": "packages/core/src/models/device.js",
                 "needle": "        : `${this.brand} ${this.model} (${this.serial})`;",
@@ -3291,7 +3291,7 @@
         {
             "id": "def-exports-condition-import",
             "surface": "definition",
-            "note": "The bench package's exports map gives `./interop/cents-label` an \"import\" and a \"require\" target; this ESM consumer takes the import condition, so centsLabel is the ES module's function, never its CommonJS twin. Language-specific mechanism: the \"import\" condition of a package.json exports map, which sends an ESM consumer to a different file than a CommonJS one.",
+            "note": "The bench package's exports map gives `./interop/cents-label` an \"import\" and a \"require\" target; what must be resolved is the exports-map condition this ESM consumer takes, so centsLabel is the ES module's function, never its CommonJS twin. Language-specific mechanism: the \"import\" condition of a package.json exports map, which sends an ESM consumer to a different file than a CommonJS one.",
             "from": {
                 "file": "packages/app/tests/interopForms.test.js",
                 "needle": "        assert.equal(centsLabel(58325), \"583.25 EUR\");",
@@ -3308,7 +3308,7 @@
         {
             "id": "def-exports-condition-require",
             "surface": "definition",
-            "note": "The same specifier as def-exports-condition-import, required from CommonJS: the \"require\" condition sends it to the .cjs file. Language-specific mechanism: the \"require\" condition of a package.json exports map.",
+            "note": "The same specifier as def-exports-condition-import, required from CommonJS; what must be resolved is the exports-map condition this CommonJS consumer takes: the \"require\" condition sends it to the .cjs file. Language-specific mechanism: the \"require\" condition of a package.json exports map.",
             "from": {
                 "file": "packages/bench/tests/interopForms.test.cjs",
                 "needle": "        assert.equal(centsLabel(12025), \"120.25 EUR\");",

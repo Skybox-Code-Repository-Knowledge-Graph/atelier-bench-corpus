@@ -31,11 +31,11 @@ on a bench machine if you need bit-stable ground truth.
 | Package | Module system | Role | Files |
 | --- | --- | --- | --- |
 | `packages/core` | ESM (`"type": "module"`, `.js`) | Domain: models, prototypes, mixins, container bindings, money, errors, events | 37 |
-| `packages/bench` | CommonJS (`.cjs`) | Breadth subsystem: 10 contracts, 8 concerns, 8 bases, 124 implementors | 131 |
+| `packages/bench` | CommonJS (`.cjs`), plus one ES module, `src/interop/centsLabel.mjs`, reached through the exports map's `import` condition | Breadth subsystem: 10 contracts, 8 concerns, 8 bases, 124 implementors | 138 |
 | `packages/app` | ESM, imports the CommonJS package | Application surface: express router, console commands, jobs | 12 |
 | `packages/routes` | ESM | One route module per JavaScript route parser the tool surface lists, each in its framework's own convention (see Route parsers, below); lane-only | 13 |
 | `bench/verify-tasks` | ESM (`.mjs`) | Ground-truth self-check; **zero third-party dependencies** | 1 |
-| `bench/tests` | ESM (`.mjs`) | Lane-wide guard tests run by `npm test`: module specifiers, source loading, answer-key needles, the language-server report | 4 |
+| `bench/tests` | ESM (`.mjs`) | Lane-wide guard tests run by `npm test`: module specifiers, source loading, answer-key needles, the language-server report, JSDoc `@import` use | 5 |
 | `bench/lsp-check.mjs` | ESM (`.mjs`) | Runs the pinned language server over the keys (E.5) | 1 |
 
 ## Coverage map
@@ -82,7 +82,7 @@ on a bench machine if you need bit-stable ground truth.
 | Enum as a frozen object | `packages/core/src/support/status.js`, `packages/core/src/support/priority.js`: the members (`RepairStatus.Completed`, `Priority.Rush`) and the behaviour over them (`label`, `transitionsTo`, `surchargeBp`) are sibling properties of one `Object.freeze({ ... })` declaration |
 | Contract with no `implements` keyword | `packages/core/src/contracts/invoiceCalculator.js`, `packages/bench/src/contracts/reportContract.cjs`, `packages/bench/src/contracts/notifierContract.cjs`: each contract is a JSDoc `@typedef` with no runtime declaration, so its 2 / 24 / 8 implementors satisfy it structurally through the prototype chain |
 | Deterministic seed | `packages/bench/src/dataset.cjs`: revenue `58325`c, part cost `46300`c, gross profit `12025`c |
-| Tests (incl. request-level) | 149 tests: domain lifecycle, prototypes, Proxy forwarding, shadow pair, breadth registry, rules, CJS/ESM interop, express routes, console commands, the three job styles, slot board and day summary; every exporter, notifier, repository and service against a hand-derived table (`packages/bench/tests/components.test.cjs`); every source module loaded and the CLI entry run (`bench/tests/load.test.mjs`); every module specifier resolved (`bench/tests/specifiers.test.mjs`); every answer-key needle resolved (`bench/tests/sites.test.mjs`); every route module driven (`packages/routes/tests`); the language-server report pinned (`bench/tests/lsp-check.test.mjs`) |
+| Tests (incl. request-level) | 152 tests: domain lifecycle, prototypes, Proxy forwarding, shadow pair, breadth registry, rules, CJS/ESM interop, express routes, console commands, the three job styles, slot board and day summary; every exporter, notifier, repository and service against a hand-derived table (`packages/bench/tests/components.test.cjs`); every source module loaded and the CLI entry run (`bench/tests/load.test.mjs`); every module specifier resolved (`bench/tests/specifiers.test.mjs`); every answer-key needle resolved (`bench/tests/sites.test.mjs`); every route module driven (`packages/routes/tests`); the language-server report pinned (`bench/tests/lsp-check.test.mjs`); every JSDoc `@import` name used by a JSDoc type (`bench/tests/jsdoc-imports.test.mjs`) |
 | Broken-syntax fixtures | `fixtures/broken-syntax`, **DO NOT FIX** (negative cases; nothing imports them): an unclosed class, an unbalanced CommonJS destructuring, and TypeScript-only syntax in a `.js` file |
 | Document-symbol + call-hierarchy | `packages/core/src/models/repairOrder.js` (9 named symbols) and `packages/bench/src/index.cjs` (6) for the symbol listing; `complete` → `transitionTo`, three callers of `transitionTo`, and `@atelier/app` `recalculateInventory` → `@atelier/core` `SendCompletionNotice.subscribe` for the call graph |
 
@@ -96,7 +96,7 @@ Local use:
 
 ```bash
 npm ci
-npm test                             # node --test, 149 tests
+npm test                             # node --test, 152 tests
 npm run verify                       # 125 ground-truth tasks
 npm run verify:lint                  # node --check over packages/ + broken-fixture guard + checkJs allowlist gate
 npm run typecheck                    # the pinned tsc on jsconfig.json, raw output (exits 2: the 61 allowlisted diagnostics)
@@ -157,7 +157,7 @@ The tool surface lists eight JavaScript route parsers (`bench/TOOL-SURFACE.md`, 
 
 Where code registers the route (Express, Hono, Fastify), the `from` is the registration line and its symbol the handler. Where nothing in code names the handler (NestJS, and the four file-convention frameworks), the task is a string-keyed link: the `from` is a committed consumer that addresses the route by URL, `from.symbol` is the path token, and the framework's convention binds the path to the handler (lane notes).
 
-Two framework choices, stated plainly. SvelteKit is pinned at 2.70.4, the current 2.x, because 3.4.1 declares an optional `typescript ^6` peer that makes npm nest a second TypeScript beside the lane's pinned 5.7.3. **The Expo fixture is convention-only** (ruling R15, a declared deviation from "the framework is a pinned dependency"): the module follows the Expo Router `+api` convention with web-standard `Request` / `Response` and imports nothing, and no Expo package is installed. `expo-router` brings `expo` and `react-native`: `npm install --dry-run expo-router@58.0.33` into an empty project adds 522 packages, whose registry unpacked sizes sum to at least 575 MB (39 of them state no size), against the lane's ~300 MB install budget, of which the seven other frameworks use 179 MB (`node_modules` 33 MB before, 212 MB after, `nitropack` included), and `expo-server` 58.1.0, the only small Expo package for API routes, does not load under plain Node: `Error [ERR_MODULE_NOT_FOUND]: Cannot find module '.../node_modules/expo-server/build/mjs/runtime/api' imported from .../node_modules/expo-server/build/mjs/index.js` (its ESM build uses extensionless internal imports, for Metro).
+Two framework choices, stated plainly. SvelteKit is pinned at 2.70.4, the current 2.x, because 3.4.1 declares an optional `typescript ^6` peer that makes npm nest a second TypeScript beside the lane's pinned 5.7.3. **The Expo fixture is convention-only** (ruling R15, a declared deviation from "the framework is a pinned dependency"): the module follows the Expo Router `+api` convention with web-standard `Request` / `Response` and imports nothing, and no Expo package is installed. `expo-router` brings `expo` and `react-native`: `npm install --dry-run expo-router@58.0.33` into an empty project adds 522 packages, whose registry unpacked sizes sum to at least 575 MB (39 of them state no size), against the lane's ~300 MB install budget, of which the seven other route frameworks use about 176 MB (`node_modules` 33 MB before, 212 MB after, `nitropack` included, `typescript-language-server` about 3 MB of that), and `expo-server` 58.1.0, the only small Expo package for API routes, does not load under plain Node: `Error [ERR_MODULE_NOT_FOUND]: Cannot find module '.../node_modules/expo-server/build/mjs/runtime/api' imported from .../node_modules/expo-server/build/mjs/index.js` (its ESM build uses extensionless internal imports, for Metro).
 
 ## Integrations (E.2)
 
@@ -176,7 +176,21 @@ No ORM, schema or serialization integration is listed for JavaScript, and the la
 
 ## Lane-local ids (D.2)
 
-Sorted under rulings R10, R13 and R18. Language-specific (38): the CommonJS, prototype, JSDoc and runtime-only tasks, each `note` ending in a "Language-specific mechanism" sentence; 32 of them hold without a close call, and the six close calls (`def-explicit-parent-method-call`, `resolution-mixin-source-order`, `def-jsdoc-callback`, `def-jsdoc-import-tag`, `resolution-jsdoc-import-alias`, `def-define-property-accessor`) are not needed for the floor of 30. Common candidates (18, kept unchanged and not counted, for a follow-up lane that gives each one id across javascript and typescript): `def-static-block-init`, `def-getter-private-field`, `def-class-field-arrow`, `def-computed-method-name`, `def-symbol-keyed-method`, `def-tagged-template`, `def-default-export`, `def-event-emitter-subclass`, `def-promise-style`, `def-setter-accessor`, `hover-setter-clamp`, `def-generator-iterator`, `def-dynamic-import`, `resolution-this-rebinding`, `resolution-calculate-through-binding`, `refs-format-reference`, `refs-with-reference`, `parse-negative-bad-destructure`. The eight `def-route-*` ids are shared with typescript (R12) and counted toward neither.
+Sorted under rulings R10, R13, R14, R18, R19 and R20. Three columns, each a subset of the one before, counted from `bench/tasks.json` against `bench/matrix.json`:
+
+| Column | Count |
+|---|---|
+| (a) ids that only this lane carries (one-lane ids in the canonical set), route variants excluded | 56 |
+| (b) of (a), ids on a construct unique to javascript (CommonJS, prototype, JSDoc-typed, runtime-only; my sort, common candidates and duplicates excluded), route variants excluded | 38 |
+| (c) of (b), ids that also pass the R19 trace (a mechanism-blind resolver does not land on the expect line, and no close call) | 22 |
+
+The eight `def-route-*` variants are one-lane too (64 in all) and are shown separately (R14); they sit in none of the columns. Column (b) reaches the floor of 30 (38); column (c) does not (22). Under R20 the lane-only floor is no longer a merge gate and box D.2 is graded on its own words; D.2 stays unticked under R13 while the common candidates wait for the follow-up lane (`i223-es-common`). Each (b) id's `note` ends in a "Language-specific mechanism" sentence.
+
+The 22 in (c): `def-through-require`, `def-exports-assignment`, `def-cjs-reexport`, `def-prototype-method`, `dir-object-create-parent`, `def-jsdoc-typedef`, `def-cjs-from-esm-interop`, `def-dynamic-require`, `resolution-shadow-alias-cjs`, `def-module-exports-class`, `resolution-prototype-override`, `def-prototype-chain-inherited`, `def-installed-prototype-field`, `def-string-key-require`, `refs-jsdoc-typedef`, `parse-negative-ts-syntax-in-js`, `hover-prototype-method`, `def-cjs-named-import`, `hover-exports-assignment`, `def-exports-condition-import`, `def-module-exports-reassigned`, `def-module-this-export`.
+
+In (b) but out of (c): six ids the R19 trace lands on (`def-parent-constructor-call`, `def-esmodule-flag-ignored`, `def-module-exports-object`, `def-jsdoc-template`, `def-module-exports-member`, `def-jsdoc-this-tag`) and ten close calls (`def-explicit-parent-method-call`, `resolution-mixin-source-order`, `def-jsdoc-callback`, `def-jsdoc-import-tag`, `resolution-jsdoc-import-alias`, `def-define-property-accessor`, `def-create-require`, `def-exports-condition-require`, `def-exports-define-property`, `def-callable-module-property`). All sixteen stay as tasks.
+
+Common candidates (18, kept unchanged and not counted, for a follow-up lane that gives each one id across javascript and typescript): `def-static-block-init`, `def-getter-private-field`, `def-class-field-arrow`, `def-computed-method-name`, `def-symbol-keyed-method`, `def-tagged-template`, `def-default-export`, `def-event-emitter-subclass`, `def-promise-style`, `def-setter-accessor`, `hover-setter-clamp`, `def-generator-iterator`, `def-dynamic-import`, `resolution-this-rebinding`, `resolution-calculate-through-binding`, `refs-format-reference`, `refs-with-reference`, `parse-negative-bad-destructure`.
 
 ## Language server (E.5)
 
