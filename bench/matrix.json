@@ -62,12 +62,6 @@
         "go"
       ]
     },
-    "card-magic-forward": {
-      "surface": "resolution",
-      "lanes": [
-        "php"
-      ]
-    },
     "card-report-contract": {
       "surface": "cardinality",
       "lanes": [
@@ -108,10 +102,22 @@
         "typescript"
       ]
     },
+    "def-anonymous-component": {
+      "surface": "definition",
+      "lanes": [
+        "php"
+      ]
+    },
     "def-anonymous-struct": {
       "surface": "definition",
       "lanes": [
         "go"
+      ]
+    },
+    "def-artisan-command-name": {
+      "surface": "definition",
+      "lanes": [
+        "php"
       ]
     },
     "def-assoc-const": {
@@ -141,6 +147,7 @@
       "surface": "definition",
       "lanes": [
         "typescript",
+        "javascript",
         "python"
       ]
     },
@@ -156,12 +163,6 @@
         "rust"
       ]
     },
-    "def-async-style": {
-      "surface": "definition",
-      "lanes": [
-        "javascript"
-      ]
-    },
     "def-async-trait-method": {
       "surface": "implementation",
       "lanes": [
@@ -169,6 +170,12 @@
       ]
     },
     "def-attribute-class": {
+      "surface": "definition",
+      "lanes": [
+        "php"
+      ]
+    },
+    "def-blade-component-tag": {
       "surface": "definition",
       "lanes": [
         "php"
@@ -186,6 +193,12 @@
         "rust"
       ]
     },
+    "def-broadcast-channel": {
+      "surface": "definition",
+      "lanes": [
+        "php"
+      ]
+    },
     "def-build-script-generated": {
       "surface": "definition",
       "lanes": [
@@ -196,6 +209,24 @@
       "surface": "definition",
       "lanes": [
         "go"
+      ]
+    },
+    "def-callable-array": {
+      "surface": "definition",
+      "lanes": [
+        "php"
+      ]
+    },
+    "def-callable-module-property": {
+      "surface": "definition",
+      "lanes": [
+        "javascript"
+      ]
+    },
+    "def-callable-string": {
+      "surface": "definition",
+      "lanes": [
+        "php"
       ]
     },
     "def-callback-style": {
@@ -227,16 +258,16 @@
         "javascript"
       ]
     },
-    "def-cjs-reexport": {
+    "def-cjs-named-import": {
       "surface": "definition",
       "lanes": [
         "javascript"
       ]
     },
-    "def-class-const": {
+    "def-cjs-reexport": {
       "surface": "definition",
       "lanes": [
-        "php"
+        "javascript"
       ]
     },
     "def-class-expression": {
@@ -492,12 +523,6 @@
         "python"
       ]
     },
-    "def-enum-case": {
-      "surface": "definition",
-      "lanes": [
-        "php"
-      ]
-    },
     "def-enum-implements": {
       "surface": "definition",
       "lanes": [
@@ -555,7 +580,19 @@
         "go"
       ]
     },
+    "def-esmodule-flag-ignored": {
+      "surface": "definition",
+      "lanes": [
+        "javascript"
+      ]
+    },
     "def-event-emitter-subclass": {
+      "surface": "definition",
+      "lanes": [
+        "javascript"
+      ]
+    },
+    "def-explicit-parent-method-call": {
       "surface": "definition",
       "lanes": [
         "javascript"
@@ -568,6 +605,24 @@
       ]
     },
     "def-exports-assignment": {
+      "surface": "definition",
+      "lanes": [
+        "javascript"
+      ]
+    },
+    "def-exports-condition-import": {
+      "surface": "definition",
+      "lanes": [
+        "javascript"
+      ]
+    },
+    "def-exports-condition-require": {
+      "surface": "definition",
+      "lanes": [
+        "javascript"
+      ]
+    },
+    "def-exports-define-property": {
       "surface": "definition",
       "lanes": [
         "javascript"
@@ -709,18 +764,6 @@
         "typescript"
       ]
     },
-    "def-global-const": {
-      "surface": "definition",
-      "lanes": [
-        "php"
-      ]
-    },
-    "def-global-function": {
-      "surface": "definition",
-      "lanes": [
-        "php"
-      ]
-    },
     "def-goroutine-select": {
       "surface": "definition",
       "lanes": [
@@ -768,13 +811,13 @@
         "python"
       ]
     },
-    "def-interface-const-via-impl": {
+    "def-installed-prototype-field": {
       "surface": "definition",
       "lanes": [
-        "php"
+        "javascript"
       ]
     },
-    "def-interface-through-binding": {
+    "def-interface-const-via-impl": {
       "surface": "definition",
       "lanes": [
         "php"
@@ -792,7 +835,25 @@
         "php"
       ]
     },
+    "def-jsdoc-callback": {
+      "surface": "definition",
+      "lanes": [
+        "javascript"
+      ]
+    },
+    "def-jsdoc-import-tag": {
+      "surface": "definition",
+      "lanes": [
+        "javascript"
+      ]
+    },
     "def-jsdoc-template": {
+      "surface": "definition",
+      "lanes": [
+        "javascript"
+      ]
+    },
+    "def-jsdoc-this-tag": {
       "surface": "definition",
       "lanes": [
         "javascript"
@@ -823,6 +884,12 @@
       ]
     },
     "def-lang-key": {
+      "surface": "definition",
+      "lanes": [
+        "php"
+      ]
+    },
+    "def-late-static-return": {
       "surface": "definition",
       "lanes": [
         "php"
@@ -934,7 +1001,25 @@
         "go"
       ]
     },
+    "def-module-exports-class": {
+      "surface": "definition",
+      "lanes": [
+        "javascript"
+      ]
+    },
+    "def-module-exports-member": {
+      "surface": "definition",
+      "lanes": [
+        "javascript"
+      ]
+    },
     "def-module-exports-object": {
+      "surface": "definition",
+      "lanes": [
+        "javascript"
+      ]
+    },
+    "def-module-exports-reassigned": {
       "surface": "definition",
       "lanes": [
         "javascript"
@@ -944,6 +1029,12 @@
       "surface": "definition",
       "lanes": [
         "python"
+      ]
+    },
+    "def-module-this-export": {
+      "surface": "definition",
+      "lanes": [
+        "javascript"
       ]
     },
     "def-name-mangling": {
@@ -962,6 +1053,12 @@
       "surface": "definition",
       "lanes": [
         "go"
+      ]
+    },
+    "def-named-route-api": {
+      "surface": "definition",
+      "lanes": [
+        "php"
       ]
     },
     "def-namedtuple-field": {
@@ -988,12 +1085,6 @@
         "php"
       ]
     },
-    "def-object-assign-mixin": {
-      "surface": "definition",
-      "lanes": [
-        "javascript"
-      ]
-    },
     "def-operator-overload": {
       "surface": "definition",
       "lanes": [
@@ -1013,6 +1104,12 @@
         "go"
       ]
     },
+    "def-parent-constructor-call": {
+      "surface": "definition",
+      "lanes": [
+        "javascript"
+      ]
+    },
     "def-path-attribute-module": {
       "surface": "definition",
       "lanes": [
@@ -1023,6 +1120,12 @@
       "surface": "definition",
       "lanes": [
         "typescript"
+      ]
+    },
+    "def-pennant-flag": {
+      "surface": "definition",
+      "lanes": [
+        "php"
       ]
     },
     "def-policy-ability": {
@@ -1053,6 +1156,12 @@
       "surface": "definition",
       "lanes": [
         "python"
+      ]
+    },
+    "def-prototype-chain-inherited": {
+      "surface": "definition",
+      "lanes": [
+        "javascript"
       ]
     },
     "def-prototype-method": {
@@ -1102,6 +1211,18 @@
         "rust"
       ]
     },
+    "def-relation-name": {
+      "surface": "definition",
+      "lanes": [
+        "php"
+      ]
+    },
+    "def-relation-property": {
+      "surface": "definition",
+      "lanes": [
+        "php"
+      ]
+    },
     "def-route-default-mux": {
       "surface": "definition",
       "lanes": [
@@ -1114,10 +1235,58 @@
         "python"
       ]
     },
+    "def-route-expo": {
+      "surface": "definition",
+      "lanes": [
+        "javascript"
+      ]
+    },
+    "def-route-express-router": {
+      "surface": "definition",
+      "lanes": [
+        "javascript"
+      ]
+    },
     "def-route-fastapi": {
       "surface": "definition",
       "lanes": [
         "python"
+      ]
+    },
+    "def-route-fastify": {
+      "surface": "definition",
+      "lanes": [
+        "javascript"
+      ]
+    },
+    "def-route-hono": {
+      "surface": "definition",
+      "lanes": [
+        "javascript"
+      ]
+    },
+    "def-route-nestjs": {
+      "surface": "definition",
+      "lanes": [
+        "javascript"
+      ]
+    },
+    "def-route-nuxt": {
+      "surface": "definition",
+      "lanes": [
+        "javascript"
+      ]
+    },
+    "def-route-remix": {
+      "surface": "definition",
+      "lanes": [
+        "javascript"
+      ]
+    },
+    "def-route-sveltekit": {
+      "surface": "definition",
+      "lanes": [
+        "javascript"
       ]
     },
     "def-route-to-handler": {
@@ -1201,6 +1370,12 @@
         "php"
       ]
     },
+    "def-static-creating": {
+      "surface": "definition",
+      "lanes": [
+        "php"
+      ]
+    },
     "def-static-factory": {
       "surface": "definition",
       "lanes": [
@@ -1228,6 +1403,12 @@
       "surface": "definition",
       "lanes": [
         "python"
+      ]
+    },
+    "def-string-key-require": {
+      "surface": "definition",
+      "lanes": [
+        "javascript"
       ]
     },
     "def-struct-tag": {
@@ -1297,7 +1478,7 @@
         "python"
       ]
     },
-    "def-trait-method-scope": {
+    "def-trait-alias": {
       "surface": "definition",
       "lanes": [
         "php"
@@ -1354,6 +1535,12 @@
       "surface": "definition",
       "lanes": [
         "go"
+      ]
+    },
+    "def-view-name": {
+      "surface": "definition",
+      "lanes": [
+        "php"
       ]
     },
     "def-walrus-scope": {
@@ -1510,6 +1697,12 @@
         "typescript"
       ]
     },
+    "hover-exports-assignment": {
+      "surface": "hover",
+      "lanes": [
+        "javascript"
+      ]
+    },
     "hover-free-function": {
       "surface": "hover",
       "lanes": [
@@ -1538,16 +1731,16 @@
         "go"
       ]
     },
-    "hover-global-function": {
-      "surface": "hover",
-      "lanes": [
-        "php"
-      ]
-    },
     "hover-macro-generated": {
       "surface": "hover",
       "lanes": [
         "rust"
+      ]
+    },
+    "hover-prototype-method": {
+      "surface": "hover",
+      "lanes": [
+        "javascript"
       ]
     },
     "hover-proxy-forwarding": {
@@ -1687,12 +1880,6 @@
       "surface": "implementation",
       "lanes": [
         "python"
-      ]
-    },
-    "impl-interface": {
-      "surface": "implementation",
-      "lanes": [
-        "php"
       ]
     },
     "impl-invoice-calculator": {
@@ -1871,12 +2058,6 @@
         "php"
       ]
     },
-    "lw-on-listener-edge": {
-      "surface": "references",
-      "lanes": [
-        "php"
-      ]
-    },
     "lw-sfc-computed": {
       "surface": "definition",
       "lanes": [
@@ -1948,6 +2129,12 @@
         "go"
       ]
     },
+    "parse-negative-ts-syntax-in-js": {
+      "surface": "parse-negative",
+      "lanes": [
+        "javascript"
+      ]
+    },
     "parse-negative-unclosed-blade": {
       "surface": "parse-negative",
       "lanes": [
@@ -1961,12 +2148,6 @@
         "typescript",
         "javascript",
         "python"
-      ]
-    },
-    "parse-negative-unclosed-function": {
-      "surface": "parse-negative",
-      "lanes": [
-        "javascript"
       ]
     },
     "parse-negative-unclosed-impl": {
@@ -2046,6 +2227,12 @@
         "python"
       ]
     },
+    "refs-jsdoc-typedef": {
+      "surface": "references",
+      "lanes": [
+        "javascript"
+      ]
+    },
     "refs-jsx-component-usage": {
       "surface": "references",
       "lanes": [
@@ -2096,12 +2283,6 @@
         "javascript",
         "python",
         "go"
-      ]
-    },
-    "refs-report-row": {
-      "surface": "references",
-      "lanes": [
-        "javascript"
       ]
     },
     "refs-report-row-from-cents": {
@@ -2258,6 +2439,18 @@
         "go"
       ]
     },
+    "resolution-jsdoc-import-alias": {
+      "surface": "resolution",
+      "lanes": [
+        "javascript"
+      ]
+    },
+    "resolution-mixin-source-order": {
+      "surface": "resolution",
+      "lanes": [
+        "javascript"
+      ]
+    },
     "resolution-namespace-vs-enum": {
       "surface": "resolution",
       "lanes": [
@@ -2274,6 +2467,12 @@
       "surface": "resolution",
       "lanes": [
         "python"
+      ]
+    },
+    "resolution-prototype-override": {
+      "surface": "resolution",
+      "lanes": [
+        "javascript"
       ]
     },
     "resolution-pydantic-field-validator": {
@@ -2318,12 +2517,6 @@
       ]
     },
     "resolution-shadow-alias-cjs": {
-      "surface": "resolution",
-      "lanes": [
-        "javascript"
-      ]
-    },
-    "resolution-shadow-alias-esm": {
       "surface": "resolution",
       "lanes": [
         "javascript"

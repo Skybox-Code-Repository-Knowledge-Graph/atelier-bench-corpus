@@ -91,13 +91,13 @@ Language server (E.5): not pinned yet
 
 | Extractor | Class | Scored by (task ids) | Deliberate gap (README line) | Not yet |
 | --- | --- | --- | --- | --- |
-| Laravel routes | route parser | `def-route-to-handler`, `resolution-route-model-binding`, `def-middleware-alias`, `lw-fullpage-route` | | |
-| Eloquent | ORM, schema or serialization | `rel-hasonethrough`, `rel-hasmanythrough`, `rel-ofmany-builder`, `rel-morphedbymany`, `def-query-scope`, `def-trait-method-scope`, `def-accessor-attribute`, `lane-local-money` | | |
-| Guzzle | other | | | not yet |
-| Inertia (PHP side) | other | | | not yet |
-| Blade | other | `def-blade-model-method`, `def-livewire-computed`, `def-accessor-attribute`, `lw-sfc-computed`, `lw-wireclick-method`, `lw-form-object-magic`, `lw-embed-tag`, `int-folio-filename-binding`, `int-volt-functional-prop` | | |
+| Laravel routes | route parser | `def-route-to-handler`, `def-named-route-api`, `resolution-route-model-binding`, `def-middleware-alias`, `lw-fullpage-route` | | |
+| Eloquent | ORM, schema or serialization | `rel-hasonethrough`, `rel-hasmanythrough`, `rel-ofmany-builder`, `rel-morphedbymany`, `def-relation-name`, `def-relation-property`, `def-query-scope`, `def-accessor-attribute`, `def-enum-method`, `lane-local-money`, `refs-money-class` | | |
+| Guzzle | other | | "Deliberate gap: the lane's own code makes no outgoing HTTP call (no `Http::` client and no Guzzle client anywhere" | |
+| Inertia (PHP side) | other | | "Deliberate gap: Inertia (PHP side) goes unscored because Inertia is not installed" | |
+| Blade | other | `def-blade-model-method`, `def-livewire-computed`, `def-accessor-attribute`, `def-view-name`, `def-blade-component-tag`, `def-anonymous-component`, `lw-sfc-computed`, `lw-wireclick-method`, `lw-form-object-magic`, `lw-embed-tag`, `int-folio-filename-binding`, `int-volt-functional-prop` | | |
 
-Language server (E.5): not pinned yet
+Language server (E.5): phpactor 2026.11.22.0; source "Pinned: **phpactor 2026.11.22.0**, the release phar"
 
 ### typescript
 
@@ -121,19 +121,18 @@ names no server or version.
 
 | Extractor | Class | Scored by (task ids) | Deliberate gap (README line) | Not yet |
 | --- | --- | --- | --- | --- |
-| Express | route parser | `def-route-to-handler` | | |
-| NestJS | route parser | | | not yet |
-| Hono | route parser | | | not yet |
-| Fastify | route parser | | | not yet |
-| Remix | route parser | | | not yet |
-| SvelteKit | route parser | | | not yet |
-| Nuxt | route parser | | | not yet |
-| Expo | route parser | | | not yet |
+| Express | route parser | `def-route-to-handler`, `def-route-express-router` | | |
+| NestJS | route parser | `def-route-nestjs` | | |
+| Hono | route parser | `def-route-hono` | | |
+| Fastify | route parser | `def-route-fastify` | | |
+| Remix | route parser | `def-route-remix` | | |
+| SvelteKit | route parser | `def-route-sveltekit` | | |
+| Nuxt | route parser | `def-route-nuxt` | | |
+| Expo | route parser | `def-route-expo` | | |
 
-`javascript/README.md` already has a row "ORM / schema / serialization" that reads "none,
-deliberately"; no JavaScript extractor in the quoted list is in that class, so it fills no row.
+No JavaScript extractor in the quoted list is an ORM, schema or serialization integration or an "other" extractor, so no row of those classes exists; `javascript/README.md` (Integrations) says so. The NestJS row's module applies `Controller`, `Get` and `Param` as calls: Node runs JavaScript without decorator syntax, and NestJS documents decorators in JavaScript only through a Babel build (README, Route parsers). The Expo row is scored under ruling R15: its route module follows the Expo Router `+api` convention with no Expo package installed (README, Route parsers).
 
-Language server (E.5): the TypeScript language service of `typescript` 5.7.3, through `typescript-language-server` 6.1.0; source "the TypeScript language service of the pinned `typescript` 5.7.3 (graded through `typescript-language-server` 6.1.0)"
+Language server (E.5): the TypeScript language service of `typescript` 5.7.3, started by `typescript-language-server` 6.1.0; source "the TypeScript language service of the pinned `typescript` 5.7.3, started by the exact-pinned devDependency `typescript-language-server` 6.1.0"
 
 ### python
 

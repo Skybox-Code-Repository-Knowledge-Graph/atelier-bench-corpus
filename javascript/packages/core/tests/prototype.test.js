@@ -21,6 +21,7 @@ describe("prototype chain", () => {
         assert.ok(laptop instanceof Device);
         assert.equal(Object.getPrototypeOf(Laptop.prototype), Device.prototype);
         assert.equal(laptop.label(), 'Lenovo X1 (SER-0002) 14"');
+        assert.ok(laptop.isWarrantyEligible());
         assert.equal(Device.prototype.label.call(laptop), "Lenovo X1 (SER-0002)");
     });
 
