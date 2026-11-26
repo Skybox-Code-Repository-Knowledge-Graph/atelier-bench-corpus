@@ -16,7 +16,7 @@ import path disagrees with its declared name, and a package that shadows a stand
 | Go | `go 1.23.0` with `toolchain go1.23.4` in `go.mod` (CI pins the same; `iter.Seq` and method-prefixed `ServeMux` patterns are used) |
 | Layout | one module, `atelier.example/lane`, packages under `core/`, `atelier/`, `app/`, `cmd/`, `internal/`, `tools/`, and the lane-only route modules under `frameworks/`; run every command from the lane root (`go/`) |
 | Dependencies | the in-tree module `atelier.example/yamlish.v2`, resolved by a `replace` to `./third_party/yamlish.v2`, and the five router frameworks the lane-only route modules under `frameworks/` are written against, each pinned in `go.mod` and locked with its transitive modules in `go.sum`: `github.com/gorilla/mux v1.8.1`, `github.com/go-chi/chi/v5 v5.3.2`, `github.com/gin-gonic/gin v1.10.1`, `github.com/labstack/echo/v4 v4.13.4`, `github.com/gofiber/fiber/v2 v2.52.16` (each at a release whose module graph keeps `go 1.23.0` / `toolchain go1.23.4`: chi v5.4 and echo v4.14 already declare go 1.24). Install step: `go mod download` (fetches exactly the `go.sum` versions from the module proxy; `go build` does the same on first use) |
-| Test runner | `go test ./...` (stdlib `testing`): 73 tests, 47 in `tests/`, in-package tests for the three `main` packages (`bench/verify` 11, `cmd/atelier` 4, `tools/statusgen` 1) and 2 per route module under `frameworks/` (10) |
+| Test runner | `go test ./...` (stdlib `testing`): 81 tests, 47 in `tests/`, in-package tests for the `main` packages (`bench/verify` 11, `bench/lspcheck` 7, `cmd/atelier` 4, `tools/statusgen` 1) and 2 per route module under `frameworks/` (10) |
 | Dataset | `dataset.Seeded()` — fixed rows, **no randomness**; revenue `58325c`, part cost `46300c`, gross profit `12025c` |
 
 ## Packages
@@ -30,7 +30,7 @@ import path disagrees with its declared name, and a package that shadows a stand
 | `internal/` | Internal-only audit sink, `go:embed`ded banner, a build-tag pair | 3 |
 | `tools/statusgen/` | The `go:generate` generator behind `core/support/status_labels_gen.go`, and the test that regenerates it byte for byte | 2 |
 | `tests/` | 47 tests incl. request-level (`net/http/httptest`) | 12 |
-| `bench/` | `tasks.json` + `verify/` (stdlib only) and its test | 4 |
+| `bench/` | `tasks.json`, `verify/` (stdlib only) and its test, `lspcheck/` (the language-server check) and its test, and `lsp-check.md`, that check's committed report | 8 |
 | `third_party/yamlish.v2/` | In-tree module whose import path last segment (`yamlish.v2`) differs from its package name (`yamlish`) | 1 |
 | `fixtures/broken-syntax/` | Intentionally invalid Go, **DO NOT FIX** (build-tag gated) | 3 |
 | `frameworks/` | Lane-only route modules, one per Go route parser beyond `net/http`, each in its framework's own convention and driven by its own request-level test with no listener: `muxroutes/` (gorilla/mux), `chiroutes/` (chi), `ginroutes/` (gin), `echoroutes/` (echo), `fiberroutes/` (fiber, through `App.Test`); `orderview/` is the payload they share | 11 |
@@ -39,9 +39,14 @@ import path disagrees with its declared name, and a package that shadows a stand
 
 | Surface | Where |
 | --- | --- |
-| Method promotion, one level (embedded pointer) | `core/models/technician.go` embeds `*support.Schedule`; `technician.BookSlot(0)` resolves to `core/support/schedule.go` |
-| Method promotion, two levels | `Technician` embeds `Staff`, `Staff` embeds `concerns.HasReference`; `technician.Reference()` is declared on neither |
-| Method promotion, four levels | `reports.CashFlowReport` → `support.CompositeReport` → `PeriodicReport` → `BaseReport` → `concerns.HasCache`; `cashFlow.CacheKey()` on the concrete `*reports.CashFlowReport` (`tests/promotion_test.go`) |
+| Method promotion, one level (embedded pointer) | `core/models/technician.go` embeds `*support.Schedule`; `t.BookedCount()` resolves to `core/support/schedule.go` (`def-proxy-forwarded-method`, `refs-promoted-method-call`, `hierarchy-promoted-callee`) |
+| Method promotion, two levels | `Technician` embeds `Staff`, `Staff` embeds `concerns.HasReference`; `technician.ShortReference()` is declared on neither (`def-mixin-method`) |
+| Method promotion, four levels | `reports.CashFlowReport` → `support.CompositeReport` → `PeriodicReport` → `BaseReport` → `concerns.HasCache`; `cashFlow.CacheKey()` on the concrete `*reports.CashFlowReport` (`tests/promotion_test.go`, `def-embedded-promotion-four-levels`) |
+| Embedded field name | `core/services/rush.go`: `c.StandardInvoiceCalculator` names the embedded FIELD, whose implicit name is its type's (`resolution-embedded-field-name`) |
+| Methods on a function type | `app/http/router.go` `Handler`, used as the result type of every handler factory and as the `ServeHTTP` receiver (`def-func-type-implements-interface`, `refs-func-type-handler`) |
+| Named result set by a deferred closure | `app/jobs.go` `SafeRun`'s `err` (`def-named-result-deferred`, `def-defer-recover`) |
+| Many functions named `init` | `atelier/reports/`: 24 `init` functions, one per report file (`hierarchy-init-outgoing`, `def-init-registration`) |
+| Route parsers | `net/http` in `app/http/router.go` (`def-route-to-handler`, `def-route-default-mux`); gorilla/mux, chi, gin, echo, fiber under `frameworks/` (`def-route-gorilla-mux`, `def-route-chi`, `def-route-gin`, `def-route-echo`, `def-route-fiber`) |
 | Shadowing a promoted method | `core/services/rush.go`: `Calculate` overrides the promoted one and calls it back as `c.StandardInvoiceCalculator.Calculate(order)` |
 | Interface satisfaction without `implements` | every nominal implementor carries a `var _ Contract = (*Type)(nil)` assertion (`cash_flow.go` three, one per contract it satisfies); the 24 ad-hoc rules in `atelier/rules/adhoc/` carry none at all, and `contracts.RuleLike`, the structural twin of `RuleContract`, is asserted nowhere: it is used only as the constraint of `contracts.SatisfiedBy` |
 | Pointer vs value receivers | `core/money/money.go` is value-receiver throughout; `core/models/repairorder.go` is pointer-receiver throughout; `atelier/rules/*.go` assert on the value type |
@@ -118,6 +123,18 @@ Lane-only extras:
 - `go run ./cmd/atelier jobs`: the application caller of the callback, channel and goroutine job
   shapes in `app/jobs.go` (the last under `SafeRun`): `job callback: 4 handled`,
   `job channel: 1 handled`, `job goroutines x3: 12 handled`.
+- The five route modules under `frameworks/` (gorilla/mux, chi, gin, echo, fiber), each serving
+  `GET /api/orders` and `GET /api/orders/{id}` over the seeded state; no other lane carries them.
+
+Lane-only ids (carried by this lane alone): 48. Sorted under rulings R13 and R14 of issue #223:
+31 score a Go mechanism and carry a "Go-specific:" sentence in their note (the ids that count
+toward the floor of 30); 11 are common candidates a sibling lane could carry unchanged
+(`def-method-value`, `def-method-expression`, `def-generic-two-params`,
+`def-generic-struct-method`, `def-generic-free-function-extra-param`,
+`def-generic-registry-instantiation`, `def-type-switch`, `def-anonymous-struct`,
+`dir-interface-embeds-interface`, `def-shadowing-promoted-method`,
+`resolution-same-name-package-support`); 6 are route variants (`def-route-default-mux` and the
+five framework tasks), counted on the definition row only.
 
 Lane-specific `kind` strings used in `expect` blocks: `structural`, `shadow_alias`, `same_name`,
 `path_name_divergence`, `receiver`, `arity`, `init_order`, `embedded_field`, `lane_local`, `syntax_error`,
