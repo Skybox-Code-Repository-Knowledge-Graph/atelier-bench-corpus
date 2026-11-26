@@ -531,7 +531,7 @@
                 "symbol": "seeded"
             },
             "expect": {
-                "exact_count": 16,
+                "exact_count": 17,
                 "known_sites": [
                     {
                         "file": "packages/app/src/state.js",
@@ -572,6 +572,10 @@
                     {
                         "file": "packages/bench/tests/rules.test.cjs",
                         "needle": "        assert.ok(RuleRegistry.rule(\"gross-profit\").evaluate(Dataset.seeded()));"
+                    },
+                    {
+                        "file": "packages/bench/tests/components.test.cjs",
+                        "needle": "    return Dataset.seeded();"
                     }
                 ],
                 "repeated_sites": [
