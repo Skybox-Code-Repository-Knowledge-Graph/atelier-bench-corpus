@@ -14,6 +14,7 @@ tasks.
 | Modules | ESM everywhere (`"type": "module"`), relative imports without extensions |
 | Layout | npm workspaces: 3 packages + 1 dependency-free verifier |
 | Tests | vitest `^2.1.8` (`npm test`), request-level tests through supertest |
+| Language server | typescript-language-server `6.1.0` (exact devDependency, pinned in `package-lock.json`) over the lane's own TypeScript 5.9.3; `bench/lsp-check.mjs` starts it as `node node_modules/typescript-language-server/lib/cli.mjs --stdio` with `initializationOptions.tsserver.path` = `node_modules/typescript/lib/tsserver.js` |
 | Dataset | `Dataset.seeded()` — fixed rows, **no randomness** in the corpus seed path |
 | Vendor breadth | express 5, zod, date-fns, uuid, supertest — real dependencies the app, services and tests import, typed from `node_modules`; no task asks for a definition inside `node_modules` (the one task that names it, `def-ambient-module-declaration`, excludes it) |
 
@@ -132,10 +133,22 @@ recounts every `references` task and `packages/bench/tests/documentSymbols.test.
 comments included) and fails when a file under `packages/*/src` is reached by no test, or holds runtime
 code and is reached only through `import type` edges.
 
+**Language server (checklist E.5):** the server this lane's stack starts is typescript-language-server
+6.1.0 over TypeScript 5.9.3 (Stack table). `node bench/lsp-check.mjs` (after `npm ci`) asks it every
+`hover`, `document_symbol`, `call_hierarchy` and `implementation` task and writes
+`bench/lsp-check.md`: one line per task, agrees / disagrees / server has no answer, with what it
+returned and, where it disagrees, what the tree shows. At the committed run it agrees on 8 of 15 and
+no key was wrong: the 7 others are server-side (an anonymous callback or a local listed as a symbol;
+a registry array, a type alias or a typed array returned as an implementor; a caller or implementor
+in another package missed). A key is never changed to match the server.
+
 A language server used as a second opinion on these keys should run against the root
-`tsconfig.json`, or have the consuming package's files opened first: each `packages/*/tsconfig.json`
-includes only its own package, so a server that answers from the core project misses every site in
-`bench` and `app` (for example 6 of the 57 `refs-money-class` lines, all in `bench/src/dataset.ts`).
+`tsconfig.json`, or have the consuming package's files opened first (the script opens every file
+under `packages/*/src` and `packages/*/tests`): each `packages/*/tsconfig.json` includes only its own
+package, so a server that answers from the core project misses every site in `bench` and `app` (for
+example 6 of the 57 `refs-money-class` lines, all in `bench/src/dataset.ts`). Opening the files fixes
+references; it does not fix implementation or incoming calls across packages (`impl-repository-generic`,
+`hierarchy-incoming-transition` in the report).
 
 ## Indexer surfaces (checklist section E)
 
