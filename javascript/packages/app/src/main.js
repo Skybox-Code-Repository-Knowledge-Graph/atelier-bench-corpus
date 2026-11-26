@@ -26,7 +26,11 @@ switch (command.kind) {
     case "report":
         console.log(exportReport(state, command.slug));
         break;
+    case "export-report":
+        console.log(exportReport(state, command.slug, command.format));
+        break;
     case "recalculate":
+    case "recalculate-inventory":
         console.log(await recalculateInventory(state));
         break;
     default:

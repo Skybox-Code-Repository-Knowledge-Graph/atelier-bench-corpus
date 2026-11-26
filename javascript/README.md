@@ -86,18 +86,26 @@ Local use:
 
 ```bash
 npm ci
-npm test                             # node --test, 123 tests
+npm test                             # node --test, 124 tests
 npm run verify                       # 96 ground-truth tasks
 npm run verify:lint                  # node --check over packages/ + broken-fixture guard + checkJs allowlist gate
 npm run typecheck                    # the pinned tsc on jsconfig.json, raw output (exits 2: the 60 allowlisted diagnostics)
 node packages/app/src/main.js serve 8080
 node packages/app/src/main.js seed
+node packages/app/src/main.js export-report gross-profit json
+node packages/app/src/main.js recalculate-inventory
 node packages/app/src/main.js report gross-profit
 node packages/app/src/main.js recalculate
 ```
 
 HTTP surface: `GET /report/:reference` (e.g. `AT-2026-000001`), `GET /api/orders`,
 `GET /api/reports/:slug`, `POST /api/orders/:id/notes`, `GET /health`.
+
+Console commands: `export-report [slug] [csv|json|md]` and `recalculate-inventory` are the
+command names of the corpus-wide shared set. Lane-only extras: `report [slug]` (the same export,
+csv only) and `recalculate` (the same job), this lane's original spellings, kept beside the shared
+names; `serve [port]` and `seed`. All six are dispatched in `packages/app/src/main.js` and run by
+`bench/tests/load.test.mjs`.
 
 ## The JSDoc typecheck is a hard gate with an allowlist
 

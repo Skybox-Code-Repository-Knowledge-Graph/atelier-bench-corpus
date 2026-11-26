@@ -13,6 +13,10 @@ describe("console surface", () => {
         assert.deepEqual(parseCommand(["serve", "9000"]), { kind: "serve", port: 9000 });
         assert.deepEqual(parseCommand(["seed"]), { kind: "seed" });
         assert.deepEqual(parseCommand(["report", "part-usage"]), { kind: "report", slug: "part-usage" });
+        assert.deepEqual(parseCommand(["export-report", "cash-flow", "json"]), { kind: "export-report", slug: "cash-flow", format: "json" });
+        assert.deepEqual(parseCommand(["export-report"]), { kind: "export-report", slug: "gross-profit", format: "csv" });
+        assert.deepEqual(parseCommand(["recalculate"]), { kind: "recalculate" });
+        assert.deepEqual(parseCommand(["recalculate-inventory"]), { kind: "recalculate-inventory" });
         assert.deepEqual(parseCommand(["nonsense"]), { kind: "help" });
     });
 
