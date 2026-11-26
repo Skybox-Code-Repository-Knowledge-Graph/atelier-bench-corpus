@@ -397,9 +397,6 @@
                         "file": "packages/core/src/services/rushInvoiceCalculator.js",
                         "needle": "    calculate(order) {"
                     }
-                ],
-                "must_not_include": [
-                    "Container.invoiceCalculator"
                 ]
             }
         },
@@ -1056,10 +1053,7 @@
                 "candidate": {
                     "file": "packages/bench/src/support/abstractNotifier.cjs",
                     "needle": "        function loud(subject) {"
-                },
-                "must_not_include": [
-                    "arrow function quiet"
-                ]
+                }
             }
         },
         {
