@@ -147,6 +147,17 @@ string-keyed link from a JSON wire name (`body["reference"]` in a test) to the s
   a task to start from, and a client written only to be scored would be a construct with no real
   use.
 
+## Known-hard resolution classes (E.3)
+
+| Class | Task ids |
+| --- | --- |
+| Dynamic dispatch | `def-trait-method-through-binding` (an interface method call answered under the container binding), `impl-structural-no-assertion`, `resolution-structural-concern` (satisfaction with no `implements` and no assertion) |
+| String-keyed lookup | `def-struct-tag` (a JSON wire name to the field whose tag carries it), `refs-string-event-name` (`"repair.completed"`), `impl-exporter-contract` (exporters reached only by extension), `refs-report-registry` (reports by slug) |
+| Alias divergence | `def-shadow-alias-billing`, `def-shadow-alias-reporting`, `def-import-alias`, `resolution-shadow-type-billing`, `resolution-shadow-type-reporting`, `resolution-package-path-vs-name`, `def-vendored-package-name`, `resolution-shadowed-stdlib-package`, `resolution-embedded-field-name` |
+| Re-export chain | absent from the language: a Go package exports only what it declares, an import never re-exports, and the nearest form, a type alias `type X = pkg.Y`, declares a new name in the aliasing package that a definition answers on its own line; so no task is added |
+| Generated code | `def-generated-file`, `hover-generated-marker` |
+| Conditional compilation | `def-build-tag-gated` (the `//go:build darwin` / `!darwin` pair), `parse-negative-unclosed-class` and `parse-negative-bad-receiver` (behind the `brokenfixtures` tag) |
+
 ## Language server (E.5)
 
 The language server this lane's stack starts is **gopls v0.24.0**
