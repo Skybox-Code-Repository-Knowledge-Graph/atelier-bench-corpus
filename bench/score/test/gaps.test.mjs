@@ -10,14 +10,16 @@ import { readFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
-import { planTask } from "../lib/plan.mjs";
+import { asksMergedName, planTask } from "../lib/plan.mjs";
+import { resolveNeedle } from "../lib/resolve.mjs";
+import { scoreTask } from "../lib/score.mjs";
 
 const REPO_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..", "..", "..");
 
 /** `lane:id` -> the rule that scores it, or a pattern its UNSCORABLE reason must match. */
 const DECIDED = {
     // target plus exact_count
-    "python:def-overload": { rule: "definition/overloads" },
+    "python:def-overload": { reason: /^exact_count beside a target: the key's sources disagree on what the answer is/ },
     "typescript:resolution-class-interface-merge": { rule: "resolution/merged-name" },
     "typescript:resolution-namespace-vs-enum": { rule: "resolution/merged-member" },
     "go:resolution-arity-parameter-groups": { reason: /^kind arity: exact_count is the signature's parameter count/ },
@@ -70,18 +72,74 @@ test("a declaration_merge question is the merged name or a member, by the asked 
     assert.deepEqual([...member.notScored].sort(), ["exact_count", "known_sites"]);
 });
 
-test("definition/overloads needs exact_count to count the listed signatures", () => {
-    const task = structuredClone(taskOf("python", "def-overload"));
-    task.expect.exact_count = 3;
-    const plan = planTask(task, "python");
-    assert.equal(plan.scorable, false);
-    assert.match(plan.reason, /exact_count 3, but the key lists 2 in known_sites/);
-    assert.equal(planTask(taskOf("python", "def-overload"), null).scorable, false, "the rule is keyed by lane:id; without the lane it does not apply");
-});
-
 test("a list rule for a definition or resolution question does not make the asked line neutral", () => {
     // The line asked from is a use (a getattr call), or itself a listed declaration; either way the
     // rule must not accept it as a free extra, as a references question does.
     assert.equal(planTask(taskOf("python", "def-string-key-dispatch"), "python").from, null);
     assert.equal(planTask(taskOf("typescript", "resolution-class-interface-merge"), "typescript").from, null);
+});
+
+// What each ruled task's rule DOES, not just its name: a fixed answer built from the key's own
+// needles is scored, so a rule that changes what it reads (the wrong half, a candidate it should
+// not take, a line it should not make neutral) turns one of these red.
+const ROOT_OF = (lane) => join(REPO_ROOT, lane);
+const at = (lane, pair) => {
+    const resolved = resolveNeedle(ROOT_OF(lane), pair);
+    assert.ok(resolved.ok, `${lane}: ${pair.needle} does not resolve`);
+    return { file: pair.file, line: resolved.line };
+};
+const verdictOf = (lane, task, locations) => scoreTask(task, { locations }, { root: ROOT_OF(lane), lane, scope: "repo" }).verdict;
+
+test("resolution/merged-name: both declarations pass; one alone, or with the member, fails", () => {
+    const task = taskOf("typescript", "resolution-class-interface-merge");
+    const [klass, iface] = task.expect.known_sites.map((site) => at("typescript", site));
+    const member = at("typescript", task.expect.candidate);
+    assert.equal(verdictOf("typescript", task, [klass, iface]), "PASS");
+    assert.equal(verdictOf("typescript", task, [klass]), "FAIL");
+    assert.equal(verdictOf("typescript", task, [iface]), "FAIL");
+    assert.equal(verdictOf("typescript", task, [klass, iface, member]), "FAIL");
+    assert.equal(verdictOf("typescript", task, []), "FAIL");
+});
+
+test("resolution/merged-member: the member's own declaration passes; a half of the name beside or instead fails", () => {
+    const task = taskOf("typescript", "resolution-namespace-vs-enum");
+    const [enumHalf, namespaceHalf] = task.expect.known_sites.map((site) => at("typescript", site));
+    const member = at("typescript", task.expect.candidate);
+    assert.equal(verdictOf("typescript", task, [member]), "PASS");
+    assert.equal(verdictOf("typescript", task, [namespaceHalf]), "FAIL", "the namespace half is not the member");
+    assert.equal(verdictOf("typescript", task, [enumHalf]), "FAIL");
+    assert.equal(verdictOf("typescript", task, [member, enumHalf]), "FAIL");
+    assert.equal(verdictOf("typescript", task, [member, namespaceHalf]), "FAIL");
+    assert.equal(verdictOf("typescript", task, []), "FAIL");
+});
+
+test("definition/string-key: both selected declarations pass; one, or with the asked line or another declaration, fails", () => {
+    const task = taskOf("python", "def-string-key-dispatch");
+    const [open, completed] = task.expect.known_sites.map((site) => at("python", site));
+    const asked = at("python", task.from);
+    const other = at("python", { file: task.from.file, needle: "def total(" });
+    assert.equal(verdictOf("python", task, [open, completed]), "PASS");
+    assert.equal(verdictOf("python", task, [open]), "FAIL");
+    assert.equal(verdictOf("python", task, [completed]), "FAIL");
+    assert.equal(verdictOf("python", task, [open, completed, asked]), "FAIL", "the getattr line is not neutral");
+    assert.equal(verdictOf("python", task, [open, completed, other]), "FAIL");
+    assert.equal(verdictOf("python", task, []), "FAIL");
+});
+
+test("a declaration_merge task asks about the member unless the symbol is on every listed declaration", () => {
+    // `abstract` is written on 1 of the 2 known sites (the class line), not on both: `every`, not `some`.
+    const task = structuredClone(taskOf("typescript", "resolution-class-interface-merge"));
+    task.from.symbol = "abstract";
+    assert.equal(asksMergedName(task), false);
+    assert.equal(planTask(task, "typescript").rule, "resolution/merged-member");
+    task.from.symbol = "Worker";
+    assert.equal(planTask(task, "typescript").rule, "resolution/merged-name");
+});
+
+test("an unlisted task of a refused shape gets the generic reason, not another lane's", () => {
+    const listed = taskOf("go", "lane-local-money");
+    assert.match(planTask(listed, "go").reason, /^kind lane_local with only `contains`/);
+    const unlisted = { ...structuredClone(listed), id: "lane-local-not-in-the-list" };
+    assert.match(planTask(unlisted, "go").reason, /^no rule for surface resolution with keys contains, kind$/);
+    assert.match(planTask(listed, "python").reason, /^no rule for surface resolution with keys contains, kind$/, "the same task under another lane is not the listed one");
 });
