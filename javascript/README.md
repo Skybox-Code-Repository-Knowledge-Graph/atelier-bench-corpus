@@ -16,7 +16,7 @@ surface.
 | --- | --- |
 | Node | `>= 22.12` (`require(esm)` must be available: the CommonJS bench package requires the ESM core) |
 | Layout | npm workspaces, 3 packages + 1 dependency-free verifier |
-| Dependencies | `express@5` (runtime); dev: `supertest`, plus exact-pinned `typescript`, `@types/node`, `@types/express` for the checkJs gate only (no TypeScript sources, no `.d.ts`) |
+| Dependencies | `express@5` (runtime); dev: `supertest`, plus exact-pinned `typescript`, `@types/node`, `@types/express` for the checkJs gate (`typescript`'s parser also drives `bench/tests/specifiers.test.mjs`; no TypeScript sources, no `.d.ts`) |
 | Test runner | `node --test` (`node:test` + `node:assert/strict`), zero test-runner dependencies |
 | Build step | none: everything runs from source with `node` |
 | Dataset | `Dataset.seeded()` — fixed rows, **no randomness** in the corpus seed path |
