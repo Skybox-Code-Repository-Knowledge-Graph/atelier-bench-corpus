@@ -1750,6 +1750,7 @@
                 "kind": "mixin_parents",
                 "extends_count": 1,
                 "implements_count": 2,
+                "exact_count": 3,
                 "implementations": [
                     {
                         "file": "packages/bench/src/support/abstractPeriodicReport.cjs",

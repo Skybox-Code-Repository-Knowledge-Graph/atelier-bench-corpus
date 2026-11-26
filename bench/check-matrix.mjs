@@ -16,7 +16,8 @@
 //    builds {lane -> {id -> surface}} straight from tasks.json.
 // 3. Asserts every task id is listed in matrix.canonical, every canonical entry's `lanes` array
 //    matches reality, any id shared by two or more lanes carries the same `surface` in each, and
-//    shared cardinality / multi-parent ids state the same `exact_count` in every lane that states one.
+//    an id shared by two or more lanes on the cardinality / multi-parent surfaces states an
+//    `exact_count` in every lane that carries it, and the same one.
 // 4. Runs every lane verifier against bench/conformance/ (via --root) and diffs stdout against
 //    bench/conformance/expected.txt byte for byte.
 // 5. Prints a coverage grid and `matrix: OK (<n> canonical ids, <m> lanes)`, or the first
@@ -268,17 +269,21 @@ function readLaneExactCounts(lane) {
 
 /**
  * Shared ids on the cardinality and multi-parent surfaces count a DOMAIN invariant
- * (48 rules, 24 reports, 3 parents), so every lane that states an exact_count for such
- * an id must state the same number. Other surfaces (glob imports, overload sets) count
- * lane-specific facts and are not compared. Returns a conflict message or undefined.
+ * (48 rules, 24 reports, 3 parents), so every lane that carries such an id must state an
+ * exact_count, and the same number (issue #223: an absent count used to pass as agreement).
+ * Other surfaces (glob imports, overload sets) count lane-specific facts and are not compared.
+ * An id carried by one lane only is not shared and is not checked. Returns a conflict message
+ * or undefined.
  */
 function exactCountConflict(id, surface, inLanes, laneCounts) {
-    if (surface !== "cardinality" && surface !== "multi-parent") {
+    if ((surface !== "cardinality" && surface !== "multi-parent") || inLanes.length < 2) {
         return undefined;
     }
-    const stated = inLanes
-        .filter((name) => laneCounts.get(name).has(id))
-        .map((name) => [name, laneCounts.get(name).get(id)]);
+    const missing = inLanes.filter((name) => !laneCounts.get(name).has(id));
+    if (missing.length > 0) {
+        return `${id}: shared ${surface} id states no exact_count in ${missing.join(", ")} (every lane carrying it must state the same one)`;
+    }
+    const stated = inLanes.map((name) => [name, laneCounts.get(name).get(id)]);
     const distinct = new Set(stated.map(([, count]) => count));
     if (distinct.size <= 1) {
         return undefined;

@@ -1301,6 +1301,7 @@
             "expect": {
                 "extends_count": 1,
                 "implements_count": 2,
+                "exact_count": 3,
                 "implementations": [
                     {"file": "atelier/support/periodic.go", "needle": "type PeriodicReport struct {"},
                     {"file": "atelier/concerns/audit.go", "needle": "type HasAudit struct {"},
