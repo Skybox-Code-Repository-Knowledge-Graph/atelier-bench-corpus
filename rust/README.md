@@ -19,10 +19,10 @@ Build from the **committed** `Cargo.lock` only (`cargo build --locked`). Do not 
 
 ## Crates
 
-| Crate | Role | .rs files |
+| Crate | Role | .rs files under `src/` |
 | --- | --- | --- |
-| `crates/atelier-core` | Domain: models, enums, traits, container bindings, money, errors | 40 |
-| `crates/atelier-bench` | Breadth subsystem: 8 contracts, 8 concerns, 7 bases, 76 implementors | 111 |
+| `crates/atelier-core` | Domain: models, enums, traits, container bindings, money, errors | 45 |
+| `crates/atelier-bench` | Breadth subsystem: 8 contracts, 8 concerns, 7 bases, 76 implementors | 149 |
 | `crates/atelier-app` | Application surface: axum router, console commands, jobs | 14 |
 | `bench/verify-tasks` | Ground-truth self-check; **zero third-party dependencies** | 2 |
 
@@ -32,7 +32,7 @@ Build from the **committed** `Cargo.lock` only (`cargo build --locked`). Do not 
 | --- | --- |
 | Enums with methods | `crates/atelier-core/src/support/{status,priority}.rs` (`transitions_to`, `surcharge_bp`) |
 | Trait with a default body, reused | `concerns/has_reference.rs` implemented by `Customer` + `RepairOrder` |
-| Associated const, overridden per impl | `HasReference::PREFIX` defaults to `ATELIER_REF_PREFIX`; `Customer` overrides it with `"CU"` |
+| Associated const, overridden per impl | `HasReference::PREFIX` defaults to `ATELIER_REF_PREFIX`; `Customer` and `Voucher` override it (`"CU"`, `"VO"`); the trait's default bodies read it through `Self::PREFIX` |
 | Trait + 2 impls + container binding | `contracts/invoice_calculator.rs`, `services/{standard,rush}_invoice_calculator.rs`, `Arc<dyn ...>` in `container.rs` |
 | Same-name shadow pair (aliases) | `billing::Formatter` vs `reporting::Formatter`, aliased in `atelier-app/src/state.rs` and called in `http/report.rs` |
 | `Deref` method forwarding | `Technician` → `Schedule`: `technician.next_slot()` has no declaration on `Technician` |
@@ -50,7 +50,7 @@ Build from the **committed** `Cargo.lock` only (`cargo build --locked`). Do not 
 | Parallel iteration (rayon) | `services/revenue_service.rs::metric_sweep` — also what forces `MetricContract: Send + Sync` |
 | Wide contract implementation | 24 reports, 16 metrics, 8 exporters, 8 notifiers, 8 repositories, 12 services |
 | Deterministic seed | `atelier-bench/src/dataset.rs::seeded` — revenue `58_325c`, part cost `46_300c`, gross profit `12_025c` |
-| Tests (incl. request-level) | 71 tests: domain lifecycle, shadow pair, Deref/macro forwarding, not-found conversion, breadth registry, canonical-parity constructs, open-order iterator, topic subscription, axum routes, console commands, JSON parser |
+| Tests (incl. request-level) | 84 tests: domain lifecycle, shadow pair, Deref/macro forwarding, not-found conversion, breadth registry, every exporter/notifier/repository/service (`tests/every_component.rs`), the core models no other test reaches (`tests/every_model.rs`), canonical-parity constructs, open-order iterator, topic subscription, axum routes, console commands and the binary itself, JSON parser; plus the feature-gated rule under `--features extra-rules` |
 | Build-script generated item | `crates/atelier-core/build.rs` writes `generated_units()` into `OUT_DIR`; `support/generated_units.rs` splices it in with `include!` — no textual definition under `src/` |
 | `#[path]` module | `support/mod.rs`: `#[path = "pathed/tally_sheet.rs"] pub mod ledger;` — module name and file name differ |
 | Lifetimes, HRTB, GAT | `support/borrowed.rs` (`Borrowed<'a>`, `for<'x> Fn(&'x str)`), `support/lender.rs` (`type Loan<'a> where Self: 'a`) |
@@ -81,7 +81,10 @@ Build from the **committed** `Cargo.lock` only (`cargo build --locked`). Do not 
 Local use:
 
 ```bash
-cargo test --workspace          # 71 tests
+cargo test --workspace          # 84 tests
+cargo test -p atelier-bench --features extra-rules   # 30 tests, incl. the feature-gated ExperimentalRule
+RUSTDOCFLAGS="-D rustdoc::broken_intra_doc_links" \
+  cargo doc --workspace --no-deps --document-private-items --all-features   # every intra-doc link resolves
 cargo clippy --workspace --all-targets -- -D warnings
 cargo run -p atelier-app -- serve 8080
 cargo run -p atelier-app -- seed
@@ -96,7 +99,7 @@ HTTP surface: `GET /report/{reference}` (e.g. `AT-2026-000001`), `GET /api/order
 | Artifact | Role |
 | --- | --- |
 | `bench/tasks.json` | 104 needle-based accuracy tasks (`from` → `expect` file/needle pairs): 44 original + 30 failure-mode surfaces (issue #8) + 5 build-script/#[path]/lifetime/HRTB/GAT edges + 12 shared canonical ids + 5 document-symbol/call-hierarchy surfaces + 8 go-wave canonical ids |
-| `bench/verify-tasks` | Self-check that every task needle still resolves to exactly one line |
+| `bench/verify-tasks` | Self-check that every task needle still resolves to exactly one line (`optional_sites` included), and every `repeated_sites` needle to exactly its `lines` count |
 
 ```bash
 cargo run -p bench-verify           # resolve every file+needle pair
