@@ -103,19 +103,18 @@ Language server (E.5): not pinned yet
 
 | Extractor | Class | Scored by (task ids) | Deliberate gap (README line) | Not yet |
 | --- | --- | --- | --- | --- |
-| Express | route parser | `def-route-to-handler` | | |
-| NestJS | route parser | | | not yet |
-| Hono | route parser | | | not yet |
-| Fastify | route parser | | | not yet |
-| Remix | route parser | | | not yet |
-| SvelteKit | route parser | | | not yet |
-| Nuxt | route parser | | | not yet |
-| Expo | route parser | | | not yet |
+| Express | route parser | `def-route-to-handler`, `def-route-express-router` | | |
+| NestJS | route parser | `def-route-nestjs` | | |
+| Hono | route parser | `def-route-hono` | | |
+| Fastify | route parser | `def-route-fastify` | | |
+| Remix | route parser | `def-route-remix` | | |
+| SvelteKit | route parser | `def-route-sveltekit` | | |
+| Nuxt | route parser | `def-route-nuxt` | | |
+| Expo | route parser | `def-route-expo` | | |
 
-Language server (E.5): not pinned yet
+Every task named above has its `expect` on the handler the route binds (the registration line is the `from` for Express, Hono and Fastify; for the other five, the `from` is the client line that addresses the route by its URL). The Expo fixture is convention-only (ruling R15). `typescript/README.md` says that no ORM, schema or serialization integration and no other extractor is listed for TypeScript, so no other row exists.
 
-`typescript/README.md` asks that a second-opinion server run against the root `tsconfig.json`, but
-names no server or version.
+Language server (E.5): typescript-language-server 6.1.0 over `typescript` 5.9.3; source "typescript-language-server `6.1.0` (exact devDependency, pinned in `package-lock.json`) over the lane's own TypeScript 5.9.3"
 
 ### javascript
 
