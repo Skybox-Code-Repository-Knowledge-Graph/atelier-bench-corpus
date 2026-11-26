@@ -1,4 +1,5 @@
-//! Command parsing, the inventory job and the CSV export path.
+//! Command parsing, the inventory job and the CSV export path, under both the
+//! shared command names and this lane's older spellings.
 
 use atelier_app::commands::Command;
 use atelier_app::state::AppState;
@@ -25,6 +26,20 @@ fn parses_every_subcommand() {
         }
     );
     assert_eq!(Command::parse(&args(&["nonsense"])), Command::Help);
+}
+
+#[test]
+fn parses_the_shared_command_names() {
+    assert_eq!(
+        Command::parse(&args(&["export-report", "part-usage"])),
+        Command::Report {
+            slug: "part-usage".to_string()
+        }
+    );
+    assert_eq!(
+        Command::parse(&args(&["recalculate-inventory"])),
+        Command::Recalculate
+    );
 }
 
 #[test]
@@ -64,4 +79,30 @@ fn the_binary_prints_the_seed_summary() {
 
     assert!(output.status.success());
     assert!(stdout.starts_with("seeded: "));
+}
+
+/// Run the built binary with `argv`; it must exit 0. Returns its stdout.
+fn run_binary(argv: &[&str]) -> String {
+    let output = std::process::Command::new(env!("CARGO_BIN_EXE_atelier-app"))
+        .args(argv)
+        .output()
+        .expect("binary runs");
+
+    assert!(output.status.success());
+
+    String::from_utf8_lossy(&output.stdout).into_owned()
+}
+
+#[test]
+fn the_binary_runs_export_report_on_the_seed() {
+    let stdout = run_binary(&["export-report", "gross-profit"]);
+
+    assert!(stdout.lines().any(|line| line == "gross profit,120.25"));
+}
+
+#[test]
+fn the_binary_runs_recalculate_inventory_on_the_seed() {
+    let stdout = run_binary(&["recalculate-inventory"]);
+
+    assert!(stdout.lines().any(|line| line == "recalculated 1 part(s)"));
 }

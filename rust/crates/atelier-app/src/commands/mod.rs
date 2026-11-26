@@ -1,4 +1,8 @@
 //! Console command parsing and dispatch.
+//!
+//! The shared command names are `export-report` and `recalculate-inventory`.
+//! `report` and `recalculate` are this lane's older spellings of the same two
+//! commands and stay accepted.
 
 pub mod export_report;
 pub mod recalculate_inventory;
@@ -27,19 +31,19 @@ impl Command {
                     .unwrap_or(Self::DEFAULT_PORT),
             },
             Some("seed") => Command::Seed,
-            Some("report") => Command::Report {
+            Some("export-report" | "report") => Command::Report {
                 slug: args
                     .get(1)
                     .cloned()
                     .unwrap_or_else(|| "gross-profit".into()),
             },
-            Some("recalculate") => Command::Recalculate,
+            Some("recalculate-inventory" | "recalculate") => Command::Recalculate,
             _ => Command::Help,
         }
     }
 
     /// Usage text printed by `help` and by an unknown subcommand.
     pub fn usage() -> &'static str {
-        "usage: atelier-app <serve [port]|seed|report [slug]|recalculate>"
+        "usage: atelier-app <serve [port]|seed|export-report [slug]|recalculate-inventory>"
     }
 }
