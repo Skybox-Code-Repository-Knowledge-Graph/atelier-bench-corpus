@@ -137,6 +137,32 @@ A language server used as a second opinion on these keys should run against the 
 includes only its own package, so a server that answers from the core project misses every site in
 `bench` and `app` (for example 6 of the 57 `refs-money-class` lines, all in `bench/src/dataset.ts`).
 
+## Indexer surfaces (checklist section E)
+
+The list of what the tools under test ship for TypeScript is `bench/TOOL-SURFACE.md` (ruling R2 of
+issue #223: the published skybox 0.9.0 README, "Framework extractors"): Express, NestJS, Hono,
+Fastify, Remix, SvelteKit, Nuxt, Expo. All eight are route parsers.
+
+### ORM, schema and serialization integrations (E.2)
+
+No ORM, schema or serialization integration is listed for TypeScript, and no other extractor is:
+every TypeScript entry of the list is a route parser (E.1 below). So no deliberate gap is owed here.
+zod is a vendor dependency of the app, not a listed integration: `def-inferred-type` scores it as a
+TypeScript question (a type inferred through `typeof` from the schema value in `http/api.ts`), not as
+the output of a schema extractor.
+
+### Known-hard resolution classes (E.3)
+
+| Class | Tasks |
+| --- | --- |
+| Dynamic dispatch | `lane-local-calculate`, `def-trait-method-through-binding` (the container binding), `def-proxy-forwarded-method` (a Proxy) |
+| String-keyed lookup | `refs-string-event-name`, `resolution-indexed-access-type`, `resolution-keyof-argument`, and the five `route_url` route tasks (a URL string to its handler) |
+| Alias divergence | `def-shadow-alias-billing`, `def-shadow-alias-reporting`, `resolution-shadow-type-billing`, `resolution-shadow-type-reporting`, `def-import-equals-alias` |
+| Re-export chain | `def-through-barrel`, `imp-barrel-no-fanout`, `imp-glob-import`, `def-export-star-as` |
+| Generated code | Not a class TypeScript has: the language generates no code of its own. Framework build steps do (SvelteKit's `./$types`), and the SvelteKit fixture imports its types from the package instead so that it loads without that step. |
+| Conditional compilation | Not a class TypeScript has: there is no `#if` or `cfg`; `declare` and `.d.ts` files describe code, they do not select it. |
+| TypeScript's own | declaration merging (`resolution-class-interface-merge`, `resolution-namespace-vs-enum`, `resolution-interface-merge`, `dir-declaration-merge-not-inheritance`), structural typing (`resolution-structural-concern`, `card-rule-contract`), control-flow narrowing (`resolution-discriminated-union`, `resolution-assertion-narrowing`), computed types (`resolution-utility-return-type`, `resolution-mapped-utility-member`) |
+
 ## License
 
 MIT. Corpus content is clean-room for bench use.
