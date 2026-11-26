@@ -287,7 +287,6 @@ export const RULES = [
  */
 export const LIST_NOT_TYPES = {
     "card-rule-contract": "half the list is rule values (instances, object literals, macro arms), and an implementation query returns types",
-    "go:impl-structural-no-assertion": "the list is struct-literal values, and an implementation query returns types",
     "go:card-embedded-promotion": "the list is promoted methods, not implementing types",
     "rust:def-async-trait-method": "the list is methods, not implementing types",
     "php:impl-trait-abstract": "the list is methods, not implementing types",
@@ -346,7 +345,7 @@ export const UNRULED_SHAPES = [
         kind: "shadow_alias",
         keys: ["contains", "kind", "must_not_include", "resolution"],
         tasks: new Set(["go:resolution-shadowed-stdlib-package"]),
-        reason: "kind shadow_alias with `contains` and no candidate: the declaration is in the Go standard library, outside the repository, so no lane-relative location names it (gopls v0.24.0 answers a GOROOT path); `contains` is defined for hover text only, and the one exclusion can trip only on the line asked from, so it alone would pass an empty answer",
+        reason: "kind shadow_alias with `contains` and no candidate: the declaration is in the Go standard library, outside the repository, so no lane-relative location names it (gopls v0.24.0 answers a GOROOT path); `contains` is defined for hover text only, and the one exclusion, app/http's own NewServeMux (router.go), only says what the answer is not: with nothing required, it alone would pass an empty answer",
     },
     {
         surface: "definition",
@@ -408,12 +407,6 @@ export const UNRULED_SHAPES = [
         keys: ["exact_count", "must_include"],
         tasks: new Set(["rust:parents-supertrait-send-sync"]),
         reason: "parents with only `exact_count` and `must_include`: the two parents, Send and Sync, are declared in the Rust core library, outside the repository, so no lane-relative location names them (rust-analyzer 1.96.0 answers core/src/marker.rs in the toolchain, and has no type hierarchy); the key names them only in `must_include`, which no rule scores, and judging a parents answer by name is a mode no source states for this surface",
-    },
-    {
-        surface: "implementation",
-        keys: ["file", "needle"],
-        tasks: new Set(["php:vendor-shouldbroadcast-contract"]),
-        reason: "an implementation question whose key names the contract, not an implementor: phpactor 2026.11.22.0 answers implementation at ShouldBroadcast with six implementors (RepairCompleted and five under vendor/) and definition with the key's interface, so the key holds the definition answer on the implementation surface (the lane's other vendor targets are definition tasks)",
     },
 ];
 

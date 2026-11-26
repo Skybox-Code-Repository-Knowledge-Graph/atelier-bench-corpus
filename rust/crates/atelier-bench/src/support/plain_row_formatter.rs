@@ -1,4 +1,5 @@
-//! Structural look-alike: the method set of [`HasFormatting`] with no impl.
+//! Structural look-alike: the method set of
+//! [`HasFormatting`](crate::concerns::has_formatting::HasFormatting) with no impl.
 //!
 //! `PlainRowFormatter` declares `format_value` and `format_label` inherently
 //! and never names the trait. It is NOT a

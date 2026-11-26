@@ -293,7 +293,7 @@
         },
         {
             "id": "vendor-shouldbroadcast-contract",
-            "surface": "implementation",
+            "surface": "definition",
             "note": "VENDOR contract: RepairCompleted implements a framework interface.",
             "from": { "file": "app/Events/RepairCompleted.php", "needle": "class RepairCompleted implements ShouldBroadcast", "symbol": "ShouldBroadcast" },
             "expect": { "file": "vendor/laravel/framework/src/Illuminate/Contracts/Broadcasting/ShouldBroadcast.php", "needle": "interface ShouldBroadcast" }
