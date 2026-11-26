@@ -1748,7 +1748,7 @@
                     "file": "crates/atelier-core/src/money.rs",
                     "needle": "pub struct Money(pub i64);"
                 },
-                "must_not_include": ["php/", "typescript/", "javascript/"]
+                "must_not_include": ["php/", "typescript/", "javascript/", "python/", "go/"]
             }
         },
         {
@@ -1765,7 +1765,7 @@
                     "file": "crates/atelier-core/src/models/customer.rs",
                     "needle": "pub struct Customer {"
                 },
-                "must_not_include": ["php/", "typescript/", "javascript/"]
+                "must_not_include": ["php/", "typescript/", "javascript/", "python/", "go/"]
             }
         },
         {
@@ -1782,7 +1782,7 @@
                     "file": "crates/atelier-bench/src/dataset.rs",
                     "needle": "pub struct Dataset {"
                 },
-                "must_not_include": ["php/", "typescript/", "javascript/"]
+                "must_not_include": ["typescript/", "javascript/", "python/", "go/"]
             }
         },
         {
@@ -1799,7 +1799,7 @@
                     "file": "crates/atelier-core/src/support/helpers.rs",
                     "needle": "pub const ATELIER_REF_PREFIX: &str = \"AT\";"
                 },
-                "must_not_include": ["php/", "typescript/", "javascript/"]
+                "must_not_include": ["php/", "typescript/", "javascript/", "python/"]
             }
         },
         {
@@ -1816,7 +1816,7 @@
                     "file": "crates/atelier-core/src/contracts/invoice_calculator.rs",
                     "needle": "fn calculate(&self, order: &RepairOrder) -> Money;"
                 },
-                "must_not_include": ["php/", "typescript/", "javascript/"]
+                "must_not_include": ["php/", "typescript/", "javascript/", "python/"]
             }
         },
         {

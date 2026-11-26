@@ -1596,7 +1596,9 @@
                 "must_not_include": [
                     "php/",
                     "rust/",
-                    "typescript/"
+                    "typescript/",
+                    "python/",
+                    "go/"
                 ]
             }
         },
@@ -1618,7 +1620,9 @@
                 "must_not_include": [
                     "php/",
                     "rust/",
-                    "typescript/"
+                    "typescript/",
+                    "python/",
+                    "go/"
                 ]
             }
         },
@@ -1638,9 +1642,10 @@
                     "needle": "class Dataset {"
                 },
                 "must_not_include": [
-                    "php/",
                     "rust/",
-                    "typescript/"
+                    "typescript/",
+                    "python/",
+                    "go/"
                 ]
             }
         },
@@ -1662,7 +1667,8 @@
                 "must_not_include": [
                     "php/",
                     "rust/",
-                    "typescript/"
+                    "typescript/",
+                    "python/"
                 ]
             }
         },
@@ -1684,7 +1690,8 @@
                 "must_not_include": [
                     "php/",
                     "rust/",
-                    "typescript/"
+                    "typescript/",
+                    "python/"
                 ]
             }
         },

@@ -2374,7 +2374,8 @@
                     "php/",
                     "rust/",
                     "typescript/",
-                    "javascript/"
+                    "javascript/",
+                    "go/"
                 ]
             }
         },
@@ -2396,7 +2397,8 @@
                     "php/",
                     "rust/",
                     "typescript/",
-                    "javascript/"
+                    "javascript/",
+                    "go/"
                 ]
             }
         },
@@ -2415,10 +2417,10 @@
                     "needle": "class Dataset:"
                 },
                 "must_not_include": [
-                    "php/",
                     "rust/",
                     "typescript/",
-                    "javascript/"
+                    "javascript/",
+                    "go/"
                 ]
             }
         },

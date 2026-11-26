@@ -1906,7 +1906,9 @@
                 "must_not_include": [
                     "php/",
                     "rust/",
-                    "javascript/"
+                    "javascript/",
+                    "python/",
+                    "go/"
                 ],
                 "candidate": {
                     "file": "packages/core/src/money.ts",
@@ -1928,7 +1930,9 @@
                 "must_not_include": [
                     "php/",
                     "rust/",
-                    "javascript/"
+                    "javascript/",
+                    "python/",
+                    "go/"
                 ],
                 "candidate": {
                     "file": "packages/core/src/models/customer.ts",
@@ -1948,9 +1952,10 @@
             "expect": {
                 "kind": "lane_local",
                 "must_not_include": [
-                    "php/",
                     "rust/",
-                    "javascript/"
+                    "javascript/",
+                    "python/",
+                    "go/"
                 ],
                 "candidate": {
                     "file": "packages/bench/src/dataset.ts",
@@ -1972,7 +1977,8 @@
                 "must_not_include": [
                     "php/",
                     "rust/",
-                    "javascript/"
+                    "javascript/",
+                    "python/"
                 ],
                 "candidate": {
                     "file": "packages/core/src/support/helpers.ts",
@@ -1994,7 +2000,8 @@
                 "must_not_include": [
                     "php/",
                     "rust/",
-                    "javascript/"
+                    "javascript/",
+                    "python/"
                 ],
                 "candidate": {
                     "file": "packages/core/src/contracts/invoiceCalculator.ts",
