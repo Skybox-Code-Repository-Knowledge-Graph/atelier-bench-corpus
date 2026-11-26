@@ -140,21 +140,28 @@ change (bench lane owns `bench/`; crate lanes keep needles green).
 | `GET /api/exports/{slug}` | One registered report as CSV through the generic handler `export_rows::<CsvExporter>`: the axum route variant of box E.1 |
 
 ## One-lane ids (box D.2)
-
-The 51 ids only this lane carries are sorted under rulings R13, R18 and R19 (54 when the three
-two-lane ids count too, the looser reading). Outcome 1, language-specific (38): a resolver blind to
-the mechanism the note names (receiver type, then member by name; the nearest preceding binding for
-a name) does not land on the keyed answer. 32 of them count toward the floor of 30. The 6 close
-calls do not: `def-cfg-gated` and `refs-cfg-gated-type` (go build tags),
-`resolution-assoc-const-override` and `refs-assoc-const-override` (php class constants),
-`def-async-trait-method` (named by the wave-3 review), and `resolution-trait-path-call` (php's
-`insteadof` picks between two traits' methods of one name natively). Outcome 2 (11, common
-candidates other lanes could carry unchanged): `def-cross-crate-trait`, `def-error-conversion`,
-`def-registry-entry`, `def-serde-tagged-enum`, `def-impl-trait-return`, `def-lifetime-struct`,
-`def-hrtb-bound`, `def-reexport-two-levels`, `def-operator-overload`, `def-closure-field`,
-`def-generic-impl-two-params`. Not sorted: the route variant `def-route-axum-generic-handler`, and
-`parse-negative-unclosed-impl`, the lane's stand-in for the shared `parse-negative-unclosed-class`
-(box B.1). Ids that only repeated a question the lane already asks were retired in wave 3.
+Three counts (ruling R20). **(a)** One-lane ids in `bench/tasks.json`: 51 (54 with the three
+two-lane ids, the looser reading of "lane-only"). **(b)** Of those, ids whose `from` or `expect`
+sits on a construct only Rust or axum has, common candidates and duplicates excluded: 38. The less
+obvious ones: `def-cfg-gated` and `refs-cfg-gated-type` sit on `#[cfg(feature = ...)]` items (go's
+build tags gate whole files), `resolution-assoc-const-override` and `refs-assoc-const-override` on
+a trait const with a default that an impl overrides, `def-async-trait-method` on an `async fn` in a
+trait, and `resolution-trait-path-call` on a `Trait::method(receiver)` call that picks between two
+traits' methods of one name. **(c)** Of those, ids that also pass the R19 trace (a resolver blind to
+the mechanism, receiver type then member by name and the nearest preceding binding for a name,
+misses the keyed answer): 32, the wave-3 review's 23 plus 9 of the 10 added in its bounce, each
+traced in the PR body. The six named above are the close calls the review and this lane name;
+`resolution-trait-path-call` passes the trace, but php's `insteadof` is a native form of the same
+choice. One call of the review's 23 that this lane's own trace disputes: `def-const-generic`, whose
+keyed struct line name lookup finds; only its `implementations` entry needs the mechanism.
+Excluded from (b): 11 common candidates other lanes could carry unchanged (`def-cross-crate-trait`,
+`def-error-conversion`, `def-registry-entry`, `def-serde-tagged-enum`, `def-impl-trait-return`,
+`def-lifetime-struct`, `def-hrtb-bound`, `def-reexport-two-levels`, `def-operator-overload`,
+`def-closure-field`, `def-generic-impl-two-params`), the route variant
+`def-route-axum-generic-handler` (ruling R14) and `parse-negative-unclosed-impl`, the lane's
+stand-in for the shared `parse-negative-unclosed-class` (box B.1). (a) and (b) are above 30; box
+D.2 stays **OPEN**: the 11 common candidates wait for a follow-up lane. Ids that only repeated a
+question the lane already asks were retired in wave 3.
 
 ## Indexer surface (box E)
 
