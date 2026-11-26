@@ -128,6 +128,34 @@ task-target paths must leave `php bench/verify_tasks.php` at **exit 0**. If need
 Broken fixtures under `fixtures/broken-syntax/` are out of scope for "fix until green" — they are
 negative cases on purpose.
 
+## Indexer surfaces (checklist section E)
+
+What the tools under test ship for PHP (ruling R2, `npm view @skylence-ai/skybox@0.9.0 readme`, column "Framework extractors", committed as `bench/TOOL-SURFACE.md`): Laravel routes, Eloquent, Guzzle, Inertia (PHP side), Blade.
+
+### E.1 Route parsers
+
+Laravel routes is the one route parser listed for PHP. It is scored by `def-route-to-handler` (shared: the `[ReportController::class, 'show']` action in `routes/web.php` -> `ReportController::show`) and by the lane-local `def-named-route-api` (`route('api.orders.show')` in `OrderController::storeNote` -> `OrderController::show`, through the `->name()` registration in `routes/api.php`), which also puts a task on `routes/api.php`. Volt (`Volt::route`), Folio (file-based pages) and the Filament panel routes are not in the shipped list, so no route task is owed for them; the lane still scores those frameworks through `lw-fullpage-route`, `int-folio-filename-binding` and `int-volt-functional-prop`.
+
+### E.2 ORM and the other listed extractors
+
+| Listed | Scored by, or why not |
+| --- | --- |
+| Eloquent (ORM) | relations: `rel-hasonethrough`, `rel-hasmanythrough`, `rel-ofmany-builder`, `rel-morphedbymany`, `def-relation-name` (a relation named by a string in `load()`), `def-relation-property` (a relation read as a property through `__get`); local scope: `def-query-scope`; `Attribute` accessor: `def-accessor-attribute`; casts: `def-enum-method` (an enum attribute cast), `lane-local-money` and `refs-money-class` (the custom `Money` cast class); route-model binding by column: `resolution-route-model-binding` |
+| Blade | expressions in templates: `def-blade-model-method`, `def-accessor-attribute`; view name to template: `def-view-name`; components: `def-blade-component-tag` (class component), `def-anonymous-component` (anonymous component); Livewire inside Blade: `lw-embed-tag`, `lw-sfc-computed`, `lw-wireclick-method`, `lw-form-object-magic`; a broken template: `parse-negative-unclosed-blade` |
+| Guzzle | Deliberate gap: the lane's own code makes no outgoing HTTP call (no `Http::` client and no Guzzle client anywhere under `app/`, `routes/`, `config/` or `database/`); `guzzlehttp/guzzle` is in `composer.lock` only as a dependency of `laravel/framework`, `laravel/socialite` and the Slack notification channel, so there is no client call site to score. |
+| Inertia (PHP side) | Deliberate gap: Inertia is not installed (`composer.lock` has no `inertiajs/inertia-laravel` package); the lane's UI is Blade, Livewire and Filament, so there is no Inertia response to score. |
+
+### E.3 Known-hard resolution classes
+
+| Class | Tasks |
+| --- | --- |
+| Dynamic dispatch | `def-proxy-forwarded-method`, `hover-proxy-forwarding` (`__call` forwarding to `Schedule`), `def-facade-static-call` (a facade's `__callStatic` to the manager), `def-relation-property` (Eloquent `__get`), `lw-form-object-magic` (Livewire Form object) |
+| String-keyed lookup | `def-container-string-key`, `def-policy-ability`, `def-middleware-alias`, `def-config-key`, `def-lang-key`, `def-artisan-command-name`, `def-broadcast-channel`, `def-pennant-flag`, `def-named-route-api`, `def-view-name`, `def-relation-name`, `int-pennant-flag`, `refs-string-event-name` |
+| Alias divergence | `def-import-alias`, `def-shadow-alias-billing`, `def-shadow-alias-reporting`, `resolution-shadow-type-billing`, `resolution-shadow-type-reporting`, `lane-local-formatter-billing`, `resolution-same-name-command-vs-job` |
+| Re-export chain | `imp-barrel-no-fanout` (`app/Support/Canonical/Exports/barrel.php` aliases `Ledger` and declares nothing) |
+| Generated code | Blade templates run only as the PHP Blade compiles them to: `def-blade-model-method`, `def-accessor-attribute`, `lw-sfc-computed`, `parse-negative-unclosed-blade` |
+| Conditional compilation | PHP has none (no preprocessor and no build-time flags), so no task |
+
 ## Deliberate differences from the other lanes
 
 The shared set every lane carries is `GET /health`, `GET /report/{reference}`, `GET /api/orders`, `POST /api/orders/{key}/notes`, `GET /api/reports/{slug}`, the export-report and recalculate-inventory commands, and the recalculate-inventory job. This lane carries all of it. These differences are deliberate and stay:
