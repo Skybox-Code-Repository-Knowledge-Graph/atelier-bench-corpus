@@ -134,6 +134,19 @@ exception is `card-rule-contract`, which states `48` with `nominal_count: 24` (s
 matching the typescript, javascript and python lanes; `impl-structural-no-assertion` asks about
 the same method set by type and counts 25. A references `exact_count` counts lines, not uses.
 
+## Integrations (E.2)
+
+The Go extractors the tools under test ship (`bench/TOOL-SURFACE.md`, ruling R2 of issue #223) are
+the route parsers net/http, gorilla/mux, chi, gin, echo and fiber (scored as the route tasks
+above) and the HTTP client resty. No ORM, schema or serialization integration is listed for Go,
+so none is owed here; `def-struct-tag` scores instead what Go's own `encoding/json` reads, the
+string-keyed link from a JSON wire name (`body["reference"]` in a test) to the struct field whose
+`json:"reference"` tag carries it.
+
+- resty: a deliberate gap. The lane makes no outgoing HTTP call, so no resty call site exists for
+  a task to start from, and a client written only to be scored would be a construct with no real
+  use.
+
 ## Language server (E.5)
 
 The language server this lane's stack starts is **gopls v0.24.0**
