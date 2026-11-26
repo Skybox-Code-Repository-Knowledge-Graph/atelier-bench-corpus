@@ -6,12 +6,13 @@
 //! ```
 //!
 //! Exit 0 only when every check passes. Follows `php/bench/verify_tasks.php`
-//! for the needle keys both read, so the two lanes print the same lines; this
+//! for the needle keys both read, so the two lanes print the same lines. This
 //! one also checks `optional_sites` and `repeated_sites` (a whole `lines`
 //! count of 2 or more), the references counting rule in `notes` (`exact_count`
-//! = the `known_sites` entries + the sum of `lines`), and that every
-//! `must_not_include` entry written as text occurs on a line of the lane's
-//! sources.
+//! = the `known_sites` entries + the sum of `lines`, no line counted twice),
+//! and that every `must_not_include` entry written as text or as a `.*`
+//! pattern occurs in the code of the lane's sources, outside comments and
+//! string literals.
 
 mod json;
 
@@ -135,6 +136,8 @@ fn run_tasks(root: &Path) -> ExitCode {
 
         if let Some(problem) = count_problem(task) {
             failures.push(format!("{id}: FAIL {problem}"));
+        } else if let Some(site) = doubled_site(root, task) {
+            failures.push(format!("{id}: FAIL {site} is counted twice"));
         }
 
         let exclusions = text_exclusions(task);
@@ -142,7 +145,7 @@ fn run_tasks(root: &Path) -> ExitCode {
             let lines = lane_lines.get_or_insert_with(|| lane_source_lines(root));
             for text in absent_from(&exclusions, lines.as_slice()) {
                 failures.push(format!(
-                    "{id}: FAIL must_not_include {} (on no line of the lane's sources)",
+                    "{id}: FAIL must_not_include {} (on no code line of the lane's sources)",
                     summarize(text)
                 ));
             }
@@ -326,9 +329,46 @@ fn count_problem(task: &Json) -> Option<String> {
     }
 }
 
-/// The `must_not_include` entries written as text: not a lane prefix
-/// (`php/`), a path, a `path#symbol` or a `.*` pattern. The look-alike such
-/// an entry excludes must exist, so the text has to occur on a lane line.
+/// A line two entries of a references key both count, as `file:line`. The
+/// counting rule counts a line once, so such a key overstates `exact_count`.
+/// A known site counts the first line its needle matches (the needle check
+/// reports one that matches more), a repeated site every line it matches.
+fn doubled_site(root: &Path, task: &Json) -> Option<String> {
+    if task.get("surface").and_then(Json::as_str) != Some("references") {
+        return None;
+    }
+
+    let expect = task.get("expect")?;
+    let mut seen: Vec<(&str, usize)> = Vec::new();
+    for (key, limit) in [("known_sites", 1), ("repeated_sites", usize::MAX)] {
+        let Some(items) = expect.get(key).and_then(Json::as_array) else {
+            continue;
+        };
+        for (file, needle) in items.iter().filter_map(Json::file_needle) {
+            let Ok(content) = std::fs::read_to_string(root.join(file)) else {
+                continue;
+            };
+            let hits = content
+                .lines()
+                .enumerate()
+                .filter(|(_, line)| line.contains(needle))
+                .map(|(index, _)| index + 1);
+            for line in hits.take(limit) {
+                if seen.contains(&(file, line)) {
+                    return Some(format!("{file}:{line}"));
+                }
+                seen.push((file, line));
+            }
+        }
+    }
+
+    None
+}
+
+/// The `must_not_include` entries that name a look-alike by its text: plain
+/// text, or a pattern whose only wildcard is `.*`. A lane prefix (`php/`), a
+/// path and a `path#symbol` are skipped. The look-alike such an entry
+/// excludes must exist, so it has to occur on a code line of the lane.
 fn text_exclusions(task: &Json) -> Vec<&str> {
     let mut texts = Vec::new();
     let Some(entries) = task
@@ -345,7 +385,7 @@ fn text_exclusions(task: &Json) -> Vec<&str> {
         };
         let spaced = text.chars().any(char::is_whitespace);
         let path_like = text.contains('/') || text.contains('#');
-        if text.contains(".*") || (!spaced && path_like) {
+        if !spaced && path_like {
             continue;
         }
         texts.push(text);
@@ -354,17 +394,160 @@ fn text_exclusions(task: &Json) -> Vec<&str> {
     texts
 }
 
-/// The texts that occur on none of `lines`.
+/// Does `entry` occur on `line`? Each `.*` in it stands for any run of
+/// characters, so its literal parts must appear in order; an entry without
+/// one is matched as it is.
+fn occurs_on(entry: &str, line: &str) -> bool {
+    let mut rest = line;
+    for part in entry.split(".*") {
+        match rest.find(part) {
+            Some(at) => rest = &rest[at + part.len()..],
+            None => return false,
+        }
+    }
+
+    true
+}
+
+/// The entries that occur on none of `lines`.
 fn absent_from<'a>(texts: &[&'a str], lines: &[String]) -> Vec<&'a str> {
     texts
         .iter()
         .copied()
-        .filter(|text| !lines.iter().any(|line| line.contains(*text)))
+        .filter(|text| !lines.iter().any(|line| occurs_on(text, line)))
         .collect()
 }
 
-/// Every line of the lane's Rust sources under `crates/` and `fixtures/`;
-/// `bench/` stays out, or `tasks.json` would match its own entries.
+/// The code of each line of a Rust source, in order: `//` comments (doc
+/// comments included) and `/* */` blocks (nested ones too) are dropped, and
+/// string and char literals keep only their quotes, so a look-alike that only
+/// a comment or a string quotes is not one a tool can return. Lifetimes stay
+/// code. Limit: a `'` opens a char literal only as `'x'` or `'\` followed by
+/// an escape; anything else is read as a lifetime or a label.
+fn code_lines(content: &str) -> Vec<String> {
+    let chars: Vec<char> = content.chars().collect();
+    let mut lines = Vec::new();
+    let mut line = String::new();
+    let mut depth = 0_usize;
+    let mut i = 0;
+
+    while let Some(&c) = chars.get(i) {
+        let next = chars.get(i + 1).copied();
+        if c == '\n' {
+            lines.push(std::mem::take(&mut line));
+            i += 1;
+        } else if depth > 0 {
+            match (c, next) {
+                ('/', Some('*')) => {
+                    depth += 1;
+                    i += 2;
+                }
+                ('*', Some('/')) => {
+                    depth -= 1;
+                    i += 2;
+                }
+                _ => i += 1,
+            }
+        } else if c == '/' && next == Some('/') {
+            while chars.get(i).is_some_and(|&c| c != '\n') {
+                i += 1;
+            }
+        } else if c == '/' && next == Some('*') {
+            depth = 1;
+            i += 2;
+        } else if c == '"' {
+            i = skip_string(&chars, i, &mut line, &mut lines);
+        } else if c == '\'' {
+            i = skip_char(&chars, i, &mut line);
+        } else {
+            line.push(c);
+            i += 1;
+        }
+    }
+    lines.push(line);
+
+    lines
+}
+
+/// Skip the string literal whose opening `"` is at `start`, keeping only its
+/// two quotes on `line` (a raw string's opening hashes were already kept as
+/// code); returns the index after the literal.
+fn skip_string(chars: &[char], start: usize, line: &mut String, lines: &mut Vec<String>) -> usize {
+    let mut from = start;
+    while from > 0 && chars[from - 1] == '#' {
+        from -= 1;
+    }
+    let hashes = start - from;
+    let raw = from > 0 && chars[from - 1] == 'r' && !continues_ident(chars, from - 1);
+    let mut i = start + 1;
+    line.push('"');
+
+    while let Some(&c) = chars.get(i) {
+        if c == '\n' {
+            lines.push(std::mem::take(line));
+            i += 1;
+        } else if c == '\\' && !raw {
+            if chars.get(i + 1) == Some(&'\n') {
+                lines.push(std::mem::take(line));
+            }
+            i += 2;
+        } else if c == '"' && (!raw || closes_raw(chars, i, hashes)) {
+            line.push('"');
+
+            return i + 1 + if raw { hashes } else { 0 };
+        } else {
+            i += 1;
+        }
+    }
+
+    i
+}
+
+/// Is the `r` at `at` the tail of an identifier rather than a raw-string
+/// prefix (`r`, `br` or `cr`)?
+fn continues_ident(chars: &[char], at: usize) -> bool {
+    let ident = |i: usize| chars[i].is_alphanumeric() || chars[i] == '_';
+
+    match at {
+        0 => false,
+        1 => ident(0) && !matches!(chars[0], 'b' | 'c'),
+        _ => ident(at - 1) && (!matches!(chars[at - 1], 'b' | 'c') || ident(at - 2)),
+    }
+}
+
+/// Does the `"` at `quote` close a raw string opened with `hashes` hashes?
+fn closes_raw(chars: &[char], quote: usize, hashes: usize) -> bool {
+    chars
+        .get(quote + 1..quote + 1 + hashes)
+        .is_some_and(|run| run.iter().all(|&c| c == '#'))
+}
+
+/// Skip the char literal whose `'` is at `start`, keeping `''` on `line`, or
+/// keep a lifetime's or a label's `'` as code; returns the index after what
+/// was read.
+fn skip_char(chars: &[char], start: usize, line: &mut String) -> usize {
+    if chars.get(start + 1) == Some(&'\\') {
+        let mut i = start + 3;
+        while chars.get(i).is_some_and(|&c| c != '\'') {
+            i += 1;
+        }
+        line.push_str("''");
+
+        return i + 1;
+    }
+    if chars.get(start + 2) == Some(&'\'') {
+        line.push_str("''");
+
+        return start + 3;
+    }
+    line.push('\'');
+
+    start + 1
+}
+
+/// Every code line of the lane's Rust sources under `crates/` and
+/// `fixtures/`, as `code_lines` reads them; `bench/` stays out, or
+/// `tasks.json` would match its own entries.
 fn lane_source_lines(root: &Path) -> Vec<String> {
     let mut lines = Vec::new();
     let mut pending = vec![root.join("crates"), root.join("fixtures")];
@@ -384,7 +567,7 @@ fn lane_source_lines(root: &Path) -> Vec<String> {
                 continue;
             }
             if let Ok(content) = std::fs::read_to_string(&path) {
-                lines.extend(content.lines().map(str::to_string));
+                lines.extend(code_lines(&content));
             }
         }
     }
@@ -514,18 +697,75 @@ mod tests {
     }
 
     #[test]
-    fn a_text_exclusion_must_occur_on_a_lane_line() {
+    fn an_exclusion_must_occur_on_a_code_line_of_the_lane() {
         let lane = vec![
             "impl Shape for Square {".to_string(),
             "pub struct Left;".to_string(),
         ];
         let probe = task(
             r#"{"expect": {"must_not_include": ["impl Shape for Square", "pub struct Lfet",
-                "php/", "src/other.rs", "src/a.rs#Thing", "impl .* for Circle"]}}"#,
+                "php/", "src/other.rs", "src/a.rs#Thing",
+                "impl .* for Square", "impl .* for Circle"]}}"#,
         );
         let texts = text_exclusions(&probe);
 
-        assert_eq!(texts, ["impl Shape for Square", "pub struct Lfet"]);
-        assert_eq!(absent_from(&texts, &lane), ["pub struct Lfet"]);
+        assert_eq!(texts.len(), 4);
+        assert_eq!(texts[2], "impl .* for Square");
+        assert_eq!(
+            absent_from(&texts, &lane),
+            ["pub struct Lfet", "impl .* for Circle"]
+        );
+        assert!(occurs_on("impl .* for Square", "impl Shape for Square {"));
+        assert!(!occurs_on("for .* impl", "impl Shape for Square {"));
+        let source = r##"let a = "impl Shape for Circle"; // impl Shape for Line
+/* impl Shape for Dot /* nested */
+ still a comment */ impl Shape for Square {
+let b = r#"impl Shape for Ring"#; let c = '"'; let d = '\''; let e: &'static str = "\
+impl Shape for Arc";"##;
+
+        assert_eq!(
+            code_lines(source),
+            [
+                "let a = \"\"; ",
+                "",
+                " impl Shape for Square {",
+                "let b = r#\"\"; let c = ''; let d = ''; let e: &'static str = \"",
+                "\";",
+            ]
+        );
+    }
+
+    #[test]
+    fn a_line_two_sites_of_a_references_key_count_is_counted_twice() {
+        let name = format!("bench-verify-{}", std::process::id());
+        let root = std::env::temp_dir().join(name);
+        let file = root.join("a.rs");
+        std::fs::create_dir_all(&root).expect("temp dir");
+        std::fs::write(&file, "a\nb1\nb2\n").expect("fixture");
+        let same_entry = task(
+            r#"{"surface": "references", "expect": {"known_sites": [
+                {"file": "a.rs", "needle": "a"}, {"file": "a.rs", "needle": "a"}]}}"#,
+        );
+        let overlap = task(
+            r#"{"surface": "references", "expect": {
+                "known_sites": [{"file": "a.rs", "needle": "b1"}],
+                "repeated_sites": [{"file": "a.rs", "needle": "b", "lines": 2}]}}"#,
+        );
+        let distinct = task(
+            r#"{"surface": "references", "expect": {
+                "known_sites": [{"file": "a.rs", "needle": "a"}],
+                "repeated_sites": [{"file": "a.rs", "needle": "b", "lines": 2}]}}"#,
+        );
+
+        let found = [
+            doubled_site(&root, &same_entry),
+            doubled_site(&root, &overlap),
+            doubled_site(&root, &distinct),
+        ];
+        let _ = std::fs::remove_dir_all(&root);
+
+        assert_eq!(found[0].as_deref(), Some("a.rs:1"));
+        assert_eq!(found[1].as_deref(), Some("a.rs:2"));
+        assert_eq!(found[2], None);
     }
 }

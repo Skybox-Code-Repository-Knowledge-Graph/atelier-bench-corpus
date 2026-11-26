@@ -1,5 +1,6 @@
 //! JSON API.
 
+use atelier_bench::contracts::exporter_contract::ExporterContract;
 use atelier_bench::contracts::report_contract::ReportRow;
 use atelier_core::concerns::has_reference::HasReference;
 use axum::Json;
@@ -91,4 +92,17 @@ pub async fn show_report(
         .ok_or_else(|| ApiError::validation("slug", format!("unknown report {slug}")))?;
 
     Ok(Json(report.rows(&state.data)))
+}
+
+/// `GET /api/exports/{slug}`: one registered report rendered by the exporter
+/// `E`. The route registration picks `E` with a turbofish, so this one generic
+/// handler can serve a route per exporter.
+pub async fn export_rows<E: ExporterContract + Default>(
+    State(state): State<AppState>,
+    Path(slug): Path<String>,
+) -> Result<String, ApiError> {
+    let report = atelier_bench::report(&slug)
+        .ok_or_else(|| ApiError::validation("slug", format!("unknown report {slug}")))?;
+
+    Ok(E::default().export(&report.rows(&state.data)))
 }

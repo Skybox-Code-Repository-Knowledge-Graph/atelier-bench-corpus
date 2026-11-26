@@ -140,6 +140,7 @@
     "def-async-function": {
       "surface": "definition",
       "lanes": [
+        "rust",
         "typescript",
         "javascript",
         "python"
@@ -149,12 +150,6 @@
       "surface": "definition",
       "lanes": [
         "typescript"
-      ]
-    },
-    "def-async-handler": {
-      "surface": "definition",
-      "lanes": [
-        "rust"
       ]
     },
     "def-async-trait-method": {
@@ -389,12 +384,6 @@
       "surface": "definition",
       "lanes": [
         "javascript"
-      ]
-    },
-    "def-deref-forwarded-method": {
-      "surface": "definition",
-      "lanes": [
-        "rust"
       ]
     },
     "def-descriptor": {
@@ -1127,6 +1116,12 @@
         "php"
       ]
     },
+    "def-route-axum-generic-handler": {
+      "surface": "definition",
+      "lanes": [
+        "rust"
+      ]
+    },
     "def-route-default-mux": {
       "surface": "definition",
       "lanes": [
@@ -1332,12 +1327,6 @@
       "lanes": [
         "typescript",
         "python"
-      ]
-    },
-    "def-through-reexport": {
-      "surface": "definition",
-      "lanes": [
-        "rust"
       ]
     },
     "def-through-require": {
@@ -1639,12 +1628,6 @@
         "php"
       ]
     },
-    "imp-cross-crate-one-item": {
-      "surface": "import-precision",
-      "lanes": [
-        "rust"
-      ]
-    },
     "imp-function-not-const": {
       "surface": "import-precision",
       "lanes": [
@@ -1726,6 +1709,12 @@
         "go"
       ]
     },
+    "impl-extension-trait-primitive": {
+      "surface": "implementation",
+      "lanes": [
+        "rust"
+      ]
+    },
     "impl-intake-contract": {
       "surface": "implementation",
       "lanes": [
@@ -1763,12 +1752,6 @@
         "javascript",
         "python",
         "go"
-      ]
-    },
-    "impl-repository-cross-crate": {
-      "surface": "implementation",
-      "lanes": [
-        "rust"
       ]
     },
     "impl-repository-generic": {
@@ -2030,6 +2013,12 @@
         "python"
       ]
     },
+    "refs-cfg-gated-type": {
+      "surface": "references",
+      "lanes": [
+        "rust"
+      ]
+    },
     "refs-consumed-quantity": {
       "surface": "references",
       "lanes": [
@@ -2083,6 +2072,18 @@
         "typescript"
       ]
     },
+    "refs-macro-generated-method": {
+      "surface": "references",
+      "lanes": [
+        "rust"
+      ]
+    },
+    "refs-macro-rules-export": {
+      "surface": "references",
+      "lanes": [
+        "rust"
+      ]
+    },
     "refs-money-class": {
       "surface": "references",
       "lanes": [
@@ -2092,12 +2093,6 @@
         "javascript",
         "python",
         "go"
-      ]
-    },
-    "refs-money-newtype": {
-      "surface": "references",
-      "lanes": [
-        "rust"
       ]
     },
     "refs-money-type": {
@@ -2112,12 +2107,6 @@
         "go"
       ]
     },
-    "refs-report-contract-registry": {
-      "surface": "references",
-      "lanes": [
-        "rust"
-      ]
-    },
     "refs-report-registry": {
       "surface": "references",
       "lanes": [
@@ -2127,12 +2116,6 @@
         "javascript",
         "python",
         "go"
-      ]
-    },
-    "refs-report-row-from-cents": {
-      "surface": "references",
-      "lanes": [
-        "rust"
       ]
     },
     "refs-row-from-cents": {
@@ -2241,6 +2224,12 @@
         "rust"
       ]
     },
+    "resolution-by-value-receiver-trait": {
+      "surface": "resolution",
+      "lanes": [
+        "rust"
+      ]
+    },
     "resolution-calculate-through-binding": {
       "surface": "resolution",
       "lanes": [
@@ -2251,6 +2240,18 @@
       "surface": "resolution",
       "lanes": [
         "typescript"
+      ]
+    },
+    "resolution-collect-from-iterator": {
+      "surface": "resolution",
+      "lanes": [
+        "rust"
+      ]
+    },
+    "resolution-default-derive": {
+      "surface": "resolution",
+      "lanes": [
+        "rust"
       ]
     },
     "resolution-diamond-mro": {
@@ -2277,10 +2278,28 @@
         "rust"
       ]
     },
+    "resolution-impl-by-type-arg": {
+      "surface": "resolution",
+      "lanes": [
+        "rust"
+      ]
+    },
     "resolution-init-ordering": {
       "surface": "resolution",
       "lanes": [
         "go"
+      ]
+    },
+    "resolution-into-from-attribute": {
+      "surface": "resolution",
+      "lanes": [
+        "rust"
+      ]
+    },
+    "resolution-into-response": {
+      "surface": "resolution",
+      "lanes": [
+        "rust"
       ]
     },
     "resolution-jsdoc-import-alias": {
@@ -2307,6 +2326,12 @@
         "go"
       ]
     },
+    "resolution-parse-from-str": {
+      "surface": "resolution",
+      "lanes": [
+        "rust"
+      ]
+    },
     "resolution-property-setter": {
       "surface": "resolution",
       "lanes": [
@@ -2319,10 +2344,22 @@
         "javascript"
       ]
     },
+    "resolution-question-mark-from": {
+      "surface": "resolution",
+      "lanes": [
+        "rust"
+      ]
+    },
     "resolution-receiver-pointer-vs-value": {
       "surface": "resolution",
       "lanes": [
         "go"
+      ]
+    },
+    "resolution-return-type-impl": {
+      "surface": "resolution",
+      "lanes": [
+        "rust"
       ]
     },
     "resolution-route-model-binding": {
@@ -2399,6 +2436,12 @@
         "go"
       ]
     },
+    "resolution-sum-by-item-type": {
+      "surface": "resolution",
+      "lanes": [
+        "rust"
+      ]
+    },
     "resolution-this-rebinding": {
       "surface": "resolution",
       "lanes": [
@@ -2411,7 +2454,13 @@
         "php"
       ]
     },
-    "resolution-trait-default-body": {
+    "resolution-trait-in-scope-method": {
+      "surface": "resolution",
+      "lanes": [
+        "rust"
+      ]
+    },
+    "resolution-trait-path-call": {
       "surface": "resolution",
       "lanes": [
         "rust"

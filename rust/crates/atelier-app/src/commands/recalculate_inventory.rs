@@ -1,4 +1,4 @@
-//! `recalculate`: run the inventory job against the seeded dataset.
+//! `recalculate-inventory` (or `recalculate`): run the inventory job against the seeded dataset.
 
 use atelier_core::events::{Dispatcher, SendCompletionNotice};
 use std::sync::Arc;
