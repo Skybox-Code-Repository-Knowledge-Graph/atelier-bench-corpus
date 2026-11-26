@@ -35,7 +35,7 @@ async function runMain(args: string[]): Promise<string[]> {
 
 describe("console entrypoint", { timeout: 30_000 }, () => {
     it("prints usage for help and for an unknown command", async () => {
-        const usage = "usage: atelier <serve [port]|seed|report [slug]|recalculate>";
+        const usage = "usage: atelier <serve [port]|seed|export-report [slug]|recalculate-inventory|report [slug]|recalculate>";
 
         expect(await runMain(["help"])).toEqual([usage]);
         expect(await runMain(["nonsense"])).toEqual([usage]);
@@ -48,11 +48,22 @@ describe("console entrypoint", { timeout: 30_000 }, () => {
         expect(lines).toHaveLength(1 + 16);
     });
 
-    it("exports a report as csv", async () => {
+    it("exports a report as csv under the shared name export-report", async () => {
+        // 12025c gross profit of the frozen seed, printed in euros.
+        expect((await runMain(["export-report", "gross-profit"]))[0]).toContain("gross profit,120.25");
+        expect((await runMain(["export-report"]))[0]).toContain("gross profit,120.25");
+    });
+
+    it("exports a report as csv under the lane's own name report", async () => {
         expect((await runMain(["report", "gross-profit"]))[0]).toContain("gross profit,120.25");
     });
 
-    it("recalculates inventory", async () => {
+    it("recalculates inventory under the shared name recalculate-inventory", async () => {
+        // One seeded part has stock at or below the job's default threshold of 1.
+        expect(await runMain(["recalculate-inventory"])).toEqual(["recalculated 1 part(s)"]);
+    });
+
+    it("recalculates inventory under the lane's own name recalculate", async () => {
         expect(await runMain(["recalculate"])).toEqual(["recalculated 1 part(s)"]);
     });
 });

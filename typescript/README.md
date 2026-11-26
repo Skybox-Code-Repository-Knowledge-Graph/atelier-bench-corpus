@@ -86,10 +86,13 @@ npm run typecheck               # tsc --noEmit -p tsconfig.json
 npm test                        # 100 tests in 21 files
 ```
 
-The console entrypoint is `packages/app/src/main.ts` (`serve [port]`, `seed`, `report [slug]`,
-`recalculate`); `packages/app/tests/entrypoint.test.ts` imports it under vitest with each command
-but `serve`, and the request-level tests in `packages/app/tests/http.test.ts` drive the router, so
-no runtime loader is pinned.
+The console entrypoint is `packages/app/src/main.ts` (`serve [port]`, `seed`, `export-report [slug]`,
+`recalculate-inventory`); `packages/app/tests/entrypoint.test.ts` imports it under vitest with each
+command but `serve`, and the request-level tests in `packages/app/tests/http.test.ts` drive the router,
+so no runtime loader is pinned. `export-report` and `recalculate-inventory` are the command names the
+lanes share; the lane-only extras `report [slug]` and `recalculate` are this lane's earlier spellings of
+the same two commands, kept as aliases (`packages/app/src/commands/index.ts`), and both spellings are
+run by `entrypoint.test.ts`.
 
 HTTP surface: `GET /report/:reference` (e.g. `AT-2026-000001`), `GET /api/orders`,
 `GET /api/reports/:slug`, `POST /api/orders/:id/notes`, `GET /health`. The shared set writes the

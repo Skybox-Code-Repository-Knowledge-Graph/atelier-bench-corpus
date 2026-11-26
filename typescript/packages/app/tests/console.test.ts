@@ -12,6 +12,10 @@ describe("console surface", () => {
         expect(parseCommand(["serve", "9000"])).toEqual({ kind: "serve", port: 9000 });
         expect(parseCommand(["seed"])).toEqual({ kind: "seed" });
         expect(parseCommand(["report", "part-usage"])).toEqual({ kind: "report", slug: "part-usage" });
+        expect(parseCommand(["export-report", "part-usage"])).toEqual({ kind: "report", slug: "part-usage" });
+        expect(parseCommand(["export-report"])).toEqual({ kind: "report", slug: "gross-profit" });
+        expect(parseCommand(["recalculate"])).toEqual({ kind: "recalculate" });
+        expect(parseCommand(["recalculate-inventory"])).toEqual({ kind: "recalculate" });
         expect(parseCommand(["nonsense"])).toEqual({ kind: "help" });
     });
 
