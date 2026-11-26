@@ -16,20 +16,20 @@ import path disagrees with its declared name, and a package that shadows a stand
 | Go | `go 1.23.0` with `toolchain go1.23.4` in `go.mod` (CI pins the same; `iter.Seq` and method-prefixed `ServeMux` patterns are used) |
 | Layout | one module, `atelier.example/lane`, packages under `core/`, `atelier/`, `app/`, `cmd/`, `internal/`, `tools/`, and the lane-only route modules under `frameworks/`; run every command from the lane root (`go/`) |
 | Dependencies | the in-tree module `atelier.example/yamlish.v2`, resolved by a `replace` to `./third_party/yamlish.v2`, and the five router frameworks the lane-only route modules under `frameworks/` are written against, each pinned in `go.mod` and locked with its transitive modules in `go.sum`: `github.com/gorilla/mux v1.8.1`, `github.com/go-chi/chi/v5 v5.3.2`, `github.com/gin-gonic/gin v1.10.1`, `github.com/labstack/echo/v4 v4.13.4`, `github.com/gofiber/fiber/v2 v2.52.16` (each at a release whose module graph keeps `go 1.23.0` / `toolchain go1.23.4`: chi v5.4 and echo v4.14 already declare go 1.24). Install step: `go mod download` (fetches exactly the `go.sum` versions from the module proxy; `go build` does the same on first use) |
-| Test runner | `go test ./...` (stdlib `testing`): 81 tests, 47 in `tests/`, in-package tests for the `main` packages (`bench/verify` 11, `bench/lspcheck` 8, `cmd/atelier` 4, `tools/statusgen` 1) and 2 per route module under `frameworks/` (10) |
+| Test runner | `go test ./...` (stdlib `testing`): 88 tests, 54 in `tests/`, in-package tests for the `main` packages (`bench/verify` 11, `bench/lspcheck` 8, `cmd/atelier` 4, `tools/statusgen` 1) and 2 per route module under `frameworks/` (10) |
 | Dataset | `dataset.Seeded()` — fixed rows, **no randomness**; revenue `58325c`, part cost `46300c`, gross profit `12025c` |
 
 ## Packages
 
 | Package | Role | .go files |
 | --- | --- | --- |
-| `core/` | Domain: models, money, iota enums, interfaces, container, events, policy, failures, both `Formatter` halves | 32 |
+| `core/` | Domain: models, money, iota enums, interfaces, container, events, policy, failures, both `Formatter` halves; `workshop/` (a bench ticket: embedding depth, an interface embedded in a struct, a sealed interface, a GOOS file-name pair, error causes, the counter card) and `quoting/` (a second sealed interface spelled like the first) | 41 |
 | `atelier/` | Breadth subsystem: 13 contract interfaces, 8 concerns, 8 embeddable bases and the generic `Registry`, 24 reports, 16 metrics, 8 exporters, 8 notifiers, 8 repositories, 12 services, 48 rules, dataset, registries | 134 |
 | `app/` | Application surface: `net/http` routes, console commands, jobs (callback / channel / goroutine) | 9 |
 | `cmd/atelier/` | Console entry point; blank-imports `internal/audit` for its `init()` | 2 |
 | `internal/` | Internal-only audit sink, `go:embed`ded banner, a build-tag pair | 3 |
 | `tools/statusgen/` | The `go:generate` generator behind `core/support/status_labels_gen.go`, and the test that regenerates it byte for byte | 2 |
-| `tests/` | 47 tests incl. request-level (`net/http/httptest`) | 12 |
+| `tests/` | 54 tests incl. request-level (`net/http/httptest`) | 13 |
 | `bench/` | `tasks.json`, `verify/` (stdlib only) and its test, `lspcheck/` (the language-server check) and its test, and `lsp-check.md`, that check's committed report | 8 |
 | `third_party/yamlish.v2/` | In-tree module whose import path last segment (`yamlish.v2`) differs from its package name (`yamlish`) | 1 |
 | `fixtures/broken-syntax/` | Intentionally invalid Go, **DO NOT FIX** (build-tag gated) | 3 |
@@ -76,6 +76,9 @@ import path disagrees with its declared name, and a package that shadows a stand
 | Parse negatives | `fixtures/broken-syntax/` — two invalid files behind the `brokenfixtures` build tag, **DO NOT FIX** |
 | Shared ids carried under the shared name | `parse-negative-unclosed-class` (Go has no classes; the task asks the same question, a type body left open, of `fixtures/broken-syntax/unclosed_struct.go`; it was the lane-local `parse-negative-unclosed-struct` until ruling R11 of issue #223) |
 | Shared-id mapping: `def-async-function` | Go has no async functions; the nearest question is lane-local `def-channel-job`, a function whose result arrives on the receive-only channel it returns, received with `<-app.RunWithChannel(data)` where the other lanes `await` |
+| Bench-ticket mechanisms | `core/workshop/ticket.go`: `Ticket` embeds `Intake` (which embeds `Labels`) before `Diagnosis`, and `t.Summary()` is Diagnosis's, the shallower (`def-promotion-depth-over-order`, `refs-promotion-depth-loser`); `sender.go`: `AuditedSender` embeds the `Sender` interface (`def-embedded-interface-method`, `impl-through-embedded-interface`); `stage.go` and `core/quoting/quoting.go`: two sealed interfaces with the same spelling (`impl-sealed-unexported-method`); `spool_linux.go` / `spool_darwin.go` (`def-goos-file-suffix`); `causes.go` (`def-anonymous-interface-case`); `card.go` (`def-struct-tag-embedded-flatten`); all driven by `tests/workshop_test.go` |
+| Statement forms that declare | `app/jobs.go` `case result, open := <-results:` (`def-select-receive-ok`), `core/support/pick.go` `switch narrowed := choice.(type) {` (`def-type-switch-guard-binding`, `refs-type-switch-guard`), `core/money/money.go` `Parse`'s second `:=` redeclaring `err` (`def-short-var-redeclaration`, `refs-short-var-redeclaration`) |
+| Toolchain directives | `core/support/status.go` `//go:generate` (`def-generate-directive-package`), `internal/audit/audit.go` `//go:embed` (`def-embed-directive-file`) |
 
 ## Consumption (runner)
 
@@ -84,7 +87,7 @@ cd go
 go mod download                # the pinned framework modules of go.sum (go build fetches them too)
 go build ./...
 go test ./...
-go run ./bench/verify          # 112 tasks, exit 0
+go run ./bench/verify          # 127 tasks, exit 0
 go run ./bench/verify --lint   # build + broken-fixture guard (each file must fail to parse) + go vet + module specifiers + gofmt
 go run ./cmd/atelier seed      # seeded: 3 customer(s), 4 order(s), 4 part(s), revenue 58325c, then one line per metric, the rule tally and one line per service row
 go run ./cmd/atelier export-report cash-flow [json|csv|md|...]   # the shared command; json unless a format is named
@@ -107,7 +110,7 @@ the `go.sum` line that locks its version's `go.mod`), and the package path of ea
 
 ## Ground truth
 
-`bench/tasks.json` carries 112 needle-based tasks. `bench/verify` resolves every `file` + `needle`
+`bench/tasks.json` carries 127 needle-based tasks. `bench/verify` resolves every `file` + `needle`
 pair to exactly one line, checks that each `repeated_sites` needle matches exactly its `lines`
 lines, and prints one `<id>: OK (from <file>:<line> -> <n> expect needles resolved)` line per task;
 its stdout contract is byte-identical to the other five lanes' verifiers, which
@@ -128,20 +131,27 @@ Lane-only extras:
 - The five route modules under `frameworks/` (gorilla/mux, chi, gin, echo, fiber), each serving
   `GET /api/orders` and `GET /api/orders/{id}` over the seeded state; no other lane carries them.
 
-Lane-only ids (carried by this lane alone): 50, sorted under rulings R13, R14, R18 and R19 of
-issue #223 (does the answer line depend on the mechanism the note names; does a mechanism-blind
-resolver land on it):
+Lane-only ids, three numbers (rulings R13, R14, R19 and R20 of issue #223):
+
+- (a) one-lane ids in `bench/tasks.json`: **65**.
+- (b) of those, on a construct only Go has (the from or the answer sits on it; not a duplicate,
+  not a common candidate): **33**, listed below.
+- (c) of those, also passing the R19 trace (a mechanism-blind resolver, receiver type then member
+  by name and the nearest preceding binding, does not land on the answer, and no native sibling
+  construct or earlier task asks the same hook from the same kind of line): **15**, the
+  reviewer's list; none of the 15 ids added in bounce 1 (4 land, 11 are close calls).
 
 | Sort | Ids | Count |
 | --- | --- | --- |
-| Language-specific unaided (the Go construct is on the from or the answer line) | `def-build-tag-gated`, `def-named-result-deferred`, `def-struct-tag`, `resolution-embedded-field-name`, `resolution-arity-parameter-groups`, `resolution-init-ordering`, `parse-negative-bad-receiver`, `imp-internal-package`, `hierarchy-init-outgoing` | 9 |
-| Language-specific by a note sentence (the lines read like a sibling's; the note's "Go-specific:" sentence names the rule) | `def-embedded-promotion-four-levels`, `refs-promoted-method-call`, `card-embedded-promotion`, `hierarchy-promoted-callee`, `resolution-shadowed-stdlib-package`, `def-vendored-package-name` | 6 |
-| Route variant (counted on the definition row only) | `def-route-default-mux`, `def-route-gorilla-mux`, `def-route-chi`, `def-route-gin`, `def-route-echo`, `def-route-fiber` | 6 |
-| Close call (named in its note, not counted) | `def-package-var-block`, `imp-blank-import-side-effect`, `impl-structural-no-assertion`, `refs-func-type-handler`, `resolution-package-path-vs-name` | 5 |
-| Common candidate (a sibling lane could ask it unchanged; not counted) | `def-error-sentinel`, `def-method-value`, `def-method-expression`, `def-generic-two-params`, `def-generic-struct-method`, `def-generic-free-function-extra-param`, `def-generic-registry-instantiation`, `def-type-switch`, `def-anonymous-struct`, `dir-interface-embeds-interface`, `def-shadowing-promoted-method`, `resolution-same-name-package-support`, `def-channel-job`, `def-goroutine-select`, `def-defer-recover`, `def-init-registration`, `def-generic-constraint-union`, `def-embedded-asset`, `resolution-receiver-pointer-vs-value`, `def-func-type-implements-interface`, `def-generated-file`, `hover-generated-marker`, `hover-receive-only-channel`, `hover-struct-tag` | 24 |
+| (b) and (c) | `def-build-tag-gated`, `def-named-result-deferred`, `def-struct-tag`, `resolution-embedded-field-name`, `resolution-arity-parameter-groups`, `resolution-init-ordering`, `parse-negative-bad-receiver`, `imp-internal-package`, `hierarchy-init-outgoing`, `def-embedded-promotion-four-levels`, `refs-promoted-method-call`, `card-embedded-promotion`, `hierarchy-promoted-callee`, `resolution-shadowed-stdlib-package`, `def-vendored-package-name` | 15 |
+| (b), R19 lands | `def-select-receive-ok` (a select case declares), `def-type-switch-guard-binding`, `refs-type-switch-guard` (one guard declaration for every clause), `def-short-var-redeclaration` (`:=` that only assigns `err`) | 4 |
+| (b), R19 close call | `refs-short-var-redeclaration`, `def-promotion-depth-over-order`, `refs-promotion-depth-loser` (the depth rule, not listing order), `def-embedded-interface-method`, `impl-through-embedded-interface` (an interface embedded in a struct), `impl-sealed-unexported-method` (a package-qualified unexported method), `def-goos-file-suffix` (the file name as build constraint), `def-anonymous-interface-case`, `def-struct-tag-embedded-flatten` (encoding/json flattens an embedded struct), `def-generate-directive-package`, `def-embed-directive-file`, `def-package-var-block` (a factored `var ( ... )` block), `imp-blank-import-side-effect` (`_ "path"`), `resolution-package-path-vs-name` (beside `def-vendored-package-name`) | 14 |
+| not (b): a construct a sibling shares | `impl-structural-no-assertion` (typescript structural interfaces), `refs-func-type-handler` (a function type) | 2 |
+| not (b): route variant (R14, definition row only) | `def-route-default-mux`, `def-route-gorilla-mux`, `def-route-chi`, `def-route-gin`, `def-route-echo`, `def-route-fiber` | 6 |
+| not (b): common candidate (a sibling lane could ask it unchanged; for the follow-up lane) | `def-error-sentinel`, `def-method-value`, `def-method-expression`, `def-generic-two-params`, `def-generic-struct-method`, `def-generic-free-function-extra-param`, `def-generic-registry-instantiation`, `def-type-switch`, `def-anonymous-struct`, `dir-interface-embeds-interface`, `def-shadowing-promoted-method`, `resolution-same-name-package-support`, `def-channel-job`, `def-goroutine-select`, `def-defer-recover`, `def-init-registration`, `def-generic-constraint-union`, `def-embedded-asset`, `resolution-receiver-pointer-vs-value`, `def-func-type-implements-interface`, `def-generated-file`, `hover-generated-marker`, `hover-receive-only-channel`, `hover-struct-tag` | 24 |
 
-The 15 language-specific ids are below the floor of 30 that section D of
-`bench/S-PLUS-CHECKLIST.md` asks for, so that row stays open for this lane.
+(b) is 33, above the floor of 30, but 24 common candidates wait for the follow-up lane, so the
+section D lane-only row and box D.2 stay OPEN for this lane.
 
 Lane-specific `kind` strings used in `expect` blocks: `structural`, `shadow_alias`, `same_name`,
 `path_name_divergence`, `receiver`, `arity`, `init_order`, `embedded_field`, `lane_local`, `syntax_error`,
@@ -180,7 +190,7 @@ string-keyed link from a JSON wire name (`body["reference"]` in a test) to the s
 | Alias divergence | `def-shadow-alias-billing`, `def-shadow-alias-reporting`, `def-import-alias`, `resolution-shadow-type-billing`, `resolution-shadow-type-reporting`, `resolution-package-path-vs-name`, `def-vendored-package-name`, `resolution-shadowed-stdlib-package`, `resolution-embedded-field-name` |
 | Re-export chain | absent from the language: a Go package exports only what it declares, an import never re-exports, and the nearest form, a type alias `type X = pkg.Y`, declares a new name in the aliasing package that a definition answers on its own line; so no task is added |
 | Generated code | `def-generated-file`, `hover-generated-marker` |
-| Conditional compilation | `def-build-tag-gated` (the `//go:build darwin` / `!darwin` pair) |
+| Conditional compilation | `def-build-tag-gated` (the `//go:build darwin` / `!darwin` pair), `def-goos-file-suffix` (the `_linux.go` / `_darwin.go` file names, with no build line) |
 
 ## Language server (E.5)
 
@@ -195,7 +205,7 @@ cd go
 go run ./bench/lspcheck -gopls "$(go env GOPATH)/bin/gopls" -out bench/lsp-check.md
 ```
 
-Result: 19 tasks, 19 agree, 0 disagree, 0 no answer. The server is compared with each key and
+Result: 21 tasks, 21 agree, 0 disagree, 0 no answer. The server is compared with each key and
 never used to make one; how each difference reads against the tree:
 
 - `implementation`: where the server returns more locations than the key lists implementors
