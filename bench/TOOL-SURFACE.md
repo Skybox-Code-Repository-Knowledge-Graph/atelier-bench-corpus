@@ -120,19 +120,18 @@ Language server (E.5): typescript-language-server 6.1.0 over `typescript` 5.9.3;
 
 | Extractor | Class | Scored by (task ids) | Deliberate gap (README line) | Not yet |
 | --- | --- | --- | --- | --- |
-| Express | route parser | `def-route-to-handler` | | |
-| NestJS | route parser | | | not yet |
-| Hono | route parser | | | not yet |
-| Fastify | route parser | | | not yet |
-| Remix | route parser | | | not yet |
-| SvelteKit | route parser | | | not yet |
-| Nuxt | route parser | | | not yet |
-| Expo | route parser | | | not yet |
+| Express | route parser | `def-route-to-handler`, `def-route-express-router` | | |
+| NestJS | route parser | `def-route-nestjs` | | |
+| Hono | route parser | `def-route-hono` | | |
+| Fastify | route parser | `def-route-fastify` | | |
+| Remix | route parser | `def-route-remix` | | |
+| SvelteKit | route parser | `def-route-sveltekit` | | |
+| Nuxt | route parser | `def-route-nuxt` | | |
+| Expo | route parser | `def-route-expo` | | |
 
-`javascript/README.md` already has a row "ORM / schema / serialization" that reads "none,
-deliberately"; no JavaScript extractor in the quoted list is in that class, so it fills no row.
+No JavaScript extractor in the quoted list is an ORM, schema or serialization integration or an "other" extractor, so no row of those classes exists; `javascript/README.md` (Integrations) says so. The NestJS row's module applies `Controller`, `Get` and `Param` as calls: Node runs JavaScript without decorator syntax, and NestJS documents decorators in JavaScript only through a Babel build (README, Route parsers). The Expo row is scored under ruling R15: its route module follows the Expo Router `+api` convention with no Expo package installed (README, Route parsers).
 
-Language server (E.5): the TypeScript language service of `typescript` 5.7.3, through `typescript-language-server` 6.1.0; source "the TypeScript language service of the pinned `typescript` 5.7.3 (graded through `typescript-language-server` 6.1.0)"
+Language server (E.5): the TypeScript language service of `typescript` 5.7.3, started by `typescript-language-server` 6.1.0; source "the TypeScript language service of the pinned `typescript` 5.7.3, started by the exact-pinned devDependency `typescript-language-server` 6.1.0"
 
 ### python
 

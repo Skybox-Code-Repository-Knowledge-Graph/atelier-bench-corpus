@@ -5,8 +5,11 @@ import { Money, RepairStatus } from "@atelier/core";
 import { Formatter as MoneyFormatter } from "@atelier/core/billing";
 import { Formatter as StatusFormatter } from "@atelier/core/reporting";
 
+/** @import { Formatter as BillingFormatter } from "@atelier/core/billing" */
+
 describe("shadow pair", () => {
     it("keeps two same-name classes apart behind aliases", () => {
+        /** @type {BillingFormatter} */
         const money = new MoneyFormatter("EUR");
         const status = new StatusFormatter("en");
 
