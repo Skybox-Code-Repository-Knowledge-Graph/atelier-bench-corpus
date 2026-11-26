@@ -39,13 +39,13 @@ const DECIDED = {
     "javascript:def-dynamic-require": { reason: /^kind unresolvable_static: .* anchors each module on a line inside it/ },
     "python:def-dynamic-import-module": { reason: /^kind unresolvable_static: .* anchors each module on a line inside it/ },
     // import-precision, kind visibility_boundary, with contains and one known site (go)
-    "go:imp-internal-package": { reason: /^kind visibility_boundary with `contains` and one known site and no count: gopls v0\.24\.0 answers .* three importers/ },
+    "go:imp-internal-package": { reason: /^kind visibility_boundary with `contains` and one known site and no count: no source says what the question returns, .* three importers/ },
     // import-precision, the shared id imp-glob-import: no single reading
     "rust:imp-glob-import": { reason: /^imp-glob-import has no single reading: .* the rust key lists both public items/ },
     "python:imp-glob-import": { reason: /^imp-glob-import has no single reading: .* the python key lists 2 of the 16 names, each on its `from \.x import X` line in metrics\/__init__\.py/ },
     "typescript:imp-glob-import": { reason: /^imp-glob-import has no single reading: .* the typescript key lists 2 of the 4 exported names by line and the other 2 only by name/ },
-    "javascript:imp-glob-import": { reason: /^imp-glob-import has no single reading: .* the javascript note says "the answer is the declaring module"/ },
-    "php:imp-glob-import": { reason: /^imp-glob-import has no single reading: .* the php statement is a brace group-use that names its eight classes, not a glob/ },
+    "javascript:imp-glob-import": { reason: /^imp-glob-import has no single reading: .* the javascript key lists the four declarations of helpers\.js and counts them .* answers the module \(helpers\.js:3\), which no line of the key names$/ },
+    "php:imp-glob-import": { reason: /^imp-glob-import has no single reading: .* the php key has rust's form .* the shared id, whose python, typescript and go keys read differently$/ },
     // multi-parent with only exact_count and must_include, parents outside the repository (rust)
     "rust:parents-supertrait-send-sync": { reason: /^parents with only `exact_count` and `must_include`: the two parents, Send and Sync, are declared in the Rust core library/ },
     // implementation with a single target under vendor/ (php)
@@ -212,6 +212,14 @@ test("an unlisted task of a refused shape gets the generic reason, not another l
     const unlisted = { ...structuredClone(listed), id: "lane-local-not-in-the-list" };
     assert.match(planTask(unlisted, "go").reason, /^no rule for surface resolution with keys contains, kind$/);
     assert.match(planTask(listed, "python").reason, /^no rule for surface resolution with keys contains, kind$/, "the same task under another lane is not the listed one");
+});
+
+test("a listed task carrying one key more than its refused shape gets the generic reason", () => {
+    const listed = taskOf("go", "lane-local-money");
+    assert.match(planTask(listed, "go").reason, /^kind lane_local with only `contains`/);
+    const extra = structuredClone(listed);
+    extra.expect.exact_count = 1;
+    assert.match(planTask(extra, "go").reason, /^no rule for surface resolution with keys contains, exact_count, kind$/);
 });
 
 // README "Exact rules" and the plan.mjs header say what `exact_count` beside a target means today:

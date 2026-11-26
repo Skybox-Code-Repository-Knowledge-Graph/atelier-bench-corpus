@@ -324,7 +324,7 @@ export const TARGET_COUNT_UNSCORABLE = {
  * Why no rule scores the shared id imp-glob-import (issue #135): the start of each lane's reason.
  * The lanes ask one question, and neither the servers nor the keys settle what its answer is.
  */
-const GLOB_NO_READING = "imp-glob-import has no single reading: asked at the import, every lane's own server answers the module or nothing, never the lines the keys list (rust-analyzer 1.96.0 and pyright 1.1.414 the module's first line, typescript-language-server 6.1.0 its first statement, phpactor 2026.11.22.0 no location), and the keys of this shared id disagree on the answer (go's, kind dot_import, names one member the file uses as its candidate, though the file uses more than one)";
+const GLOB_NO_READING = "imp-glob-import has no single reading: asked at the import, every lane's own server answers the module or nothing, never the lines the keys list (rust-analyzer 1.96.0 and pyright 1.1.414 the module's first line, typescript-language-server 6.1.0 its first statement, phpactor 2026.11.22.0 no location), asked at a name the import binds the servers answer that name's declaration, and the keys of this shared id disagree on the answer (go's, kind dot_import, names one member the file uses as its candidate, though the file uses more than one)";
 
 /**
  * Key shapes no rule scores, with the reason (issue #135): a surface, an optional kind, the exact
@@ -366,7 +366,7 @@ export const UNRULED_SHAPES = [
         kind: "visibility_boundary",
         keys: ["contains", "kind", "known_sites"],
         tasks: new Set(["go:imp-internal-package"]),
-        reason: "kind visibility_boundary with `contains` and one known site and no count: gopls v0.24.0 answers references at the package clause with three importers (cmd/atelier/main.go, tests/events_test.go, tests/structure_test.go) and the key lists one, so the list is not known to be complete and a rule over it could only be recall, which every import line of the lane would pass; `contains` is defined for hover text only",
+        reason: "kind visibility_boundary with `contains` and one known site and no count: no source says what the question returns, known_sites with no target has no stated role (README), and `contains` is defined for hover text only; gopls v0.24.0 answers references at the package clause with three importers (cmd/atelier/main.go, tests/events_test.go, tests/structure_test.go) and the key lists one, so a rule over the list could only be recall",
     },
     {
         surface: "import-precision",
@@ -394,14 +394,14 @@ export const UNRULED_SHAPES = [
         kind: "glob",
         keys: ["exact_count", "kind", "known_sites", "must_not_include"],
         tasks: new Set(["javascript:imp-glob-import"]),
-        reason: `${GLOB_NO_READING}; the javascript note says "the answer is the declaring module", while its known_sites and exact_count list the module's four declarations`,
+        reason: `${GLOB_NO_READING}; the javascript key lists the four declarations of helpers.js and counts them (the lane notes: glob is \`export *\`, whose exact_count is the number of names crossing the re-export), and typescript-language-server 6.1.0 asked at from.symbol answers the module (helpers.js:3), which no line of the key names`,
     },
     {
         surface: "import-precision",
         kind: "group_use",
         keys: ["exact_count", "kind", "known_sites", "must_not_include"],
         tasks: new Set(["php:imp-glob-import"]),
-        reason: `${GLOB_NO_READING}; the php statement is a brace group-use that names its eight classes, not a glob, and phpactor 2026.11.22.0 answers no location at the namespace asked (Repositories)`,
+        reason: `${GLOB_NO_READING}; the php key has rust's form (the eight declarations the brace group-use binds, exact_count 8; the lane's own note calls the group-use its equivalent of the glob question), and phpactor 2026.11.22.0 answers no location at the namespace asked (Repositories); what splits is the shared id, whose python, typescript and go keys read differently`,
     },
     {
         surface: "multi-parent",
@@ -413,7 +413,7 @@ export const UNRULED_SHAPES = [
         surface: "implementation",
         keys: ["file", "needle"],
         tasks: new Set(["php:vendor-shouldbroadcast-contract"]),
-        reason: "an implementation question whose key names the contract, not an implementor: phpactor 2026.11.22.0 answers implementation at ShouldBroadcast with six implementors (RepairCompleted and five under vendor/) and definition with the key's interface, so the key holds the definition answer on the implementation surface (the lane's other vendor targets are definition tasks); the target is under vendor/, which the scoring checkout does not install, so any rule would score it UNRESOLVED there",
+        reason: "an implementation question whose key names the contract, not an implementor: phpactor 2026.11.22.0 answers implementation at ShouldBroadcast with six implementors (RepairCompleted and five under vendor/) and definition with the key's interface, so the key holds the definition answer on the implementation surface (the lane's other vendor targets are definition tasks)",
     },
 ];
 
