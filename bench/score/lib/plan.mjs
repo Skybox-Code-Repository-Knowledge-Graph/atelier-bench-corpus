@@ -409,6 +409,12 @@ export const UNRULED_SHAPES = [
         tasks: new Set(["rust:parents-supertrait-send-sync"]),
         reason: "parents with only `exact_count` and `must_include`: the two parents, Send and Sync, are declared in the Rust core library, outside the repository, so no lane-relative location names them (rust-analyzer 1.96.0 answers core/src/marker.rs in the toolchain, and has no type hierarchy); the key names them only in `must_include`, which no rule scores, and judging a parents answer by name is a mode no source states for this surface",
     },
+    {
+        surface: "implementation",
+        keys: ["file", "needle"],
+        tasks: new Set(["php:vendor-shouldbroadcast-contract"]),
+        reason: "an implementation question whose key names the contract, not an implementor: phpactor 2026.11.22.0 answers implementation at ShouldBroadcast with six implementors (RepairCompleted and five under vendor/) and definition with the key's interface, so the key holds the definition answer on the implementation surface (the lane's other vendor targets are definition tasks); the target is under vendor/, which the scoring checkout does not install, so any rule would score it UNRESOLVED there",
+    },
 ];
 
 /**
