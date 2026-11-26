@@ -1,7 +1,8 @@
 /**
- * Two type-level member lookups on RepairOrder. An indexed access type names a property by a string
- * literal; the Partial mapped type re-declares every property as optional. Both resolve to the
- * property the order declares (on its base class in models/repairOrder.ts), not to a new member.
+ * Three member lookups on RepairOrder through TypeScript's type system. An indexed access type names
+ * a property by a string literal; the Partial mapped type re-declares every property as optional; a
+ * string argument is checked against a `keyof` constraint. Each resolves to the property the order
+ * declares (on its base class in models/repairOrder.ts), not to a new member.
  */
 
 import type { RepairOrder } from "@atelier/core";
@@ -20,4 +21,14 @@ export function statusOf(order: RepairOrder): OrderStatusField {
 /** True when the patch sets a priority. */
 export function changesPriority(patch: OrderPatch): boolean {
     return patch.priority !== undefined;
+}
+
+/** Read any order property by name; the key is checked against keyof RepairOrder. */
+export function fieldOf<K extends keyof RepairOrder>(order: RepairOrder, key: K): RepairOrder[K] {
+    return order[key];
+}
+
+/** The device an order is for, read by its property name. */
+export function deviceOf(order: RepairOrder): number {
+    return fieldOf(order, "deviceId");
 }

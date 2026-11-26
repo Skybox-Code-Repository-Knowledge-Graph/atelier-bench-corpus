@@ -22,3 +22,9 @@ export function assertRush(order: RepairOrder): asserts order is RushOrder {
         throw new TypeError("expected a rush-priority order");
     }
 }
+
+/** The priority of an order the caller requires to be rush; after assertRush it can only be Rush. */
+export function rushTier(order: RepairOrder): Priority.Rush {
+    assertRush(order);
+    return order.priority;
+}

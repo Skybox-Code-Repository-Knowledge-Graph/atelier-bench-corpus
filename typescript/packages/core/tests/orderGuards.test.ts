@@ -6,7 +6,7 @@ import { describe, expect, expectTypeOf, it } from "vitest";
 
 import { Priority, RepairOrder } from "@atelier/core";
 
-import { assertRush, isRush, type RushOrder } from "../src/support/orderGuards";
+import { assertRush, isRush, rushTier, type RushOrder } from "../src/support/orderGuards";
 
 describe("order guards", () => {
     it("narrows only a rush-priority order", () => {
@@ -27,5 +27,13 @@ describe("order guards", () => {
         order.priority = Priority.Rush;
         assertRush(order);
         expectTypeOf(order.priority).toEqualTypeOf<Priority.Rush>();
+    });
+
+    it("reads the narrowed member after the assertion", () => {
+        const order = RepairOrder.seed(11, 1, 1);
+
+        expect(() => rushTier(order)).toThrow(/rush-priority/);
+        order.priority = Priority.Rush;
+        expect(rushTier(order)).toBe(Priority.Rush);
     });
 });

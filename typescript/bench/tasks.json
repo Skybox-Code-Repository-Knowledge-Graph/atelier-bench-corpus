@@ -3257,6 +3257,57 @@
                     "needle": "readonly bin: string;"
                 }
             }
+        },
+        {
+            "id": "resolution-assertion-narrowing",
+            "surface": "resolution",
+            "note": "After `assertRush(order)` the parameter is a RushOrder, so `order.priority` resolves to the member the RushOrder interface re-declares, not to the RepairOrder property; without the assertion it would resolve to the class's priority in models/repairOrder.ts. TypeScript-only mechanism: an assertion signature (`asserts order is RushOrder`) narrowing the argument for the rest of the caller's body.",
+            "from": {
+                "file": "packages/core/src/support/orderGuards.ts",
+                "needle": "return order.priority;",
+                "symbol": "priority"
+            },
+            "expect": {
+                "resolution": "order narrowed to RushOrder by the assertion function",
+                "candidate": {
+                    "file": "packages/core/src/support/orderGuards.ts",
+                    "needle": "priority: Priority.Rush;"
+                }
+            }
+        },
+        {
+            "id": "resolution-utility-return-type",
+            "surface": "resolution",
+            "note": "LoadedOrder is `Awaited<ReturnType<typeof loadDraftOrder>>`: the type is computed from the async function's inferred return type, so `loaded.laborMinutes` resolves to the property the order's base class declares although no annotation names RepairOrder. TypeScript-only mechanism: the built-in conditional utility types ReturnType and Awaited applied to a type query.",
+            "from": {
+                "file": "packages/bench/src/support/loadedOrder.ts",
+                "needle": "return loaded.laborMinutes;",
+                "symbol": "laborMinutes"
+            },
+            "expect": {
+                "resolution": "Awaited<ReturnType<typeof loadDraftOrder>> is RepairOrder",
+                "candidate": {
+                    "file": "packages/core/src/models/repairOrder.ts",
+                    "needle": "laborMinutes = 0;"
+                }
+            }
+        },
+        {
+            "id": "resolution-keyof-argument",
+            "surface": "resolution",
+            "note": "The string \"deviceId\" is an argument whose parameter type is `K extends keyof RepairOrder`, so it names the order's deviceId property (a constructor parameter property of its base class). TypeScript-only mechanism: a string literal argument checked against a keyof constraint.",
+            "from": {
+                "file": "packages/bench/src/support/orderFields.ts",
+                "needle": "return fieldOf(order, \"deviceId\");",
+                "symbol": "deviceId"
+            },
+            "expect": {
+                "resolution": "\"deviceId\" is a key of RepairOrder",
+                "candidate": {
+                    "file": "packages/core/src/models/repairOrder.ts",
+                    "needle": "readonly deviceId: number,"
+                }
+            }
         }
     ]
 }

@@ -9,7 +9,8 @@ import { describe, expect, expectTypeOf, it } from "vitest";
 import { Priority, RepairOrder, RepairStatus } from "@atelier/core";
 
 import { type ElementOf } from "../src/support/elementOf";
-import { changesPriority, type OrderPatch, type OrderStatusField, statusOf } from "../src/support/orderFields";
+import { bookedMinutes, loadDraftOrder } from "../src/support/loadedOrder";
+import { changesPriority, deviceOf, type OrderPatch, type OrderStatusField, statusOf } from "../src/support/orderFields";
 import { labelText, type PartLabel } from "../src/support/partLabel";
 import { applyRules, FlatSurcharge, NoAdjustment, PercentDiscount, type PriceRule } from "../src/support/priceRule";
 import { describeShelf, type Shelf } from "../src/support/thisParameter";
@@ -38,7 +39,16 @@ describe("TypeScript-only constructs are used", () => {
         expectTypeOf<OrderStatusField>().toEqualTypeOf<RepairStatus>();
         expect(changesPriority(patch)).toBe(true);
         expect(changesPriority({})).toBe(false);
+        expect(deviceOf(RepairOrder.seed(9, 1, 3))).toBe(3);
     });
+
+    it("reads a member of a type that ReturnType and Awaited compute", async () => {
+        const loaded = await loadDraftOrder(10);
+        loaded.laborMinutes = 45;
+
+        expect(bookedMinutes(loaded)).toBe(45);
+    });
+
 
     it("reads a nested namespace member through an import alias", () => {
         expect(benchHours(5)).toBe(40);
