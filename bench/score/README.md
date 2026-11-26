@@ -226,6 +226,25 @@ not changed to fit a rule.
 | `definition`, keys `implementations` only | rust `def-cfg-gated` | Asked from the `Cargo.toml` line `extra-rules = []` (no symbol). No `kind` and no count say what the question returns or that the list is complete, and the list holds `ExperimentalRule` (behind `feature = "extra-rules"`) and `AlwaysTrueRule` (behind `#[cfg(test)]`, which the feature does not gate). rust-analyzer 1.96.0 answers no definition in `Cargo.toml` |
 | `definition`, kind `unresolvable_static`, keys `exact_count`, `kind`, `known_sites` | javascript `def-dynamic-require`, python `def-dynamic-import-module` | The answer is each candidate module (lane notes: "the honest result is every candidate module, and exact_count counts them"), and the key anchors each module on a line inside it, its `SLUG` line, so no line of the key names the module. A module answer lands on the file's first line (typescript-language-server 6.1.0 and pyright 1.1.414 on a static specifier; at the runtime-built specifier both return nothing). Matching by file is a mode the key does not state: the same class as the targets anchored inside their declaration |
 | `import-precision`, kind `visibility_boundary`, keys `contains`, `kind`, `known_sites` | go `imp-internal-package` | Asked from the package clause of `internal/audit` (note: "only atelier.example/lane/... may import this package"). The key lists one importer, `tests/structure_test.go`, and no count; gopls v0.24.0, asked for references at the package clause, answers three importers (`cmd/atelier/main.go` and `tests/events_test.go` blank-import it). The list is not known to be complete, so a rule over it could only be recall, and every import line of the lane would pass it. `contains` (`internal`) is defined for hover text only |
+| `import-precision`, kind `glob`, keys `exact_count`, `kind`, `known_sites` | rust `imp-glob-import` | The shared id `imp-glob-import` has no single reading (below). The rust key lists both public items of `report_contract` (`ReportRow`, `ReportContract`, `exact_count` 2), so its list is complete; only what the answer is stays open |
+
+**`imp-glob-import`.** Five lanes ask it with a key no rule names (rust, python, typescript and
+javascript kind `glob`, php kind `group_use`), and the lane notes say a shared id asks the same
+question in every lane. No reading of the answer is settled:
+
+- Asked at the import (`from.symbol`, the module), every lane's own server answers the module, not
+  the declarations the keys list inside it: rust-analyzer 1.96.0 `report_contract.rs:1`, pyright
+  1.1.414 `metrics/__init__.py:1`, typescript-language-server 6.1.0 the module's first statement
+  (`reportContract.ts:3`, `helpers.js:3`), phpactor 2026.11.22.0 no location at `Repositories`.
+  Lane A refused `unresolvable_static` for the same reason: a module answer lands on its first line.
+- The javascript note reads both ways: "the answer is the declaring module", while its
+  `known_sites` and `exact_count` list the module's four declarations.
+- The keys disagree with each other: go's key for the same id (kind `dot_import`, scored by
+  `import-precision/candidate` and not changed here) answers the one member the file uses; python's
+  anchors its names on their re-export lines in `metrics/__init__.py`, typescript's lists half its
+  names by line and half by name only, and php's statement is a brace group naming its classes.
+
+So the five stay `UNSCORABLE`, each with its lane's own detail, and the question is open on issue #135.
 
 ### String-keyed definitions
 

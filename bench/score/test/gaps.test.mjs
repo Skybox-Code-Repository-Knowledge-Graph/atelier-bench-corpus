@@ -39,6 +39,8 @@ const DECIDED = {
     "python:def-dynamic-import-module": { reason: /^kind unresolvable_static: .* anchors each module on a line inside it/ },
     // import-precision, kind visibility_boundary, with contains and one known site (go)
     "go:imp-internal-package": { reason: /^kind visibility_boundary with `contains` and one known site and no count: gopls v0\.24\.0 answers .* three importers/ },
+    // import-precision, the shared id imp-glob-import: no single reading
+    "rust:imp-glob-import": { reason: /^imp-glob-import has no single reading: .* the rust key lists both public items/ },
 };
 
 const tasksOf = new Map();

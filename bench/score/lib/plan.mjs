@@ -321,6 +321,12 @@ export const TARGET_COUNT_UNSCORABLE = {
 };
 
 /**
+ * Why no rule scores the shared id imp-glob-import (issue #135): the start of each lane's reason.
+ * The lanes ask one question, and neither the servers nor the keys settle what its answer is.
+ */
+const GLOB_NO_READING = "imp-glob-import has no single reading: asked at the import, every lane's own server answers the module (rust-analyzer 1.96.0 and pyright 1.1.414 on its first line, typescript-language-server 6.1.0 on its first statement, phpactor 2026.11.22.0 nothing), while the keys list declarations inside it, and the keys of this shared id disagree on the answer (go's, kind dot_import, answers the one member the file uses)";
+
+/**
  * Key shapes no rule scores, with the reason (issue #135): a surface, an optional kind, the exact
  * set of expect keys, and the tasks (`lane:id`) the reason is true of. Matched only after every rule
  * has passed a task by, so an entry can never take a task a rule scores; a task of the same shape
@@ -361,6 +367,13 @@ export const UNRULED_SHAPES = [
         keys: ["contains", "kind", "known_sites"],
         tasks: new Set(["go:imp-internal-package"]),
         reason: "kind visibility_boundary with `contains` and one known site and no count: gopls v0.24.0 answers references at the package clause with three importers (cmd/atelier/main.go, tests/events_test.go, tests/structure_test.go) and the key lists one, so the list is not known to be complete and a rule over it could only be recall, which every import line of the lane would pass; `contains` is defined for hover text only",
+    },
+    {
+        surface: "import-precision",
+        kind: "glob",
+        keys: ["exact_count", "kind", "known_sites"],
+        tasks: new Set(["rust:imp-glob-import"]),
+        reason: `${GLOB_NO_READING}; the rust key lists both public items of the module, so its list is complete and only the reading is open`,
     },
 ];
 
