@@ -18,8 +18,10 @@ type RuleLike interface {
 	Evaluate(data *dataset.Dataset) bool
 }
 
-// SatisfiedBy counts the rules that hold on a dataset.
-func SatisfiedBy(rules []RuleContract, data *dataset.Dataset) int {
+// SatisfiedBy counts the rules that hold on a dataset. Its constraint is the
+// STRUCTURAL RuleLike, so any slice of rule-shaped values qualifies with no
+// conversion: the registry's []RuleContract and adhoc's []AdHocRule alike.
+func SatisfiedBy[R RuleLike](rules []R, data *dataset.Dataset) int {
 	satisfied := 0
 	for _, rule := range rules {
 		if rule.Evaluate(data) {

@@ -33,7 +33,9 @@ func main() {
 func dispatch(state *app.State, command string, args []string) ([]string, error) {
 	switch command {
 	case "seed":
-		return append([]string{app.Summarize(state)}, append(app.MetricLines(state), app.RuleLine(state))...), nil
+		lines := append([]string{app.Summarize(state)}, app.MetricLines(state)...)
+		lines = append(lines, app.RuleLine(state))
+		return append(lines, app.ServiceLines(state)...), nil
 	case "report":
 		if len(args) < 1 {
 			return nil, fmt.Errorf("report needs a slug")

@@ -3,8 +3,10 @@ package app
 import (
 	"fmt"
 
+	"atelier.example/lane/atelier/contracts"
 	"atelier.example/lane/atelier/metrics"
 	"atelier.example/lane/atelier/rules"
+	"atelier.example/lane/atelier/services"
 )
 
 // Summarize is the seed line every lane prints.
@@ -28,7 +30,20 @@ func MetricLines(state *State) []string {
 	return lines
 }
 
-// RuleLine renders the satisfied-rule tally.
+// RuleLine renders the satisfied-rule tally. The count goes through
+// contracts.SatisfiedBy, whose constraint is the structural RuleLike.
 func RuleLine(state *State) string {
-	return fmt.Sprintf("rules: %d/%d satisfied", len(rules.Satisfied(state.Data)), rules.Count())
+	return fmt.Sprintf("rules: %d/%d satisfied", contracts.SatisfiedBy(rules.All(), state.Data), rules.Count())
+}
+
+// ServiceLines runs every service over the seed, in name order, one line per
+// result row.
+func ServiceLines(state *State) []string {
+	lines := []string{}
+	for _, service := range services.All() {
+		for _, row := range service.Run(state.Data) {
+			lines = append(lines, fmt.Sprintf("service %s: %s = %.2f", service.Name(), row.Label, row.Value))
+		}
+	}
+	return lines
 }
