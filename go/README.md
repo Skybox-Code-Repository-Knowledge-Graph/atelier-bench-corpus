@@ -16,7 +16,7 @@ import path disagrees with its declared name, and a package that shadows a stand
 | Go | `go 1.23.0` with `toolchain go1.23.4` in `go.mod` (CI pins the same; `iter.Seq` and method-prefixed `ServeMux` patterns are used) |
 | Layout | one module, `atelier.example/lane`, packages under `core/`, `atelier/`, `app/`, `cmd/`, `internal/`, `tools/`; run every command from the lane root (`go/`) |
 | Dependencies | none over the network: the only `require` is the in-tree module `atelier.example/yamlish.v2`, resolved by a `replace` to `./third_party/yamlish.v2`, so there is no `go.sum` |
-| Test runner | `go test ./...` (stdlib `testing`): 59 tests, 47 in `tests/` plus in-package tests for the three `main` packages (`bench/verify` 9, `cmd/atelier` 2, `tools/statusgen` 1) |
+| Test runner | `go test ./...` (stdlib `testing`): 60 tests, 47 in `tests/` plus in-package tests for the three `main` packages (`bench/verify` 9, `cmd/atelier` 3, `tools/statusgen` 1) |
 | Dataset | `dataset.Seeded()` — fixed rows, **no randomness**; revenue `58325c`, part cost `46300c`, gross profit `12025c` |
 
 ## Packages
@@ -79,6 +79,8 @@ go test ./...
 go run ./bench/verify          # 108 tasks, exit 0
 go run ./bench/verify --lint   # build + broken-fixture guard (each file must fail to parse) + go vet + module specifiers + gofmt
 go run ./cmd/atelier seed      # seeded: 3 customer(s), 4 order(s), 4 part(s), revenue 58325c, then one line per metric, the rule tally and one line per service row
+go run ./cmd/atelier export-report cash-flow [json|csv|md|...]   # the shared command; json unless a format is named
+go run ./cmd/atelier recalculate-inventory                       # the shared command: recalculate-inventory: 2 part(s) below reorder level, ...
 ```
 
 No network access is needed: the single dependency is replaced by an in-tree path, so `go build`
@@ -100,8 +102,14 @@ its stdout contract is byte-identical to the other five lanes' verifiers, which
 `node bench/check-matrix.mjs` proves against `bench/conformance/expected.txt` and
 `bench/verify`'s own test checks in this lane's CI job.
 
-Lane-only extra: `go run ./cmd/atelier seed` prints 16 `service <name>: <label> = <value>` rows (one or
-more per service, 12 services) after the rule tally; no other lane's seed command prints service rows.
+Lane-only extras:
+
+- `go run ./cmd/atelier seed` prints 16 `service <name>: <label> = <value>` rows (one or more per
+  service, 12 services) after the rule tally; no other lane's seed command prints service rows.
+- Console verbs beside the shared `export-report` and `recalculate-inventory`: `report <slug>`
+  (the same operation as `export-report`, always markdown), `recalculate` (the same operation as
+  `recalculate-inventory`; both verbs share one case clause in `cmd/atelier/main.go`) and `export`
+  (the run manifest through `atelier.example/yamlish.v2`).
 
 Lane-specific `kind` strings used in `expect` blocks: `structural`, `shadow_alias`, `same_name`,
 `path_name_divergence`, `receiver`, `arity`, `init_order`, `lane_local`, `syntax_error`,
