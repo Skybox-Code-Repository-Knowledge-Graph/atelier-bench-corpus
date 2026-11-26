@@ -52,12 +52,15 @@ func TestFourLevelPromotionOnAReport(t *testing.T) {
 	if report.Slug() != "cash-flow" || report.Title() != "Cash flow" {
 		t.Errorf("slug/title = %s/%s", report.Slug(), report.Title())
 	}
-	cacheable, ok := report.(interface{ CacheKey() string })
+	// CacheKey is called on the CONCRETE type, so the call resolves statically
+	// through all four hops: CashFlowReport -> CompositeReport -> PeriodicReport
+	// -> BaseReport -> concerns.HasCache, none of them written on this line.
+	cashFlow, ok := report.(*reports.CashFlowReport)
 	if !ok {
-		t.Fatal("cash-flow should satisfy the cacheable shape")
+		t.Fatal("cash-flow should be registered as a *reports.CashFlowReport")
 	}
-	if cacheable.CacheKey() != "cash-flow:cache" {
-		t.Errorf("cache key = %s", cacheable.CacheKey())
+	if cashFlow.CacheKey() != "cash-flow:cache" {
+		t.Errorf("cache key = %s", cashFlow.CacheKey())
 	}
 }
 

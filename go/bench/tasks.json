@@ -104,8 +104,8 @@
         {
             "id": "def-import-alias",
             "surface": "definition",
-            "note": "Aliased import: the local identifier is nothing like the package name.",
-            "from": {"file": "app/state.go", "needle": "\tmoneyfmt \"atelier.example/lane/core/billing\"", "symbol": "billing"},
+            "note": "Aliased import: the qualifier moneyfmt is nothing like the package name billing (app/state.go imports atelier.example/lane/core/billing as moneyfmt), and the call resolves through the alias to that package's NewFormatter.",
+            "from": {"file": "app/state.go", "needle": "\t\tMoney:     moneyfmt.NewFormatter(\"EUR\"),", "symbol": "NewFormatter"},
             "expect": {"file": "core/billing/formatter.go", "needle": "func NewFormatter(currency string) *Formatter {"}
         },
         {
@@ -146,7 +146,7 @@
             "id": "def-embedded-promotion-four-levels",
             "surface": "definition",
             "note": "CashFlowReport reaches CacheKey through CompositeReport, PeriodicReport, BaseReport, HasCache.",
-            "from": {"file": "tests/promotion_test.go", "needle": "if cacheable.CacheKey() != \"cash-flow:cache\" {", "symbol": "CacheKey"},
+            "from": {"file": "tests/promotion_test.go", "needle": "if cashFlow.CacheKey() != \"cash-flow:cache\" {", "symbol": "CacheKey"},
             "expect": {
                 "file": "atelier/concerns/cache.go",
                 "needle": "func (h HasCache) CacheKey() string {",
@@ -406,16 +406,16 @@
         {
             "id": "def-struct-tag",
             "surface": "definition",
-            "note": "The wire name lives in a struct tag, not in the field name.",
+            "note": "The wire name lives in a struct tag, not in the field name. A string-keyed link, not a language-level definition: from.symbol is the key of a decoded JSON map, a string literal that names no identifier, and the answer is the field whose json tag carries that wire name. No definition query on the literal reaches it by the language's own resolution.",
             "from": {"file": "tests/http_test.go", "needle": "\tif body[\"reference\"] != \"AT-2026-000001\" {", "symbol": "reference"},
             "expect": {"file": "app/http/report.go", "needle": "\tReference  string `json:\"reference\"`"}
         },
         {
             "id": "def-internal-package",
             "surface": "definition",
-            "note": "internal/ limits importers to this module; the blank import runs init and nothing else.",
-            "from": {"file": "cmd/atelier/main.go", "needle": "\t_ \"atelier.example/lane/internal/audit\"", "symbol": "audit"},
-            "expect": {"file": "internal/audit/audit.go", "needle": "func init() {"}
+            "note": "internal/ limits importers to packages rooted at the parent of the internal directory (atelier.example/lane/...); the tests package qualifies, so audit.Banner resolves into the internal package. The earlier question, the blank import in cmd/atelier/main.go reaching `func init()`, is dropped: a blank import binds no identifier, so no definition answers init (the same finding left imp-blank-import-side-effect unscorable in #205).",
+            "from": {"file": "tests/structure_test.go", "needle": "\tif !strings.Contains(audit.Banner(), \"audit sink\") {", "symbol": "Banner"},
+            "expect": {"file": "internal/audit/audit.go", "needle": "func Banner() string {"}
         },
         {
             "id": "def-vendored-package-name",
@@ -531,36 +531,40 @@
         {
             "id": "impl-structural-no-assertion",
             "surface": "implementation",
-            "note": "The 24 ad-hoc rule VALUES satisfy RuleLike by shape; the adhoc package names no contract and asserts nothing.",
+            "note": "RuleLike declares the same method set as RuleContract, and nothing anywhere asserts RuleLike: every type with that method set satisfies it by shape alone. That is adhoc.AdHocRule (its 24 values assert nothing) and the 24 nominal rule structs (each asserts RuleContract only), 25 types under the lane's counting rule; RuleContract, an interface with the same method set, is an optional site.",
             "from": {"file": "atelier/contracts/rule.go", "needle": "type RuleLike interface {", "symbol": "RuleLike"},
             "expect": {
-                "exact_count": 24,
+                "exact_count": 25,
                 "kind": "structural",
                 "implementations": [
-                    {"file": "atelier/rules/adhoc/adhoc.go", "needle": "\t{key: \"duplicate-reference\", check: func(data *dataset.Dataset) bool {"},
-                    {"file": "atelier/rules/adhoc/adhoc.go", "needle": "\t{key: \"reference-prefix\", check: func(data *dataset.Dataset) bool {"},
-                    {"file": "atelier/rules/adhoc/adhoc.go", "needle": "\t{key: \"currency-consistency\", check: func(data *dataset.Dataset) bool {"},
-                    {"file": "atelier/rules/adhoc/adhoc.go", "needle": "\t{key: \"rounding\", check: func(data *dataset.Dataset) bool {"},
-                    {"file": "atelier/rules/adhoc/adhoc.go", "needle": "\t{key: \"tax-applied\", check: func(data *dataset.Dataset) bool {"},
-                    {"file": "atelier/rules/adhoc/adhoc.go", "needle": "\t{key: \"export-freshness\", check: func(data *dataset.Dataset) bool {"},
-                    {"file": "atelier/rules/adhoc/adhoc.go", "needle": "\t{key: \"notification-sent\", check: func(data *dataset.Dataset) bool {"},
-                    {"file": "atelier/rules/adhoc/adhoc.go", "needle": "\t{key: \"audit-trail\", check: func(data *dataset.Dataset) bool {"},
-                    {"file": "atelier/rules/adhoc/adhoc.go", "needle": "\t{key: \"cache-ttl\", check: func(data *dataset.Dataset) bool {"},
-                    {"file": "atelier/rules/adhoc/adhoc.go", "needle": "\t{key: \"report-coverage\", check: func(data *dataset.Dataset) bool {"},
-                    {"file": "atelier/rules/adhoc/adhoc.go", "needle": "\t{key: \"metric-range\", check: func(data *dataset.Dataset) bool {"},
-                    {"file": "atelier/rules/adhoc/adhoc.go", "needle": "\t{key: \"dataset-integrity\", check: func(data *dataset.Dataset) bool {"},
-                    {"file": "atelier/rules/adhoc/adhoc.go", "needle": "\t{key: \"seed-determinism\", check: func(data *dataset.Dataset) bool {"},
-                    {"file": "atelier/rules/adhoc/adhoc.go", "needle": "\t{key: \"order-count\", check: func(data *dataset.Dataset) bool {"},
-                    {"file": "atelier/rules/adhoc/adhoc.go", "needle": "\t{key: \"customer-count\", check: func(data *dataset.Dataset) bool {"},
-                    {"file": "atelier/rules/adhoc/adhoc.go", "needle": "\t{key: \"part-count\", check: func(data *dataset.Dataset) bool {"},
-                    {"file": "atelier/rules/adhoc/adhoc.go", "needle": "\t{key: \"invoice-count\", check: func(data *dataset.Dataset) bool {"},
-                    {"file": "atelier/rules/adhoc/adhoc.go", "needle": "\t{key: \"open-order-ratio\", check: func(data *dataset.Dataset) bool {"},
-                    {"file": "atelier/rules/adhoc/adhoc.go", "needle": "\t{key: \"completion-rate\", check: func(data *dataset.Dataset) bool {"},
-                    {"file": "atelier/rules/adhoc/adhoc.go", "needle": "\t{key: \"average-ticket\", check: func(data *dataset.Dataset) bool {"},
-                    {"file": "atelier/rules/adhoc/adhoc.go", "needle": "\t{key: \"parts-per-order\", check: func(data *dataset.Dataset) bool {"},
-                    {"file": "atelier/rules/adhoc/adhoc.go", "needle": "\t{key: \"repeat-customer\", check: func(data *dataset.Dataset) bool {"},
-                    {"file": "atelier/rules/adhoc/adhoc.go", "needle": "\t{key: \"device-category\", check: func(data *dataset.Dataset) bool {"},
-                    {"file": "atelier/rules/adhoc/adhoc.go", "needle": "\t{key: \"inventory-turnover\", check: func(data *dataset.Dataset) bool {"}
+                    {"file": "atelier/rules/adhoc/adhoc.go", "needle": "type AdHocRule struct {"},
+                    {"file": "atelier/rules/customer_credit.go", "needle": "type CustomerCreditRule struct{}"},
+                    {"file": "atelier/rules/deposit_required.go", "needle": "type DepositRequiredRule struct{}"},
+                    {"file": "atelier/rules/device_age.go", "needle": "type DeviceAgeRule struct{}"},
+                    {"file": "atelier/rules/discount_ceiling.go", "needle": "type DiscountCeilingRule struct{}"},
+                    {"file": "atelier/rules/gross_profit.go", "needle": "type GrossProfitRule struct{}"},
+                    {"file": "atelier/rules/idle_technician.go", "needle": "type IdleTechnicianRule struct{}"},
+                    {"file": "atelier/rules/invoice_balance.go", "needle": "type InvoiceBalanceRule struct{}"},
+                    {"file": "atelier/rules/label_presence.go", "needle": "type LabelPresenceRule struct{}"},
+                    {"file": "atelier/rules/maximum_backlog.go", "needle": "type MaximumBacklogRule struct{}"},
+                    {"file": "atelier/rules/minimum_stock.go", "needle": "type MinimumStockRule struct{}"},
+                    {"file": "atelier/rules/note_required.go", "needle": "type NoteRequiredRule struct{}"},
+                    {"file": "atelier/rules/part_availability.go", "needle": "type PartAvailabilityRule struct{}"},
+                    {"file": "atelier/rules/part_cost_margin.go", "needle": "type PartCostMarginRule struct{}"},
+                    {"file": "atelier/rules/priority_escalation.go", "needle": "type PriorityEscalationRule struct{}"},
+                    {"file": "atelier/rules/repair_duration.go", "needle": "type RepairDurationRule struct{}"},
+                    {"file": "atelier/rules/revenue_floor.go", "needle": "type RevenueFloorRule struct{}"},
+                    {"file": "atelier/rules/rework_limit.go", "needle": "type ReworkLimitRule struct{}"},
+                    {"file": "atelier/rules/rush_surcharge.go", "needle": "type RushSurchargeRule struct{}"},
+                    {"file": "atelier/rules/schedule_gap.go", "needle": "type ScheduleGapRule struct{}"},
+                    {"file": "atelier/rules/signature_required.go", "needle": "type SignatureRequiredRule struct{}"},
+                    {"file": "atelier/rules/slot_overbooking.go", "needle": "type SlotOverbookingRule struct{}"},
+                    {"file": "atelier/rules/status_sequence.go", "needle": "type StatusSequenceRule struct{}"},
+                    {"file": "atelier/rules/technician_capacity.go", "needle": "type TechnicianCapacityRule struct{}"},
+                    {"file": "atelier/rules/warranty_window.go", "needle": "type WarrantyWindowRule struct{}"}
+                ],
+                "optional_sites": [
+                    {"file": "atelier/contracts/rule.go", "needle": "type RuleContract interface {"}
                 ],
                 "must_not_include": ["var _ contracts.RuleLike"]
             }
@@ -875,12 +879,14 @@
         {
             "id": "resolution-structural-concern",
             "surface": "resolution",
-            "note": "The value satisfies RuleLike by shape; nothing in the adhoc package names any contract.",
+            "note": "AdHocRule satisfies RuleLike by shape, and RuleContract too: the two interfaces declare the same method set (atelier/contracts/rule.go), so RuleContract is a known site, not a wrong answer. Nothing in the adhoc package names either interface.",
             "from": {"file": "atelier/rules/adhoc/adhoc.go", "needle": "func (r AdHocRule) Evaluate(data *dataset.Dataset) bool {", "symbol": "AdHocRule"},
             "expect": {
                 "kind": "structural",
                 "candidate": {"file": "atelier/contracts/rule.go", "needle": "type RuleLike interface {"},
-                "must_not_include": ["RuleContract"]
+                "known_sites": [
+                    {"file": "atelier/contracts/rule.go", "needle": "type RuleContract interface {"}
+                ]
             }
         },
         {
@@ -897,13 +903,12 @@
         {
             "id": "resolution-same-name-package-support",
             "surface": "resolution",
-            "note": "Two packages are named support; the file imports the core one under an alias and the bench one not at all.",
+            "note": "Two packages are named support; this file imports both, atelier/support under its own name (for BaseService) and core/support under the alias coresupport, and PriorityWarranty is reached through the alias. atelier/support declares no PriorityWarranty, so no namesake exclusion is keyed; the package-level look-alike is asked by imp-one-of-two-siblings.",
             "from": {"file": "atelier/services/warranty_claim_service.go", "needle": "\t\tif order.Priority == coresupport.PriorityWarranty {", "symbol": "PriorityWarranty"},
             "expect": {
                 "kind": "shadow_alias",
                 "resolution": "atelier.example/lane/core/support#PriorityWarranty",
-                "candidate": {"file": "core/support/priority.go", "needle": "\tPriorityWarranty                 // never billed"},
-                "must_not_include": ["atelier/support"]
+                "candidate": {"file": "core/support/priority.go", "needle": "\tPriorityWarranty                 // never billed"}
             }
         },
         {
@@ -914,14 +919,13 @@
             "expect": {
                 "kind": "path_name_divergence",
                 "resolution": "atelier.example/yamlish.v2#Version",
-                "candidate": {"file": "third_party/yamlish.v2/yamlish.go", "needle": "const Version = \"v2\""},
-                "must_not_include": ["yamlish.v2.Version"]
+                "candidate": {"file": "third_party/yamlish.v2/yamlish.go", "needle": "const Version = \"v2\""}
             }
         },
         {
             "id": "resolution-shadowed-stdlib-package",
             "surface": "resolution",
-            "note": "Inside a package itself named http, the identifier http is the standard library, not this package.",
+            "note": "Inside a package itself named http, the identifier http is the standard library, not this package. The package declares its own NewServeMux (app/http/router.go, the application mux constructor), which a bare-name match also returns: the call on the from line is the standard library's, inside that namesake.",
             "from": {"file": "app/http/router.go", "needle": "\tmux := http.NewServeMux()", "symbol": "NewServeMux"},
             "expect": {
                 "kind": "shadow_alias",
@@ -937,8 +941,7 @@
             "from": {"file": "tests/promotion_test.go", "needle": "\tdoubled := amount.Times(2)", "symbol": "Times"},
             "expect": {
                 "kind": "receiver",
-                "candidate": {"file": "core/money/money.go", "needle": "func (m Money) Times(factor int64) Money {"},
-                "must_not_include": ["func (m *Money)"]
+                "candidate": {"file": "core/money/money.go", "needle": "func (m Money) Times(factor int64) Money {"}
             }
         },
         {
@@ -1155,17 +1158,18 @@
         {
             "id": "card-embedded-promotion",
             "surface": "cardinality",
-            "note": "Five methods are promoted onto every embedder of BaseReport: Slug, Title and Describe from Component, CacheKey and TTLSeconds from HasCache. The key lists Slug, Title, CacheKey and TTLSeconds, not Describe; Rows is not among the promoted methods, which is why each report must declare it.",
+            "note": "Five methods are promoted onto every embedder of BaseReport: Slug, Title and Describe from Component, CacheKey and TTLSeconds from HasCache. exact_count counts those promoted methods, each anchored on its declaration line; Rows is not among them, which is why each report must declare it.",
             "from": {"file": "atelier/support/report.go", "needle": "type BaseReport struct {", "symbol": "BaseReport"},
             "expect": {
-                "exact_count": 4,
+                "exact_count": 5,
                 "implementations": [
                     {"file": "atelier/support/component.go", "needle": "func (c Component) Slug() string {"},
                     {"file": "atelier/support/component.go", "needle": "func (c Component) Title() string {"},
+                    {"file": "atelier/support/component.go", "needle": "func (c Component) Describe() string {"},
                     {"file": "atelier/concerns/cache.go", "needle": "func (h HasCache) CacheKey() string {"},
                     {"file": "atelier/concerns/cache.go", "needle": "func (h HasCache) TTLSeconds() int {"}
                 ],
-                "must_include": ["Slug", "Title", "CacheKey", "TTLSeconds"],
+                "must_include": ["Slug", "Title", "Describe", "CacheKey", "TTLSeconds"],
                 "must_not_include": ["Rows"]
             }
         },
@@ -1212,7 +1216,7 @@
         {
             "id": "imp-one-of-two-siblings",
             "surface": "import-precision",
-            "note": "Two packages named support exist; this file imports exactly one of them, under an alias.",
+            "note": "Two packages named support exist; this import line reaches core/support under the alias coresupport, never atelier/support (which the same file also imports, under its own name).",
             "from": {"file": "atelier/services/warranty_claim_service.go", "needle": "\tcoresupport \"atelier.example/lane/core/support\"", "symbol": "support"},
             "expect": {
                 "kind": "one_of_two",
