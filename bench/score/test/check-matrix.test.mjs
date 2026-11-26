@@ -153,17 +153,31 @@ test("a new task id fails the default check until a write; both writes then agre
     }
 });
 
-// The static guards: each mutation below breaks exactly what one guard protects, on its own temp
+// The static guards. Each mutation below breaks exactly what one guard protects, on its own temp
 // copy, and `--write --matrix-only` (static guards only) must refuse it by name, spawn nothing and
-// write nothing. The unchanged copy passing (tests above) is the green half.
+// write nothing; the unchanged copy passing (tests above) is the green half. Targets are picked by
+// predicate from the lane files at run time, never by a row or id a lane may legitimately change.
 function editJson(root, path, change) {
     const file = join(root, path);
     const value = JSON.parse(readFileSync(file, "utf8"));
     change(value);
     writeFileSync(file, `${JSON.stringify(value, null, 4)}\n`);
 }
+const readJson = (root, path) => JSON.parse(readFileSync(join(root, path), "utf8"));
 const taskIn = (manifest, id) => manifest.tasks.find((task) => task.id === id);
 const appendText = (root, path, text) => writeFileSync(join(root, path), readFileSync(join(root, path), "utf8") + text);
+const escape = (text) => text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
+/** The first task, in lane order, that `predicate` accepts: [lane, task]. */
+function findTask(predicate) {
+    for (const lane of LANES) {
+        const task = readJson(REPO_ROOT, `${lane}/bench/tasks.json`).tasks.find((candidate) => predicate(candidate, lane));
+        if (task) {
+            return [lane, task];
+        }
+    }
+    assert.fail("no task in any lane fits the mutation");
+}
 
 function assertRefused(t, mutate, pattern) {
     const root = scratch(t);
@@ -178,8 +192,8 @@ function assertRefused(t, mutate, pattern) {
 test("guard: task ids are lower-case kebab-case, so a case or whitespace variant is refused", (t) => {
     for (const id of ["Def-Free-Function", "def-free-function ", "def_free_function", "def--free-function"]) {
         assertRefused(t, (root) => editJson(root, "go/bench/tasks.json", (manifest) => {
-            manifest.tasks.push({ ...structuredClone(taskIn(manifest, "def-free-function")), id });
-        }), new RegExp(`^matrix: FAIL go/bench/tasks\\.json: task id ${JSON.stringify(JSON.stringify(id)).slice(1, -1)} is not lower-case kebab-case`));
+            manifest.tasks.push({ ...structuredClone(manifest.tasks[0]), id });
+        }), new RegExp(`^matrix: FAIL go/bench/tasks\\.json: task id ${escape(JSON.stringify(id))} is not lower-case kebab-case`));
     }
 });
 
@@ -193,31 +207,51 @@ test("guard: bench/conformance/bench/tasks.json is checked for repeated and malf
 });
 
 test("guard: every hover task states a contains string, a lane-local one included", (t) => {
-    assertRefused(t, (root) => editJson(root, "go/bench/tasks.json", (manifest) => {
-        delete taskIn(manifest, "hover-generated-marker").expect.contains;
-    }), /^matrix: FAIL go:hover-generated-marker: hover task states no contains string/);
-    assertRefused(t, (root) => editJson(root, "php/bench/tasks.json", (manifest) => {
-        taskIn(manifest, "hover-global-function").expect.contains = "";
-    }), /^matrix: FAIL php:hover-global-function: hover task states no contains string/);
+    const lanesOf = new Map(Object.entries(JSON.parse(COMMITTED_MATRIX).canonical).map(([id, entry]) => [id, entry.lanes]));
+    for (const shared of [false, true]) {
+        const [lane, task] = findTask((candidate) => candidate.surface === "hover" && (lanesOf.get(candidate.id).length > 1) === shared);
+        for (const value of [undefined, ""]) {
+            assertRefused(t, (root) => editJson(root, `${lane}/bench/tasks.json`, (manifest) => {
+                const target = taskIn(manifest, task.id).expect;
+                if (value === undefined) {
+                    delete target.contains;
+                } else {
+                    target.contains = value;
+                }
+            }), new RegExp(`^matrix: FAIL ${lane}:${escape(task.id)}: hover task states no contains string`));
+        }
+    }
 });
 
 test("guard: a list task's count equals its implementations list", (t) => {
-    assertRefused(t, (root) => editJson(root, "javascript/bench/tasks.json", (manifest) => {
-        taskIn(manifest, "card-report-contract").expect.exact_count += 1;
-    }), /^matrix: FAIL javascript:card-report-contract: the key states a count of 25 but lists 24 implementations/);
-    assertRefused(t, (root) => editJson(root, "go/bench/tasks.json", (manifest) => {
-        taskIn(manifest, "impl-structural-no-assertion").expect.implementations.pop();
-    }), /^matrix: FAIL go:impl-structural-no-assertion: the key states a count of 25 but lists 24 implementations/);
-    assertRefused(t, (root) => editJson(root, "python/bench/tasks.json", (manifest) => {
-        taskIn(manifest, "parents-class-one-plus-two").expect.extends_count = 2;
-    }), /^matrix: FAIL python:parents-class-one-plus-two: exact_count 3 disagrees with extends_count \+ implements_count 4/);
+    const listed = (surface) => (task) => task.surface === surface && Number.isInteger(task.expect?.exact_count) && Array.isArray(task.expect?.implementations);
+    const [cardLane, card] = findTask(listed("cardinality"));
+    const size = card.expect.implementations.length;
+    assertRefused(t, (root) => editJson(root, `${cardLane}/bench/tasks.json`, (manifest) => {
+        taskIn(manifest, card.id).expect.exact_count += 1;
+    }), new RegExp(`^matrix: FAIL ${cardLane}:${escape(card.id)}: the key states a count of ${size + 1} but lists ${size} implementations`));
+
+    const [implLane, impl] = findTask(listed("implementation"));
+    const implSize = impl.expect.implementations.length;
+    assertRefused(t, (root) => editJson(root, `${implLane}/bench/tasks.json`, (manifest) => {
+        taskIn(manifest, impl.id).expect.implementations.pop();
+    }), new RegExp(`^matrix: FAIL ${implLane}:${escape(impl.id)}: the key states a count of ${implSize} but lists ${implSize - 1} implementations`));
+
+    const [splitLane, split] = findTask((task) => listed("multi-parent")(task) && Number.isInteger(task.expect.extends_count) && Number.isInteger(task.expect.implements_count));
+    const { exact_count: exact, extends_count: extendsCount, implements_count: implementsCount } = split.expect;
+    assertRefused(t, (root) => editJson(root, `${splitLane}/bench/tasks.json`, (manifest) => {
+        taskIn(manifest, split.id).expect.extends_count += 1;
+    }), new RegExp(`^matrix: FAIL ${splitLane}:${escape(split.id)}: exact_count ${exact} disagrees with extends_count \\+ implements_count ${extendsCount + implementsCount + 1}`));
 });
 
 test("guard: .gitattributes keeps crlf.txt -text, as the last line that sets text for it", (t) => {
+    const normalised = /^matrix: FAIL \.gitattributes lets git normalise the line endings of bench\/conformance\/src\/crlf\.txt/;
     assertRefused(t, (root) => {
         const path = join(root, ".gitattributes");
-        writeFileSync(path, readFileSync(path, "utf8").replace("bench/conformance/src/crlf.txt -text\n", ""));
-    }, /^matrix: FAIL \.gitattributes lets git normalise the line endings of bench\/conformance\/src\/crlf\.txt \(the last line setting text for it is "\* text=auto eol=lf"\)/);
+        const text = readFileSync(path, "utf8");
+        assert.ok(text.includes("bench/conformance/src/crlf.txt -text\n"));
+        writeFileSync(path, text.replace("bench/conformance/src/crlf.txt -text\n", ""));
+    }, normalised);
     assertRefused(t, (root) => appendText(root, ".gitattributes", "*.txt text\n"), /\(the last line setting text for it is "\*\.txt text"\)/);
     assertRefused(t, (root) => appendText(root, ".gitattributes", "bench/** text eol=lf\n"), /\(the last line setting text for it is "bench\/\*\* text eol=lf"\)/);
     assertRefused(t, (root) => rmSync(join(root, ".gitattributes")), /^matrix: FAIL \.gitattributes is missing/);
@@ -229,62 +263,126 @@ test("guard: .gitattributes keeps crlf.txt -text, as the last line that sets tex
     assert.equal(result.status, 0, result.stderr);
 });
 
-/** Replace the one occurrence of `from` in a copied file (asserted, so a mutation never silently misses). */
-function replaceOnce(root, path, from, to) {
-    const file = join(root, path);
-    const text = readFileSync(file, "utf8");
-    assert.equal(text.split(from).length, 2, `${path}: ${JSON.stringify(from)} is not there exactly once`);
-    writeFileSync(file, text.replace(from, to));
-}
+// bench/TOOL-SURFACE.md. The committed file passes (the tests above run on it); these tests write
+// their own file of the same shape into the copy, built from the copy's lane files, so that the
+// lanes filling in their rows never turns them red.
 const SURFACE = "bench/TOOL-SURFACE.md";
+const LANGUAGE = { php: "PHP", rust: "Rust", typescript: "TypeScript", javascript: "JavaScript", python: "Python", go: "Go" };
+const QUOTED = {
+    Rust: ["Axum routes", "Reqwest HTTP"],
+    PHP: ["Laravel routes", "Eloquent", "Guzzle", "Inertia (PHP side)", "Blade"],
+    TypeScript: ["Express", "NestJS"],
+    JavaScript: ["Express", "NestJS"],
+    Python: ["FastAPI", "Flask", "SQLAlchemy"],
+    Go: ["net/http", "chi", "resty"],
+};
+const installedVersion = (root) => /inputs\.skybox_version \|\| '(\d+\.\d+\.\d+)'/.exec(readFileSync(join(root, ".github", "workflows", "score-tools.yml"), "utf8"))[1];
+const readmeTitle = (root, lane) => readFileSync(join(root, lane, "README.md"), "utf8").split("\n").find((line) => line.startsWith("# ")).slice(2);
 
-test("guard: bench/TOOL-SURFACE.md names only task ids its lanes have", (t) => {
-    // The table names an id the lane does not have...
-    assertRefused(t, (root) => replaceOnce(root, SURFACE, "`def-route-to-handler`, `def-async-handler`", "`def-route-to-handler`, `def-async-handlr`"),
-        /^matrix: FAIL bench\/TOOL-SURFACE\.md: rust Axum routes: task def-async-handlr is not in rust\/bench\/tasks\.json/);
-    // ...or the lane renames an id the table names.
-    assertRefused(t, (root) => editJson(root, "go/bench/tasks.json", (manifest) => {
-        taskIn(manifest, "def-route-default-mux").id = "def-route-default-mux-renamed";
-    }), /^matrix: FAIL bench\/TOOL-SURFACE\.md: go net\/http: task def-route-default-mux is not in go\/bench\/tasks\.json/);
-    assertRefused(t, (root) => replaceOnce(root, SURFACE, "| Flask | route parser | `def-route-to-handler` |", "| Flask | route parser | def-route-to-handler |"),
-        /python Flask: Scored by must be backticked task ids/);
-});
+/**
+ * Write a TOOL-SURFACE.md into the copy: each lane's first extractor is a route parser scored by the
+ * lane's first task, the others are `other` and not yet, and no server is pinned. `edit` changes
+ * the model before it is written.
+ */
+function writeSurface(root, edit = () => {}) {
+    const model = {
+        versionLine: `Pinned version: \`${installedVersion(root)}\``,
+        quoted: structuredClone(QUOTED),
+        lanes: Object.fromEntries(LANES.map((lane) => {
+            const first = readJson(root, `${lane}/bench/tasks.json`).tasks[0].id;
+            const rows = QUOTED[LANGUAGE[lane]].map((extractor, index) => index === 0
+                ? { extractor, klass: "route parser", scoredBy: `\`${first}\``, gap: "", notYet: "" }
+                : { extractor, klass: "other", scoredBy: "", gap: "", notYet: "not yet" });
+            return [lane, { rows, servers: ["not pinned yet"] }];
+        })),
+    };
+    edit(model);
+    const out = ["# Tool surface (test copy)", "", "## Scope (ruling R1)", "", model.versionLine, "", "## Framework extractors (ruling R2)", "",
+        "```", "npm view (not run by this test)", "```", "",
+        "| Language | Framework extractors |", "| --- | --- |",
+        ...Object.entries(model.quoted).map(([language, list]) => `| ${language} | ${list.join(", ")} |`), "", "## Per-lane coverage", ""];
+    for (const [lane, { rows, servers }] of Object.entries(model.lanes)) {
+        out.push(`### ${lane}`, "", "| Extractor | Class | Scored by (task ids) | Deliberate gap (README line) | Not yet |", "| --- | --- | --- | --- | --- |");
+        out.push(...rows.map((row) => `| ${row.extractor} | ${row.klass} | ${row.scoredBy} | ${row.gap} | ${row.notYet} |`), "");
+        out.push(...servers.map((server) => `Language server (E.5): ${server}`), "");
+    }
+    writeFileSync(join(root, SURFACE), `${out.join("\n")}\n`);
+}
 
-test("guard: bench/TOOL-SURFACE.md rows follow the quoted list, one state each", (t) => {
-    assertRefused(t, (root) => replaceOnce(root, SURFACE, "| Reqwest HTTP | other | | | not yet |\n", ""),
-        /^matrix: FAIL bench\/TOOL-SURFACE\.md: rust rows are \[Axum routes\], but the quoted Rust list is \[Axum routes, Reqwest HTTP\]/);
-    assertRefused(t, (root) => replaceOnce(root, SURFACE, "| Go | net/http, gorilla/mux,", "| Go | net/http, gorilla/mux, httprouter,"),
-        /go rows are \[.*\], but the quoted Go list is \[net\/http, gorilla\/mux, httprouter,/);
-    assertRefused(t, (root) => replaceOnce(root, SURFACE, "| Axum routes | route parser | `def-route-to-handler`, `def-async-handler` | | |", "| Axum routes | route parser | `def-route-to-handler`, `def-async-handler` | | not yet |"),
-        /rust Axum routes: fill exactly one of Scored by, Deliberate gap and Not yet \(2 filled\)/);
-    assertRefused(t, (root) => replaceOnce(root, SURFACE, "| Django | route parser | | | not yet |", "| Django | route parser | | | |"),
-        /python Django: fill exactly one of Scored by, Deliberate gap and Not yet \(0 filled\)/);
-    assertRefused(t, (root) => replaceOnce(root, SURFACE, "| Reqwest HTTP | other |", "| Reqwest HTTP | client |"),
-        /rust Reqwest HTTP: class "client" is not one of/);
-});
-
-test("guard: a deliberate gap quotes the lane README, and a route parser cannot be one", (t) => {
-    const gap = (cell) => (root) => replaceOnce(root, SURFACE, "| SQLAlchemy | ORM, schema or serialization | | | not yet |", `| SQLAlchemy | ORM, schema or serialization | | ${cell} | |`);
-    assertRefused(t, gap('"no SQLAlchemy here, on purpose"'), /python SQLAlchemy: Deliberate gap must quote, in double quotes, a line of python\/README\.md/);
-    assertRefused(t, gap("Flask==3.1.1"), /python SQLAlchemy: Deliberate gap must quote/);
-    assertRefused(t, (root) => replaceOnce(root, SURFACE, "| FastAPI | route parser | | | not yet |", '| FastAPI | route parser | | "Flask==3.1.1" | |'),
-        /python FastAPI: a route parser cannot be a deliberate gap/);
-
-    // A quote that is in the lane README is accepted (the mechanism; the words are the lane's to write).
+test("guard: TOOL-SURFACE.md of the checked shape passes, with a quoted gap and a quoted server pin", (t) => {
     const root = scratch(t);
-    gap('"`Flask==3.1.1`"')(root);
+    writeSurface(root, (model) => {
+        const python = model.lanes.python.rows.find((row) => row.extractor === "SQLAlchemy");
+        Object.assign(python, { gap: `"${readmeTitle(root, "python")}"`, notYet: "" });
+        model.lanes.go.servers = [`gopls v0.0.0; source "${readmeTitle(root, "go")}"`];
+    });
     const result = run(root, "--write", "--matrix-only");
     assert.equal(result.status, 0, result.stderr);
 });
 
-test("guard: bench/TOOL-SURFACE.md pins the version score-tools.yml installs, and quotes each pinned server", (t) => {
-    assertRefused(t, (root) => replaceOnce(root, ".github/workflows/score-tools.yml", "inputs.skybox_version || '0.9.0'", "inputs.skybox_version || '0.9.1'"),
-        /^matrix: FAIL bench\/TOOL-SURFACE\.md: pinned version 0\.9\.0 is not the one \.github\/workflows\/score-tools\.yml installs \(0\.9\.1\)/);
-    assertRefused(t, (root) => replaceOnce(root, SURFACE, "Pinned version: `0.9.0`", "Pinned version: 0.9.0"),
-        /pinned version \(no "Pinned version:" line\)/);
-    assertRefused(t, (root) => replaceOnce(root, SURFACE, "| go | not pinned yet | | |", "| go | gopls | v0.24.0 | |"),
-        /go language server: quote, in double quotes, the go\/README\.md line that pins it/);
-    assertRefused(t, (root) => replaceOnce(root, "javascript/README.md", "(graded through `typescript-language-server` 6.1.0)", "(graded through `typescript-language-server` 6.2.0)"),
-        /javascript language server: quote, in double quotes, the javascript\/README\.md line that pins it/);
+test("guard: TOOL-SURFACE.md names only task ids its lanes have", (t) => {
+    assertRefused(t, (root) => writeSurface(root, (model) => {
+        model.lanes.rust.rows[0].scoredBy += ", `no-such-task-id`";
+    }), /^matrix: FAIL bench\/TOOL-SURFACE\.md: rust Axum routes: task no-such-task-id is not in rust\/bench\/tasks\.json/);
+    // The lane renames an id the table names: the rot this guard exists for.
+    const goFirst = readJson(REPO_ROOT, "go/bench/tasks.json").tasks[0].id;
+    assertRefused(t, (root) => {
+        writeSurface(root);
+        editJson(root, "go/bench/tasks.json", (manifest) => {
+            manifest.tasks[0].id = `${goFirst}-renamed`;
+        });
+    }, new RegExp(`^matrix: FAIL bench/TOOL-SURFACE\\.md: go net/http: task ${escape(goFirst)} is not in go/bench/tasks\\.json`));
+    assertRefused(t, (root) => writeSurface(root, (model) => {
+        model.lanes.python.rows[0].scoredBy = model.lanes.python.rows[0].scoredBy.replaceAll("`", "");
+    }), /python FastAPI: Scored by must be backticked task ids/);
+});
+
+test("guard: TOOL-SURFACE.md rows follow the quoted list, one state each", (t) => {
+    assertRefused(t, (root) => writeSurface(root, (model) => model.lanes.rust.rows.pop()),
+        /^matrix: FAIL bench\/TOOL-SURFACE\.md: rust rows are \[Axum routes\], but the quoted Rust list is \[Axum routes, Reqwest HTTP\]/);
+    assertRefused(t, (root) => writeSurface(root, (model) => model.quoted.Go.push("fiber")),
+        /go rows are \[net\/http, chi, resty\], but the quoted Go list is \[net\/http, chi, resty, fiber\]/);
+    assertRefused(t, (root) => writeSurface(root, (model) => {
+        model.lanes.rust.rows[0].notYet = "not yet";
+    }), /rust Axum routes: fill exactly one of Scored by, Deliberate gap and Not yet \(2 filled\)/);
+    assertRefused(t, (root) => writeSurface(root, (model) => {
+        model.lanes.go.rows[1].notYet = "";
+    }), /go chi: fill exactly one of Scored by, Deliberate gap and Not yet \(0 filled\)/);
+    assertRefused(t, (root) => writeSurface(root, (model) => {
+        model.lanes.go.rows[2].notYet = "later";
+    }), /go resty: the Not yet cell reads "later"/);
+    assertRefused(t, (root) => writeSurface(root, (model) => {
+        model.lanes.rust.rows[1].klass = "client";
+    }), /rust Reqwest HTTP: class "client" is not one of/);
+    assertRefused(t, (root) => writeSurface(root, (model) => {
+        delete model.lanes.typescript;
+    }), /no coverage table for lane typescript/);
+});
+
+test("guard: a deliberate gap quotes the lane README, and a route parser cannot be one", (t) => {
+    const gapOn = (index, cell) => (root) => writeSurface(root, (model) => {
+        Object.assign(model.lanes.python.rows[index], { scoredBy: "", gap: typeof cell === "function" ? cell(root) : cell, notYet: "" });
+    });
+    assertRefused(t, gapOn(2, '"no SQLAlchemy here, on purpose"'), /python SQLAlchemy: Deliberate gap must quote, in double quotes, a line of python\/README\.md/);
+    assertRefused(t, gapOn(2, (root) => readmeTitle(root, "python")), /python SQLAlchemy: Deliberate gap must quote/);
+    assertRefused(t, gapOn(0, (root) => `"${readmeTitle(root, "python")}"`), /python FastAPI: a route parser cannot be a deliberate gap/);
+});
+
+test("guard: TOOL-SURFACE.md pins the version score-tools.yml installs, and quotes each pinned server", (t) => {
+    assertRefused(t, (root) => writeSurface(root, (model) => {
+        model.versionLine = "Pinned version: `999.0.0`";
+    }), /^matrix: FAIL bench\/TOOL-SURFACE\.md: pinned version 999\.0\.0 is not the one \.github\/workflows\/score-tools\.yml installs \(\d+\.\d+\.\d+\)/);
+    assertRefused(t, (root) => writeSurface(root, (model) => {
+        model.versionLine = model.versionLine.replaceAll("`", "");
+    }), /pinned version \(no "Pinned version:" line\)/);
+    assertRefused(t, (root) => writeSurface(root, (model) => {
+        model.lanes.go.servers = ["gopls v0.0.0"];
+    }), /go language server: end the line with ; source "<the go\/README\.md text that pins it>"/);
+    assertRefused(t, (root) => writeSurface(root, (model) => {
+        model.lanes.go.servers = ['gopls v0.0.0; source "a pin no go README line holds"'];
+    }), /go language server: end the line with ; source/);
+    assertRefused(t, (root) => writeSurface(root, (model) => {
+        model.lanes.php.servers = ["not pinned yet", "not pinned yet"];
+    }), /the php section needs exactly one "Language server \(E\.5\): \.\.\." line \(2 found\)/);
     assertRefused(t, (root) => rmSync(join(root, SURFACE)), /^matrix: FAIL bench\/TOOL-SURFACE\.md is missing/);
 });

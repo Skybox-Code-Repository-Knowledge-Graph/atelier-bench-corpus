@@ -217,7 +217,8 @@ function staticProblem(lanes) {
  *   - each row fills exactly one of Scored by (backticked ids, each in the lane's tasks.json),
  *     Deliberate gap (a double-quoted line of the lane README; never for a route parser, ruling R3)
  *     and Not yet (`not yet`);
- *   - each lane's language-server row is `not pinned yet` or quotes the README line that pins it.
+ *   - each lane section has one `Language server (E.5): ` line, `not pinned yet` or ending in
+ *     `; source "<README text>"` that the lane README pins it with.
  * NOT proven: that a listed task really exercises the extractor (a reviewer's read of its `from`
  * line), or that the quoted list is what the package prints (re-run the command in the file).
  */
@@ -239,7 +240,7 @@ function toolSurfaceProblem(lanes) {
     const tables = markdownTables(text);
     const extractorsOf = new Map((tables.get("Framework extractors (ruling R2)")?.rows ?? [])
         .map(([language, list = ""]) => [language, list.split(", ")]));
-    const servers = new Map((tables.get("Language servers (E.5)")?.rows ?? []).map((row) => [row[0], row]));
+    const serverPrefix = "Language server (E.5): ";
 
     for (const lane of lanes) {
         const language = LANE_LANGUAGES[lane.name];
@@ -295,44 +296,57 @@ function toolSurfaceProblem(lanes) {
             }
         }
 
-        const [, server = "", , source = ""] = servers.get(lane.name) ?? [];
-        if (server === "") {
-            return `${where}: no language-server row for lane ${lane.name}`;
+        const servers = (tables.get(`Per-lane coverage > ${lane.name}`)?.lines ?? []).filter((line) => line.startsWith(serverPrefix));
+        if (servers.length !== 1) {
+            return `${where}: the ${lane.name} section needs exactly one "${serverPrefix}..." line (${servers.length} found)`;
         }
-        if (server !== "not pinned yet" && !quotes(source)) {
-            return `${where}: ${lane.name} language server: quote, in double quotes, the ${lane.name}/README.md line that pins it, or write "not pinned yet"`;
+        const server = servers[0].slice(serverPrefix.length);
+        const source = /; source "(.+)"$/.exec(server)?.[1];
+        if (server !== "not pinned yet" && !(source !== undefined && readme.includes(source))) {
+            return `${where}: ${lane.name} language server: end the line with ; source "<the ${lane.name}/README.md text that pins it>", or write "not pinned yet"`;
         }
     }
     return undefined;
 }
 
-/** A Markdown file's tables, keyed by the headings above them ("h2" or "h2 > h3"). */
+/**
+ * A Markdown file's sections, keyed by the headings above them ("h2" or "h2 > h3"): each section's
+ * first table (`header`, `rows`) and its other non-empty lines (`lines`). Fenced blocks are skipped.
+ */
 function markdownTables(text) {
-    const tables = new Map();
+    const sections = new Map();
+    let key = "";
     let h2 = "";
-    let h3 = "";
     let fenced = false;
+    const section = () => {
+        if (!sections.has(key)) {
+            sections.set(key, { header: null, rows: [], lines: [] });
+        }
+        return sections.get(key);
+    };
     for (const line of text.split(/\r?\n/)) {
         if (line.startsWith("```")) {
             fenced = !fenced;
         } else if (fenced) {
             continue;
         } else if (line.startsWith("## ")) {
-            [h2, h3] = [line.slice(3).trim(), ""];
+            h2 = line.slice(3).trim();
+            key = h2;
         } else if (line.startsWith("### ")) {
-            h3 = line.slice(4).trim();
+            key = `${h2} > ${line.slice(4).trim()}`;
         } else if (line.startsWith("|")) {
             const cells = line.trim().replace(/^\|/, "").replace(/(?<!\\)\|$/, "").split(/(?<!\\)\|/)
                 .map((cell) => cell.trim().replaceAll("\\|", "|"));
-            const key = h3 === "" ? h2 : `${h2} > ${h3}`;
-            if (!tables.has(key)) {
-                tables.set(key, { header: cells, rows: [] });
+            if (section().header === null) {
+                section().header = cells;
             } else if (!cells.every((cell) => /^-+$/.test(cell))) {
-                tables.get(key).rows.push(cells);
+                section().rows.push(cells);
             }
+        } else if (line.trim() !== "") {
+            section().lines.push(line.trim());
         }
     }
-    return tables;
+    return sections;
 }
 
 /**
@@ -423,10 +437,7 @@ function hoverContainsProblem(lanes) {
         if (stated.length < 2) {
             continue;
         }
-        const missing = stated.filter(([, contains]) => contains === undefined).map(([name]) => name);
-        if (missing.length > 0) {
-            return `${id}: shared hover id states no contains string in ${missing.join(", ")} (every lane carrying it must state the same one)`;
-        }
+        // (0) above already refused a hover task without a string, so every lane here states one.
         if (new Set(stated.map(([, contains]) => contains)).size > 1) {
             const detail = stated.map(([name, contains]) => `${name}=${JSON.stringify(contains)}`).join(", ");
             return `${id}: shared hover id uses more than one contains string (${detail})`;

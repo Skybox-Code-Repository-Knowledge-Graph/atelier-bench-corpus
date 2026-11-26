@@ -11,7 +11,8 @@ read to fill it.
 "Scored by" cell must exist in that lane's `bench/tasks.json`, every quoted README line must be in
 that lane's README, each lane's rows must equal the quoted list below, and the pinned version must
 equal the one `score-tools.yml` installs. A lane that renames or retires a task id named here
-updates its row in the same pull request.
+updates its row in the same pull request. Each lane edits only its own section, so the lanes'
+pull requests do not conflict here.
 
 ## Scope (ruling R1)
 
@@ -77,7 +78,8 @@ output, adapter notes, grades or score reports were read). The lanes fill in the
 Each lane has one section with one row per extractor of its language, in the order quoted above.
 Exactly one of the last three cells is filled: "Scored by" holds backticked task ids separated by
 commas; "Deliberate gap" holds a line of the lane README, quoted in double quotes (a `|` written
-`\|`); "Not yet" holds `not yet`.
+`\|`); "Not yet" holds `not yet`. The section ends with the lane's language-server line (E.5,
+below).
 
 ### rust
 
@@ -85,6 +87,8 @@ commas; "Deliberate gap" holds a line of the lane README, quoted in double quote
 | --- | --- | --- | --- | --- |
 | Axum routes | route parser | `def-route-to-handler`, `def-async-handler` | | |
 | Reqwest HTTP | other | | | not yet |
+
+Language server (E.5): not pinned yet
 
 ### php
 
@@ -95,6 +99,8 @@ commas; "Deliberate gap" holds a line of the lane README, quoted in double quote
 | Guzzle | other | | | not yet |
 | Inertia (PHP side) | other | | | not yet |
 | Blade | other | `def-blade-model-method`, `def-livewire-computed`, `def-accessor-attribute`, `lw-sfc-computed`, `lw-wireclick-method`, `lw-form-object-magic`, `lw-embed-tag`, `int-folio-filename-binding`, `int-volt-functional-prop`, `parse-negative-unclosed-blade` | | |
+
+Language server (E.5): not pinned yet
 
 ### typescript
 
@@ -108,6 +114,11 @@ commas; "Deliberate gap" holds a line of the lane README, quoted in double quote
 | SvelteKit | route parser | | | not yet |
 | Nuxt | route parser | | | not yet |
 | Expo | route parser | | | not yet |
+
+Language server (E.5): not pinned yet
+
+`typescript/README.md` asks that a second-opinion server run against the root `tsconfig.json`, but
+names no server or version.
 
 ### javascript
 
@@ -125,6 +136,8 @@ commas; "Deliberate gap" holds a line of the lane README, quoted in double quote
 `javascript/README.md` already has a row "ORM / schema / serialization" that reads "none,
 deliberately"; no JavaScript extractor in the quoted list is in that class, so it fills no row.
 
+Language server (E.5): the TypeScript language service of `typescript` 5.7.3, through `typescript-language-server` 6.1.0; source "the TypeScript language service of the pinned `typescript` 5.7.3 (graded through `typescript-language-server` 6.1.0)"
+
 ### python
 
 | Extractor | Class | Scored by (task ids) | Deliberate gap (README line) | Not yet |
@@ -134,6 +147,8 @@ deliberately"; no JavaScript extractor in the quoted list is in that class, so i
 | Django | route parser | | | not yet |
 | SQLAlchemy | ORM, schema or serialization | | | not yet |
 | Pydantic | ORM, schema or serialization | | | not yet |
+
+Language server (E.5): not pinned yet
 
 ### go
 
@@ -147,21 +162,13 @@ deliberately"; no JavaScript extractor in the quoted list is in that class, so i
 | fiber | route parser | | | not yet |
 | resty | other | | | not yet |
 
+Language server (E.5): not pinned yet
+
 ## Language servers (E.5)
 
 E.5 scores the language-server surfaces (`hover`, `document_symbol`, `call_hierarchy`,
 `implementation`) against the server the lane's stack starts. Ruling R5: each lane README pins that
-server with its version. A row names a server only where the lane README already pins one, quoted
-in "Source"; otherwise it reads `not pinned yet`.
-
-| Lane | Server the lane's stack starts | Version | Source (README line) |
-| --- | --- | --- | --- |
-| php | not pinned yet | | |
-| rust | not pinned yet | | |
-| typescript | not pinned yet | | |
-| javascript | the TypeScript language service, through `typescript-language-server` | `typescript` 5.7.3, `typescript-language-server` 6.1.0 | "the TypeScript language service of the pinned `typescript` 5.7.3 (graded through `typescript-language-server` 6.1.0)" |
-| python | not pinned yet | | |
-| go | not pinned yet | | |
-
-`typescript/README.md` asks that a second-opinion server run against the root `tsconfig.json`, but
-names no server or version, so its row is not pinned yet.
+server with its version. Each lane section above ends with one line,
+`Language server (E.5): ...`. It names a server and version only where the lane README already
+pins one, followed by `; source "<the README text that pins it>"`; otherwise it reads
+`not pinned yet`. At main `7e67f55` only `javascript/README.md` pins one.
