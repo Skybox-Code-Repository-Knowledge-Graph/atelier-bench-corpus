@@ -83,7 +83,7 @@ const DISPOSITIONS = {
     "impl-type-alias-contract": {
         verdict: "disagrees",
         missing: [],
-        extra: ["packages/bench/tests/typescriptOnly.test.ts:21"],
+        extra: ["packages/bench/tests/typescriptOnly.test.ts:33"],
         reading: "key right, unchanged. The extra line is `const rules: PriceRule[] = [...]` in the test, an array value typed with the alias; it holds implementors and is not one.",
     },
 };

@@ -3219,15 +3219,15 @@
         {
             "id": "def-infer-type-variable",
             "surface": "definition",
-            "note": "Item in the true branch is the type variable `infer Item` declares in the extends clause; it has no other declaration. TypeScript-only mechanism: a type variable bound by `infer` inside a conditional type.",
+            "note": "QueuedOrder is `ElementOf<typeof DRAFT_QUEUE>`, which is RepairOrder only because the conditional type binds `infer Item` to the queue's element type, so `queued.customerId` reads the constructor parameter property of RepairOrder's base class (Invoice, Customer and others declare look-alike customerId members). Re-pointed in bounce 1 (R18, I2): it asked for the declaration of `Item` itself, a line a text search finds. TypeScript-only mechanism: a type variable bound by `infer` inside a conditional type.",
             "from": {
                 "file": "packages/bench/src/support/elementOf.ts",
-                "needle": "? Item",
-                "symbol": "Item"
+                "needle": "return queued.customerId;",
+                "symbol": "customerId"
             },
             "expect": {
-                "file": "packages/bench/src/support/elementOf.ts",
-                "needle": "export type ElementOf<T> = T extends readonly (infer Item)[]"
+                "file": "packages/core/src/models/repairOrder.ts",
+                "needle": "readonly customerId: number,"
             }
         },
         {
@@ -3307,6 +3307,140 @@
                     "file": "packages/core/src/models/repairOrder.ts",
                     "needle": "readonly deviceId: number,"
                 }
+            }
+        },
+        {
+            "id": "def-this-type-marker",
+            "surface": "definition",
+            "note": "The object literal's contextual type is `BayMethods & ThisType<BayState>`, so `this` inside its methods is a BayState and `this.capacity` reads BayState's member; without the marker `this` is the literal itself, which has no capacity (Shelf in thisParameter.ts declares a look-alike). Added in bounce 1 (R18). TypeScript-only mechanism: the ThisType<T> marker type, which types `this` inside an object literal's methods.",
+            "from": {
+                "file": "packages/bench/src/support/thisTypeMarker.ts",
+                "needle": "return this.capacity - this.used;",
+                "symbol": "capacity"
+            },
+            "expect": {
+                "file": "packages/bench/src/support/thisTypeMarker.ts",
+                "needle": "readonly capacity: number;"
+            }
+        },
+        {
+            "id": "resolution-template-index-signature",
+            "surface": "resolution",
+            "note": "TraceHeaders declares two index signatures; the string literal key matches the pattern `x-${string}`, so the access reads the pattern signature (type string), not the plain `[name: string]` one on the next line (type string | undefined), which is the look-alike. Added in bounce 1 (R18). TypeScript-only mechanism: a template literal pattern index signature.",
+            "from": {
+                "file": "packages/bench/src/support/traceHeaders.ts",
+                "needle": "return headers[\"x-trace-id\"];",
+                "symbol": "x-trace-id"
+            },
+            "expect": {
+                "resolution": "the key matches the template literal pattern, so it reads that index signature and not the plain string one",
+                "candidate": {
+                    "file": "packages/bench/src/support/traceHeaders.ts",
+                    "needle": "readonly [name: `x-${string}`]: string;"
+                }
+            }
+        },
+        {
+            "id": "def-this-predicate-method",
+            "surface": "definition",
+            "note": "isRush() returns the predicate `this is RushTicket`, so past the early return `ticket` is a RushTicket and `ticket.label()` names the override, not Ticket's `label(): string {` (the look-alike); without the predicate `ticket.promisedBy` on the same line does not compile. Added in bounce 1 (R18). TypeScript-only mechanism: a `this is T` type predicate on a method, which narrows the method's own receiver.",
+            "from": {
+                "file": "packages/bench/src/support/rushTicket.ts",
+                "needle": "return `${ticket.label()} by ${ticket.promisedBy}`;",
+                "symbol": "label"
+            },
+            "expect": {
+                "file": "packages/bench/src/support/rushTicket.ts",
+                "needle": "override label(): string {"
+            }
+        },
+        {
+            "id": "resolution-extract-union-member",
+            "surface": "resolution",
+            "note": "StatusChangedEvent is `Extract<DomainEvent, { kind: \"status_changed\" }>`: the conditional type keeps only that union member, so `event.orderId` reads its orderId and not the repair_completed member's, the look-alike on the line above in events.ts. resolution-discriminated-union narrows by control flow; this one filters at the type level. Added in bounce 1 (R18). TypeScript-only mechanism: the built-in distributive conditional type Extract applied to a union.",
+            "from": {
+                "file": "packages/bench/src/support/eventFilters.ts",
+                "needle": "return event.orderId;",
+                "symbol": "orderId"
+            },
+            "expect": {
+                "resolution": "Extract<DomainEvent, { kind: \"status_changed\" }> is the status_changed member of the union",
+                "candidate": {
+                    "file": "packages/core/src/events.ts",
+                    "needle": "| { readonly kind: \"status_changed\"; readonly orderId: number; readonly from: RepairStatus; readonly to: RepairStatus }"
+                }
+            }
+        },
+        {
+            "id": "def-function-namespace-merge",
+            "surface": "definition",
+            "note": "partCode is a function and a namespace of one name; `partCode.separator`, the second separator on the line, is the namespace's const, while the first, `style?.separator`, is CodeStyle's property (the look-alike). Added in bounce 1 (R18). TypeScript-only mechanism: function + namespace declaration merging; the member lives in the namespace half, and a plain function has no such property.",
+            "from": {
+                "file": "packages/bench/src/support/partCode.ts",
+                "needle": "return [sku, bin].join(style?.separator ?? partCode.separator);",
+                "symbol": "separator",
+                "occurrence": 2
+            },
+            "expect": {
+                "file": "packages/bench/src/support/partCode.ts",
+                "needle": "export const separator = \"/\";"
+            }
+        },
+        {
+            "id": "resolution-enum-merge",
+            "surface": "resolution",
+            "note": "Two exported enum declarations named IntakeStage merge into one enum; `Received` is declared only by the second, so the member resolves there and not to RepairStatus's `Received = \"received\",` in support/status.ts (the look-alike). exact_count counts the 2 declarations that merge into IntakeStage. Added in bounce 1 (R18). TypeScript-only mechanism: enum declaration merging.",
+            "from": {
+                "file": "packages/bench/src/support/intakeStage.ts",
+                "needle": "return stage === IntakeStage.Received;",
+                "symbol": "Received"
+            },
+            "expect": {
+                "kind": "declaration_merge",
+                "exact_count": 2,
+                "known_sites": [
+                    {
+                        "file": "packages/bench/src/support/intakeStage.ts",
+                        "needle": "export enum IntakeStage { Booked = \"booked\" }"
+                    },
+                    {
+                        "file": "packages/bench/src/support/intakeStage.ts",
+                        "needle": "export enum IntakeStage { Received = \"received\" }"
+                    }
+                ],
+                "candidate": {
+                    "file": "packages/bench/src/support/intakeStage.ts",
+                    "needle": "export enum IntakeStage { Received = \"received\" }"
+                }
+            }
+        },
+        {
+            "id": "def-event-map-handler-param",
+            "surface": "definition",
+            "note": "on<K extends keyof BenchEventMap> takes a handler of BenchEventMap[K]; K is inferred from the string \"stock_low\", so the handler's `event.sku` reads the stock_low entry's sku, not the part_returned entry's sku on the line above (the look-alike; OrderPart and others declare more). Added in bounce 1 (R18). TypeScript-only mechanism: an indexed access type by a generic key inferred from a string literal argument, which types a callback's parameter.",
+            "from": {
+                "file": "packages/bench/src/support/benchEvents.ts",
+                "needle": "events.on(\"stock_low\", (event) => low.push(event.sku));",
+                "symbol": "sku"
+            },
+            "expect": {
+                "file": "packages/bench/src/support/benchEvents.ts",
+                "needle": "stock_low: { readonly sku: string; readonly onHand: number };"
+            }
+        },
+        {
+            "id": "def-import-type-query-member",
+            "surface": "definition",
+            "note": "The parameter's type is `typeof import(\"./orderFields\")`, the type of that module's namespace object, so `fields.statusOf` (the first statusOf on the line) is orderFields' export, although lazyFields.ts imports nothing from it; the second, bare `statusOf` is lazyFields' own function (the look-alike). def-import-type-expression asks a type alias line; this asks a member call on a value typed by the query. Added in bounce 1 (R18). TypeScript-only mechanism: an import type query, `typeof import(...)`, in a parameter annotation.",
+            "from": {
+                "file": "packages/bench/src/support/lazyFields.ts",
+                "needle": "return `${fields.statusOf(order)} (${statusOf(order)})`;",
+                "symbol": "statusOf",
+                "occurrence": 1
+            },
+            "expect": {
+                "file": "packages/bench/src/support/orderFields.ts",
+                "needle": "export function statusOf(order: RepairOrder): OrderStatusField {"
             }
         },
         {
