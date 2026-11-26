@@ -182,12 +182,14 @@ func TestGoModBlocksAreRead(t *testing.T) {
 	}
 }
 
-// A require line naming a module the offline graph cannot load fails the
-// guard, while the in-tree replace target still resolves.
+// A require line naming a module neither the module cache nor go.sum knows
+// at that version fails the guard; the in-tree replace target and a module
+// go.sum locks still resolve.
 func TestGoModRequireMustResolve(t *testing.T) {
 	root := t.TempDir()
 	files := map[string]string{
-		"go.mod":       "module example.test/req\n\ngo 1.23\n\nrequire (\n\texample.test/nosuch v1.0.0\n\texample.test/local v0.0.0\n)\n\nreplace example.test/local => ./local\n",
+		"go.mod":       "module example.test/req\n\ngo 1.23\n\nrequire (\n\texample.test/nosuch v1.0.0\n\texample.test/local v0.0.0\n\texample.test/locked v1.2.0 // indirect\n)\n\nreplace example.test/local => ./local\n",
+		"go.sum":       "example.test/locked v1.2.0/go.mod h1:AAAA=\nexample.test/nosuch v0.9.0/go.mod h1:BBBB=\n",
 		"main.go":      "package req\n",
 		"local/go.mod": "module example.test/local\n\ngo 1.23\n",
 	}
@@ -204,8 +206,10 @@ func TestGoModRequireMustResolve(t *testing.T) {
 		t.Fatal(err)
 	}
 	failures := checkSpecifiers(root, found)
-	if len(failures) == 0 || !strings.Contains(failures[0], `require "example.test/nosuch": module does not resolve`) {
-		t.Errorf("failures = %v, want example.test/nosuch to fail", failures)
+	// nosuch is locked at another version only, so it fails; locked is not in
+	// the module cache but go.sum pins its go.mod, so it resolves.
+	if len(failures) != 1 || !strings.Contains(failures[0], `require "example.test/nosuch": module does not resolve`) {
+		t.Errorf("failures = %v, want exactly example.test/nosuch to fail", failures)
 	}
 }
 
