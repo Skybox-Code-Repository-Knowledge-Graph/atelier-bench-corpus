@@ -9,7 +9,10 @@ Self-check for bench/tasks.json needle uniqueness (python lane).
 
 Standard library only. Exit 0 only when every check passes. Mirrors
 php/bench/verify_tasks.php, rust/bench/verify-tasks and the two verify.mjs
-files line for line, so every lane is scored the same way.
+files line for line, so every lane is scored the same way. On top of them it
+checks the two site lists those verifiers skip: each optional_sites needle must
+resolve to exactly one line, and each repeated_sites needle to exactly `lines`
+lines. A failure there prints a FAIL line; the OK line format is unchanged.
 """
 
 from __future__ import annotations
@@ -67,8 +70,34 @@ def collect_needle_pairs(task: dict) -> list[tuple[str, str, str]]:
     if is_file_needle(candidate):
         pairs.append((candidate["file"], candidate["needle"], "expect"))
     # Non-needle expect keys (contains, behavior, must_include, must_not_include,
-    # min_*, exact_count, kind, resolution) are ignored by design.
+    # min_*, exact_count, kind, resolution) are ignored by design. optional_sites
+    # and repeated_sites are checked by check_site_lists, outside this count.
     return pairs
+
+
+def check_site_lists(root: Path, task: dict) -> list[str]:
+    """optional_sites: one line each; repeated_sites: exactly `lines` lines each."""
+    failures: list[str] = []
+    expect = task.get("expect")
+    if not isinstance(expect, dict):
+        return failures
+    for item in expect.get("optional_sites") or []:
+        if is_file_needle(item):
+            ok, result = resolve_needle(root, item["file"], item["needle"])
+            if not ok:
+                failures.append(f"{task['id']}: FAIL {item['file']} needle {summarize(item['needle'])} ({result})")
+    for item in expect.get("repeated_sites") or []:
+        if not is_file_needle(item):
+            continue
+        path = root / item["file"]
+        lines = item.get("lines")
+        if not path.is_file():
+            failures.append(f"{task['id']}: FAIL {item['file']} needle {summarize(item['needle'])} (file missing)")
+            continue
+        hits = sum(1 for line in SPLIT.split(path.read_text(encoding="utf-8")) if item["needle"] in line)
+        if not isinstance(lines, int) or isinstance(lines, bool) or lines < 2 or hits != lines:
+            failures.append(f"{task['id']}: FAIL {item['file']} needle {summarize(item['needle'])} (found {hits} times, repeated_sites says {lines})")
+    return failures
 
 
 def resolve_needle(root: Path, file: str, needle: str) -> tuple[bool, str | int]:
@@ -121,6 +150,7 @@ def run_tasks(root: Path) -> int:
                     expect_resolved += 1
             else:
                 failures.append(f"{task_id}: FAIL {file} needle {summarize(needle)} ({result})")
+        failures.extend(check_site_lists(root, task))
         if failures:
             any_fail = True
             for failure in failures:
