@@ -324,7 +324,7 @@ export const TARGET_COUNT_UNSCORABLE = {
  * Why no rule scores the shared id imp-glob-import (issue #135): the start of each lane's reason.
  * The lanes ask one question, and neither the servers nor the keys settle what its answer is.
  */
-const GLOB_NO_READING = "imp-glob-import has no single reading: asked at the import, every lane's own server answers the module (rust-analyzer 1.96.0 and pyright 1.1.414 on its first line, typescript-language-server 6.1.0 on its first statement, phpactor 2026.11.22.0 nothing), while the keys list declarations inside it, and the keys of this shared id disagree on the answer (go's, kind dot_import, answers the one member the file uses)";
+const GLOB_NO_READING = "imp-glob-import has no single reading: asked at the import, every lane's own server answers the module or nothing, never the lines the keys list (rust-analyzer 1.96.0 and pyright 1.1.414 the module's first line, typescript-language-server 6.1.0 its first statement, phpactor 2026.11.22.0 no location), and the keys of this shared id disagree on the answer (go's, kind dot_import, names one member the file uses as its candidate, though the file uses more than one)";
 
 /**
  * Key shapes no rule scores, with the reason (issue #135): a surface, an optional kind, the exact
@@ -380,7 +380,7 @@ export const UNRULED_SHAPES = [
         kind: "glob",
         keys: ["exact_count", "kind", "known_sites", "must_include"],
         tasks: new Set(["python:imp-glob-import"]),
-        reason: `${GLOB_NO_READING}; the python key lists 2 of the 16 names, each on its \`from .x import X\` line in metrics/__init__.py, while pyright 1.1.414 resolves a name the star import brings in to its class (metrics/margin.py) and the lane's barrel note says such an import lands on the submodule, never on __init__.py`,
+        reason: `${GLOB_NO_READING}; the python key lists 2 of the 16 names, each on its \`from .x import X\` line in metrics/__init__.py, while pyright 1.1.414 resolves a name the star import brings in to its class (metrics/margin.py), and the lane's barrel note says the same of atelier_core: an import through its __init__.py lands on the submodule that defines the name`,
     },
     {
         surface: "import-precision",
