@@ -26,15 +26,66 @@ const TSSERVER = join(LANE, "node_modules", "typescript", "lib", "tsserver.js");
 const OUT = join(LANE, "bench", "lsp-check.md");
 const SURFACES = ["hover", "document_symbol", "call_hierarchy", "implementation"];
 
-/** The tree's reading of every task the server disagrees with, written after reading the tree. */
+/**
+ * The tree's reading of every task the server disagrees with, written after reading the tree.
+ * Each reading records the exact answer it was written for: the verdict, the keyed items the
+ * server did not return (missing) and what it returned beyond the key (extra), as the report
+ * prints them. A run whose answer differs from that prints the line as NOT READ and exits 1, so
+ * a reading never stands under an answer nobody read.
+ */
 const DISPOSITIONS = {
-    "impl-invoice-calculator": "key right, unchanged. The extra line is `export type CalculatorRef = import(\"../contracts/invoiceCalculator\").InvoiceCalculator;`, a type alias that names the contract; it declares no type that implements it, and the notes count only implementing types.",
-    "impl-report-contract": "key right, unchanged. The extra line is `export const REPORTS: readonly ReportContract[] = [`, the registry array; the notes say a value that only holds implementors is not an implementor.",
-    "impl-repository-generic": "key right, unchanged. All 8 files under packages/bench/src/repositories declare `implements Repository<...>` (grep: 8 of 8); the contract lives in packages/core, whose tsconfig.json includes only core, so the server answers from a project that holds none of them.",
-    "docsym-repair-order": "key right, unchanged. The extras are an anonymous `parts.map()` callback and the function-local `order`, which the counting rule in the notes leaves out (also recorded in bench/score as DOCSYM_REFERENCE_DISAGREES, issue #208).",
-    "docsym-report-registry": "key right, unchanged. The extras are the anonymous `REPORTS.find()` and `METRICS.find()` callbacks, which the counting rule leaves out.",
-    "hierarchy-incoming-transition": "key right, unchanged. packages/bench/src/dataset.ts:72 is `orders[1]!.transitionTo(RepairStatus.AwaitingParts, \"seeder\");` inside Dataset.seeded, a caller in packages/bench; the declaration is in packages/core, whose project does not include bench, so the server misses that caller.",
-    "impl-type-alias-contract": "key right, unchanged. The extra line is `const rules: PriceRule[] = [...]` in the test, an array value typed with the alias; it holds implementors and is not one.",
+    "impl-invoice-calculator": {
+        verdict: "disagrees",
+        missing: [],
+        extra: ["packages/core/src/support/calculatorRef.ts:7"],
+        reading: "key right, unchanged. The extra line is `export type CalculatorRef = import(\"../contracts/invoiceCalculator\").InvoiceCalculator;`, a type alias that names the contract; it declares no type that implements it, and the notes count only implementing types.",
+    },
+    "impl-report-contract": {
+        verdict: "disagrees",
+        missing: [],
+        extra: ["packages/bench/src/index.ts:69"],
+        reading: "key right, unchanged. The extra line is `export const REPORTS: readonly ReportContract[] = [`, the registry array; the notes say a value that only holds implementors is not an implementor.",
+    },
+    "impl-repository-generic": {
+        verdict: "server has no answer",
+        missing: [],
+        extra: [],
+        reading: "key right, unchanged. All 8 files under packages/bench/src/repositories declare `implements Repository<...>` (grep: 8 of 8); the contract lives in packages/core, whose tsconfig.json includes only core, so the server answers from a project that holds none of them.",
+    },
+    "docsym-repair-order": {
+        verdict: "disagrees",
+        missing: [],
+        extra: [
+            "`changedBy` listed 2x (line 23, 48), key 1x",
+            "`from` listed 2x (line 21, 48), key 1x",
+            "`order` listed 1x (line 81), key 0x",
+            "`partId` listed 2x (line 13, 73), key 1x",
+            "`parts.map() callback` listed 1x (line 63), key 0x",
+            "`quantity` listed 2x (line 15, 73), key 1x",
+            "`sku` listed 2x (line 14, 73), key 1x",
+            "`to` listed 2x (line 22, 48), key 1x",
+            "`unitPrice` listed 2x (line 16, 73), key 1x",
+        ],
+        reading: "key right, unchanged. 9 extras: the keyed `partId`, `sku`, `quantity`, `unitPrice` (lines 13-16, interface OrderPart) and `from`, `to`, `changedBy` (lines 21-23, interface StatusChange) are listed again from the object literals `{ partId: part.id, sku: part.sku, quantity, unitPrice: part.unitPrice }` (line 73, in addPart) and `{ from: this.status, to: next, changedBy }` (line 48, in transitionTo); line 63 is the anonymous `this.parts.map((line) => ...)` callback and line 81 the function-local `const order` in `seed`. The counting rule in the notes leaves object-literal keys, anonymous callbacks and function-local variables out (the callback and the local are also recorded in bench/score as DOCSYM_REFERENCE_DISAGREES, issue #208).",
+    },
+    "docsym-report-registry": {
+        verdict: "disagrees",
+        missing: [],
+        extra: ["`METRICS.find() callback` listed 1x (line 123), key 0x", "`REPORTS.find() callback` listed 1x (line 118), key 0x"],
+        reading: "key right, unchanged. The extras are the anonymous arrow callbacks of `REPORTS.find((candidate) => ...)` (line 118, in `report`) and `METRICS.find((candidate) => ...)` (line 123, in `metric`); the counting rule in the notes leaves anonymous callbacks out.",
+    },
+    "hierarchy-incoming-transition": {
+        verdict: "disagrees",
+        missing: ["packages/bench/src/dataset.ts:72"],
+        extra: [],
+        reading: "key right, unchanged. packages/bench/src/dataset.ts:72 is `orders[1]!.transitionTo(RepairStatus.AwaitingParts, \"seeder\");` inside Dataset.seeded, a caller in packages/bench; the declaration is in packages/core, whose project does not include bench, so the server misses that caller.",
+    },
+    "impl-type-alias-contract": {
+        verdict: "disagrees",
+        missing: [],
+        extra: ["packages/bench/tests/typescriptOnly.test.ts:21"],
+        reading: "key right, unchanged. The extra line is `const rules: PriceRule[] = [...]` in the test, an array value typed with the alias; it holds implementors and is not one.",
+    },
 };
 
 const version = (path) => JSON.parse(readFileSync(join(path, "package.json"), "utf8")).version;
@@ -149,8 +200,12 @@ function hoverText(contents) {
     return contents.value ?? "";
 }
 
-function symbolNames(symbols) {
-    return (symbols ?? []).flatMap((symbol) => [symbol.name, ...symbolNames(symbol.children)]);
+/** Every symbol the server lists, nested ones included, with the 1-based line of its name. */
+function symbolEntries(symbols) {
+    return (symbols ?? []).flatMap((symbol) => [
+        { name: symbol.name, line: (symbol.selectionRange ?? symbol.range ?? symbol.location.range).start.line + 1 },
+        ...symbolEntries(symbol.children),
+    ]);
 }
 
 function locations(result) {
@@ -164,36 +219,53 @@ function locations(result) {
 
 const brief = (items, limit = 6) => (items.length <= limit ? items.join(", ") : `${items.slice(0, limit).join(", ")}, ... (${items.length})`);
 
+/** One answer: the verdict, what the server said, and the exact difference from the key. */
+const answer = (verdict, detail, missing = [], extra = []) => ({ verdict, detail, missing, extra });
+const sameItems = (left, right) => JSON.stringify([...left].sort()) === JSON.stringify([...right].sort());
+const all = (items) => items.join(", ") || "none";
+
 async function ask(task) {
     const expect = task.expect;
     if (task.surface === "hover") {
         const text = hoverText((await request("textDocument/hover", position(task))).result?.contents);
         if (text === "") {
-            return ["server has no answer", "empty hover"];
+            return answer("server has no answer", "empty hover");
         }
 
         return text.includes(expect.contains)
-            ? ["agrees", `hover holds ${JSON.stringify(expect.contains)}`]
-            : ["disagrees", `hover is ${JSON.stringify(text.replace(/\s+/g, " ").slice(0, 160))}`];
+            ? answer("agrees", `hover holds ${JSON.stringify(expect.contains)}`)
+            : answer("disagrees", `hover is ${JSON.stringify(text.replace(/\s+/g, " ").slice(0, 160))}`, [JSON.stringify(expect.contains)]);
     }
     if (task.surface === "document_symbol") {
-        const names = symbolNames((await request("textDocument/documentSymbol", { textDocument: { uri: uriOf(task.from.file) } })).result);
-        if (names.length === 0) {
-            return ["server has no answer", "no symbols"];
+        const listed = symbolEntries((await request("textDocument/documentSymbol", { textDocument: { uri: uriOf(task.from.file) } })).result);
+        if (listed.length === 0) {
+            return answer("server has no answer", "no symbols");
         }
-        const keyed = new Set(expect.symbols);
-        const listed = new Set(names);
-        const missing = [...keyed].filter((name) => !listed.has(name));
-        const extra = [...listed].filter((name) => !keyed.has(name));
+        // A multiset compare by name, with every line the server gives for that name: a name the
+        // server lists more often than the key is an extra even when the key holds it once (an
+        // object-literal key spelled like a property), so a name set would hide it.
+        const missing = [];
+        const extra = [];
+        for (const name of [...new Set([...expect.symbols, ...listed.map((entry) => entry.name)])].sort()) {
+            const keyed = expect.symbols.filter((symbol) => symbol === name).length;
+            const lines = listed.filter((entry) => entry.name === name).map((entry) => entry.line).sort((left, right) => left - right);
+            const shown = `\`${name}\` listed ${lines.length}x${lines.length > 0 ? ` (line ${lines.join(", ")})` : ""}, key ${keyed}x`;
+            if (lines.length < keyed) {
+                missing.push(shown);
+            }
+            if (lines.length > keyed) {
+                extra.push(shown);
+            }
+        }
 
         return missing.length === 0 && extra.length === 0
-            ? ["agrees", `${names.length} symbols listed, the key's ${keyed.size} names exactly`]
-            : ["disagrees", `${names.length} symbols listed; key names missing: ${brief(missing) || "none"}; listed beyond the key: ${brief(extra) || "none"}`];
+            ? answer("agrees", `${listed.length} symbols listed, the key's ${expect.symbols.length} names with the same multiplicity`)
+            : answer("disagrees", `${listed.length} symbols listed, the key holds ${expect.symbols.length}; listed fewer times than the key: ${all(missing)}; listed more times than the key: ${all(extra)}`, missing, extra);
     }
     if (task.surface === "call_hierarchy") {
         const item = (await request("textDocument/prepareCallHierarchy", position(task))).result?.[0];
         if (item === undefined) {
-            return ["server has no answer", "prepareCallHierarchy returned nothing"];
+            return answer("server has no answer", "prepareCallHierarchy returned nothing");
         }
         if (Array.isArray(expect.incoming_includes)) {
             const calls = (await request("callHierarchy/incomingCalls", { item })).result ?? [];
@@ -201,20 +273,20 @@ async function ask(task) {
             const missing = expect.incoming_includes.map(site).filter((line) => !sites.has(line));
 
             return missing.length === 0
-                ? ["agrees", `${calls.length} caller(s); every keyed call site covered`]
-                : ["disagrees", `${calls.length} caller(s) (${brief(calls.map((call) => call.from.name))}); keyed call sites not returned: ${brief(missing)}`];
+                ? answer("agrees", `${calls.length} caller(s); every keyed call site covered`)
+                : answer("disagrees", `${calls.length} caller(s) (${brief(calls.map((call) => call.from.name))}); keyed call sites not returned: ${all(missing)}`, missing);
         }
         const calls = (await request("callHierarchy/outgoingCalls", { item })).result ?? [];
         const callees = new Set(calls.map((call) => `${fileOfUri(call.to.uri)}:${call.to.selectionRange.start.line + 1}`));
         const missing = expect.outgoing_includes.map(site).filter((line) => !callees.has(line));
 
         return missing.length === 0
-            ? ["agrees", `${calls.length} callee(s); every keyed callee returned`]
-            : ["disagrees", `${calls.length} callee(s) (${brief(calls.map((call) => call.to.name))}); keyed callees not returned: ${brief(missing)}`];
+            ? answer("agrees", `${calls.length} callee(s); every keyed callee returned`)
+            : answer("disagrees", `${calls.length} callee(s) (${brief(calls.map((call) => call.to.name))}); keyed callees not returned: ${all(missing)}`, missing);
     }
     const returned = locations((await request("textDocument/implementation", position(task))).result);
     if (returned.length === 0) {
-        return ["server has no answer", "no locations"];
+        return answer("server has no answer", "no locations");
     }
     const keyed = new Set(expect.implementations.map(site));
     const allowed = new Set([...keyed, ...(expect.optional_sites ?? []).map(site), site(task.from)]);
@@ -222,8 +294,8 @@ async function ask(task) {
     const extra = [...new Set(returned)].filter((line) => !allowed.has(line));
 
     return missing.length === 0 && extra.length === 0
-        ? ["agrees", `${returned.length} location(s): the key's ${keyed.size} plus only optional or asked-from lines`]
-        : ["disagrees", `${returned.length} location(s); keyed not returned: ${brief(missing) || "none"}; returned beyond the key: ${brief(extra) || "none"}`];
+        ? answer("agrees", `${returned.length} location(s): the key's ${keyed.size} plus only optional or asked-from lines`)
+        : answer("disagrees", `${returned.length} location(s); keyed not returned: ${all(missing)}; returned beyond the key: ${all(extra)}`, missing, extra);
 }
 
 // --- run ---------------------------------------------------------------------------------------
@@ -243,10 +315,27 @@ for (const path of opened) {
 }
 
 const rows = [];
+const unread = [];
 for (const task of tasks) {
-    const [verdict, detail] = await ask(task);
-    const disposition = verdict === "agrees" ? "" : ` Tree: ${DISPOSITIONS[task.id] ?? "not yet read"}`;
-    rows.push(`- \`${task.id}\` (${task.surface}): **${verdict}**. ${detail}.${disposition}`);
+    const result = await ask(task);
+    const reading = DISPOSITIONS[task.id];
+    let tree = "";
+    if (result.verdict !== "agrees") {
+        const covers = reading !== undefined
+            && reading.verdict === result.verdict
+            && sameItems(reading.missing, result.missing)
+            && sameItems(reading.extra, result.extra);
+        tree = covers ? ` Tree: ${reading.reading}` : " Tree: NOT READ (no DISPOSITIONS entry was written for exactly this answer).";
+        if (!covers) {
+            unread.push(task.id);
+        }
+    } else if (reading !== undefined) {
+        unread.push(`${task.id} (agrees now, so its DISPOSITIONS entry is stale)`);
+    }
+    rows.push(`- \`${task.id}\` (${task.surface}): **${result.verdict}**. ${result.detail}.${tree}`);
+}
+for (const id of Object.keys(DISPOSITIONS).filter((id) => !tasks.some((task) => task.id === id))) {
+    unread.push(`${id} (no such task)`);
 }
 await request("shutdown", null);
 notify("exit", null);
@@ -261,9 +350,13 @@ writeFileSync(OUT, [
     `- TypeScript: ${version(join(LANE, "node_modules", "typescript"))}, the lane's own, passed as initializationOptions.tsserver.path = node_modules/typescript/lib/tsserver.js.`,
     `- Root: the lane directory; all ${opened.length} files under packages/*/src and packages/*/tests opened before the first question.`,
     `- Tasks: every hover, document_symbol, call_hierarchy and implementation task of bench/tasks.json (${tasks.length}): ${counts}.`,
-    "- A key is never changed because the server disagrees; where it does, the line says what the tree shows.",
+    "- A key is never changed because the server disagrees; where it does, the line says what the tree shows. Each reading records the exact difference it was written for, and the script fails when the server's difference is not exactly that one.",
     "",
     ...rows,
     "",
 ].join("\n"));
 console.log(`lsp-check: ${counts}; wrote ${laneRelative(OUT)}`);
+if (unread.length > 0) {
+    console.error(`lsp-check: FAIL, answers with no matching tree reading: ${unread.join("; ")}`);
+    process.exitCode = 1;
+}

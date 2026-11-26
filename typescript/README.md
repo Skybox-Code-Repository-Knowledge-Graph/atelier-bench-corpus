@@ -142,10 +142,14 @@ code and is reached only through `import type` edges.
 6.1.0 over TypeScript 5.9.3 (Stack table). `node bench/lsp-check.mjs` (after `npm ci`) asks it every
 `hover`, `document_symbol`, `call_hierarchy` and `implementation` task and writes
 `bench/lsp-check.md`: one line per task, agrees / disagrees / server has no answer, with what it
-returned and, where it disagrees, what the tree shows. At the committed run it agrees on 8 of 15 and
-no key was wrong: the 7 others are server-side (an anonymous callback or a local listed as a symbol;
-a registry array, a type alias or a typed array returned as an implementor; a caller or implementor
-in another package missed). A key is never changed to match the server.
+returned and, where it disagrees, what the tree shows. Document symbols are compared as a multiset
+of names, with every line the server gives, so a name listed twice is an extra even when the key
+holds it once. Each tree reading in the script records the exact difference it was written for, and
+the script exits 1 when the server's answer differs from it. At the committed run it agrees on 8 of
+15 and no key was wrong: the 7 others are server-side (an anonymous callback, a local or an
+object-literal key listed as a symbol; a registry array, a type alias or a typed array returned as
+an implementor; a caller or implementor in another package missed). A key is never changed to match
+the server.
 
 A language server used as a second opinion on these keys should run against the root
 `tsconfig.json`, or have the consuming package's files opened first (the script opens every file
