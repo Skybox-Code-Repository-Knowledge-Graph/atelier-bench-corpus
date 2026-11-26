@@ -139,6 +139,39 @@ test("definition/string-key: both selected declarations pass; one, or with the a
     assert.equal(verdictOf("python", task, []), "FAIL");
 });
 
+test("definition/string-key passes a task by when it names a target: file, needle or candidate (absent)", () => {
+    // README: "A string_key task that names a target (file and needle, or candidate) keeps the
+    // target rules." A synthetic task: the real one plus a target taken from its own key.
+    const task = taskOf("python", "def-string-key-dispatch");
+    assert.equal(planTask(task, "python").rule, "definition/string-key");
+    const [site] = task.expect.known_sites;
+    for (const extra of [{ file: site.file }, { needle: site.needle }, { file: site.file, needle: site.needle }, { candidate: site }]) {
+        const synthetic = structuredClone(task);
+        Object.assign(synthetic.expect, extra);
+        const plan = planTask(synthetic, "python");
+        assert.notEqual(plan.rule, "definition/string-key", `with ${Object.keys(extra).join(" and ")}`);
+    }
+    const targeted = structuredClone(task);
+    Object.assign(targeted.expect, { file: site.file, needle: site.needle });
+    delete targeted.expect.exact_count;
+    assert.equal(planTask(targeted, "python").rule, "definition/target", "with a target and no count, the target rule takes it");
+});
+
+test("resolution/merged-member reads must_not_include: an excluded entry fails the member's own declaration", () => {
+    // The real task carries no must_not_include; a synthetic one adds an entry the answer's text can trip.
+    const task = structuredClone(taskOf("typescript", "resolution-namespace-vs-enum"));
+    task.expect.must_not_include = ["zz excluded by the key"];
+    const plan = planTask(task, "typescript");
+    assert.equal(plan.rule, "resolution/merged-member");
+    assert.ok(!plan.notScored.includes("must_not_include"), "must_not_include is read, not reported as not scored");
+    const member = at("typescript", task.expect.candidate);
+    const context = { root: ROOT_OF("typescript"), lane: "typescript", scope: "repo" };
+    assert.equal(scoreTask(task, { locations: [member] }, context).verdict, "PASS");
+    const tripped = scoreTask(task, { locations: [member], text: "zz excluded by the key" }, context);
+    assert.equal(tripped.verdict, "FAIL");
+    assert.match(tripped.detail, /excluded "zz excluded by the key" returned/);
+});
+
 test("a declaration_merge task asks about the member unless the symbol is on every listed declaration", () => {
     // `abstract` is written on 1 of the 2 known sites (the class line), not on both: `every`, not `some`.
     const task = structuredClone(taskOf("typescript", "resolution-class-interface-merge"));
