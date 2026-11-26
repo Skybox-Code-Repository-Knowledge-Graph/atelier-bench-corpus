@@ -5,7 +5,7 @@ use crate::dataset::Dataset;
 use crate::rules::RULES;
 use serde::Serialize;
 
-/// Snapshot of rule pass/fail counts, serialized for the report API.
+/// Snapshot of rule pass/fail counts; serializes to JSON as `{"passed": n, "failed": n}`.
 #[derive(Serialize)]
 pub struct RuleSummary {
     pub passed: usize,
@@ -33,5 +33,9 @@ mod tests {
 
         assert_eq!(summary.passed, 48);
         assert_eq!(summary.failed, 0);
+        assert_eq!(
+            serde_json::to_value(summary).expect("serializes"),
+            serde_json::json!({ "passed": 48, "failed": 0 })
+        );
     }
 }
