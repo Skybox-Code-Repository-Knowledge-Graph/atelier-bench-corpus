@@ -1306,7 +1306,7 @@
         {
             "id": "def-static-creating",
             "surface": "definition",
-            "note": "static::creating(...) inside a trait: `static` is the using model, and creating() is a static method of the framework's HasEvents trait, reached through Model's trait list (VENDOR file; resolves after composer install). PHP-specific: trait method behind `static::`. HasReference::bootHasReference runs it on every create (tests/Feature/PhpMechanicsTest.php).",
+            "note": "static::creating(...) inside a trait: `static` is the using model, and creating() is a static method of the framework's HasEvents trait, reached through Model's trait list (VENDOR file; resolves after composer install). A declaration in a dependency's source, so a common candidate (not counted as language-specific, ruling R18). HasReference::bootHasReference runs it on every create (tests/Feature/PhpMechanicsTest.php).",
             "from": { "file": "app/Concerns/HasReference.php", "needle": "static::creating(function ($model): void {", "symbol": "creating" },
             "expect": { "file": "vendor/laravel/framework/src/Illuminate/Database/Eloquent/Concerns/HasEvents.php", "needle": "public static function creating($callback)" }
         }
