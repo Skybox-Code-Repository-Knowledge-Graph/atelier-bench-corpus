@@ -12,7 +12,7 @@
         "node": ">=22"
     },
     "scripts": {
-        "typecheck": "tsc --noEmit -p tsconfig.json",
+        "typecheck": "tsc --noEmit -p tsconfig.json && tsc --noEmit -p packages/routes/src/nest/tsconfig.json",
         "test": "vitest run",
         "verify": "node bench/verify-tasks/verify.mjs",
         "verify:lint": "node bench/verify-tasks/verify.mjs --lint"

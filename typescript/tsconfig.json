@@ -8,6 +8,8 @@
     ],
     "exclude": [
         "node_modules",
-        "fixtures"
+        "fixtures",
+        "packages/routes/src/nest",
+        "packages/routes/tests/nest.test.ts"
     ]
 }
