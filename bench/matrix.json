@@ -251,12 +251,6 @@
         "rust"
       ]
     },
-    "def-closure-handler": {
-      "surface": "definition",
-      "lanes": [
-        "go"
-      ]
-    },
     "def-computed-method-name": {
       "surface": "definition",
       "lanes": [
@@ -403,18 +397,6 @@
       ]
     },
     "def-embedded-promotion-four-levels": {
-      "surface": "definition",
-      "lanes": [
-        "go"
-      ]
-    },
-    "def-embedded-promotion-one-level": {
-      "surface": "definition",
-      "lanes": [
-        "go"
-      ]
-    },
-    "def-embedded-promotion-two-levels": {
       "surface": "definition",
       "lanes": [
         "go"
@@ -702,12 +684,6 @@
         "php"
       ]
     },
-    "def-internal-package": {
-      "surface": "definition",
-      "lanes": [
-        "go"
-      ]
-    },
     "def-intersection-type": {
       "surface": "definition",
       "lanes": [
@@ -874,7 +850,7 @@
         "php"
       ]
     },
-    "def-named-func-type-adapter": {
+    "def-named-result-deferred": {
       "surface": "definition",
       "lanes": [
         "go"
@@ -1006,7 +982,37 @@
         "rust"
       ]
     },
+    "def-route-chi": {
+      "surface": "definition",
+      "lanes": [
+        "go"
+      ]
+    },
     "def-route-default-mux": {
+      "surface": "definition",
+      "lanes": [
+        "go"
+      ]
+    },
+    "def-route-echo": {
+      "surface": "definition",
+      "lanes": [
+        "go"
+      ]
+    },
+    "def-route-fiber": {
+      "surface": "definition",
+      "lanes": [
+        "go"
+      ]
+    },
+    "def-route-gin": {
+      "surface": "definition",
+      "lanes": [
+        "go"
+      ]
+    },
+    "def-route-gorilla-mux": {
       "surface": "definition",
       "lanes": [
         "go"
@@ -1342,6 +1348,12 @@
         "go"
       ]
     },
+    "hierarchy-init-outgoing": {
+      "surface": "call_hierarchy",
+      "lanes": [
+        "go"
+      ]
+    },
     "hierarchy-promoted-callee": {
       "surface": "call_hierarchy",
       "lanes": [
@@ -1411,6 +1423,12 @@
         "go"
       ]
     },
+    "hover-receive-only-channel": {
+      "surface": "hover",
+      "lanes": [
+        "go"
+      ]
+    },
     "hover-schedule-method": {
       "surface": "hover",
       "lanes": [
@@ -1421,6 +1439,12 @@
       "surface": "hover",
       "lanes": [
         "javascript"
+      ]
+    },
+    "hover-struct-tag": {
+      "surface": "hover",
+      "lanes": [
+        "go"
       ]
     },
     "imp-barrel-no-fanout": {
@@ -1592,12 +1616,6 @@
         "typescript",
         "javascript",
         "python",
-        "go"
-      ]
-    },
-    "impl-service-contract": {
-      "surface": "implementation",
-      "lanes": [
         "go"
       ]
     },
@@ -1810,7 +1828,8 @@
         "php",
         "typescript",
         "javascript",
-        "python"
+        "python",
+        "go"
       ]
     },
     "parse-negative-unclosed-function": {
@@ -1823,12 +1842,6 @@
       "surface": "parse-negative",
       "lanes": [
         "rust"
-      ]
-    },
-    "parse-negative-unclosed-struct": {
-      "surface": "parse-negative",
-      "lanes": [
-        "go"
       ]
     },
     "refs-assoc-const-override": {
@@ -1890,6 +1903,12 @@
         "javascript"
       ]
     },
+    "refs-func-type-handler": {
+      "surface": "references",
+      "lanes": [
+        "go"
+      ]
+    },
     "refs-jsx-component-usage": {
       "surface": "references",
       "lanes": [
@@ -1911,12 +1930,6 @@
       "surface": "references",
       "lanes": [
         "rust"
-      ]
-    },
-    "refs-money-type": {
-      "surface": "references",
-      "lanes": [
-        "go"
       ]
     },
     "refs-promoted-method-call": {
@@ -2088,6 +2101,12 @@
       "surface": "resolution",
       "lanes": [
         "rust"
+      ]
+    },
+    "resolution-embedded-field-name": {
+      "surface": "resolution",
+      "lanes": [
+        "go"
       ]
     },
     "resolution-foreign-bound-blanket": {

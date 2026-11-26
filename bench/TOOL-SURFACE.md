@@ -151,15 +151,15 @@ Language server (E.5): not pinned yet
 
 | Extractor | Class | Scored by (task ids) | Deliberate gap (README line) | Not yet |
 | --- | --- | --- | --- | --- |
-| net/http | route parser | `def-route-to-handler`, `def-route-default-mux`, `def-closure-handler` | | |
-| gorilla/mux | route parser | | | not yet |
-| chi | route parser | | | not yet |
-| gin | route parser | | | not yet |
-| echo | route parser | | | not yet |
-| fiber | route parser | | | not yet |
-| resty | other | | | not yet |
+| net/http | route parser | `def-route-to-handler`, `def-route-default-mux` | | |
+| gorilla/mux | route parser | `def-route-gorilla-mux` | | |
+| chi | route parser | `def-route-chi` | | |
+| gin | route parser | `def-route-gin` | | |
+| echo | route parser | `def-route-echo` | | |
+| fiber | route parser | `def-route-fiber` | | |
+| resty | other | | "resty: a deliberate gap. The lane makes no outgoing HTTP call" | |
 
-Language server (E.5): not pinned yet
+Language server (E.5): gopls v0.24.0; source "The language server this lane's stack starts is **gopls v0.24.0**"
 
 ## Language servers (E.5)
 
