@@ -38,4 +38,14 @@ class StatusBoardTest extends TestCase
         $this->assertSame(RepairStatus::Completed, $order->status);
         $this->assertNotNull($order->completed_at);
     }
+
+    public function test_board_route_serves_the_component_as_a_full_page(): void
+    {
+        $order = RepairOrder::factory()->create(['status' => RepairStatus::Repairing]);
+
+        $this->get('/board')
+            ->assertOk()
+            ->assertSeeLivewire(StatusBoard::class)
+            ->assertSee($order->reference);
+    }
 }
