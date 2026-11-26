@@ -2,7 +2,7 @@
     "version": 1,
     "corpus": "atelier-bench-corpus",
     "lane": "go",
-    "notes": "Known-answer navigation tasks for the go lane. Needle-based, not line-based: bench/verify resolves every needle to a unique line at the current SHA, so the manifest survives edits without stale line numbers. Paths are relative to the lane root (go/), not to the repository root. 'expect' blocks carry the ground truth a harness scores against; a count named min_* is a floor, every other count is exact. COUNTING RULES, one per count and count-bearing field; each states how the current counts were made. (1) exact_count on an implementation or cardinality list counts TYPES: concrete, non-generic, unconditionally compiled named types whose value or pointer method set satisfies the contract, directly or through EMBEDDING (Go's promotion), a generic contract under the instantiation the type's own method signatures fix (CustomerRepository satisfies Repository[*models.Customer]); interfaces, embeddable bases and build-tag-gated types are excluded. Go has no implements keyword: the textual evidence of satisfaction is a `var _ Contract = (*Type)(nil)` assertion, and the structural rules carry none at all. The assertion is evidence only, never the anchor: each implementor is anchored on the declaration line of its type (`type T struct {`), the line that declares the implementing type. (2) optional_sites on an implementation or cardinality list names the interfaces whose method set contains the contract's, by embedding it (CompositeContract, Keyed) or by declaring the same methods (RuleContract and RuleLike, each for the other): they satisfy the contract but are not counted, and a tool may return them or not. (3) card-rule-contract is the one list that counts VALUES, the single exception to rule (1), kept so that its 48 equals the same shared id in the typescript, javascript and python lanes, whose structural rules are object values with no type of their own: exact_count = nominal_count (the 24 rule structs, each on its type declaration line) + structural_count (the 24 AdHocRule struct-literal values of adhoc.Rules, each on its literal line), and the AdHocRule type itself is not counted. impl-structural-no-assertion asks about the same method set under rule (1) and counts 25 types. (4) card-embedded-promotion, asked from an embeddable struct, counts METHODS: exact_count is the number of methods the struct's method set gains from its embedded fields (all five of BaseReport's; it declares none of its own), each anchored on its declaration line. (5) On a multi-parent task a Go type's parents are its embedded fields: an interface's embedded interfaces (parents-contract-three, whose exact_count counts them) and a struct's embedded structs (parents-class-one-plus-two: extends_count counts the embedded report base from atelier/support, implements_count the embedded behaviour concerns from atelier/concerns, and their sum is the number of embedded fields). Each parent is listed on its type's declaration line. (6) exact_count on a references task counts LINES: every line of a compiled file, tests included, on which an identifier resolves to the asked declaration, whatever its position (a call, a selector reached through embedding, a method value or method expression, a type in a field, parameter, result, receiver or composite literal, a package-qualified mention), each line once however many uses it holds (refs-money-type and refs-money-class: 44 lines holding 53 uses). The declaration line asked from is not counted, and comments, string literals and the never-compiled files under fixtures/broken-syntax hold no uses. known_sites, with repeated_sites, lists exactly those lines. (7) repeated_sites names a needle that matches exactly `lines` lines of one file, every one of them a site: exact_count = known_sites + all repeated lines, and bench/verify checks each `lines`. (8) optional_sites on a references list names a line that links to the symbol without using it, such as a string literal equal to a const's value (refs-string-event-name): never counted, and a tool may return it or not. (9) min_incoming on a call_hierarchy task is a floor on calling FUNCTIONS: each function or method whose body holds a call counts once, however many call sites it holds (hierarchy-incoming-transition: RepairOrder.Complete, dataset.Seeded with seven call sites, and TestPointerAndValueReceivers, so 3). incoming_includes names one call site per caller and outgoing_includes the callee declarations; both are partial lists and never counted. (10) document_symbol tasks count every named declaration the anchored FILE makes: package-level types, consts, vars and functions, methods, struct fields (an embedded field counts once, under its type name) and interface methods (an embedded interface likewise). Parameters, results, receivers, local variables, imports and the package clause are not symbols. Each task's note enumerates that count N and states min_symbols = floor(0.75 * N), the 25% margin absorbing listings that fold container nodes; must_include never lists more names than min_symbols. (11) exact_count on a resolution task of kind arity counts parameters, not groups (see arity below). ANCHORING RULES. A definition answer is the declaration of the identifier from.symbol names, anchored on its declaring line (the func, method, type, var or const line; in a grouped block, the spec line), never on a line inside a body: a function whose body holds the construct asked about (def-type-switch) is answered by the function's own line. Where the identifier is a method called on an interface value, the answer is the concrete method the call reaches under the lane's default container binding, the other implementations being known_sites (def-trait-method-through-binding, ruled in #154). def-struct-tag is the one string-keyed definition: from.symbol sits in a string literal, and the answer is the struct field whose json tag carries that wire name. A blank import binds no identifier, so no definition task is asked from one. IDs shared with the other lanes ask the same question in each language. Other kinds this lane uses: arity (the parameter count of a signature whose parameters share types in groups: sku, name string is two parameters, and exact_count counts parameters, not groups), dot_import (an import . \"path\": the package's exported names are used with no qualifier, so the call site carries no package name to follow), init_order (package initialisation order: package-level vars initialise before any init function runs, and the init functions of one package run in file-name order), no_fanout (an import of a leaf package: it reaches that package's declarations and nothing in the package of its parent directory), one_member (an import of a whole package from which the file uses one member: the answer is that member, never every declaration in the package), one_of_two (two packages share one name and the import line asked from reaches one of them under an alias: the answer is a declaration in the package that line imports, never in its namesake), path_name_divergence (an import path whose last segment differs from the package clause, such as yamlish.v2 declaring package yamlish: the local identifier is the declared package name), receiver (the receiver form of a method, value or pointer: a call resolves to the method declared on that receiver, and a value receiver works on a copy, so the caller's value is never mutated), same_name (two Go functions share the name RecalculateInventory, the console command and the job it calls; the package qualifier at the call site, app., is all that tells them apart), shadow_alias (an identifier that reaches one of two same-name declarations through a package alias or a shadowed package name: moneyfmt.Formatter and statusfmt.Formatter name the Formatter of two different packages, coresupport picks one of two packages named support, and http inside a package itself named http is the standard library; each resolves to the declaration at the import path, never its namesake), side_effect_only (a blank import _ \"path\": no identifier is bound, and the only effect is the package's init functions), structural (Go interface satisfaction: a type implements an interface through its method set, directly or through embedding, without naming the interface; a var _ Contract = (*Type)(nil) assertion is optional evidence, and the adhoc rules carry none), syntax_error (a source file under fixtures/broken-syntax/ that carries the brokenfixtures build tag, so the normal build never compiles it; it is malformed on purpose, an unclosed struct literal or a broken receiver list, and parsing it must fail), type_only (a package imported only for names in type positions: Go has no import type, so the distinction is positional, and a file that calls no function of the package carries no value-level edge to it), visibility_boundary (a package under internal/: only packages rooted at the parent of the internal directory may import it, a boundary the compiler enforces). Kinds shared with other lanes, worded identically in every lane that uses them. child_of: the anchored declaration is the child end of a parent edge, and the answer is a direct parent it extends, implements or embeds, one level up, never a further ancestor and never one of its own children. lane_local: a symbol every lane carries under the same name or as its lane equivalent (Money, Customer, Dataset, the reference prefix, the invoice calculator's calculate, the billing Formatter); resolution must land on this lane's own declaration and never cross into a sibling lane. parent_of: a parent edge scored for direction, with the anchor at either end; the parent is the type that is extended, implemented or embedded, the child is the type that does so, and an answer that reports the child as the parent is wrong. uses_self: a type that refers to itself, such as a tree node holding children of its own type; the edge is a uses edge back to the declaring type, never extends, implements or embedding. from.symbol is the identifier a task asks about, exactly as written on the from line and with no qualifier: the alias where an alias is used, the member on a member access, null when the question has no single identifier. from.occurrence (1-based) says which one when it appears more than once on that line, and is then required. document_symbol, parse-negative and diagnostics tasks ask about a file and carry neither key.",
+    "notes": "Known-answer navigation tasks for the go lane. Needle-based, not line-based: bench/verify resolves every needle to a unique line at the current SHA, so the manifest survives edits without stale line numbers. Paths are relative to the lane root (go/), not to the repository root. 'expect' blocks carry the ground truth a harness scores against; a count named min_* is a floor, every other count is exact. COUNTING RULES, one per count and count-bearing field; each states how the current counts were made. (1) exact_count on an implementation or cardinality list counts TYPES: concrete, non-generic, unconditionally compiled named types whose value or pointer method set satisfies the contract, directly or through EMBEDDING (Go's promotion), a generic contract under the instantiation the type's own method signatures fix (CustomerRepository satisfies Repository[*models.Customer]); interfaces, embeddable bases and build-tag-gated types are excluded. Go has no implements keyword: the textual evidence of satisfaction is a `var _ Contract = (*Type)(nil)` assertion, and the structural rules carry none at all. The assertion is evidence only, never the anchor: each implementor is anchored on the declaration line of its type (`type T struct {`), the line that declares the implementing type. (2) optional_sites on an implementation or cardinality list names the interfaces whose method set contains the contract's, by embedding it (CompositeContract, Keyed) or by declaring the same methods (RuleContract and RuleLike, each for the other): they satisfy the contract but are not counted, and a tool may return them or not. (3) card-rule-contract is the one list that counts VALUES, the single exception to rule (1), kept so that its 48 equals the same shared id in the typescript, javascript and python lanes, whose structural rules are object values with no type of their own: exact_count = nominal_count (the 24 rule structs, each on its type declaration line) + structural_count (the 24 AdHocRule struct-literal values of adhoc.Rules, each on its literal line), and the AdHocRule type itself is not counted. impl-structural-no-assertion asks about the same method set under rule (1) and counts 25 types. (4) card-embedded-promotion, asked from an embeddable struct, counts METHODS: exact_count is the number of methods the struct's method set gains from its embedded fields (all five of BaseReport's; it declares none of its own), each anchored on its declaration line. (5) On a multi-parent task a Go type's parents are its embedded fields: an interface's embedded interfaces (parents-contract-three, whose exact_count counts them) and a struct's embedded structs (parents-class-one-plus-two: extends_count counts the embedded report base from atelier/support, implements_count the embedded behaviour concerns from atelier/concerns, and their sum is the number of embedded fields). Each parent is listed on its type's declaration line. (6) exact_count on a references task counts LINES: every line of a compiled file, tests included, on which an identifier resolves to the asked declaration, whatever its position (a call, a selector reached through embedding, a method value or method expression, a type in a field, parameter, result, receiver or composite literal, a package-qualified mention), each line once however many uses it holds (refs-money-class: 44 lines holding 53 uses). The declaration line asked from is not counted, and comments, string literals and the never-compiled files under fixtures/broken-syntax hold no uses. known_sites, with repeated_sites, lists exactly those lines. (7) repeated_sites names a needle that matches exactly `lines` lines of one file, every one of them a site: exact_count = known_sites + all repeated lines, and bench/verify checks each `lines`. (8) optional_sites on a references list names a line that links to the symbol without using it, such as a string literal equal to a const's value (refs-string-event-name): never counted, and a tool may return it or not. (9) min_incoming on a call_hierarchy task is a floor on calling FUNCTIONS: each function or method whose body holds a call counts once, however many call sites it holds (hierarchy-incoming-transition: RepairOrder.Complete, dataset.Seeded with seven call sites, and TestPointerAndValueReceivers, so 3). incoming_includes names one call site per caller and outgoing_includes the callee declarations; both are partial lists and never counted. (10) document_symbol tasks count every named declaration the anchored FILE makes: package-level types, consts, vars and functions, methods, struct fields (an embedded field counts once, under its type name) and interface methods (an embedded interface likewise). Parameters, results, receivers, local variables, imports and the package clause are not symbols. Each task's note enumerates that count N and states min_symbols = floor(0.75 * N), the 25% margin absorbing listings that fold container nodes; must_include never lists more names than min_symbols. (11) exact_count on a resolution task of kind arity counts parameters, not groups (see arity below). ANCHORING RULES. A definition answer is the declaration of the identifier from.symbol names, anchored on its declaring line (the func, method, type, var or const line; in a grouped block, the spec line), never on a line inside a body: a function whose body holds the construct asked about (def-type-switch) is answered by the function's own line. Where the identifier is a method called on an interface value, the answer is the concrete method the call reaches under the lane's default container binding, the other implementations being known_sites (def-trait-method-through-binding, ruled in #154). def-struct-tag is the one string-keyed definition: from.symbol sits in a string literal, and the answer is the struct field whose json tag carries that wire name. A blank import binds no identifier, so no definition task is asked from one. IDs shared with the other lanes ask the same question in each language. Other kinds this lane uses: arity (the parameter count of a signature whose parameters share types in groups: sku, name string is two parameters, and exact_count counts parameters, not groups), dot_import (an import . \"path\": the package's exported names are used with no qualifier, so the call site carries no package name to follow), init_order (package initialisation order: package-level vars initialise before any init function runs, and the init functions of one package run in file-name order), no_fanout (an import of a leaf package: it reaches that package's declarations and nothing in the package of its parent directory), one_member (an import of a whole package from which the file uses one member: the answer is that member, never every declaration in the package), one_of_two (two packages share one name and the import line asked from reaches one of them under an alias: the answer is a declaration in the package that line imports, never in its namesake), path_name_divergence (an import path whose last segment differs from the package clause, such as yamlish.v2 declaring package yamlish: the local identifier is the declared package name), receiver (the receiver form of a method, value or pointer: a call resolves to the method declared on that receiver, and a value receiver works on a copy, so the caller's value is never mutated), same_name (two Go functions share the name RecalculateInventory, the console command and the job it calls; the package qualifier at the call site, app., is all that tells them apart), shadow_alias (an identifier that reaches one of two same-name declarations through a package alias or a shadowed package name: moneyfmt.Formatter and statusfmt.Formatter name the Formatter of two different packages, coresupport picks one of two packages named support, and http inside a package itself named http is the standard library; each resolves to the declaration at the import path, never its namesake), side_effect_only (a blank import _ \"path\": no identifier is bound, and the only effect is the package's init functions), structural (Go interface satisfaction: a type implements an interface through its method set, directly or through embedding, without naming the interface; a var _ Contract = (*Type)(nil) assertion is optional evidence, and the adhoc rules carry none), syntax_error (a source file under fixtures/broken-syntax/ that carries the brokenfixtures build tag, so the normal build never compiles it; it is malformed on purpose, an unclosed struct literal or a broken receiver list, and parsing it must fail), type_only (a package imported only for names in type positions: Go has no import type, so the distinction is positional, and a file that calls no function of the package carries no value-level edge to it), visibility_boundary (a package under internal/: only packages rooted at the parent of the internal directory may import it, a boundary the compiler enforces). Kinds shared with other lanes, worded identically in every lane that uses them. child_of: the anchored declaration is the child end of a parent edge, and the answer is a direct parent it extends, implements or embeds, one level up, never a further ancestor and never one of its own children. lane_local: a symbol every lane carries under the same name or as its lane equivalent (Money, Customer, Dataset, the reference prefix, the invoice calculator's calculate, the billing Formatter); resolution must land on this lane's own declaration and never cross into a sibling lane. parent_of: a parent edge scored for direction, with the anchor at either end; the parent is the type that is extended, implemented or embedded, the child is the type that does so, and an answer that reports the child as the parent is wrong. uses_self: a type that refers to itself, such as a tree node holding children of its own type; the edge is a uses edge back to the declaring type, never extends, implements or embedding. from.symbol is the identifier a task asks about, exactly as written on the from line and with no qualifier: the alias where an alias is used, the member on a member access, null when the question has no single identifier. from.occurrence (1-based) says which one when it appears more than once on that line, and is then required. document_symbol, parse-negative and diagnostics tasks ask about a file and carry neither key.",
     "tasks": [
         {
             "id": "def-free-function",
@@ -49,7 +49,7 @@
         {
             "id": "def-package-var-block",
             "surface": "definition",
-            "note": "Package-level var declared inside a grouped var block.",
+            "note": "Package-level var declared inside a grouped var block. Go-specific: a factored `var ( ... )` block declares several package-level variables under one keyword, so the declaration is the spec line inside the parentheses, never a line that starts with var.",
             "from": {"file": "core/support/priority.go", "needle": "return surchargeBasisPoints[p]", "symbol": "surchargeBasisPoints"},
             "expect": {"file": "core/support/priority.go", "needle": "\tsurchargeBasisPoints = map[Priority]int64{"}
         },
@@ -83,7 +83,7 @@
         {
             "id": "def-route-default-mux",
             "surface": "definition",
-            "note": "The other registration shape: package-level HandleFunc on the default mux.",
+            "note": "The other registration shape: package-level HandleFunc on the default mux. Go-specific: net/http's package-level HandleFunc registers on the implicit DefaultServeMux, a global the call never names, with a pattern that carries no method.",
             "from": {"file": "app/http/router.go", "needle": "http.HandleFunc(\"/health\", Health(state))", "symbol": "Health"},
             "expect": {"file": "app/http/router.go", "needle": "func Health(state *app.State) Handler {"}
         },
@@ -116,36 +116,9 @@
             "expect": {"file": "core/concerns/reference.go", "needle": "func (h HasReference) ShortReference() string {"}
         },
         {
-            "id": "def-embedded-promotion-one-level",
-            "surface": "definition",
-            "note": "One level of promotion through an embedded POINTER field; technician.go never names BookSlot.",
-            "from": {"file": "tests/promotion_test.go", "needle": "if !technician.BookSlot(0) {", "symbol": "BookSlot"},
-            "expect": {
-                "file": "core/support/schedule.go",
-                "needle": "func (s *Schedule) BookSlot(slot int) bool {",
-                "known_sites": [
-                    {"file": "core/models/technician.go", "needle": "\t*support.Schedule"}
-                ]
-            }
-        },
-        {
-            "id": "def-embedded-promotion-two-levels",
-            "surface": "definition",
-            "note": "Two levels: Technician embeds Staff, Staff embeds HasReference. Neither hop is written on Technician.",
-            "from": {"file": "tests/promotion_test.go", "needle": "if got := technician.Reference(); got != \"TE-2026-000007\" {", "symbol": "Reference"},
-            "expect": {
-                "file": "core/concerns/reference.go",
-                "needle": "func (h HasReference) Reference() string {",
-                "known_sites": [
-                    {"file": "core/models/technician.go", "needle": "type Staff struct {"},
-                    {"file": "core/models/technician.go", "needle": "\t\tStaff:    Staff{HasReference: concerns.NewHasReference(\"TE\", id), Name: name},"}
-                ]
-            }
-        },
-        {
             "id": "def-embedded-promotion-four-levels",
             "surface": "definition",
-            "note": "CashFlowReport reaches CacheKey through CompositeReport, PeriodicReport, BaseReport, HasCache.",
+            "note": "CashFlowReport reaches CacheKey through CompositeReport, PeriodicReport, BaseReport, HasCache. Go-specific: each level is an anonymous embedded field, not a declared supertype, and the selector resolves under Go's shallowest-depth rule at depth four, so no class hierarchy declares the chain.",
             "from": {"file": "tests/promotion_test.go", "needle": "if cashFlow.CacheKey() != \"cash-flow:cache\" {", "symbol": "CacheKey"},
             "expect": {
                 "file": "atelier/concerns/cache.go",
@@ -168,7 +141,7 @@
         {
             "id": "def-shadowing-promoted-method",
             "surface": "definition",
-            "note": "The outer Calculate SHADOWS the promoted one and calls it back through the explicit field path.",
+            "note": "The outer Calculate SHADOWS the promoted one and calls it back through the explicit field path. Go-specific: an embedded field's implicit name is its type name, so c.StandardInvoiceCalculator.Calculate selects the shadowed promoted method explicitly; Go has no super.",
             "from": {"file": "core/services/rush.go", "needle": "base := c.StandardInvoiceCalculator.Calculate(order)", "symbol": "Calculate"},
             "expect": {
                 "file": "core/services/standard.go",
@@ -181,21 +154,21 @@
         {
             "id": "def-method-value",
             "surface": "definition",
-            "note": "Method value: the receiver is bound, the result is a func(int) bool.",
+            "note": "Method value: the receiver is bound, the result is a func(int) bool. Go-specific: a method value evaluates s.BookSlot without calling it and binds the receiver s into a plain func(int) bool.",
             "from": {"file": "core/support/schedule.go", "needle": "\tbook := s.BookSlot", "symbol": "BookSlot"},
             "expect": {"file": "core/support/schedule.go", "needle": "func (s *Schedule) BookSlot(slot int) bool {"}
         },
         {
             "id": "def-method-expression",
             "surface": "definition",
-            "note": "Method expression: the receiver becomes the first parameter, func(*Schedule, int) bool.",
+            "note": "Method expression: the receiver becomes the first parameter, func(*Schedule, int) bool. Go-specific: a method expression names the method through its receiver type, (*Schedule).BookSlot, and turns the receiver into the first parameter.",
             "from": {"file": "core/support/schedule.go", "needle": "\tbooker := (*Schedule).BookSlot", "symbol": "BookSlot"},
             "expect": {"file": "core/support/schedule.go", "needle": "func (s *Schedule) BookSlot(slot int) bool {"}
         },
         {
             "id": "def-func-type-implements-interface",
             "surface": "definition",
-            "note": "The http.HandlerFunc pattern: the method set hangs off a named FUNCTION type.",
+            "note": "The http.HandlerFunc pattern: the method set hangs off a named FUNCTION type. Go-specific: only Go attaches methods to a named function type, so the type that satisfies http.Handler is a func, not a struct or class.",
             "from": {"file": "app/http/router.go", "needle": "var _ http.Handler = Handler(nil)", "symbol": "Handler", "occurrence": 2},
             "expect": {
                 "file": "app/http/router.go",
@@ -208,14 +181,14 @@
         {
             "id": "def-named-func-type-adapter",
             "surface": "definition",
-            "note": "A func type adapting a plain closure to a three-method interface.",
+            "note": "A func type adapting a plain closure to a three-method interface. Go-specific: the adapter is a conversion of a function value to a named func type that carries a method, the http.HandlerFunc idiom.",
             "from": {"file": "tests/interfaces_test.go", "needle": "var adapted corecontracts.InvoiceCalculator = corecontracts.CalculatorFunc(func(order *models.RepairOrder) money.Money {", "symbol": "CalculatorFunc"},
             "expect": {"file": "core/contracts/invoicecalculator.go", "needle": "type CalculatorFunc func(order *models.RepairOrder) money.Money"}
         },
         {
             "id": "def-generic-constraint-union",
             "surface": "definition",
-            "note": "One type parameter constrained by a union of approximated types.",
+            "note": "One type parameter constrained by a union of approximated types. Go-specific: the constraint is a type-set union of ~ (underlying-type) terms, a form only Go's generics have.",
             "from": {"file": "tests/interfaces_test.go", "needle": "if support.SumOf([]float64{1.5, 2.5}) != 4 {", "symbol": "SumOf"},
             "expect": {
                 "file": "core/support/helpers.go",
@@ -226,44 +199,37 @@
             }
         },
         {
-            "id": "def-generic-two-params",
-            "surface": "definition",
-            "note": "Two type parameters, both inferred at the call site.",
-            "from": {"file": "tests/interfaces_test.go", "needle": "lengths := support.MapSlice([]string{\"a\", \"bb\"}, func(value string) int { return len(value) })", "symbol": "MapSlice"},
-            "expect": {"file": "core/support/helpers.go", "needle": "func MapSlice[T any, R any](values []T, convert func(T) R) []R {"}
-        },
-        {
             "id": "def-generic-struct-method",
             "surface": "definition",
-            "note": "Method on a generic struct: the receiver carries the type parameters, the method adds none.",
+            "note": "Method on a generic struct: the receiver carries the type parameters, the method adds none. Go-specific: a method of a generic type declares no type parameters of its own; the receiver Pair[L, R] re-binds the type's parameters by name.",
             "from": {"file": "tests/interfaces_test.go", "needle": "if swapped := pair.Swap(); swapped.Left != 4 {", "symbol": "Swap"},
             "expect": {"file": "core/support/pair.go", "needle": "func (p Pair[L, R]) Swap() Pair[R, L] {"}
         },
         {
             "id": "def-generic-free-function-extra-param",
             "surface": "definition",
-            "note": "A Go method may not add a type parameter, so the third one lives on a free function.",
+            "note": "A Go method may not add a type parameter, so the third one lives on a free function. Go-specific: a Go method cannot add type parameters, so a third type parameter forces a free function over Pair.",
             "from": {"file": "tests/interfaces_test.go", "needle": "doubled := support.MapRight(pair, func(value int) int { return value * 2 })", "symbol": "MapRight"},
             "expect": {"file": "core/support/pair.go", "needle": "func MapRight[L any, R any, T any](pair Pair[L, R], convert func(R) T) Pair[L, T] {"}
         },
         {
             "id": "def-generic-registry-instantiation",
             "surface": "definition",
-            "note": "The same generic container instantiated for reports, metrics, exporters, notifiers and rules.",
+            "note": "The same generic container instantiated for reports, metrics, exporters, notifiers and rules. Go-specific: explicit instantiation in square brackets, NewRegistry[contracts.ReportContract](), parses like an index expression until NewRegistry is known to be generic.",
             "from": {"file": "atelier/reports/registry.go", "needle": "var registry = support.NewRegistry[contracts.ReportContract]()", "symbol": "NewRegistry"},
             "expect": {"file": "atelier/support/registry.go", "needle": "func NewRegistry[T any]() *Registry[T] {"}
         },
         {
             "id": "def-init-registration",
             "surface": "definition",
-            "note": "Registration happens in init(), so no call site outside the package mentions the report.",
+            "note": "Registration happens in init(), so no call site outside the package mentions the report. Go-specific: no statement calls an init function; the runtime runs every init at package load, so Register's callers sit in bodies no call reaches.",
             "from": {"file": "atelier/reports/gross_profit.go", "needle": "\tRegister(NewGrossProfitReport())", "symbol": "Register"},
             "expect": {"file": "atelier/reports/registry.go", "needle": "func Register(report contracts.ReportContract) {"}
         },
         {
             "id": "def-generated-file",
             "surface": "definition",
-            "note": "Label() exists only in the committed generated file; the generator that writes it is in tools/.",
+            "note": "Label() exists only in the committed generated file; the generator that writes it is in tools/. Go-specific: the //go:generate directive and the `Code generated ... DO NOT EDIT.` header are the Go toolchain's own convention for committed generated code.",
             "from": {"file": "core/reporting/formatter.go", "needle": "\t\treturn status.Label()", "symbol": "Label"},
             "expect": {
                 "file": "core/support/status_labels_gen.go",
@@ -278,7 +244,7 @@
         {
             "id": "def-embedded-asset",
             "surface": "definition",
-            "note": "go:embed binds a file to a package variable at build time; no file is read at run time.",
+            "note": "go:embed binds a file to a package variable at build time; no file is read at run time. Go-specific: //go:embed fills the package variable at compile time; no statement assigns it.",
             "from": {"file": "internal/audit/audit.go", "needle": "\treturn strings.TrimSpace(banner)", "symbol": "banner"},
             "expect": {
                 "file": "internal/audit/audit.go",
@@ -291,7 +257,7 @@
         {
             "id": "def-build-tag-gated",
             "surface": "definition",
-            "note": "Two files declare platformLabel; exactly one compiles, chosen by GOOS. CI (linux) takes the !darwin half.",
+            "note": "Two files declare platformLabel; exactly one compiles, chosen by GOOS. CI (linux) takes the !darwin half. Go-specific: a //go:build constraint is file-level, so two files declare the same platformLabel and the build constraint, not the source text, picks one.",
             "from": {"file": "internal/audit/audit.go", "needle": "s.trail = append(s.trail, fmt.Sprintf(\"%s/%s\", platformLabel(), event))", "symbol": "platformLabel"},
             "expect": {
                 "file": "internal/audit/platform_other.go",
@@ -303,22 +269,9 @@
             }
         },
         {
-            "id": "def-closure-handler",
-            "surface": "definition",
-            "note": "Every handler is an anonymous function returned by a factory; the route table holds closures.",
-            "from": {"file": "app/http/router.go", "needle": "mux.Handle(\"GET /api/orders\", ListOrders(state))", "symbol": "ListOrders"},
-            "expect": {
-                "file": "app/http/api.go",
-                "needle": "func ListOrders(state *app.State) Handler {",
-                "known_sites": [
-                    {"file": "app/http/report.go", "needle": "\treturn func(writer http.ResponseWriter, request *http.Request) {"}
-                ]
-            }
-        },
-        {
             "id": "def-defer-recover",
             "surface": "definition",
-            "note": "A deferred closure turns a panic into a named return value.",
+            "note": "A deferred closure turns a panic into a named return value. Go-specific: recover stops a panic only inside a deferred function, which then rewrites the named result err.",
             "from": {"file": "tests/jobs_test.go", "needle": "result, err := app.SafeRun(func() app.JobResult {", "symbol": "SafeRun"},
             "expect": {
                 "file": "app/jobs.go",
@@ -338,14 +291,14 @@
         {
             "id": "def-channel-job",
             "surface": "definition",
-            "note": "Second of the trio: the result arrives on a receive-only channel closed by a goroutine.",
+            "note": "Second of the trio: the result arrives on a receive-only channel closed by a goroutine. Go-specific: the result arrives on the receive-only channel the function returns and is received with <-; Go has no async functions, and the README maps the shared def-async-function to this id as its nearest question.",
             "from": {"file": "tests/jobs_test.go", "needle": "\tfromChannel := <-app.RunWithChannel(data)", "symbol": "RunWithChannel"},
             "expect": {"file": "app/jobs.go", "needle": "func RunWithChannel(data *dataset.Dataset) <-chan JobResult {"}
         },
         {
             "id": "def-goroutine-select",
             "surface": "definition",
-            "note": "Third of the trio: three goroutines, a WaitGroup and a select with a timeout arm.",
+            "note": "Third of the trio: three goroutines, a WaitGroup and a select with a timeout arm. Go-specific: goroutines, a WaitGroup and a select over a result channel and a timer channel.",
             "from": {"file": "tests/jobs_test.go", "needle": "\tfromGoroutines := app.RunWithGoroutines(data)", "symbol": "RunWithGoroutines"},
             "expect": {
                 "file": "app/jobs.go",
@@ -366,7 +319,7 @@
         {
             "id": "def-type-switch",
             "surface": "definition",
-            "note": "Definition of a function whose body narrows an interface with a type switch (two concrete arms plus a default); the answer is the function declaration line, the switch is inside it.",
+            "note": "Definition of a function whose body narrows an interface with a type switch (two concrete arms plus a default); the answer is the function declaration line, the switch is inside it. Go-specific: switch narrowed := choice.(type) binds narrowed with a different static type in each case clause.",
             "from": {"file": "tests/interfaces_test.go", "needle": "if got := support.DescribeChoice(support.RightOf(7)); got != \"right:7\" {", "symbol": "DescribeChoice"},
             "expect": {
                 "file": "core/support/pick.go",
@@ -379,7 +332,7 @@
         {
             "id": "def-anonymous-struct",
             "surface": "definition",
-            "note": "The return type has no name anywhere in the tree.",
+            "note": "The return type has no name anywhere in the tree. Go-specific: the result type is an unnamed struct type literal, identical by structure to any other struct type with the same fields, tags and order.",
             "from": {"file": "tests/interfaces_test.go", "needle": "summary := support.AnonymousSummary(support.LeftOf(\"\", \"fallback\"))", "symbol": "AnonymousSummary"},
             "expect": {"file": "core/support/pick.go", "needle": "func AnonymousSummary(choice Choice) struct {"}
         },
@@ -399,28 +352,21 @@
         {
             "id": "def-error-sentinel",
             "surface": "definition",
-            "note": "The sentinel is a package-level var compared with errors.Is, never by message.",
+            "note": "The sentinel is a package-level var compared with errors.Is, never by message. Go-specific: errors are values; a sentinel is a package-level var matched through errors.Is along an Unwrap chain, not an exception class.",
             "from": {"file": "tests/errors_test.go", "needle": "\tif !errors.Is(wrapped, failure.ErrNotFound) {", "symbol": "ErrNotFound"},
             "expect": {"file": "core/failure/errors.go", "needle": "var ErrNotFound = errors.New(\"not found\")"}
         },
         {
             "id": "def-struct-tag",
             "surface": "definition",
-            "note": "The wire name lives in a struct tag, not in the field name. A string-keyed link, not a language-level definition: from.symbol is the key of a decoded JSON map, a string literal that names no identifier, and the answer is the field whose json tag carries that wire name. No definition query on the literal reaches it by the language's own resolution.",
+            "note": "The wire name lives in a struct tag, not in the field name. A string-keyed link, not a language-level definition: from.symbol is the key of a decoded JSON map, a string literal that names no identifier, and the answer is the field whose json tag carries that wire name. No definition query on the literal reaches it by the language's own resolution. Go-specific: a struct tag is a string literal the compiler attaches to a field, read only through reflection (encoding/json here).",
             "from": {"file": "tests/http_test.go", "needle": "\tif body[\"reference\"] != \"AT-2026-000001\" {", "symbol": "reference"},
             "expect": {"file": "app/http/report.go", "needle": "\tReference  string `json:\"reference\"`"}
         },
         {
-            "id": "def-internal-package",
-            "surface": "definition",
-            "note": "internal/ limits importers to packages rooted at the parent of the internal directory (atelier.example/lane/...); the tests package qualifies, so audit.Banner resolves into the internal package. The earlier question, the blank import in cmd/atelier/main.go reaching `func init()`, is dropped: a blank import binds no identifier, so no definition answers init (the same finding left imp-blank-import-side-effect unscorable in #205).",
-            "from": {"file": "tests/structure_test.go", "needle": "\tif !strings.Contains(audit.Banner(), \"audit sink\") {", "symbol": "Banner"},
-            "expect": {"file": "internal/audit/audit.go", "needle": "func Banner() string {"}
-        },
-        {
             "id": "def-vendored-package-name",
             "surface": "definition",
-            "note": "Import path ends in yamlish.v2, declared package is yamlish: the call qualifier is the package name.",
+            "note": "Import path ends in yamlish.v2, declared package is yamlish: the call qualifier is the package name. Go-specific: the import path ends in yamlish.v2 while the package clause says yamlish, so the qualifier at the call is not the path's last segment.",
             "from": {"file": "app/commands/export_report.go", "needle": "\treturn yamlish.Marshal(map[string]string{", "symbol": "Marshal"},
             "expect": {
                 "file": "third_party/yamlish.v2/yamlish.go",
@@ -531,7 +477,7 @@
         {
             "id": "impl-structural-no-assertion",
             "surface": "implementation",
-            "note": "RuleLike declares the same method set as RuleContract, and no `var _` assertion names RuleLike (its only use is as the constraint of SatisfiedBy): every type with that method set satisfies it by shape alone. That is adhoc.AdHocRule (its 24 values assert nothing) and the 24 nominal rule structs (each asserts RuleContract only), 25 types under the lane's counting rule; RuleContract, an interface with the same method set, is an optional site.",
+            "note": "RuleLike declares the same method set as RuleContract, and no `var _` assertion names RuleLike (its only use is as the constraint of SatisfiedBy): every type with that method set satisfies it by shape alone. That is adhoc.AdHocRule (its 24 values assert nothing) and the 24 nominal rule structs (each asserts RuleContract only), 25 types under the lane's counting rule; RuleContract, an interface with the same method set, is an optional site. Go-specific: no Go type names the interfaces it satisfies, and RuleLike is named by no type and no assertion, so only a method-set comparison finds its 25 implementors.",
             "from": {"file": "atelier/contracts/rule.go", "needle": "type RuleLike interface {", "symbol": "RuleLike"},
             "expect": {
                 "exact_count": 25,
@@ -567,30 +513,6 @@
                     {"file": "atelier/contracts/rule.go", "needle": "type RuleContract interface {"}
                 ],
                 "must_not_include": ["var _ contracts.RuleLike"]
-            }
-        },
-        {
-            "id": "impl-service-contract",
-            "surface": "implementation",
-            "note": "12 services, each embedding support.BaseService for the promoted Name method.",
-            "from": {"file": "atelier/contracts/service.go", "needle": "type ServiceContract interface {", "symbol": "ServiceContract"},
-            "expect": {
-                "exact_count": 12,
-                "kind": "structural",
-                "implementations": [
-                    {"file": "atelier/services/backlog_service.go", "needle": "type BacklogService struct {"},
-                    {"file": "atelier/services/revenue_service.go", "needle": "type RevenueService struct {"},
-                    {"file": "atelier/services/churn_risk_service.go", "needle": "type ChurnRiskService struct {"},
-                    {"file": "atelier/services/customer_retention_service.go", "needle": "type CustomerRetentionService struct {"},
-                    {"file": "atelier/services/inventory_turnover_service.go", "needle": "type InventoryTurnoverService struct {"},
-                    {"file": "atelier/services/order_volume_service.go", "needle": "type OrderVolumeService struct {"},
-                    {"file": "atelier/services/part_usage_service.go", "needle": "type PartUsageService struct {"},
-                    {"file": "atelier/services/payment_latency_service.go", "needle": "type PaymentLatencyService struct {"},
-                    {"file": "atelier/services/profit_margin_service.go", "needle": "type ProfitMarginService struct {"},
-                    {"file": "atelier/services/technician_load_service.go", "needle": "type TechnicianLoadService struct {"},
-                    {"file": "atelier/services/throughput_service.go", "needle": "type ThroughputService struct {"},
-                    {"file": "atelier/services/warranty_claim_service.go", "needle": "type WarrantyClaimService struct {"}
-                ]
             }
         },
         {
@@ -659,60 +581,6 @@
                 ],
                 "repeated_sites": [
                     {"file": "tests/seed_test.go", "needle": "data := dataset.Seeded()", "lines": 3}
-                ]
-            }
-        },
-        {
-            "id": "refs-money-type",
-            "surface": "references",
-            "from": {"file": "core/money/money.go", "needle": "type Money struct {", "symbol": "Money"},
-            "expect": {
-                "exact_count": 44,
-                "known_sites": [
-                    {"file": "core/billing/formatter.go", "needle": "func (f *Formatter) Money(amount money.Money) string {"},
-                    {"file": "core/billing/formatter.go", "needle": "func (f *Formatter) Line(quantity int, description string, amount money.Money) string {"},
-                    {"file": "core/contracts/invoicecalculator.go", "needle": "\tCalculate(order *models.RepairOrder) money.Money"},
-                    {"file": "core/contracts/invoicecalculator.go", "needle": "type CalculatorFunc func(order *models.RepairOrder) money.Money"},
-                    {"file": "core/contracts/invoicecalculator.go", "needle": "func (f CalculatorFunc) Calculate(order *models.RepairOrder) money.Money {"},
-                    {"file": "core/models/invoice.go", "needle": "\tTotal         money.Money"},
-                    {"file": "core/models/invoice.go", "needle": "func NewInvoice(id int, repairOrderID int, total money.Money) *Invoice {"},
-                    {"file": "core/models/invoice.go", "needle": "func (i *Invoice) Outstanding() money.Money {"},
-                    {"file": "core/models/part.go", "needle": "\tUnitPrice    money.Money"},
-                    {"file": "core/models/part.go", "needle": "func NewPart(id int, sku, name string, unitPrice money.Money, stock, reorderLevel int) *Part {"},
-                    {"file": "core/models/part.go", "needle": "func SeedPart(id int, sku string, name string, unitPrice money.Money, stock int) *Part {"},
-                    {"file": "core/models/part.go", "needle": "func (p *Part) LineTotal(quantity int) money.Money {"},
-                    {"file": "core/models/repairorder.go", "needle": "\tUnitPrice money.Money"},
-                    {"file": "core/models/repairorder.go", "needle": "\tCalculate(order *RepairOrder) money.Money"},
-                    {"file": "core/models/repairorder.go", "needle": "func (o *RepairOrder) PartsSubtotal() money.Money {"},
-                    {"file": "core/models/repairorder.go", "needle": "\tlines := make([]money.Money, 0, len(o.Parts))"},
-                    {"file": "core/models/repairorder.go", "needle": "func (o *RepairOrder) Total(calculator Calculator) money.Money {"},
-                    {"file": "core/money/money.go", "needle": "var Zero = Money{cents: 0}"},
-                    {"file": "core/money/money.go", "needle": "func FromCents(cents int64) Money {"},
-                    {"file": "core/money/money.go", "needle": "\treturn Money{cents: cents}"},
-                    {"file": "core/money/money.go", "needle": "func Parse(raw string) (Money, error) {"},
-                    {"file": "core/money/money.go", "needle": "\treturn Money{cents: units*100 + subunits}, nil"},
-                    {"file": "core/money/money.go", "needle": "func Sum(amounts []Money) Money {"},
-                    {"file": "core/money/money.go", "needle": "func (m Money) Cents() int64 {"},
-                    {"file": "core/money/money.go", "needle": "func (m Money) Euros() int64 {"},
-                    {"file": "core/money/money.go", "needle": "func (m Money) WithSurchargeBp(bp int64) Money {"},
-                    {"file": "core/money/money.go", "needle": "\treturn Money{cents: m.cents + (m.cents*bp+5000)/10000}"},
-                    {"file": "core/money/money.go", "needle": "func (m Money) Plus(other Money) Money {"},
-                    {"file": "core/money/money.go", "needle": "\treturn Money{cents: m.cents + other.cents}"},
-                    {"file": "core/money/money.go", "needle": "func (m Money) Minus(other Money) Money {"},
-                    {"file": "core/money/money.go", "needle": "\treturn Money{cents: m.cents - other.cents}"},
-                    {"file": "core/money/money.go", "needle": "func (m Money) Times(factor int64) Money {"},
-                    {"file": "core/money/money.go", "needle": "\treturn Money{cents: m.cents * factor}"},
-                    {"file": "core/money/money.go", "needle": "func (m Money) Negate() Money {"},
-                    {"file": "core/money/money.go", "needle": "\treturn Money{cents: -m.cents}"},
-                    {"file": "core/money/money.go", "needle": "func (m Money) IsZero() bool {"},
-                    {"file": "core/money/money.go", "needle": "func (m Money) LessThan(other Money) bool {"},
-                    {"file": "core/money/money.go", "needle": "func (m Money) String() string {"},
-                    {"file": "core/services/rush.go", "needle": "func (c *RushInvoiceCalculator) Calculate(order *models.RepairOrder) money.Money {"},
-                    {"file": "core/services/standard.go", "needle": "func (c *StandardInvoiceCalculator) Calculate(order *models.RepairOrder) money.Money {"},
-                    {"file": "core/services/standard.go", "needle": "func (c *StandardInvoiceCalculator) Labour(order *models.RepairOrder) money.Money {"},
-                    {"file": "tests/interfaces_test.go", "needle": "\tvar adapted corecontracts.InvoiceCalculator = corecontracts.CalculatorFunc(func(order *models.RepairOrder) money.Money {"},
-                    {"file": "tests/shadow_test.go", "needle": "func moneyFromCents(cents int64) money.Money {"},
-                    {"file": "tests/structure_test.go", "needle": "\tsum := money.Sum([]money.Money{money.FromCents(100), money.FromCents(250)})"}
                 ]
             }
         },
@@ -810,7 +678,7 @@
         {
             "id": "refs-promoted-method-call",
             "surface": "references",
-            "note": "Four of the five call sites reach it through embedding, on a *models.Technician receiver; the fifth is inside Schedule itself, on its own receiver.",
+            "note": "Four of the five call sites reach it through embedding, on a *models.Technician receiver; the fifth is inside Schedule itself, on its own receiver. Go-specific: four of the lines call a method that neither the receiver's type nor any declared supertype carries; promotion through the embedded *Schedule field supplies it.",
             "from": {"file": "core/support/schedule.go", "needle": "func (s *Schedule) NextSlot() int {", "symbol": "NextSlot"},
             "expect": {
                 "exact_count": 5,
@@ -820,6 +688,24 @@
                     {"file": "core/support/schedule.go", "needle": "\tnext := s.NextSlot()"},
                     {"file": "tests/promotion_test.go", "needle": "\tif technician.NextSlot() != 0 {"},
                     {"file": "tests/promotion_test.go", "needle": "\t\tt.Errorf(\"next slot = %d, want 0\", technician.NextSlot())"}
+                ]
+            }
+        },
+        {
+            "id": "refs-func-type-handler",
+            "surface": "references",
+            "note": "References to a named FUNCTION TYPE that carries a method: the five handler factories name it as their result type, the ServeHTTP receiver names it, and the compile-time assertion converts nil to it. The returned func literals convert to Handler implicitly and spell no identifier, so they hold no use; `http.Handler` on the assertion line is net/http's interface, a different declaration, and the line counts once for its Handler(nil). Go-specific: only Go attaches methods to a function type, so the receiver line is a use of a func type.",
+            "from": {"file": "app/http/router.go", "needle": "type Handler func(writer http.ResponseWriter, request *http.Request)", "symbol": "Handler"},
+            "expect": {
+                "exact_count": 7,
+                "known_sites": [
+                    {"file": "app/http/router.go", "needle": "func (h Handler) ServeHTTP(writer http.ResponseWriter, request *http.Request) {"},
+                    {"file": "app/http/router.go", "needle": "var _ http.Handler = Handler(nil)"},
+                    {"file": "app/http/router.go", "needle": "func Health(state *app.State) Handler {"},
+                    {"file": "app/http/api.go", "needle": "func ListOrders(state *app.State) Handler {"},
+                    {"file": "app/http/api.go", "needle": "func AddNote(state *app.State) Handler {"},
+                    {"file": "app/http/api.go", "needle": "func ShowReportData(state *app.State) Handler {"},
+                    {"file": "app/http/report.go", "needle": "func ShowReport(state *app.State) Handler {"}
                 ]
             }
         },
@@ -901,20 +787,9 @@
             }
         },
         {
-            "id": "resolution-same-name-package-support",
-            "surface": "resolution",
-            "note": "Two packages are named support; this file imports both, atelier/support under its own name (for BaseService) and core/support under the alias coresupport, and PriorityWarranty is reached through the alias. atelier/support declares no PriorityWarranty, so no namesake exclusion is keyed; the package-level look-alike is asked by imp-one-of-two-siblings.",
-            "from": {"file": "atelier/services/warranty_claim_service.go", "needle": "\t\tif order.Priority == coresupport.PriorityWarranty {", "symbol": "PriorityWarranty"},
-            "expect": {
-                "kind": "shadow_alias",
-                "resolution": "atelier.example/lane/core/support#PriorityWarranty",
-                "candidate": {"file": "core/support/priority.go", "needle": "\tPriorityWarranty                 // never billed"}
-            }
-        },
-        {
             "id": "resolution-package-path-vs-name",
             "surface": "resolution",
-            "note": "The import path's last segment is yamlish.v2 but the local identifier is the declared package name, yamlish.",
+            "note": "The import path's last segment is yamlish.v2 but the local identifier is the declared package name, yamlish. Go-specific: the local identifier comes from the package clause (yamlish), not from the import path's last segment (yamlish.v2).",
             "from": {"file": "app/commands/export_report.go", "needle": "\t\t\"version\":    yamlish.Version,", "symbol": "Version"},
             "expect": {
                 "kind": "path_name_divergence",
@@ -925,7 +800,7 @@
         {
             "id": "resolution-shadowed-stdlib-package",
             "surface": "resolution",
-            "note": "Inside a package itself named http, the identifier http is the standard library, not this package. The package declares its own NewServeMux (app/http/router.go, the application mux constructor), which a bare-name match also returns: the call on the from line is the standard library's, inside that namesake.",
+            "note": "Inside a package itself named http, the identifier http is the standard library, not this package. The package declares its own NewServeMux (app/http/router.go, the application mux constructor), which a bare-name match also returns: the call on the from line is the standard library's, inside that namesake. Go-specific: a package may take a standard-library package's name; inside it the identifier http is the imported net/http, never the package itself.",
             "from": {"file": "app/http/router.go", "needle": "\tmux := http.NewServeMux()", "symbol": "NewServeMux"},
             "expect": {
                 "kind": "shadow_alias",
@@ -1026,7 +901,7 @@
             }
         },
         {
-            "id": "parse-negative-unclosed-struct",
+            "id": "parse-negative-unclosed-class",
             "surface": "parse-negative",
             "note": "The struct literal is never closed; the file is excluded from the build by the brokenfixtures tag.",
             "from": {"file": "fixtures/broken-syntax/unclosed_struct.go", "needle": "\tslots [8]bool"},
@@ -1161,7 +1036,7 @@
         {
             "id": "card-embedded-promotion",
             "surface": "cardinality",
-            "note": "Five methods are promoted onto every embedder of BaseReport: Slug, Title and Describe from Component, CacheKey and TTLSeconds from HasCache. exact_count counts those promoted methods, each anchored on its declaration line; Rows is not among them, which is why each report must declare it.",
+            "note": "Five methods are promoted onto every embedder of BaseReport: Slug, Title and Describe from Component, CacheKey and TTLSeconds from HasCache. exact_count counts those promoted methods, each anchored on its declaration line; Rows is not among them, which is why each report must declare it. Go-specific: a struct's method set grows by every method of its embedded fields, none of which it declares.",
             "from": {"file": "atelier/support/report.go", "needle": "type BaseReport struct {", "symbol": "BaseReport"},
             "expect": {
                 "exact_count": 5,
@@ -1209,7 +1084,7 @@
         {
             "id": "dir-interface-embeds-interface",
             "surface": "direction",
-            "note": "Interface embedding is a union of method sets, not inheritance.",
+            "note": "Interface embedding is a union of method sets, not inheritance. Go-specific: interface embedding has no extends keyword; the parent edge is a bare type name on its own line inside the interface body.",
             "from": {"file": "atelier/contracts/composite.go", "needle": "type CompositeContract interface {", "symbol": "CompositeContract"},
             "expect": {
                 "kind": "parent_of",
@@ -1341,7 +1216,7 @@
         {
             "id": "hierarchy-promoted-callee",
             "surface": "call_hierarchy",
-            "note": "The only outgoing call goes to a method the type never declares, reached through the embedded pointer.",
+            "note": "The only outgoing call goes to a method the type never declares, reached through the embedded pointer. Go-specific: the callee BookedCount is declared on the embedded *Schedule, and Utilisation calls it on its own receiver t.",
             "from": {"file": "core/models/technician.go", "needle": "func (t *Technician) Utilisation() float64 {", "symbol": "Utilisation"},
             "expect": {
                 "outgoing_includes": [
@@ -1352,7 +1227,7 @@
         {
             "id": "refs-money-class",
             "surface": "references",
-            "note": "Canonical id for the go-local refs-money-type: the 44 lines that spell the Money type count, as field types, receiver and signature types, Money{...} composite literals and package-qualified money.Money mentions; a call such as FromCents(100) that never spells the type does not count on its own.",
+            "note": "The 44 lines that spell the Money type count, as field types, receiver and signature types, Money{...} composite literals and package-qualified money.Money mentions; a call such as FromCents(100) that never spells the type does not count on its own.",
             "from": {"file": "core/money/money.go", "needle": "type Money struct {", "symbol": "Money"},
             "expect": {
                 "exact_count": 44,

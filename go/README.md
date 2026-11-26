@@ -68,7 +68,8 @@ import path disagrees with its declared name, and a package that shadows a stand
 | HTTP routes | `app/http/router.go`: `GET /report/{reference}`, `GET /api/orders`, `POST /api/orders/{id}/notes`, `GET /api/reports/{slug}`, `GET /health`; `RegisterDefault` also registers `/health` on the default mux |
 | Parameter groups vs arity | `core/models/part.go` `NewPart` takes six parameters in four groups |
 | Parse negatives | `fixtures/broken-syntax/` — two invalid files behind the `brokenfixtures` build tag, **DO NOT FIX** |
-| Shared-id mapping: `parse-negative-unclosed-class` | Go has no classes; the same question (a type body left open) is asked by lane-local `parse-negative-unclosed-struct` (`fixtures/broken-syntax/unclosed_struct.go`) |
+| Shared ids carried under the shared name | `parse-negative-unclosed-class` (Go has no classes; the task asks the same question, a type body left open, of `fixtures/broken-syntax/unclosed_struct.go`; it was the lane-local `parse-negative-unclosed-struct` until ruling R11 of issue #223) |
+| Shared-id mapping: `def-async-function` | Go has no async functions; the nearest question is lane-local `def-channel-job`, a function whose result arrives on the receive-only channel it returns, received with `<-app.RunWithChannel(data)` where the other lanes `await` |
 
 ## Consumption (runner)
 
@@ -76,7 +77,7 @@ import path disagrees with its declared name, and a package that shadows a stand
 cd go
 go build ./...
 go test ./...
-go run ./bench/verify          # 108 tasks, exit 0
+go run ./bench/verify          # 101 tasks, exit 0
 go run ./bench/verify --lint   # build + broken-fixture guard (each file must fail to parse) + go vet + module specifiers + gofmt
 go run ./cmd/atelier seed      # seeded: 3 customer(s), 4 order(s), 4 part(s), revenue 58325c, then one line per metric, the rule tally and one line per service row
 go run ./cmd/atelier export-report cash-flow [json|csv|md|...]   # the shared command; json unless a format is named
@@ -95,7 +96,7 @@ doc links in comments, `go.mod`'s require and replace lines, and the package pat
 
 ## Ground truth
 
-`bench/tasks.json` carries 108 needle-based tasks. `bench/verify` resolves every `file` + `needle`
+`bench/tasks.json` carries 101 needle-based tasks. `bench/verify` resolves every `file` + `needle`
 pair to exactly one line, checks that each `repeated_sites` needle matches exactly its `lines`
 lines, and prints one `<id>: OK (from <file>:<line> -> <n> expect needles resolved)` line per task;
 its stdout contract is byte-identical to the other five lanes' verifiers, which
