@@ -7,6 +7,7 @@ package main
 
 import (
 	"fmt"
+	"io"
 	"os"
 	"strings"
 
@@ -16,24 +17,34 @@ import (
 )
 
 func main() {
-	if len(os.Args) < 2 {
-		fmt.Println("usage: atelier <seed|report|export|recalculate>")
-		os.Exit(2)
+	os.Exit(run(os.Args[1:], os.Stdout, os.Stderr))
+}
+
+// run is main without the process: it takes the arguments after the program
+// name, writes to the two streams and returns the exit code, so every branch
+// is testable.
+func run(args []string, stdout io.Writer, stderr io.Writer) int {
+	if len(args) < 1 {
+		fmt.Fprintln(stdout, "usage: atelier <seed|report|export|recalculate>")
+		return 2
 	}
 	state := app.SeededState()
-	lines, err := dispatch(state, os.Args[1], os.Args[2:])
+	lines, err := dispatch(state, args[0], args[1:])
 	if err != nil {
-		fmt.Fprintln(os.Stderr, "atelier:", err)
-		os.Exit(1)
+		fmt.Fprintln(stderr, "atelier:", err)
+		return 1
 	}
-	fmt.Println(strings.Join(lines, "\n"))
+	fmt.Fprintln(stdout, strings.Join(lines, "\n"))
+	return 0
 }
 
 // dispatch selects a command by STRING, the way a console kernel does.
 func dispatch(state *app.State, command string, args []string) ([]string, error) {
 	switch command {
 	case "seed":
-		return append([]string{app.Summarize(state)}, append(app.MetricLines(state), app.RuleLine(state))...), nil
+		lines := append([]string{app.Summarize(state)}, app.MetricLines(state)...)
+		lines = append(lines, app.RuleLine(state))
+		return append(lines, app.ServiceLines(state)...), nil
 	case "report":
 		if len(args) < 1 {
 			return nil, fmt.Errorf("report needs a slug")

@@ -10,14 +10,18 @@ type RuleContract interface {
 }
 
 // RuleLike is the STRUCTURAL twin: the same method set under a different
-// name, satisfied by the 24 ad-hoc rule VALUES which assert nothing at all.
+// name. Every type with that method set satisfies it without naming it:
+// adhoc.AdHocRule, whose 24 values assert nothing at all, and the 24 nominal
+// rule structs, which assert RuleContract only.
 type RuleLike interface {
 	Key() string
 	Evaluate(data *dataset.Dataset) bool
 }
 
-// SatisfiedBy counts the rules that hold on a dataset.
-func SatisfiedBy(rules []RuleContract, data *dataset.Dataset) int {
+// SatisfiedBy counts the rules that hold on a dataset. Its constraint is the
+// STRUCTURAL RuleLike, so any slice of rule-shaped values qualifies with no
+// conversion: the registry's []RuleContract and adhoc's []AdHocRule alike.
+func SatisfiedBy[R RuleLike](rules []R, data *dataset.Dataset) int {
 	satisfied := 0
 	for _, rule := range rules {
 		if rule.Evaluate(data) {

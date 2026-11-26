@@ -15,7 +15,7 @@ import (
 func get(t *testing.T, state *app.State, target string) (int, map[string]any) {
 	t.Helper()
 	recorder := httptest.NewRecorder()
-	apphttp.NewRouter(state).ServeHTTP(recorder, httptest.NewRequest(http.MethodGet, target, nil))
+	apphttp.NewServeMux(state).ServeHTTP(recorder, httptest.NewRequest(http.MethodGet, target, nil))
 	body := map[string]any{}
 	if err := json.Unmarshal(recorder.Body.Bytes(), &body); err != nil {
 		t.Fatalf("decode %s: %v (%s)", target, err, recorder.Body.String())
@@ -75,7 +75,7 @@ func TestUnknownReferenceIs404(t *testing.T) {
 func TestOrdersAndReportRoutes(t *testing.T) {
 	state := app.SeededState()
 	recorder := httptest.NewRecorder()
-	apphttp.NewRouter(state).ServeHTTP(recorder, httptest.NewRequest(http.MethodGet, "/api/orders", nil))
+	apphttp.NewServeMux(state).ServeHTTP(recorder, httptest.NewRequest(http.MethodGet, "/api/orders", nil))
 	var orders []map[string]any
 	if err := json.Unmarshal(recorder.Body.Bytes(), &orders); err != nil {
 		t.Fatalf("decode orders: %v", err)
@@ -101,7 +101,7 @@ func TestPostNoteAndHealth(t *testing.T) {
 	state := app.SeededState()
 	recorder := httptest.NewRecorder()
 	request := httptest.NewRequest(http.MethodPost, "/api/orders/1/notes", strings.NewReader(`{"body":"checked","author":"nel"}`))
-	apphttp.NewRouter(state).ServeHTTP(recorder, request)
+	apphttp.NewServeMux(state).ServeHTTP(recorder, request)
 	if recorder.Code != http.StatusCreated {
 		t.Fatalf("status = %d, want 201", recorder.Code)
 	}
