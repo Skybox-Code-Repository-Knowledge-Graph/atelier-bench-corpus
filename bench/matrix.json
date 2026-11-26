@@ -96,6 +96,12 @@
         "php"
       ]
     },
+    "def-ambient-declare-const": {
+      "surface": "definition",
+      "lanes": [
+        "typescript"
+      ]
+    },
     "def-ambient-global-namespace": {
       "surface": "definition",
       "lanes": [
@@ -672,6 +678,24 @@
         "go"
       ]
     },
+    "def-import-equals-alias": {
+      "surface": "definition",
+      "lanes": [
+        "typescript"
+      ]
+    },
+    "def-import-type-expression": {
+      "surface": "definition",
+      "lanes": [
+        "typescript"
+      ]
+    },
+    "def-infer-type-variable": {
+      "surface": "definition",
+      "lanes": [
+        "typescript"
+      ]
+    },
     "def-inferred-type": {
       "surface": "definition",
       "lanes": [
@@ -1012,6 +1036,54 @@
         "go"
       ]
     },
+    "def-route-expo": {
+      "surface": "definition",
+      "lanes": [
+        "typescript"
+      ]
+    },
+    "def-route-express-router": {
+      "surface": "definition",
+      "lanes": [
+        "typescript"
+      ]
+    },
+    "def-route-fastify": {
+      "surface": "definition",
+      "lanes": [
+        "typescript"
+      ]
+    },
+    "def-route-hono": {
+      "surface": "definition",
+      "lanes": [
+        "typescript"
+      ]
+    },
+    "def-route-nestjs": {
+      "surface": "definition",
+      "lanes": [
+        "typescript"
+      ]
+    },
+    "def-route-nuxt": {
+      "surface": "definition",
+      "lanes": [
+        "typescript"
+      ]
+    },
+    "def-route-remix": {
+      "surface": "definition",
+      "lanes": [
+        "typescript"
+      ]
+    },
+    "def-route-sveltekit": {
+      "surface": "definition",
+      "lanes": [
+        "typescript"
+      ]
+    },
     "def-route-to-handler": {
       "surface": "definition",
       "lanes": [
@@ -1146,6 +1218,12 @@
         "typescript"
       ]
     },
+    "def-this-parameter": {
+      "surface": "definition",
+      "lanes": [
+        "typescript"
+      ]
+    },
     "def-through-barrel": {
       "surface": "definition",
       "lanes": [
@@ -1256,6 +1334,12 @@
       "surface": "direction",
       "lanes": [
         "go"
+      ]
+    },
+    "dir-interface-extends-class": {
+      "surface": "direction",
+      "lanes": [
+        "typescript"
       ]
     },
     "dir-mro-linearization": {
@@ -1611,6 +1695,12 @@
       "surface": "implementation",
       "lanes": [
         "php"
+      ]
+    },
+    "impl-type-alias-contract": {
+      "surface": "implementation",
+      "lanes": [
+        "typescript"
       ]
     },
     "int-folio-filename-binding": {
@@ -2042,6 +2132,12 @@
         "go"
       ]
     },
+    "resolution-assertion-narrowing": {
+      "surface": "resolution",
+      "lanes": [
+        "typescript"
+      ]
+    },
     "resolution-assoc-const-override": {
       "surface": "resolution",
       "lanes": [
@@ -2096,10 +2192,34 @@
         "rust"
       ]
     },
+    "resolution-indexed-access-type": {
+      "surface": "resolution",
+      "lanes": [
+        "typescript"
+      ]
+    },
     "resolution-init-ordering": {
       "surface": "resolution",
       "lanes": [
         "go"
+      ]
+    },
+    "resolution-interface-merge": {
+      "surface": "resolution",
+      "lanes": [
+        "typescript"
+      ]
+    },
+    "resolution-keyof-argument": {
+      "surface": "resolution",
+      "lanes": [
+        "typescript"
+      ]
+    },
+    "resolution-mapped-utility-member": {
+      "surface": "resolution",
+      "lanes": [
+        "typescript"
       ]
     },
     "resolution-namespace-vs-enum": {
@@ -2229,6 +2349,12 @@
       "lanes": [
         "typescript",
         "python"
+      ]
+    },
+    "resolution-utility-return-type": {
+      "surface": "resolution",
+      "lanes": [
+        "typescript"
       ]
     },
     "vendor-sanctum-trait": {
