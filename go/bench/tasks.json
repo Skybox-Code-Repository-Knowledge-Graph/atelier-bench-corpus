@@ -49,7 +49,7 @@
         {
             "id": "def-package-var-block",
             "surface": "definition",
-            "note": "Package-level var declared inside a grouped var block. Go-specific: a factored `var ( ... )` block declares several package-level variables under one keyword, so the declaration is the spec line inside the parentheses, never a line that starts with var.",
+            "note": "Package-level var declared inside a grouped var block. Go-specific: a factored `var ( ... )` block declares several package-level variables under one keyword, so the declaration is the spec line inside the parentheses, never a line that starts with var. Outcome 1 under R13: the answer line itself, a spec line inside the parentheses with no var keyword, is what the factored block changes.",
             "from": {"file": "core/support/priority.go", "needle": "return surchargeBasisPoints[p]", "symbol": "surchargeBasisPoints"},
             "expect": {"file": "core/support/priority.go", "needle": "\tsurchargeBasisPoints = map[Priority]int64{"}
         },
@@ -394,7 +394,7 @@
         {
             "id": "def-error-sentinel",
             "surface": "definition",
-            "note": "The sentinel is a package-level var compared with errors.Is, never by message. Go-specific: errors are values; a sentinel is a package-level var matched through errors.Is along an Unwrap chain, not an exception class.",
+            "note": "The sentinel is a package-level var compared with errors.Is, never by message. Common candidate (R13 outcome 2): errors.Is and its Unwrap chain are Go mechanisms, but the question asked is the definition of a package-level var, which a sibling lane can ask unchanged of a module-level sentinel constant.",
             "from": {"file": "tests/errors_test.go", "needle": "\tif !errors.Is(wrapped, failure.ErrNotFound) {", "symbol": "ErrNotFound"},
             "expect": {"file": "core/failure/errors.go", "needle": "var ErrNotFound = errors.New(\"not found\")"}
         },
@@ -782,6 +782,24 @@
             "from": {"file": "core/support/status_labels_gen.go", "needle": "func (s RepairStatus) Label() string {", "symbol": "Label"},
             "expect": {
                 "contains": "DO NOT EDIT"
+            }
+        },
+        {
+            "id": "hover-receive-only-channel",
+            "surface": "hover",
+            "note": "The hover of the channel job shows its result type, a RECEIVE-ONLY channel: the caller can only receive from what RunWithChannel returns. Go-specific: channel types and their direction (<-chan, chan<-) exist only in Go.",
+            "from": {"file": "app/jobs.go", "needle": "func RunWithChannel(data *dataset.Dataset) <-chan JobResult {", "symbol": "RunWithChannel"},
+            "expect": {
+                "contains": "<-chan JobResult"
+            }
+        },
+        {
+            "id": "hover-struct-tag",
+            "surface": "hover",
+            "note": "The hover of a struct field declared with a tag shows the tag, which is part of the field's declaration: the JSON wire name reference. Go-specific: a struct tag is a string literal the compiler attaches to a field, read only through reflection (encoding/json here).",
+            "from": {"file": "app/http/report.go", "needle": "\tReference  string `json:\"reference\"`", "symbol": "Reference"},
+            "expect": {
+                "contains": "json:\"reference\""
             }
         },
         {

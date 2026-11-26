@@ -84,7 +84,7 @@ cd go
 go mod download                # the pinned framework modules of go.sum (go build fetches them too)
 go build ./...
 go test ./...
-go run ./bench/verify          # 110 tasks, exit 0
+go run ./bench/verify          # 112 tasks, exit 0
 go run ./bench/verify --lint   # build + broken-fixture guard (each file must fail to parse) + go vet + module specifiers + gofmt
 go run ./cmd/atelier seed      # seeded: 3 customer(s), 4 order(s), 4 part(s), revenue 58325c, then one line per metric, the rule tally and one line per service row
 go run ./cmd/atelier export-report cash-flow [json|csv|md|...]   # the shared command; json unless a format is named
@@ -107,7 +107,7 @@ the `go.sum` line that locks its version's `go.mod`), and the package path of ea
 
 ## Ground truth
 
-`bench/tasks.json` carries 110 needle-based tasks. `bench/verify` resolves every `file` + `needle`
+`bench/tasks.json` carries 112 needle-based tasks. `bench/verify` resolves every `file` + `needle`
 pair to exactly one line, checks that each `repeated_sites` needle matches exactly its `lines`
 lines, and prints one `<id>: OK (from <file>:<line> -> <n> expect needles resolved)` line per task;
 its stdout contract is byte-identical to the other five lanes' verifiers, which
@@ -128,10 +128,10 @@ Lane-only extras:
 - The five route modules under `frameworks/` (gorilla/mux, chi, gin, echo, fiber), each serving
   `GET /api/orders` and `GET /api/orders/{id}` over the seeded state; no other lane carries them.
 
-Lane-only ids (carried by this lane alone): 48. Sorted under rulings R13 and R14 of issue #223:
-31 score a Go mechanism and carry a "Go-specific:" sentence in their note (the ids that count
-toward the floor of 30); 11 are common candidates a sibling lane could carry unchanged
-(`def-method-value`, `def-method-expression`, `def-generic-two-params`,
+Lane-only ids (carried by this lane alone): 50. Sorted under rulings R13 and R14 of issue #223:
+32 score a Go mechanism and carry a "Go-specific:" sentence in their note (the ids that count
+toward the floor of 30); 12 are common candidates a sibling lane could carry unchanged
+(`def-error-sentinel`, `def-method-value`, `def-method-expression`, `def-generic-two-params`,
 `def-generic-struct-method`, `def-generic-free-function-extra-param`,
 `def-generic-registry-instantiation`, `def-type-switch`, `def-anonymous-struct`,
 `dir-interface-embeds-interface`, `def-shadowing-promoted-method`,
@@ -190,7 +190,7 @@ cd go
 go run ./bench/lspcheck -gopls "$(go env GOPATH)/bin/gopls" -out bench/lsp-check.md
 ```
 
-Result: 17 tasks, 17 agree, 0 disagree, 0 no answer. The server is compared with each key and
+Result: 19 tasks, 19 agree, 0 disagree, 0 no answer. The server is compared with each key and
 never used to make one; how each difference reads against the tree:
 
 - `implementation`: where the server returns more locations than the key lists implementors
