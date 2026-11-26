@@ -5,8 +5,9 @@
 //! cargo run -p bench-verify -- --lint  # cargo check + broken-fixture guard
 //! ```
 //!
-//! Exit 0 only when every check passes. Mirrors `php/bench/verify_tasks.php`
-//! line for line so the two lanes can be scored the same way.
+//! Exit 0 only when every check passes. Follows `php/bench/verify_tasks.php`
+//! for the needle keys both read, so the two lanes print the same lines; this
+//! one also checks `optional_sites` and `repeated_sites`.
 
 mod json;
 
