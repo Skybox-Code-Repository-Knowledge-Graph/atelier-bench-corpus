@@ -326,3 +326,49 @@ lane-shaped fixture.
 
 The number of scorable tasks is computed at run time and printed by the tests and by every report.
 It is not written down here, because the lanes change.
+
+## Comparing two reports
+
+`compare.mjs` shows what changed between two `score.mjs --format json` reports of the same tool on
+the same lane: a tool release against the one before it, or a change you are testing against a
+baseline. It knows nothing about any tool.
+
+```
+node bench/score/compare.mjs --before before.report.json --after after.report.json
+node bench/score/compare.mjs --before before.report.json --after after.report.json --format json
+```
+
+What it prints, in this order:
+
+- **One line per rule class and protocol**, as the score report groups them, with `passed of
+  scorable` before and after, how many tasks that line gained and lost, and how many of its tasks
+  were not compared (they move the totals but are in neither gained nor lost). Lines are never added up.
+- **GAINED**: tasks that were not `PASS` and are `PASS`.
+- **LOST**: tasks that were `PASS` and are not, with the verdict they have now. A loss is listed
+  even when its line's total went up.
+- **CHANGED**: every other verdict change (`FAIL` to `UNSUPPORTED`, `UNANSWERED` to `FAIL`).
+- **NOT COMPARED**: a task whose `rule`, `class` or `protocol` differs between the reports, or that
+  is in one report only. The key or the scorer changed, not the tool, so the task counts in neither
+  gains nor losses. Per-line counts still count each report as it was scored.
+
+Ids are sorted and nothing reads a clock: the same two files give the same bytes.
+
+It exits 0 whenever the comparison was made, losses included: a loss is a result. It exits 2, with
+one line on stderr, when an input is not a score report, or the two reports are for different lanes,
+tool names or scopes. Tool versions may differ; that is what is being compared.
+
+A local before and after, for a tool whose adapter you can run on both versions:
+
+```
+node bench/adapters/skybox/run.mjs --lane go --skybox <path to old skybox> --version 0.9.0 --out before.json
+node bench/adapters/skybox/run.mjs --lane go --skybox <path to new skybox> --version 0.10.0 --out after.json
+node bench/score/score.mjs --lane go --answers before.json --format json > before.report.json
+node bench/score/score.mjs --lane go --answers after.json --format json > after.report.json
+node bench/score/compare.mjs --before before.report.json --after after.report.json
+```
+
+Run both at the same checkout of this repository. A key edit that keeps a task's rule, class and
+protocol is not detected: it shows as a gain or a loss, so both reports must be scored at the same
+checkout. The `score-tools` workflow does this for skybox when a baseline version is given to a manual
+run (`baseline_version`): it scores both versions and adds the comparison to the job summary and to
+the lane's artifact.

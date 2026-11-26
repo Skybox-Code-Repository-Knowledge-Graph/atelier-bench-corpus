@@ -11,6 +11,15 @@ name: score-tools
 
 on:
   workflow_dispatch:
+    inputs:
+      skybox_version:
+        description: "skybox version under test, exact x.y.z (empty: 0.9.0)"
+        required: false
+        type: string
+      baseline_version:
+        description: "baseline skybox version, exact x.y.z; when given, both are scored at this checkout and compared (empty: no comparison)"
+        required: false
+        type: string
   schedule:
     - cron: "17 4 * * 1"
 
@@ -35,9 +44,23 @@ jobs:
       matrix:
         lane: [php, rust, typescript, javascript, python, go]
     env:
-      SKYBOX_VERSION: "0.9.0"
+      # Inputs reach the scripts only through env. Empty on a schedule: 0.9.0, no baseline.
+      SKYBOX_VERSION: ${{ inputs.skybox_version || '0.9.0' }}
+      BASELINE_VERSION: ${{ inputs.baseline_version }}
       LANE: ${{ matrix.lane }}
     steps:
+      - name: Versions are exact x.y.z
+        run: |
+          semver='^[0-9]+\.[0-9]+\.[0-9]+$'
+          if ! [[ "$SKYBOX_VERSION" =~ $semver ]]; then
+            echo "::error::skybox_version must be an exact x.y.z"
+            exit 1
+          fi
+          if [[ -n "$BASELINE_VERSION" ]] && ! [[ "$BASELINE_VERSION" =~ $semver ]]; then
+            echo "::error::baseline_version must be an exact x.y.z"
+            exit 1
+          fi
+
       - uses: actions/checkout@v7.0.1
 
       - name: Node 22
@@ -76,6 +99,39 @@ jobs:
             echo "Per-task verdicts are in the artifact skybox-${LANE}."
           } >> "$GITHUB_STEP_SUMMARY"
 
+      # Only when a baseline version was given to a manual run: the same checkout, the same lane,
+      # the baseline version asked and scored the same way, then the two reports compared. This step is
+      # not continue-on-error: it fails the job for the same causes the Ask step does (a wrong
+      # version, an index or serve failure), so a comparison whose baseline could not be scored is
+      # visibly failed; the version under test's report is already written and uploaded. Per-question
+      # failures are recorded in the answers.
+      - name: Baseline (same checkout; only when baseline_version is given)
+        if: env.BASELINE_VERSION != ''
+        run: |
+          npm install --prefix "$RUNNER_TEMP/skybox-baseline" --no-save --no-audit --no-fund "@skylence-ai/skybox@${BASELINE_VERSION}"
+          "$RUNNER_TEMP/skybox-baseline/node_modules/.bin/skybox" --version
+          node bench/adapters/skybox/run.mjs \
+            --lane "$LANE" \
+            --skybox "$RUNNER_TEMP/skybox-baseline/node_modules/.bin/skybox" \
+            --version "$BASELINE_VERSION" \
+            --out "skybox-$LANE.baseline.json"
+          node bench/score/score.mjs --lane "$LANE" --answers "skybox-$LANE.baseline.json" --format json > "skybox-$LANE.baseline.report.json"
+
+      - name: Compare with the baseline
+        if: env.BASELINE_VERSION != ''
+        run: |
+          node bench/score/compare.mjs --before "skybox-$LANE.baseline.report.json" --after "skybox-$LANE.report.json" > "skybox-$LANE.compare.txt"
+          node bench/score/compare.mjs --before "skybox-$LANE.baseline.report.json" --after "skybox-$LANE.report.json" --format json > "skybox-$LANE.compare.json"
+          {
+            echo "### skybox ${BASELINE_VERSION} -> ${SKYBOX_VERSION}, lane ${LANE}, scope lane, corpus ${GITHUB_SHA::7}"
+            echo
+            echo "Before and after per line; lines are separate measures and are never added up. Losses are listed even when a line's total rose. Tasks whose rule, class or protocol differ, or that are on one side only, are not compared."
+            echo
+            echo '```'
+            cat "skybox-$LANE.compare.txt"
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
       - name: Keep the answers and the report
         if: always()
         uses: actions/upload-artifact@v7.0.1
@@ -85,6 +141,10 @@ jobs:
             skybox-${{ matrix.lane }}.json
             skybox-${{ matrix.lane }}.report.txt
             skybox-${{ matrix.lane }}.report.json
+            skybox-${{ matrix.lane }}.baseline.json
+            skybox-${{ matrix.lane }}.baseline.report.json
+            skybox-${{ matrix.lane }}.compare.txt
+            skybox-${{ matrix.lane }}.compare.json
           if-no-files-found: ignore
 
   codebase-memory-mcp:
