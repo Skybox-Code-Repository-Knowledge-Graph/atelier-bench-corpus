@@ -8,6 +8,10 @@
     "main": "./src/index.cjs",
     "exports": {
         ".": "./src/index.cjs",
+        "./interop/cents-label": {
+            "import": "./src/interop/centsLabel.mjs",
+            "require": "./src/interop/centsLabel.cjs"
+        },
         "./*": "./src/*"
     },
     "dependencies": {

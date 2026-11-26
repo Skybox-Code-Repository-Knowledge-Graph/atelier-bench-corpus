@@ -2962,34 +2962,17 @@
             }
         },
         {
-            "id": "def-require-esm",
-            "surface": "definition",
-            "note": "The CommonJS dataset requires the ESM core package; the destructured Device crosses the package's exports map and the barrel to the constructor function. Language-specific mechanism: require(esm): a CommonJS file loads an ES module synchronously through require (Node >= 22.12).",
-            "from": {
-                "file": "packages/bench/src/dataset.cjs",
-                "needle": "            new Device(3, 3, \"Apple\", \"MBP 14\"),",
-                "symbol": "Device"
-            },
-            "expect": {
-                "file": "packages/core/src/models/device.js",
-                "needle": "export function Device(id, customerId, brand, model, serial) {",
-                "must_not_include": [
-                    "packages/core/src/index.js"
-                ]
-            }
-        },
-        {
             "id": "def-parent-constructor-call",
             "surface": "definition",
-            "note": "Laptop runs its parent constructor by calling Device with its own `this`; the enclosing Laptop is not the answer. Language-specific mechanism: constructor-function inheritance, `Device.call(this, ...)`, the pre-class form of super(...).",
+            "note": "Re-pointed in review (ruling R18): the question is now what `this.brand` is for a Laptop, the receiver core/tests/prototype.test.js builds. Laptop's own constructor never assigns brand; the field reaches the instance only because Laptop runs `Device.call(this, ...)`, so the answer is the assignment inside Device. Language-specific mechanism: constructor-function inheritance, where a parent constructor run through `Device.call(this, ...)` assigns the child's fields.",
             "from": {
                 "file": "packages/core/src/models/device.js",
-                "needle": "    Device.call(this, id, customerId, brand, model, serial);",
-                "symbol": "Device"
+                "needle": "        : `${this.brand} ${this.model} (${this.serial})`;",
+                "symbol": "brand"
             },
             "expect": {
                 "file": "packages/core/src/models/device.js",
-                "needle": "export function Device(id, customerId, brand, model, serial) {",
+                "needle": "    this.brand = brand;",
                 "must_not_include": [
                     "export function Laptop"
                 ]
@@ -3303,6 +3286,113 @@
             },
             "expect": {
                 "contains": "Suffix appended to a metric's rendered number."
+            }
+        },
+        {
+            "id": "def-exports-condition-import",
+            "surface": "definition",
+            "note": "The bench package's exports map gives `./interop/cents-label` an \"import\" and a \"require\" target; this ESM consumer takes the import condition, so centsLabel is the ES module's function, never its CommonJS twin. Language-specific mechanism: the \"import\" condition of a package.json exports map, which sends an ESM consumer to a different file than a CommonJS one.",
+            "from": {
+                "file": "packages/app/tests/interopForms.test.js",
+                "needle": "        assert.equal(centsLabel(58325), \"583.25 EUR\");",
+                "symbol": "centsLabel"
+            },
+            "expect": {
+                "file": "packages/bench/src/interop/centsLabel.mjs",
+                "needle": "export function centsLabel(cents) {",
+                "must_not_include": [
+                    "packages/bench/src/interop/centsLabel.cjs"
+                ]
+            }
+        },
+        {
+            "id": "def-exports-condition-require",
+            "surface": "definition",
+            "note": "The same specifier as def-exports-condition-import, required from CommonJS: the \"require\" condition sends it to the .cjs file. Language-specific mechanism: the \"require\" condition of a package.json exports map.",
+            "from": {
+                "file": "packages/bench/tests/interopForms.test.cjs",
+                "needle": "        assert.equal(centsLabel(12025), \"120.25 EUR\");",
+                "symbol": "centsLabel"
+            },
+            "expect": {
+                "file": "packages/bench/src/interop/centsLabel.cjs",
+                "needle": "exports.centsLabel = function centsLabel(cents) {",
+                "must_not_include": [
+                    "packages/bench/src/interop/centsLabel.mjs"
+                ]
+            }
+        },
+        {
+            "id": "def-module-exports-reassigned",
+            "surface": "definition",
+            "note": "exportsReset.cjs first assigns exports.formatCents, then replaces module.exports with an object whose formatCents is formatCentsFixed; the earlier assignment is dropped with the original exports object. Language-specific mechanism: a later `module.exports =` that replaces the exports object and drops the earlier `exports.X` assignments.",
+            "from": {
+                "file": "packages/bench/tests/interopForms.test.cjs",
+                "needle": "        assert.equal(formatCents(12025), \"120.25\");",
+                "symbol": "formatCents"
+            },
+            "expect": {
+                "file": "packages/bench/src/interop/exportsReset.cjs",
+                "needle": "function formatCentsFixed(cents) {",
+                "must_not_include": [
+                    "exports.formatCents = function formatCents"
+                ]
+            }
+        },
+        {
+            "id": "def-module-this-export",
+            "surface": "definition",
+            "note": "moduleThis.cjs never writes exports or module: its `this.toEuros =` is the export, because `this` at the top of a CommonJS module is module.exports. Language-specific mechanism: top-level `this` of a CommonJS module, which is `module.exports`.",
+            "from": {
+                "file": "packages/bench/tests/interopForms.test.cjs",
+                "needle": "        assert.equal(moduleThis.toEuros(12025), 120.25);",
+                "symbol": "toEuros"
+            },
+            "expect": {
+                "file": "packages/bench/src/interop/moduleThis.cjs",
+                "needle": "this.toEuros = function toEuros(cents) {"
+            }
+        },
+        {
+            "id": "def-exports-define-property",
+            "surface": "definition",
+            "note": "vatRateBp is never assigned or declared: Object.defineProperty installs it on the exports object as a getter. Language-specific mechanism: an export installed as a getter by `Object.defineProperty(exports, ...)`.",
+            "from": {
+                "file": "packages/bench/tests/interopForms.test.cjs",
+                "needle": "        assert.equal(lazy.vatRateBp, 2100);",
+                "symbol": "vatRateBp"
+            },
+            "expect": {
+                "file": "packages/bench/src/interop/lazyExport.cjs",
+                "needle": "Object.defineProperty(exports, \"vatRateBp\", {"
+            }
+        },
+        {
+            "id": "def-callable-module-property",
+            "surface": "definition",
+            "note": "percentLabel.cjs exports a function, and fromRatio is a property hung on that function, so the required binding is both callable and carries the member. Language-specific mechanism: `module.exports = function ...` followed by `module.exports.fromRatio = ...`, a callable module with a member.",
+            "from": {
+                "file": "packages/bench/tests/interopForms.test.cjs",
+                "needle": "        assert.equal(percentLabel.fromRatio(0.25), \"25.00%\");",
+                "symbol": "fromRatio"
+            },
+            "expect": {
+                "file": "packages/bench/src/interop/percentLabel.cjs",
+                "needle": "module.exports.fromRatio = function fromRatio(ratio) {"
+            }
+        },
+        {
+            "id": "def-esmodule-flag-ignored",
+            "surface": "definition",
+            "note": "babelish.cjs is transpiler-style output with an __esModule flag; Node ignores the flag, so the ESM default import binds the whole exports object and `.default` is the exported function (a bundler that honours the flag would bind the function itself). Language-specific mechanism: Node's ESM import of CommonJS, where the default binding is module.exports and an `__esModule` flag is ignored.",
+            "from": {
+                "file": "packages/app/tests/interopForms.test.js",
+                "needle": "        assert.equal(babelish.default({ id: 7 }), \"order 7\");",
+                "symbol": "default"
+            },
+            "expect": {
+                "file": "packages/bench/src/interop/babelish.cjs",
+                "needle": "exports.default = function describeOrder(order) {"
             }
         }
     ]

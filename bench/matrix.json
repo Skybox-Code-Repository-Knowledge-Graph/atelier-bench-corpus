@@ -187,6 +187,12 @@
         "go"
       ]
     },
+    "def-callable-module-property": {
+      "surface": "definition",
+      "lanes": [
+        "javascript"
+      ]
+    },
     "def-callback-style": {
       "surface": "definition",
       "lanes": [
@@ -484,6 +490,12 @@
         "go"
       ]
     },
+    "def-esmodule-flag-ignored": {
+      "surface": "definition",
+      "lanes": [
+        "javascript"
+      ]
+    },
     "def-event-emitter-subclass": {
       "surface": "definition",
       "lanes": [
@@ -503,6 +515,24 @@
       ]
     },
     "def-exports-assignment": {
+      "surface": "definition",
+      "lanes": [
+        "javascript"
+      ]
+    },
+    "def-exports-condition-import": {
+      "surface": "definition",
+      "lanes": [
+        "javascript"
+      ]
+    },
+    "def-exports-condition-require": {
+      "surface": "definition",
+      "lanes": [
+        "javascript"
+      ]
+    },
+    "def-exports-define-property": {
       "surface": "definition",
       "lanes": [
         "javascript"
@@ -899,10 +929,22 @@
         "javascript"
       ]
     },
+    "def-module-exports-reassigned": {
+      "surface": "definition",
+      "lanes": [
+        "javascript"
+      ]
+    },
     "def-module-getattr": {
       "surface": "definition",
       "lanes": [
         "python"
+      ]
+    },
+    "def-module-this-export": {
+      "surface": "definition",
+      "lanes": [
+        "javascript"
       ]
     },
     "def-name-mangling": {
@@ -1053,12 +1095,6 @@
       "surface": "definition",
       "lanes": [
         "rust"
-      ]
-    },
-    "def-require-esm": {
-      "surface": "definition",
-      "lanes": [
-        "javascript"
       ]
     },
     "def-route-default-mux": {
