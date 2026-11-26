@@ -30,8 +30,8 @@ Install from the **committed** `composer.lock` only (`composer install`). Do not
 | `database/` | Migrations, factories, deterministic `DatabaseSeeder`, delegating `CanonicalSeeder` | 41 |
 | `routes/` | `web.php`, `api.php`, `console.php` | 3 |
 | `resources/views/` | Report view, Blade components, Livewire SFC, Filament pages | 12 |
-| `tests/` | Feature + Unit suite (85 tests), Dusk scaffold | 19 |
-| `bench/` | `tasks.json` + `verify_tasks.php` self-check; **zero composer dependencies** | 1 |
+| `tests/` | Feature + Unit suite (102 tests), Dusk scaffold | 23 |
+| `bench/` | `tasks.json` + `verify_tasks.php` self-check; the needle check has **zero composer dependencies** (the `--lint` Blade fixture check needs `vendor/`) | 1 |
 | `fixtures/broken-syntax/` | Intentionally invalid PHP + Blade, **DO NOT FIX** | 2 |
 
 ## Coverage map
@@ -59,7 +59,7 @@ Install from the **committed** `composer.lock` only (`composer install`). Do not
 | Class-based Blade component | `app/View/Components/StatusBadge` + `<x-status-badge>` in the report view |
 | Model factories + states | `database/factories/*Factory.php`, deterministic sequences; `RepairOrderFactory::rush()` / `::completed()` |
 | Observer via attribute | `app/Observers/DeviceObserver` registered with `#[ObservedBy]` on Device |
-| Feature tests (incl. Livewire::test) | `tests/Feature/*`: 84 tests / 342 assertions covering HTTP, lifecycle/events, all Livewire components, observer registration, the full relationship matrix, every package integration, and the shared health, report-by-slug and export-report surfaces |
+| Feature tests (incl. Livewire::test) | `tests/Feature/*`: 101 tests / 892 assertions covering HTTP, lifecycle/events, all Livewire components, observer registration, the full relationship matrix, every package integration, the shared health, report-by-slug and export-report surfaces, and the guards below |
 | COMPLETE Eloquent relationship matrix | BelongsTo, HasOne, HasMany, BelongsToMany+pivot, HasOneThrough (Device→invoice), HasManyThrough (Customer→statusLogs), HasOne/MorphOne `ofMany`, MorphTo, MorphOne (Signature), MorphMany (Note), MorphToMany/MorphedByMany first-party (Label/labelables) AND vendor (spatie tags on Part). Proven in `tests/Feature/RelationshipsTest.php` |
 | First-party packages USED as intended (auth, billing, search, flags, broadcast) | sanctum guard on the API mutation + HasApiTokens · passport guard `api` · cashier Billable on User · scout Searchable on Part (database driver) · pennant `rush-surcharge` flag in RushInvoiceCalculator · reverb-ready ShouldBroadcast event + private channel · socialite login pair · fortify actions + TwoFactorAuthenticatable |
 | First-party packages USED as intended (pages, UI, ops, plugins) | folio pages (incl. filename binding) · volt functional component at /rush-counter · flux badge + layout · horizon/octane/telescope/pulse configured (recorders env-gated) · slack notification (guarded) · spatie media/tags/settings via Filament plugins. Proven in `tests/Feature/IntegrationsTest.php` |
@@ -81,6 +81,7 @@ Install from the **committed** `composer.lock` only (`composer install`). Do not
 | Wave-2 shared ids: name collisions | `App\Console\Commands\RecalculateInventory` against `App\Jobs\RecalculateInventory` (aliased import), and `PricingPolicy` resolving two traits' `rate()` with `insteadof` |
 | Generic contract | `app/Bench/Contracts/RepositoryContract`, a `@template` docblock generic with the 8 repositories as implementors |
 | Breadth (constructs that may be dropped) | `app/Support/Edge/`: enum-implements-interface, first-class callables, readonly promoted properties + readonly class, intersection types, `#[Attribute]` + reflection, `new` in initializer + `never` type, static closure + no-default `match`, named arguments, nullsafe chain, `@template`/`@extends` generics, trait with abstract method + static property, interface constant via implementor |
+| Guards no gate covers otherwise | `tests/Feature/SpecifierResolutionTest` (every module specifier written in the lane resolves: imports of every form, trait uses, qualified names in code, docblock types, Blade views compiled first), `tests/Feature/LaneFilesLoadTest` (every PHP file under `app/` `bootstrap/` `config/` `database/` `lang/` `routes/` loads, and every `app/Bench` component is called through each contract it implements), `tests/Feature/EdgeProbesTest` (each `app/Support/Edge` probe and the `Units` const/function pair is exercised), `php bench/verify_tasks.php --lint` (each broken fixture must still refuse to parse) |
 
 ## Consumption (runner)
 
@@ -96,7 +97,7 @@ cp .env.example .env   # if needed
 php artisan key:generate
 php artisan migrate --force
 php artisan db:seed    # DatabaseSeeder — deterministic
-php artisan test       # 85 tests, sqlite :memory:
+php artisan test       # 102 tests, sqlite :memory:
 ```
 
 Admin UI: `/admin` (Filament). Sample report path: `GET /report/{repairOrder:reference}` (see `ReportController`).
@@ -105,16 +106,18 @@ Admin UI: `/admin` (Filament). Sample report path: `GET /report/{repairOrder:ref
 
 | Artifact | Role |
 | --- | --- |
-| `bench/tasks.json` | 119 needle-based accuracy tasks (`from` → `expect` file/needle pairs): 40 original + 29 for the cardinality/direction/import-precision/collision/multi-parent/breadth surfaces (issue #7) + 10 framework-magic string-keyed edges + 24 shared canonical ids carried by the other lanes + 3 document-symbol/call-hierarchy surfaces |
+| `bench/tasks.json` | 119 needle-based accuracy tasks (`from` → `expect` file/needle pairs): 40 original + 29 for the cardinality/direction/import-precision/collision/multi-parent/breadth surfaces (issue #7) + 10 framework-magic string-keyed edges + 24 shared canonical ids carried by the other lanes + 3 document-symbol/call-hierarchy surfaces + 13 wave-2 shared ids (the last 13 entries, `def-module-const` through `parse-negative-unclosed-blade`). By surface: definition 56, resolution 13, references 12, implementation 7, hover 7, import-precision 7, call_hierarchy 4, direction 4, document_symbol 2, cardinality 2, multi-parent 2, parse-negative 2, diagnostics 1. The counting rule for every count the keys state is in the `notes` field |
 | `bench/verify_tasks.php` | Self-check that every task needle still resolves to exactly one line |
 
 ```bash
-php bench/verify_tasks.php          # resolve every file+needle pair (3 vendor-* tasks need composer install)
-php bench/verify_tasks.php --lint   # php -l over app/ bench/ config/ database/ routes/
+php bench/verify_tasks.php          # resolve every file+needle pair (4 tasks read vendor/: vendor-scout-trait, vendor-sanctum-trait, vendor-shouldbroadcast-contract, def-facade-static-call; run composer install first)
+php bench/verify_tasks.php --lint   # php -l over app/ bench/ config/ database/ routes/, then each fixtures/broken-syntax/* must refuse to parse
 ```
 
-The verifier has **no composer dependencies**, so it also runs on a machine that has never installed
-the corpus dependency tree (the three `vendor-*` tasks then report `file missing` by design).
+The needle check has **no composer dependencies**, so it also runs on a machine that has never
+installed the corpus dependency tree (the four tasks that read `vendor/` then report `file missing`
+by design). `--lint` needs `vendor/` for one check: it compiles the broken Blade fixture with the
+Blade compiler before asserting that `php -l` refuses the compiled PHP.
 
 Task `file` paths are relative to this lane root (`php/`), not to the repository root.
 
@@ -130,8 +133,9 @@ negative cases on purpose.
 The shared set every lane carries is `GET /health`, `GET /report/{reference}`, `GET /api/orders`, `POST /api/orders/{key}/notes`, `GET /api/reports/{slug}`, the export-report and recalculate-inventory commands, and the recalculate-inventory job. This lane carries all of it. These differences are deliberate and stay:
 
 - **Seed.** `DatabaseSeeder` is framework-native and does not use the shared seed numbers (customers, order totals). Nine tasks anchor needles there, so it is not reseeded.
-- **Lane-only routes.** Order by reference (`GET /api/orders/{repairOrder:reference}`), `/board`, the two social-auth routes (`/auth/{provider}/redirect`, `/auth/{provider}/callback`) and the Volt route `/rush-counter`. Laravel's own `/up` health endpoint also stays beside `/health`.
-- **`atelier:prune-delivered`.** A prune command no other lane has.
+- **Lane-only routes.** Order by reference (`GET /api/orders/{repairOrder:reference}`), `/board`, the two social-auth routes (`/auth/{provider}/redirect`, `/auth/{provider}/callback`) and the Volt route `/rush-counter`; Laravel's skeleton welcome page `GET /` (`routes/web.php:8`) and its `/up` health endpoint, which stays beside `/health`; the Folio pages `/about` and `/orders/{repairOrder:reference}` (`resources/views/pages/`); and the Filament panel under `/admin` (the customers, parts and repair-orders resources and the inventory-report page; `php artisan route:list` lists them).
+- **Lane-only commands.** `atelier:prune-delivered`, a prune command no other lane has, and Laravel's skeleton `inspire` (`routes/console.php:6`).
+- **Route parameter names.** `GET /report/{repairOrder:reference}` is the shared `GET /report/{reference}`: Laravel names the parameter after the model it binds and looks it up by the `reference` column.
 - **Notes bound by reference.** `POST /api/orders/{repairOrder:reference}/notes` binds the order by its `reference` key where the other lanes bind by id.
 - **Report payload.** `GET /api/reports/{slug}` returns the report's own `generate()` array as `rows`, a title derived from `name()` and Laravel's standard 404 body, where the other lanes return a row list, a human title and `{error, key}`.
 
