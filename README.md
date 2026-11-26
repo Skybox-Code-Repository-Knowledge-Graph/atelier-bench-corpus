@@ -14,7 +14,7 @@ One directory per language lane; each lane is self-contained and carries its own
 | `typescript/` | Node 22 · TypeScript 5.7 · npm workspaces | repair atelier (same domain) | `typescript/bench/tasks.json` | `npm run verify` |
 | `javascript/` | Node 22 · mixed CJS/ESM · npm workspaces · JSDoc-only typing · Express app + one route fixture per listed JavaScript route parser | repair atelier (same domain) | `javascript/bench/tasks.json` | `npm run verify` |
 | `python/` | Python 3.12+ · Flask 3.1 · three packages, no build step · type hints + mypy allowlist gate | repair atelier (same domain) | `python/bench/tasks.json` | `python3 bench/verify_tasks.py` |
-| `go/` | Go 1.23 · one module, stdlib only · `net/http` · embedding, generics, build tags | repair atelier (same domain) | `go/bench/tasks.json` | `go run ./bench/verify` |
+| `go/` | Go 1.23 · one module · `net/http`, plus lane-only route modules on gorilla/mux, chi, gin, echo and fiber · embedding, generics, build tags | repair atelier (same domain) | `go/bench/tasks.json` | `go run ./bench/verify` |
 
 All lanes model the **same** domain (customers, devices, repair orders, parts, technicians) so a
 harness can compare tool accuracy across languages on structurally equivalent questions.
@@ -44,7 +44,7 @@ Consumers pin this tree via `corpora.lock.json`:
 ```
 
 1. Check out the pinned SHA.
-2. Install per lane from the **committed** lockfile — `composer install` in `php/`, `cargo build --locked` in `rust/`, `npm ci` in `typescript/` and `javascript/`, `pip install -r requirements-dev.txt` in `python/`. `go/` needs no install step: its single dependency is an in-tree `replace`. No unlock, no update.
+2. Install per lane from the **committed** lockfile — `composer install` in `php/`, `cargo build --locked` in `rust/`, `npm ci` in `typescript/` and `javascript/`, `pip install -r requirements-dev.txt` in `python/`. `go mod download` in `go/` (the router frameworks pinned in `go.mod` and locked in `go.sum`; the yamlish module is an in-tree `replace`). No unlock, no update.
 3. No remote artifacts, no SSH private remotes, no vault/secrets required for install or seed.
 
 ## Corpus-wide check

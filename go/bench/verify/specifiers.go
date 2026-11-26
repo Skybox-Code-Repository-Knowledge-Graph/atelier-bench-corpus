@@ -18,10 +18,11 @@ import (
 // specifier is one module specifier written somewhere in the lane, with the
 // place it was written.
 type specifier struct {
-	kind  string // import, go:generate, go:embed, comment, go.mod, tasks.json
-	value string // import path, package path, embed pattern or module path
-	dir   string // go:embed and go:generate file arguments resolve against it
-	where string // file:line, relative to the lane root
+	kind    string // import, go:generate, go:embed, comment, go.mod, tasks.json
+	value   string // import path, package path, embed pattern or module path
+	version string // the version a go.mod require line names
+	dir     string // go:embed and go:generate file arguments resolve against it; a go.mod's directory
+	where   string // file:line, relative to the lane root
 }
 
 // commentModulePath matches a path under this lane's module domain written in
@@ -173,19 +174,33 @@ func withoutMember(path string) string {
 	return path
 }
 
-// goModSpecifiers reads the require and replace lines of one go.mod.
+// goModSpecifiers reads the require and replace directives of one go.mod,
+// single-line or grouped in a `require (` / `replace (` block, with any
+// trailing `// indirect` comment dropped.
 func goModSpecifiers(path string, relative string) ([]specifier, error) {
 	raw, err := os.ReadFile(path)
 	if err != nil {
 		return nil, err
 	}
 	found := []specifier{}
+	block := ""
 	for index, line := range strings.Split(string(raw), "\n") {
-		fields := strings.Fields(line)
+		code, _, _ := strings.Cut(line, "//")
+		fields := strings.Fields(code)
 		where := fmt.Sprintf("%s:%d", relative, index+1)
 		switch {
+		case len(fields) == 2 && fields[1] == "(":
+			block = fields[0]
+			continue
+		case len(fields) == 1 && fields[0] == ")":
+			block = ""
+			continue
+		case block != "" && len(fields) > 0:
+			fields = append([]string{block}, fields...)
+		}
+		switch {
 		case len(fields) >= 3 && fields[0] == "require":
-			found = append(found, specifier{kind: "go.mod", value: fields[1], where: where})
+			found = append(found, specifier{kind: "go.mod", value: fields[1], version: fields[2], dir: filepath.Dir(path), where: where})
 		case len(fields) >= 4 && fields[0] == "replace" && fields[2] == "=>":
 			found = append(found, specifier{kind: "go.mod", value: "replace " + fields[1] + " => " + fields[3], dir: filepath.Dir(path), where: where})
 		}
@@ -241,7 +256,7 @@ func checkSpecifiers(root string, found []specifier) []string {
 				if module, err := moduleOf(filepath.Join(target, "go.mod")); err != nil || module != parts[1] {
 					failures = append(failures, fmt.Sprintf("%s %s: target is not module %s", spec.where, spec.value, parts[1]))
 				}
-			} else if !moduleResolves(root, spec.value) {
+			} else if !moduleResolves(root, spec.value) && !lockedInGoSum(spec.dir, spec.value, spec.version) {
 				failures = append(failures, fmt.Sprintf("%s require %q: module does not resolve", spec.where, spec.value))
 			}
 		}
@@ -295,6 +310,26 @@ func moduleResolves(root string, module string) bool {
 	command.Dir = root
 	command.Env = append(os.Environ(), "GOFLAGS=", "GOPROXY=off", "GOWORK=off")
 	return command.Run() == nil
+}
+
+// lockedInGoSum reports whether the go.sum next to the go.mod that requires
+// the module records the hash of that version's go.mod. A module the build
+// never compiles on the CI platform (gin's alternative JSON backends, behind
+// build tags) is never downloaded there, so `go list -m` cannot answer for it
+// with the proxy off; the lockfile line is then what pins it, and the go
+// command checks that hash whenever it fetches the module.
+func lockedInGoSum(dir string, module string, version string) bool {
+	raw, err := os.ReadFile(filepath.Join(dir, "go.sum"))
+	if err != nil || version == "" {
+		return false
+	}
+	want := module + " " + version + "/go.mod h1:"
+	for _, line := range strings.Split(string(raw), "\n") {
+		if strings.HasPrefix(line, want) {
+			return true
+		}
+	}
+	return false
 }
 
 // moduleOf reads the module line of a go.mod.

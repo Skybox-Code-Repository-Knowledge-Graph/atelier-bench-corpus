@@ -84,6 +84,30 @@ func SafeRun(job func() JobResult) (result JobResult, err error) {
 	return job(), nil
 }
 
+// JobLines runs the three job shapes over the data, the goroutine one under
+// SafeRun, and renders one line per shape: the console's `jobs` verb.
+func JobLines(data *dataset.Dataset) []string {
+	lines := []string{}
+	RunWithCallback(data, func(result JobResult) {
+		lines = append(lines, fmt.Sprintf("job %s: %d handled", result.Name, result.Handled))
+	})
+	for result := range RunWithChannel(data) {
+		lines = append(lines, fmt.Sprintf("job %s: %d handled", result.Name, result.Handled))
+	}
+	workers, err := SafeRun(func() JobResult {
+		results := RunWithGoroutines(data)
+		handled := 0
+		for _, result := range results {
+			handled += result.Handled
+		}
+		return JobResult{Name: fmt.Sprintf("goroutines x%d", len(results)), Handled: handled}
+	})
+	if err != nil {
+		return append(lines, "job goroutines: "+err.Error())
+	}
+	return append(lines, fmt.Sprintf("job %s: %d handled", workers.Name, workers.Handled))
+}
+
 // SatisfiedRules is how many of the 48 rules hold, used by the seed summary.
 func SatisfiedRules(data *dataset.Dataset) int {
 	return len(rules.Satisfied(data))

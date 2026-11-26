@@ -12,7 +12,8 @@ var statusLabels = map[RepairStatus]string{
 	StatusCollected:     "Collected",
 }
 
-// Label is the generated accessor; String stays hand-written in status.go.
+// Label is the generated accessor, DO NOT EDIT: regenerate it with go generate ./core/support.
+// String stays hand-written in status.go.
 func (s RepairStatus) Label() string {
 	return statusLabels[s]
 }

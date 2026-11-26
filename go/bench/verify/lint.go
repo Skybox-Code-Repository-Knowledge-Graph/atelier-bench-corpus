@@ -13,7 +13,7 @@ import (
 // lintDirs are the directories the gofmt sweep covers. fixtures/ is NOT among
 // them on purpose: gofmt exits 2 on unparseable input, and the broken fixtures
 // are unparseable by design.
-var lintDirs = []string{"app", "atelier", "bench", "cmd", "core", "internal", "tests", "third_party", "tools"}
+var lintDirs = []string{"app", "atelier", "bench", "cmd", "core", "frameworks", "internal", "tests", "third_party", "tools"}
 
 // brokenFixtureTag gates the two intentionally invalid files, so the normal
 // build never sees them and `go build -tags brokenfixtures` still can.

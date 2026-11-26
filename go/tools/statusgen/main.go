@@ -48,7 +48,8 @@ func render() string {
 		builder.WriteString(fmt.Sprintf("\t%s: %q,\n", row[0], row[1]))
 	}
 	builder.WriteString("}\n\n")
-	builder.WriteString("// Label is the generated accessor; String stays hand-written in status.go.\n")
+	builder.WriteString("// Label is the generated accessor, DO NOT EDIT: regenerate it with go generate ./core/support.\n")
+	builder.WriteString("// String stays hand-written in status.go.\n")
 	builder.WriteString("func (s RepairStatus) Label() string {\n")
 	builder.WriteString("\treturn statusLabels[s]\n")
 	builder.WriteString("}\n")
