@@ -138,8 +138,8 @@ class RepairOrder extends Model
     /**
      * Advance to a new status, logging the transition.
      *
-     * Central references target: called from the Filament action, the report
-     * controller flow, complete(), and the seeder.
+     * Central references target: called from complete(), the seeder and the
+     * lifecycle feature tests.
      */
     public function transitionTo(RepairStatus $next, string $changedBy): bool
     {
@@ -164,9 +164,10 @@ class RepairOrder extends Model
      * Finish the repair: transition, price via the bound InvoiceCalculator,
      * stamp completion, fire the event.
      *
-     * Call-hierarchy hub: known callers are the Filament
-     * CompleteAction and the seeder; pricing routes through the
-     * container-bound InvoiceCalculator implementation.
+     * Call-hierarchy hub: called from the Filament repair-orders table's
+     * complete action, the status board, the seeder and the feature tests;
+     * pricing routes through the container-bound InvoiceCalculator
+     * implementation.
      */
     public function complete(string $changedBy): bool
     {

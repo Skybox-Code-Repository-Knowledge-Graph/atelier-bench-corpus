@@ -8,7 +8,7 @@ use Livewire\Component;
 
 /**
  * Coverage: Livewire Form object property ($this->form), wire:model.blur
- * binding into the form, dispatch to the board's #[On('note-added')].
+ * binding into the form, and a dispatch the board's event listener receives.
  */
 class NoteComposer extends Component
 {

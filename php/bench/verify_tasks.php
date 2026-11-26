@@ -6,10 +6,12 @@
  *
  * Usage:
  *   php bench/verify_tasks.php                # resolve every file+needle pair
- *   php bench/verify_tasks.php --lint          # php -l over app/ bench/ config/ database/ routes/
+ *   php bench/verify_tasks.php --lint          # php -l over app/ bench/ config/ database/ routes/,
+ *                                              # then each fixtures/broken-syntax/* must refuse to parse
  *   php bench/verify_tasks.php --root <dir>    # verify another lane-shaped directory
  *
- * Zero composer deps. Exit 0 only when every check passes. Mirrors
+ * The needle check has zero composer deps; --lint loads vendor/ only to compile
+ * the broken Blade fixture. Exit 0 only when every check passes. Mirrors
  * rust/bench/verify-tasks/src/main.rs, typescript/bench/verify-tasks/verify.mjs
  * and javascript/bench/verify-tasks/verify.mjs line for line so every lane is
  * scored the same way.
@@ -242,9 +244,102 @@ function runLint(string $root): int
 
     if ($failed > 0) {
         echo "lint: {$failed} failed of {$checked} php files\n";
+        lintBrokenFixtures($root);
         return 1;
     }
 
     echo "lint: OK ({$checked} php files under app/ bench/ config/ database/ routes/)\n";
+
+    return lintBrokenFixtures($root) > 0 ? 1 : 0;
+}
+
+/**
+ * Every file in fixtures/broken-syntax/ must still refuse to parse, each under
+ * the parser its parse-negative task names: `php -l` for a .php file; for a
+ * .blade.php file the Blade compiler (illuminate/view from vendor/, so this
+ * half needs `composer install`) and then `php -l` on the compiled PHP. A
+ * compiler that throws also counts as a refusal. Each file is checked on its
+ * own; a fixture that parses, one with no named parser, or an empty fixture
+ * directory fails the lint. Returns the number of failures.
+ */
+function lintBrokenFixtures(string $root): int
+{
+    $dir = $root . '/fixtures/broken-syntax';
+    $fixtures = is_dir($dir) ? glob($dir . '/*') : [];
+    $fixtures = array_values(array_filter($fixtures ?: [], 'is_file'));
+    if ($fixtures === []) {
+        echo "LINT FAIL: no broken fixtures under {$dir}\n";
+        return 1;
+    }
+
+    $failed = 0;
+    foreach ($fixtures as $path) {
+        $name = basename($path);
+        if (str_ends_with($name, '.blade.php')) {
+            try {
+                $refusal = bladeRefusal($root, $path);
+            } catch (RuntimeException $e) {
+                echo "LINT FAIL: {$e->getMessage()}\n";
+                $failed++;
+                continue;
+            }
+        } elseif (str_ends_with($name, '.php')) {
+            $refusal = phpLintRefusal($path);
+        } else {
+            echo "LINT FAIL: {$path} has no parser named for broken fixtures (.php or .blade.php)\n";
+            $failed++;
+            continue;
+        }
+        if ($refusal === null) {
+            echo "LINT FAIL: broken fixture {$path} parses; it must refuse to\n";
+            $failed++;
+        }
+    }
+
+    if ($failed > 0) {
+        echo "lint: {$failed} of " . count($fixtures) . " broken fixture(s) failed the must-not-parse check\n";
+        return $failed;
+    }
+
+    echo 'lint: OK (' . count($fixtures) . " broken fixture(s) still refuse to parse)\n";
     return 0;
+}
+
+/** The `php -l` error for a file, or null when it parses. */
+function phpLintRefusal(string $path): ?string
+{
+    $output = [];
+    $code = 0;
+    exec('php -l ' . escapeshellarg($path) . ' 2>&1', $output, $code);
+
+    return $code !== 0 ? implode("\n", $output) : null;
+}
+
+/** Compile a Blade file, then `php -l` the result: the refusal, or null when both succeed. */
+function bladeRefusal(string $root, string $path): ?string
+{
+    $autoload = $root . '/vendor/autoload.php';
+    if (! is_file($autoload)) {
+        throw new RuntimeException("{$autoload} missing; run composer install to compile {$path}");
+    }
+    require_once $autoload;
+
+    if (! class_exists(\Illuminate\View\Compilers\BladeCompiler::class)) {
+        throw new RuntimeException("the Blade compiler is not in {$autoload}; cannot compile {$path}");
+    }
+    // Only the compile itself may count as a refusal: a broken vendor/ must fail the lint, not pass it.
+    $compiler = new \Illuminate\View\Compilers\BladeCompiler(new \Illuminate\Filesystem\Filesystem(), sys_get_temp_dir());
+    try {
+        $compiled = $compiler->compileString((string) file_get_contents($path));
+    } catch (\Throwable $e) {
+        return 'blade compile: ' . $e->getMessage();
+    }
+
+    $tmp = tempnam(sys_get_temp_dir(), 'verify-blade-');
+    file_put_contents($tmp, $compiled);
+    try {
+        return phpLintRefusal($tmp);
+    } finally {
+        unlink($tmp);
+    }
 }
