@@ -331,7 +331,7 @@ const GLOB_NO_READING = "imp-glob-import has no single reading: asked at the imp
  * set of expect keys, and the tasks (`lane:id`) the reason is true of. Matched only after every rule
  * has passed a task by, so an entry can never take a task a rule scores; a task of the same shape
  * that is not listed falls through to the generic "no rule for surface ..." reason instead of one
- * written for another lane's task.
+ * written for another lane's task. An entry whose `tasks` is not a Set matches no task.
  */
 export const UNRULED_SHAPES = [
     {
@@ -589,7 +589,7 @@ export function planTask(task, lane = null) {
         };
     }
 
-    const unruled = UNRULED_SHAPES.find((shape) => shape.tasks.has(`${lane}:${task.id}`)
+    const unruled = UNRULED_SHAPES.find((shape) => shape.tasks instanceof Set && shape.tasks.has(`${lane}:${task.id}`)
         && shape.surface === task.surface
         && (shape.kind === undefined || shape.kind === expect.kind)
         && shape.keys.length === keys.length

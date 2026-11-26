@@ -11,7 +11,7 @@ import { readFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
-import { LANES, asksMergedName, planTask } from "../lib/plan.mjs";
+import { LANES, UNRULED_SHAPES, asksMergedName, planTask } from "../lib/plan.mjs";
 import { resolveNeedle } from "../lib/resolve.mjs";
 import { scoreTask } from "../lib/score.mjs";
 
@@ -147,6 +147,30 @@ test("a declaration_merge task asks about the member unless the symbol is on eve
     assert.equal(planTask(task, "typescript").rule, "resolution/merged-member");
     task.from.symbol = "Worker";
     assert.equal(planTask(task, "typescript").rule, "resolution/merged-name");
+});
+
+test("every refused shape lists its tasks as a non-empty set of lane:id, and an entry without one matches nothing", () => {
+    const laneId = new RegExp(`^(${LANES.join("|")}):[a-z0-9-]+$`);
+    for (const shape of UNRULED_SHAPES) {
+        const label = `${shape.surface} ${shape.kind ?? ""} ${shape.keys.join(",")}`;
+        assert.ok(shape.tasks instanceof Set && shape.tasks.size > 0, `${label}: tasks is not a non-empty Set`);
+        for (const key of shape.tasks) {
+            assert.match(key, laneId, label);
+        }
+        assert.ok(typeof shape.reason === "string" && shape.reason !== "", `${label}: no reason`);
+    }
+    // An entry written without `tasks` (or with a list in place of a Set) must neither throw for
+    // every later task nor take a task of its shape: it matches none.
+    const task = taskOf("go", "imp-internal-package");
+    for (const tasks of [undefined, ["go:imp-internal-package"]]) {
+        UNRULED_SHAPES.unshift({ surface: task.surface, kind: task.expect.kind, keys: Object.keys(task.expect), tasks, reason: "an entry without a Set of tasks" });
+        try {
+            assert.match(planTask(task, "go").reason, /^kind visibility_boundary with `contains`/);
+            assert.match(planTask({ ...structuredClone(task), id: "imp-not-listed" }, "go").reason, /^no rule for surface import-precision with keys contains, kind, known_sites$/);
+        } finally {
+            UNRULED_SHAPES.shift();
+        }
+    }
 });
 
 test("an unlisted task of a refused shape gets the generic reason, not another lane's", () => {
