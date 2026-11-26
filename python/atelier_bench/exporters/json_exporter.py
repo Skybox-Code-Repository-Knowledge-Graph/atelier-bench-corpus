@@ -1,10 +1,10 @@
-"""json exporter."""
+"""json exporter: the compact JSON text comes from the HasSerialization concern's `to_json`."""
 
 from __future__ import annotations
 
-import json
 from collections.abc import Sequence
 
+from ..concerns.has_serialization import to_json
 from ..contracts.report_contract import ReportRow
 from ..support.abstract_exporter import AbstractExporter
 
@@ -14,4 +14,4 @@ class JsonExporter(AbstractExporter):
         super().__init__("json", "application/json")
 
     def export(self, rows: Sequence[ReportRow]) -> str:
-        return json.dumps([row._asdict() for row in rows], separators=(",", ":"))
+        return to_json([row._asdict() for row in rows])

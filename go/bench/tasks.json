@@ -2,7 +2,7 @@
     "version": 1,
     "corpus": "atelier-bench-corpus",
     "lane": "go",
-    "notes": "Known-answer navigation tasks for the go lane. Needle-based, not line-based: bench/verify resolves every needle to a unique line at the current SHA, so the manifest survives edits without stale line numbers. Paths are relative to the lane root (go/), not to the repository root. 'expect' blocks carry the ground truth a harness scores against; counts are minimums where marked. exact_count is exact and counts concrete, non-generic, unconditionally compiled types that satisfy the contract directly or through EMBEDDING (Go's promotion); interfaces, embeddable bases and build-tag-gated types are excluded. On an implementation or cardinality list, optional_sites names declarations that satisfy the contract but are not counted (interfaces that embed it); a tool may return them or not. Go has no implements keyword: the textual evidence of satisfaction is a `var _ Contract = (*Type)(nil)` assertion, and the structural rules carry none at all. The assertion is evidence only, never the anchor: each nominal implementor is anchored on the declaration line of its type (`type T struct {`), which is the line an implementation tool returns. README.md (Ground truth) also lists the lane-specific kind strings, and these notes define each of them. document_symbol tasks count every named symbol the anchored FILE declares at any nesting depth (types, fields, functions, methods); each task's note enumerates that count N and states min_symbols = floor(0.75 * N), the 25% margin absorbing listings that fold container nodes. IDs shared with the other lanes ask the same question in each language. Other kinds this lane uses: arity (the parameter count of a signature whose parameters share types in groups: sku, name string is two parameters, and exact_count counts parameters, not groups), dot_import (an import . \"path\": the package's exported names are used with no qualifier, so the call site carries no package name to follow), init_order (package initialisation order: package-level vars initialise before any init function runs, and the init functions of one package run in file-name order), no_fanout (an import of a leaf package: it reaches that package's declarations and nothing in the package of its parent directory), one_member (an import of a whole package from which the file uses one member: the answer is that member, never every declaration in the package), one_of_two (two packages share one name and the file imports exactly one of them, under an alias: the answer is the declaration in the package it imports), path_name_divergence (an import path whose last segment differs from the package clause, such as yamlish.v2 declaring package yamlish: the local identifier is the declared package name), receiver (the receiver form of a method, value or pointer: a call resolves to the method declared on that receiver, and a value receiver works on a copy, so the caller's value is never mutated), same_name (two Go functions share the name RecalculateInventory, the console command and the job it calls; the package qualifier at the call site, app., is all that tells them apart), shadow_alias (an identifier that reaches one of two same-name declarations through a package alias or a shadowed package name: moneyfmt.Formatter and statusfmt.Formatter name the Formatter of two different packages, coresupport picks one of two packages named support, and http inside a package itself named http is the standard library; each resolves to the declaration at the import path, never its namesake), side_effect_only (a blank import _ \"path\": no identifier is bound, and the only effect is the package's init functions), structural (Go interface satisfaction: a type implements an interface through its method set, directly or through embedding, without naming the interface; a var _ Contract = (*Type)(nil) assertion is optional evidence, and the adhoc rules carry none), syntax_error (a source file under fixtures/broken-syntax/ that carries the brokenfixtures build tag, so the normal build never compiles it; it is malformed on purpose, an unclosed struct literal or a broken receiver list, and parsing it must fail), type_only (a package imported only for names in type positions: Go has no import type, so the distinction is positional, and a file that calls no function of the package carries no value-level edge to it), visibility_boundary (a package under internal/: only packages rooted at the parent of the internal directory may import it, a boundary the compiler enforces). Kinds shared with other lanes, worded identically in every lane that uses them. child_of: the anchored declaration is the child end of a parent edge, and the answer is a direct parent it extends, implements or embeds, one level up, never a further ancestor and never one of its own children. lane_local: a symbol every lane carries under the same name or as its lane equivalent (Money, Customer, Dataset, the reference prefix, the invoice calculator's calculate, the billing Formatter); resolution must land on this lane's own declaration and never cross into a sibling lane. parent_of: a parent edge scored for direction, with the anchor at either end; the parent is the type that is extended, implemented or embedded, the child is the type that does so, and an answer that reports the child as the parent is wrong. uses_self: a type that refers to itself, such as a tree node holding children of its own type; the edge is a uses edge back to the declaring type, never extends, implements or embedding. from.symbol is the identifier a task asks about, exactly as written on the from line and with no qualifier: the alias where an alias is used, the member on a member access, null when the question has no single identifier. from.occurrence (1-based) says which one when it appears more than once on that line, and is then required. document_symbol, parse-negative and diagnostics tasks ask about a file and carry neither key.",
+    "notes": "Known-answer navigation tasks for the go lane. Needle-based, not line-based: bench/verify resolves every needle to a unique line at the current SHA, so the manifest survives edits without stale line numbers. Paths are relative to the lane root (go/), not to the repository root. 'expect' blocks carry the ground truth a harness scores against; a count named min_* is a floor, every other count is exact. COUNTING RULES, one per count and count-bearing field; each states how the current counts were made. (1) exact_count on an implementation or cardinality list counts TYPES: concrete, non-generic, unconditionally compiled named types whose value or pointer method set satisfies the contract, directly or through EMBEDDING (Go's promotion), a generic contract under the instantiation the type's own method signatures fix (CustomerRepository satisfies Repository[*models.Customer]); interfaces, embeddable bases and build-tag-gated types are excluded. Go has no implements keyword: the textual evidence of satisfaction is a `var _ Contract = (*Type)(nil)` assertion, and the structural rules carry none at all. The assertion is evidence only, never the anchor: each implementor is anchored on the declaration line of its type (`type T struct {`), the line that declares the implementing type. (2) optional_sites on an implementation or cardinality list names the interfaces whose method set contains the contract's, by embedding it (CompositeContract, Keyed) or by declaring the same methods (RuleContract and RuleLike, each for the other): they satisfy the contract but are not counted, and a tool may return them or not. (3) card-rule-contract is the one list that counts VALUES, the single exception to rule (1), kept so that its 48 equals the same shared id in the typescript, javascript and python lanes, whose structural rules are object values with no type of their own: exact_count = nominal_count (the 24 rule structs, each on its type declaration line) + structural_count (the 24 AdHocRule struct-literal values of adhoc.Rules, each on its literal line), and the AdHocRule type itself is not counted. impl-structural-no-assertion asks about the same method set under rule (1) and counts 25 types. (4) card-embedded-promotion, asked from an embeddable struct, counts METHODS: exact_count is the number of methods the struct's method set gains from its embedded fields (all five of BaseReport's; it declares none of its own), each anchored on its declaration line. (5) On a multi-parent task a Go type's parents are its embedded fields: an interface's embedded interfaces (parents-contract-three, whose exact_count counts them) and a struct's embedded structs (parents-class-one-plus-two: extends_count counts the embedded report base from atelier/support, implements_count the embedded behaviour concerns from atelier/concerns, and their sum is the number of embedded fields). Each parent is listed on its type's declaration line. (6) exact_count on a references task counts LINES: every line of a compiled file, tests included, on which an identifier resolves to the asked declaration, whatever its position (a call, a selector reached through embedding, a method value or method expression, a type in a field, parameter, result, receiver or composite literal, a package-qualified mention), each line once however many uses it holds (refs-money-type and refs-money-class: 44 lines holding 53 uses). The declaration line asked from is not counted, and comments, string literals and the never-compiled files under fixtures/broken-syntax hold no uses. known_sites, with repeated_sites, lists exactly those lines. (7) repeated_sites names a needle that matches exactly `lines` lines of one file, every one of them a site: exact_count = known_sites + all repeated lines, and bench/verify checks each `lines`. (8) optional_sites on a references list names a line that links to the symbol without using it, such as a string literal equal to a const's value (refs-string-event-name): never counted, and a tool may return it or not. (9) min_incoming on a call_hierarchy task is a floor on calling FUNCTIONS: each function or method whose body holds a call counts once, however many call sites it holds (hierarchy-incoming-transition: RepairOrder.Complete, dataset.Seeded with seven call sites, and TestPointerAndValueReceivers, so 3). incoming_includes names one call site per caller and outgoing_includes the callee declarations; both are partial lists and never counted. (10) document_symbol tasks count every named declaration the anchored FILE makes: package-level types, consts, vars and functions, methods, struct fields (an embedded field counts once, under its type name) and interface methods (an embedded interface likewise). Parameters, results, receivers, local variables, imports and the package clause are not symbols. Each task's note enumerates that count N and states min_symbols = floor(0.75 * N), the 25% margin absorbing listings that fold container nodes; must_include never lists more names than min_symbols. (11) exact_count on a resolution task of kind arity counts parameters, not groups (see arity below). ANCHORING RULES. A definition answer is the declaration of the identifier from.symbol names, anchored on its declaring line (the func, method, type, var or const line; in a grouped block, the spec line), never on a line inside a body: a function whose body holds the construct asked about (def-type-switch) is answered by the function's own line. Where the identifier is a method called on an interface value, the answer is the concrete method the call reaches under the lane's default container binding, the other implementations being known_sites (def-trait-method-through-binding, ruled in #154). def-struct-tag is the one string-keyed definition: from.symbol sits in a string literal, and the answer is the struct field whose json tag carries that wire name. A blank import binds no identifier, so no definition task is asked from one. IDs shared with the other lanes ask the same question in each language. Other kinds this lane uses: arity (the parameter count of a signature whose parameters share types in groups: sku, name string is two parameters, and exact_count counts parameters, not groups), dot_import (an import . \"path\": the package's exported names are used with no qualifier, so the call site carries no package name to follow), init_order (package initialisation order: package-level vars initialise before any init function runs, and the init functions of one package run in file-name order), no_fanout (an import of a leaf package: it reaches that package's declarations and nothing in the package of its parent directory), one_member (an import of a whole package from which the file uses one member: the answer is that member, never every declaration in the package), one_of_two (two packages share one name and the import line asked from reaches one of them under an alias: the answer is a declaration in the package that line imports, never in its namesake), path_name_divergence (an import path whose last segment differs from the package clause, such as yamlish.v2 declaring package yamlish: the local identifier is the declared package name), receiver (the receiver form of a method, value or pointer: a call resolves to the method declared on that receiver, and a value receiver works on a copy, so the caller's value is never mutated), same_name (two Go functions share the name RecalculateInventory, the console command and the job it calls; the package qualifier at the call site, app., is all that tells them apart), shadow_alias (an identifier that reaches one of two same-name declarations through a package alias or a shadowed package name: moneyfmt.Formatter and statusfmt.Formatter name the Formatter of two different packages, coresupport picks one of two packages named support, and http inside a package itself named http is the standard library; each resolves to the declaration at the import path, never its namesake), side_effect_only (a blank import _ \"path\": no identifier is bound, and the only effect is the package's init functions), structural (Go interface satisfaction: a type implements an interface through its method set, directly or through embedding, without naming the interface; a var _ Contract = (*Type)(nil) assertion is optional evidence, and the adhoc rules carry none), syntax_error (a source file under fixtures/broken-syntax/ that carries the brokenfixtures build tag, so the normal build never compiles it; it is malformed on purpose, an unclosed struct literal or a broken receiver list, and parsing it must fail), type_only (a package imported only for names in type positions: Go has no import type, so the distinction is positional, and a file that calls no function of the package carries no value-level edge to it), visibility_boundary (a package under internal/: only packages rooted at the parent of the internal directory may import it, a boundary the compiler enforces). Kinds shared with other lanes, worded identically in every lane that uses them. child_of: the anchored declaration is the child end of a parent edge, and the answer is a direct parent it extends, implements or embeds, one level up, never a further ancestor and never one of its own children. lane_local: a symbol every lane carries under the same name or as its lane equivalent (Money, Customer, Dataset, the reference prefix, the invoice calculator's calculate, the billing Formatter); resolution must land on this lane's own declaration and never cross into a sibling lane. parent_of: a parent edge scored for direction, with the anchor at either end; the parent is the type that is extended, implemented or embedded, the child is the type that does so, and an answer that reports the child as the parent is wrong. uses_self: a type that refers to itself, such as a tree node holding children of its own type; the edge is a uses edge back to the declaring type, never extends, implements or embedding. from.symbol is the identifier a task asks about, exactly as written on the from line and with no qualifier: the alias where an alias is used, the member on a member access, null when the question has no single identifier. from.occurrence (1-based) says which one when it appears more than once on that line, and is then required. document_symbol, parse-negative and diagnostics tasks ask about a file and carry neither key.",
     "tasks": [
         {
             "id": "def-free-function",
@@ -104,8 +104,8 @@
         {
             "id": "def-import-alias",
             "surface": "definition",
-            "note": "Aliased import: the local identifier is nothing like the package name.",
-            "from": {"file": "app/state.go", "needle": "\tmoneyfmt \"atelier.example/lane/core/billing\"", "symbol": "billing"},
+            "note": "Aliased import: the qualifier moneyfmt is nothing like the package name billing (app/state.go imports atelier.example/lane/core/billing as moneyfmt), and the call resolves through the alias to that package's NewFormatter.",
+            "from": {"file": "app/state.go", "needle": "\t\tMoney:     moneyfmt.NewFormatter(\"EUR\"),", "symbol": "NewFormatter"},
             "expect": {"file": "core/billing/formatter.go", "needle": "func NewFormatter(currency string) *Formatter {"}
         },
         {
@@ -146,7 +146,7 @@
             "id": "def-embedded-promotion-four-levels",
             "surface": "definition",
             "note": "CashFlowReport reaches CacheKey through CompositeReport, PeriodicReport, BaseReport, HasCache.",
-            "from": {"file": "tests/promotion_test.go", "needle": "if cacheable.CacheKey() != \"cash-flow:cache\" {", "symbol": "CacheKey"},
+            "from": {"file": "tests/promotion_test.go", "needle": "if cashFlow.CacheKey() != \"cash-flow:cache\" {", "symbol": "CacheKey"},
             "expect": {
                 "file": "atelier/concerns/cache.go",
                 "needle": "func (h HasCache) CacheKey() string {",
@@ -406,16 +406,16 @@
         {
             "id": "def-struct-tag",
             "surface": "definition",
-            "note": "The wire name lives in a struct tag, not in the field name.",
+            "note": "The wire name lives in a struct tag, not in the field name. A string-keyed link, not a language-level definition: from.symbol is the key of a decoded JSON map, a string literal that names no identifier, and the answer is the field whose json tag carries that wire name. No definition query on the literal reaches it by the language's own resolution.",
             "from": {"file": "tests/http_test.go", "needle": "\tif body[\"reference\"] != \"AT-2026-000001\" {", "symbol": "reference"},
             "expect": {"file": "app/http/report.go", "needle": "\tReference  string `json:\"reference\"`"}
         },
         {
             "id": "def-internal-package",
             "surface": "definition",
-            "note": "internal/ limits importers to this module; the blank import runs init and nothing else.",
-            "from": {"file": "cmd/atelier/main.go", "needle": "\t_ \"atelier.example/lane/internal/audit\"", "symbol": "audit"},
-            "expect": {"file": "internal/audit/audit.go", "needle": "func init() {"}
+            "note": "internal/ limits importers to packages rooted at the parent of the internal directory (atelier.example/lane/...); the tests package qualifies, so audit.Banner resolves into the internal package. The earlier question, the blank import in cmd/atelier/main.go reaching `func init()`, is dropped: a blank import binds no identifier, so no definition answers init (the same finding left imp-blank-import-side-effect unscorable in #205).",
+            "from": {"file": "tests/structure_test.go", "needle": "\tif !strings.Contains(audit.Banner(), \"audit sink\") {", "symbol": "Banner"},
+            "expect": {"file": "internal/audit/audit.go", "needle": "func Banner() string {"}
         },
         {
             "id": "def-vendored-package-name",
@@ -531,36 +531,40 @@
         {
             "id": "impl-structural-no-assertion",
             "surface": "implementation",
-            "note": "The 24 ad-hoc rule VALUES satisfy RuleLike by shape; the adhoc package names no contract and asserts nothing.",
+            "note": "RuleLike declares the same method set as RuleContract, and no `var _` assertion names RuleLike (its only use is as the constraint of SatisfiedBy): every type with that method set satisfies it by shape alone. That is adhoc.AdHocRule (its 24 values assert nothing) and the 24 nominal rule structs (each asserts RuleContract only), 25 types under the lane's counting rule; RuleContract, an interface with the same method set, is an optional site.",
             "from": {"file": "atelier/contracts/rule.go", "needle": "type RuleLike interface {", "symbol": "RuleLike"},
             "expect": {
-                "exact_count": 24,
+                "exact_count": 25,
                 "kind": "structural",
                 "implementations": [
-                    {"file": "atelier/rules/adhoc/adhoc.go", "needle": "\t{key: \"duplicate-reference\", check: func(data *dataset.Dataset) bool {"},
-                    {"file": "atelier/rules/adhoc/adhoc.go", "needle": "\t{key: \"reference-prefix\", check: func(data *dataset.Dataset) bool {"},
-                    {"file": "atelier/rules/adhoc/adhoc.go", "needle": "\t{key: \"currency-consistency\", check: func(data *dataset.Dataset) bool {"},
-                    {"file": "atelier/rules/adhoc/adhoc.go", "needle": "\t{key: \"rounding\", check: func(data *dataset.Dataset) bool {"},
-                    {"file": "atelier/rules/adhoc/adhoc.go", "needle": "\t{key: \"tax-applied\", check: func(data *dataset.Dataset) bool {"},
-                    {"file": "atelier/rules/adhoc/adhoc.go", "needle": "\t{key: \"export-freshness\", check: func(data *dataset.Dataset) bool {"},
-                    {"file": "atelier/rules/adhoc/adhoc.go", "needle": "\t{key: \"notification-sent\", check: func(data *dataset.Dataset) bool {"},
-                    {"file": "atelier/rules/adhoc/adhoc.go", "needle": "\t{key: \"audit-trail\", check: func(data *dataset.Dataset) bool {"},
-                    {"file": "atelier/rules/adhoc/adhoc.go", "needle": "\t{key: \"cache-ttl\", check: func(data *dataset.Dataset) bool {"},
-                    {"file": "atelier/rules/adhoc/adhoc.go", "needle": "\t{key: \"report-coverage\", check: func(data *dataset.Dataset) bool {"},
-                    {"file": "atelier/rules/adhoc/adhoc.go", "needle": "\t{key: \"metric-range\", check: func(data *dataset.Dataset) bool {"},
-                    {"file": "atelier/rules/adhoc/adhoc.go", "needle": "\t{key: \"dataset-integrity\", check: func(data *dataset.Dataset) bool {"},
-                    {"file": "atelier/rules/adhoc/adhoc.go", "needle": "\t{key: \"seed-determinism\", check: func(data *dataset.Dataset) bool {"},
-                    {"file": "atelier/rules/adhoc/adhoc.go", "needle": "\t{key: \"order-count\", check: func(data *dataset.Dataset) bool {"},
-                    {"file": "atelier/rules/adhoc/adhoc.go", "needle": "\t{key: \"customer-count\", check: func(data *dataset.Dataset) bool {"},
-                    {"file": "atelier/rules/adhoc/adhoc.go", "needle": "\t{key: \"part-count\", check: func(data *dataset.Dataset) bool {"},
-                    {"file": "atelier/rules/adhoc/adhoc.go", "needle": "\t{key: \"invoice-count\", check: func(data *dataset.Dataset) bool {"},
-                    {"file": "atelier/rules/adhoc/adhoc.go", "needle": "\t{key: \"open-order-ratio\", check: func(data *dataset.Dataset) bool {"},
-                    {"file": "atelier/rules/adhoc/adhoc.go", "needle": "\t{key: \"completion-rate\", check: func(data *dataset.Dataset) bool {"},
-                    {"file": "atelier/rules/adhoc/adhoc.go", "needle": "\t{key: \"average-ticket\", check: func(data *dataset.Dataset) bool {"},
-                    {"file": "atelier/rules/adhoc/adhoc.go", "needle": "\t{key: \"parts-per-order\", check: func(data *dataset.Dataset) bool {"},
-                    {"file": "atelier/rules/adhoc/adhoc.go", "needle": "\t{key: \"repeat-customer\", check: func(data *dataset.Dataset) bool {"},
-                    {"file": "atelier/rules/adhoc/adhoc.go", "needle": "\t{key: \"device-category\", check: func(data *dataset.Dataset) bool {"},
-                    {"file": "atelier/rules/adhoc/adhoc.go", "needle": "\t{key: \"inventory-turnover\", check: func(data *dataset.Dataset) bool {"}
+                    {"file": "atelier/rules/adhoc/adhoc.go", "needle": "type AdHocRule struct {"},
+                    {"file": "atelier/rules/customer_credit.go", "needle": "type CustomerCreditRule struct{}"},
+                    {"file": "atelier/rules/deposit_required.go", "needle": "type DepositRequiredRule struct{}"},
+                    {"file": "atelier/rules/device_age.go", "needle": "type DeviceAgeRule struct{}"},
+                    {"file": "atelier/rules/discount_ceiling.go", "needle": "type DiscountCeilingRule struct{}"},
+                    {"file": "atelier/rules/gross_profit.go", "needle": "type GrossProfitRule struct{}"},
+                    {"file": "atelier/rules/idle_technician.go", "needle": "type IdleTechnicianRule struct{}"},
+                    {"file": "atelier/rules/invoice_balance.go", "needle": "type InvoiceBalanceRule struct{}"},
+                    {"file": "atelier/rules/label_presence.go", "needle": "type LabelPresenceRule struct{}"},
+                    {"file": "atelier/rules/maximum_backlog.go", "needle": "type MaximumBacklogRule struct{}"},
+                    {"file": "atelier/rules/minimum_stock.go", "needle": "type MinimumStockRule struct{}"},
+                    {"file": "atelier/rules/note_required.go", "needle": "type NoteRequiredRule struct{}"},
+                    {"file": "atelier/rules/part_availability.go", "needle": "type PartAvailabilityRule struct{}"},
+                    {"file": "atelier/rules/part_cost_margin.go", "needle": "type PartCostMarginRule struct{}"},
+                    {"file": "atelier/rules/priority_escalation.go", "needle": "type PriorityEscalationRule struct{}"},
+                    {"file": "atelier/rules/repair_duration.go", "needle": "type RepairDurationRule struct{}"},
+                    {"file": "atelier/rules/revenue_floor.go", "needle": "type RevenueFloorRule struct{}"},
+                    {"file": "atelier/rules/rework_limit.go", "needle": "type ReworkLimitRule struct{}"},
+                    {"file": "atelier/rules/rush_surcharge.go", "needle": "type RushSurchargeRule struct{}"},
+                    {"file": "atelier/rules/schedule_gap.go", "needle": "type ScheduleGapRule struct{}"},
+                    {"file": "atelier/rules/signature_required.go", "needle": "type SignatureRequiredRule struct{}"},
+                    {"file": "atelier/rules/slot_overbooking.go", "needle": "type SlotOverbookingRule struct{}"},
+                    {"file": "atelier/rules/status_sequence.go", "needle": "type StatusSequenceRule struct{}"},
+                    {"file": "atelier/rules/technician_capacity.go", "needle": "type TechnicianCapacityRule struct{}"},
+                    {"file": "atelier/rules/warranty_window.go", "needle": "type WarrantyWindowRule struct{}"}
+                ],
+                "optional_sites": [
+                    {"file": "atelier/contracts/rule.go", "needle": "type RuleContract interface {"}
                 ],
                 "must_not_include": ["var _ contracts.RuleLike"]
             }
@@ -875,12 +879,14 @@
         {
             "id": "resolution-structural-concern",
             "surface": "resolution",
-            "note": "The value satisfies RuleLike by shape; nothing in the adhoc package names any contract.",
+            "note": "AdHocRule satisfies RuleLike by shape, and RuleContract too: the two interfaces declare the same method set (atelier/contracts/rule.go), so RuleContract is a known site, not a wrong answer. Nothing in the adhoc package names either interface.",
             "from": {"file": "atelier/rules/adhoc/adhoc.go", "needle": "func (r AdHocRule) Evaluate(data *dataset.Dataset) bool {", "symbol": "AdHocRule"},
             "expect": {
                 "kind": "structural",
                 "candidate": {"file": "atelier/contracts/rule.go", "needle": "type RuleLike interface {"},
-                "must_not_include": ["RuleContract"]
+                "known_sites": [
+                    {"file": "atelier/contracts/rule.go", "needle": "type RuleContract interface {"}
+                ]
             }
         },
         {
@@ -897,13 +903,12 @@
         {
             "id": "resolution-same-name-package-support",
             "surface": "resolution",
-            "note": "Two packages are named support; the file imports the core one under an alias and the bench one not at all.",
+            "note": "Two packages are named support; this file imports both, atelier/support under its own name (for BaseService) and core/support under the alias coresupport, and PriorityWarranty is reached through the alias. atelier/support declares no PriorityWarranty, so no namesake exclusion is keyed; the package-level look-alike is asked by imp-one-of-two-siblings.",
             "from": {"file": "atelier/services/warranty_claim_service.go", "needle": "\t\tif order.Priority == coresupport.PriorityWarranty {", "symbol": "PriorityWarranty"},
             "expect": {
                 "kind": "shadow_alias",
                 "resolution": "atelier.example/lane/core/support#PriorityWarranty",
-                "candidate": {"file": "core/support/priority.go", "needle": "\tPriorityWarranty                 // never billed"},
-                "must_not_include": ["atelier/support"]
+                "candidate": {"file": "core/support/priority.go", "needle": "\tPriorityWarranty                 // never billed"}
             }
         },
         {
@@ -914,14 +919,13 @@
             "expect": {
                 "kind": "path_name_divergence",
                 "resolution": "atelier.example/yamlish.v2#Version",
-                "candidate": {"file": "third_party/yamlish.v2/yamlish.go", "needle": "const Version = \"v2\""},
-                "must_not_include": ["yamlish.v2.Version"]
+                "candidate": {"file": "third_party/yamlish.v2/yamlish.go", "needle": "const Version = \"v2\""}
             }
         },
         {
             "id": "resolution-shadowed-stdlib-package",
             "surface": "resolution",
-            "note": "Inside a package itself named http, the identifier http is the standard library, not this package.",
+            "note": "Inside a package itself named http, the identifier http is the standard library, not this package. The package declares its own NewServeMux (app/http/router.go, the application mux constructor), which a bare-name match also returns: the call on the from line is the standard library's, inside that namesake.",
             "from": {"file": "app/http/router.go", "needle": "\tmux := http.NewServeMux()", "symbol": "NewServeMux"},
             "expect": {
                 "kind": "shadow_alias",
@@ -937,8 +941,7 @@
             "from": {"file": "tests/promotion_test.go", "needle": "\tdoubled := amount.Times(2)", "symbol": "Times"},
             "expect": {
                 "kind": "receiver",
-                "candidate": {"file": "core/money/money.go", "needle": "func (m Money) Times(factor int64) Money {"},
-                "must_not_include": ["func (m *Money)"]
+                "candidate": {"file": "core/money/money.go", "needle": "func (m Money) Times(factor int64) Money {"}
             }
         },
         {
@@ -1149,23 +1152,27 @@
                     {"file": "atelier/rules/adhoc/adhoc.go", "needle": "\t{key: \"device-category\", check: func(data *dataset.Dataset) bool {"},
                     {"file": "atelier/rules/adhoc/adhoc.go", "needle": "\t{key: \"inventory-turnover\", check: func(data *dataset.Dataset) bool {"}
                 ],
-                "must_not_include": ["var _ contracts.RuleContract = AdHocRule"]
+                "must_not_include": ["var _ contracts.RuleContract = AdHocRule"],
+                "optional_sites": [
+                    {"file": "atelier/contracts/rule.go", "needle": "type RuleLike interface {"}
+                ]
             }
         },
         {
             "id": "card-embedded-promotion",
             "surface": "cardinality",
-            "note": "Five methods are promoted onto every embedder of BaseReport: Slug, Title and Describe from Component, CacheKey and TTLSeconds from HasCache. The key lists Slug, Title, CacheKey and TTLSeconds, not Describe; Rows is not among the promoted methods, which is why each report must declare it.",
+            "note": "Five methods are promoted onto every embedder of BaseReport: Slug, Title and Describe from Component, CacheKey and TTLSeconds from HasCache. exact_count counts those promoted methods, each anchored on its declaration line; Rows is not among them, which is why each report must declare it.",
             "from": {"file": "atelier/support/report.go", "needle": "type BaseReport struct {", "symbol": "BaseReport"},
             "expect": {
-                "exact_count": 4,
+                "exact_count": 5,
                 "implementations": [
                     {"file": "atelier/support/component.go", "needle": "func (c Component) Slug() string {"},
                     {"file": "atelier/support/component.go", "needle": "func (c Component) Title() string {"},
+                    {"file": "atelier/support/component.go", "needle": "func (c Component) Describe() string {"},
                     {"file": "atelier/concerns/cache.go", "needle": "func (h HasCache) CacheKey() string {"},
                     {"file": "atelier/concerns/cache.go", "needle": "func (h HasCache) TTLSeconds() int {"}
                 ],
-                "must_include": ["Slug", "Title", "CacheKey", "TTLSeconds"],
+                "must_include": ["Slug", "Title", "Describe", "CacheKey", "TTLSeconds"],
                 "must_not_include": ["Rows"]
             }
         },
@@ -1212,7 +1219,7 @@
         {
             "id": "imp-one-of-two-siblings",
             "surface": "import-precision",
-            "note": "Two packages named support exist; this file imports exactly one of them, under an alias.",
+            "note": "Two packages named support exist; this import line reaches core/support under the alias coresupport, never atelier/support (which the same file also imports, under its own name).",
             "from": {"file": "atelier/services/warranty_claim_service.go", "needle": "\tcoresupport \"atelier.example/lane/core/support\"", "symbol": "support"},
             "expect": {
                 "kind": "one_of_two",
