@@ -288,11 +288,14 @@ export function createParser(onMessage) {
 }
 
 class Client {
-    constructor(command, args, cwd) {
+    constructor(command, args, cwd, holdMs) {
         this.next = 1;
         this.pending = new Map();
         this.stderr = "";
-        this.quiescent = false;
+        this.holdMs = holdMs;
+        this.holdTimer = null;
+        this.status = null;
+        this.settled = false;
         this.readyWaiters = [];
         this.exited = null;
         this.child = spawn(command, args, { cwd, stdio: ["pipe", "pipe", "pipe"] });
@@ -302,6 +305,7 @@ class Client {
         this.child.on("error", (error) => this.fail(error));
         this.child.on("exit", (code, signal) => {
             this.exited = { code, signal };
+            clearTimeout(this.holdTimer);
             this.fail(new Error(`server exited (code ${code}, signal ${signal})`));
         });
         this.child.stdout.on("data", createParser((message) => this.receive(message)));
@@ -350,16 +354,29 @@ class Client {
 
             return;
         }
-        if (message.method === "experimental/serverStatus" && message.params?.quiescent === true) {
-            this.quiescent = true;
-            for (const waiter of this.readyWaiters) {
-                waiter.resolve();
+        if (message.method === "experimental/serverStatus") {
+            // Ready only once quiescent holds for holdMs: a later quiescent:false (build scripts,
+            // proc macros, a reload) restarts the wait instead of being missed.
+            this.status = message.params ?? null;
+            clearTimeout(this.holdTimer);
+            if (this.status?.quiescent === true) {
+                this.holdTimer = setTimeout(() => this.settle(), this.holdMs);
             }
-            this.readyWaiters = [];
         }
     }
 
+    settle() {
+        this.settled = true;
+        for (const waiter of this.readyWaiters) {
+            waiter.resolve();
+        }
+        this.readyWaiters = [];
+    }
+
     request(method, params, timeoutMs = REQUEST_TIMEOUT_MS) {
+        if (this.exited !== null) {
+            return Promise.reject(new Error(`server exited (code ${this.exited.code}, signal ${this.exited.signal})`));
+        }
         const id = this.next++;
 
         return new Promise((resolvePromise, reject) => {
@@ -377,7 +394,7 @@ class Client {
     }
 
     ready(timeoutMs) {
-        if (this.quiescent) {
+        if (this.settled) {
             return Promise.resolve();
         }
 
@@ -496,13 +513,15 @@ function escapeCell(text) {
 
 /**
  * Start the server, wait until it reports a quiescent workspace, check every task, and return
- * the report as lines. Throws only when the server cannot be used at all.
+ * the report as lines plus `failure`: null, or why the run proves nothing (the server exited
+ * before the end, or no task got an answer). Throws when the server cannot be used at all.
  */
-export async function run({ root, command, args = [], readyTimeoutMs = 900_000, version = null, env = process.env }) {
+export async function run({ root, command, args = [], readyTimeoutMs = 900_000, quiescentHoldMs = 3_000, version = null, env = process.env }) {
     const tasks = lspTasks(root);
     const started = Date.now();
-    const client = new Client(command, args, root);
+    const client = new Client(command, args, root, quiescentHoldMs);
     const lines = [];
+    let failure = null;
     try {
         const init = await client.request("initialize", {
             processId: process.pid,
@@ -545,14 +564,22 @@ export async function run({ root, command, args = [], readyTimeoutMs = 900_000, 
         lines.push("<!-- lsp-check begin -->");
         lines.push(`- server: \`${version ?? "version not probed"}\`; initialize serverInfo: \`${info}\``);
         lines.push(`- command: \`node bench/lsp-check.mjs --server ${command}${args.length > 0 ? ` -- ${args.join(" ")}` : ""}\`, run from the lane root`);
-        lines.push(`- run: ${env.GITHUB_RUN_ID ? `GitHub Actions run ${env.GITHUB_RUN_ID}, commit ${env.GITHUB_SHA ?? "?"}` : "local"}`);
-        lines.push(`- workspace quiescent after ${readySeconds} s (experimental/serverStatus)`);
+        const head = env.LSP_CHECK_HEAD_SHA || env.GITHUB_SHA || "?";
+        lines.push(`- run: ${env.GITHUB_RUN_ID ? `GitHub Actions run ${env.GITHUB_RUN_ID}, head commit ${head}` : "local"}`);
+        const health = client.status?.health ?? "?";
+        const said = client.status?.message ? `, message: ${oneLine(client.status.message).split(root).join("<lane>")}` : "";
+        lines.push(`- workspace quiescent after ${readySeconds} s (experimental/serverStatus, health ${health}${said})`);
         lines.push(`- tasks: ${tasks.length} (${bySurface}); agrees ${tally.agrees}, disagrees ${tally.disagrees}, no answer ${tally["no answer"]}`);
         lines.push("");
         lines.push("| task | surface | verdict | what the server returned |");
         lines.push("| --- | --- | --- | --- |");
         lines.push(...rows);
         lines.push("<!-- lsp-check end -->");
+        if (client.exited !== null) {
+            failure = `server exited before the run finished (code ${client.exited.code}, signal ${client.exited.signal})`;
+        } else if (tasks.length > 0 && tally["no answer"] === tasks.length) {
+            failure = "no task got an answer";
+        }
     } catch (error) {
         error.message = `${error.message}\nserver stderr (tail):\n${client.stderr.slice(-4_000)}`;
         throw error;
@@ -560,7 +587,7 @@ export async function run({ root, command, args = [], readyTimeoutMs = 900_000, 
         await client.close();
     }
 
-    return lines;
+    return { lines, failure };
 }
 
 function parseArgs(argv) {
@@ -592,7 +619,7 @@ async function main() {
     const probe = spawnSync(options.command, ["--version"], { encoding: "utf8" });
     const version = probe.status === 0 ? probe.stdout.trim() : null;
     try {
-        const lines = await run({
+        const { lines, failure } = await run({
             root: options.root,
             command: options.command,
             args: options.args,
@@ -600,6 +627,10 @@ async function main() {
             version,
         });
         process.stdout.write(`${lines.join("\n")}\n`);
+        if (failure !== null) {
+            process.stderr.write(`lsp-check: FAIL ${failure}\n`);
+            process.exitCode = 1;
+        }
     } catch (error) {
         process.stderr.write(`lsp-check: FAIL ${error.message}\n`);
         process.exitCode = 1;

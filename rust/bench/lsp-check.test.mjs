@@ -85,6 +85,9 @@ function fakeServer() {
     const root = process.env.LSP_CHECK_FAKE_ROOT;
     const uri = pathToFileURL(join(root, "src", "lib.rs")).href;
     const send = (message) => process.stdout.write(frame({ jsonrpc: "2.0", ...message }));
+    const mode = process.env.LSP_CHECK_FAKE_MODE ?? "flip";
+    const status = (quiescent, health = "ok", message = undefined) => send({ method: "experimental/serverStatus", params: { health, quiescent, message } });
+    let loaded = false;
     let contentModifiedSent = false;
     const answer = (message) => {
         const line = message.params?.position?.line;
@@ -120,8 +123,20 @@ function fakeServer() {
             return;
         }
         if (message.id === "fake-1" && message.method === undefined) {
-            send({ method: "experimental/serverStatus", params: { health: "ok", quiescent: false } });
-            send({ method: "experimental/serverStatus", params: { health: "ok", quiescent: true } });
+            if (mode === "die") {
+                loaded = true;
+                status(true);
+
+                return;
+            }
+            // Quiescent too early, then busy again, then settled: answers exist only after the
+            // last one, so a client that trusts the first quiescent:true gets nothing.
+            status(true);
+            setTimeout(() => status(false, "ok", "loading proc macros"), 100);
+            setTimeout(() => {
+                loaded = true;
+                status(true, "warning", `proc macros loaded from ${root}`);
+            }, 500);
 
             return;
         }
@@ -129,6 +144,14 @@ function fakeServer() {
             process.exit(0);
         }
         if (message.id === undefined) {
+            return;
+        }
+        if (mode === "die" && message.method.startsWith("textDocument/")) {
+            process.exit(3);
+        }
+        if (!loaded && message.method !== "initialize" && message.method !== "shutdown") {
+            send({ id: message.id, result: null });
+
             return;
         }
         if (message.method === "textDocument/documentSymbol" && !contentModifiedSent) {
@@ -186,7 +209,8 @@ if (process.env.LSP_CHECK_FAKE_SERVER === "1") {
         assert.match(judgeDocumentSymbol(docsym, [{ name: "A" }, { name: "B" }]).detail, /not returned: \[impl A\]; returned names not in the key: \[B\]/);
     });
 
-    test("a whole run against a fake server reports one verdict per task on the four surfaces", async () => {
+    /** Write the fixture lane, point the fake server at it, and run `body(root)`. */
+    async function withFake(mode, body) {
         const root = mkdtempSync(join(tmpdir(), "lsp-check-"));
         try {
             mkdirSync(join(root, "src"));
@@ -195,21 +219,39 @@ if (process.env.LSP_CHECK_FAKE_SERVER === "1") {
             writeFileSync(join(root, "bench", "tasks.json"), JSON.stringify({ version: 1, tasks: TASKS }));
             process.env.LSP_CHECK_FAKE_SERVER = "1";
             process.env.LSP_CHECK_FAKE_ROOT = root;
-            const lines = await run({
-                root,
-                command: process.execPath,
-                args: [fileURLToPath(import.meta.url)],
-                readyTimeoutMs: 20_000,
-                version: "fake-lsp 0.0.1 (test)",
-                env: {},
-            });
+            process.env.LSP_CHECK_FAKE_MODE = mode;
+
+            return await body(root);
+        } finally {
             delete process.env.LSP_CHECK_FAKE_SERVER;
+            delete process.env.LSP_CHECK_FAKE_ROOT;
+            delete process.env.LSP_CHECK_FAKE_MODE;
+            rmSync(root, { recursive: true, force: true });
+        }
+    }
+
+    const fake = (root, extra) => run({
+        root,
+        command: process.execPath,
+        args: [fileURLToPath(import.meta.url)],
+        readyTimeoutMs: 20_000,
+        quiescentHoldMs: 300,
+        version: "fake-lsp 0.0.1 (test)",
+        env: {},
+        ...extra,
+    });
+
+    test("a whole run against a fake server reports one verdict per task on the four surfaces", async () => {
+        await withFake("flip", async (root) => {
+            const { lines, failure } = await fake(root, { env: { GITHUB_RUN_ID: "7", GITHUB_SHA: "merge-sha", LSP_CHECK_HEAD_SHA: "head-sha" } });
             const report = lines.join("\n");
 
+            assert.equal(failure, null);
             assert.equal(lines[0], "<!-- lsp-check begin -->");
             assert.equal(lines.at(-1), "<!-- lsp-check end -->");
             assert.match(report, /- server: `fake-lsp 0\.0\.1 \(test\)`; initialize serverInfo: `fake-lsp 0\.0\.1`/);
-            assert.match(report, /- run: local/);
+            assert.match(report, /- run: GitHub Actions run 7, head commit head-sha/);
+            assert.match(report, /\(experimental\/serverStatus, health warning, message: proc macros loaded from <lane>\)/);
             assert.match(report, /- tasks: 7 \(hover 2, document_symbol 1, call_hierarchy 2, implementation 2\); agrees 5, disagrees 1, no answer 1/);
             assert.match(report, /^\| t-hover \| hover \| agrees \| contains "zero-padded width" once line breaks are folded \|$/m);
             assert.match(report, /^\| t-hover-miss \| hover \| disagrees \| "a phrase the doc lacks" absent; hover: /m);
@@ -220,9 +262,18 @@ if (process.env.LSP_CHECK_FAKE_SERVER === "1") {
             assert.match(report, /^\| t-incoming \| call_hierarchy \| agrees \| call src\/lib\.rs:7 returned; 1 callers \(min_incoming 1\): \[area src\/lib\.rs\] \|$/m);
             assert.doesNotMatch(report, /t-definition/);
             assert.doesNotMatch(report, new RegExp(root.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")));
-        } finally {
-            delete process.env.LSP_CHECK_FAKE_SERVER;
-            rmSync(root, { recursive: true, force: true });
-        }
+        });
+    });
+
+    test("a server that dies mid-run fails the run at once instead of reporting empty answers", async () => {
+        const started = Date.now();
+        await withFake("die", async (root) => {
+            const { lines, failure } = await fake(root);
+
+            assert.match(failure, /^server exited before the run finished \(code 3/);
+            assert.match(lines.join("\n"), /agrees 0, disagrees 0, no answer 7/);
+            assert.match(lines.join("\n"), /request failed: server exited/);
+        });
+        assert.ok(Date.now() - started < 15_000, "no request waited for its timeout");
     });
 }

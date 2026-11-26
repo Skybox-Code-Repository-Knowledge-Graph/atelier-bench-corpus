@@ -128,6 +128,10 @@ jobs:
       # The report is printed, not judged: a disagreement never fails the job, a server that
       # cannot load the workspace does. rust/bench/lsp-check.md is this step's output.
       - name: rust-analyzer over the language-server keys (report)
+        if: ${{ !cancelled() }}
+        env:
+          # On a pull_request run GITHUB_SHA is the test merge; the report names the head.
+          LSP_CHECK_HEAD_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
         run: |
           rustup component add rust-analyzer
           rust-analyzer --version
