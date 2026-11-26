@@ -1260,6 +1260,20 @@
             "note": "Eloquent relation read as a property: RepairOrder declares no parts property; $order->parts goes through the model's __get, which calls the relation method parts() and returns its loaded collection, so the answer is that method. Runs in StandardInvoiceCalculator::calculate (tests/Feature/IntegrationsTest.php, and RepairOrder::complete in tests/Feature/RepairLifecycleTest.php).",
             "from": { "file": "app/Services/StandardInvoiceCalculator.php", "needle": "$parts = $order->parts->sum(", "symbol": "parts", "occurrence": 2 },
             "expect": { "kind": "relation_property", "file": "app/Models/RepairOrder.php", "needle": "public function parts(): BelongsToMany" }
+        },
+        {
+            "id": "def-named-route-api",
+            "surface": "definition",
+            "note": "Laravel route parser, lane-local variant of def-route-to-handler (keyed the same way: the answer is the handler method), on routes/api.php: route('api.orders.show') finds the route by the name a fluent ->name() call gives its registration (known_sites), and the handler is that registration's [OrderController::class, 'show'] action, served under /api by bootstrap/app.php. OrderController::storeNote uses it for the Location header of a created note (tests/Feature/IntegrationsTest.php).",
+            "from": { "file": "app/Http/Controllers/Api/OrderController.php", "needle": "->header('Location', route('api.orders.show', $repairOrder));", "symbol": "api.orders.show" },
+            "expect": {
+                "kind": "route_name",
+                "file": "app/Http/Controllers/Api/OrderController.php",
+                "needle": "public function show(RepairOrder $repairOrder): RepairOrderResource",
+                "known_sites": [
+                    { "file": "routes/api.php", "needle": "->name('api.orders.show');" }
+                ]
+            }
         }
     ]
 }

@@ -46,9 +46,12 @@ class OrderController extends Controller
     {
         $note = $repairOrder->notes()->create($request->validated());
 
-        return response()->json([
-            'message' => __('atelier.note_created'),
-            'note' => $note,
-        ], 201);
+        // The created note's Location is its order, found by the route's name (routes/api.php).
+        return response()
+            ->json([
+                'message' => __('atelier.note_created'),
+                'note' => $note,
+            ], 201)
+            ->header('Location', route('api.orders.show', $repairOrder));
     }
 }
