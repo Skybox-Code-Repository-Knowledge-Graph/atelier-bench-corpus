@@ -20,6 +20,14 @@ from atelier_core.support.stock_ledger import (
     recount,
     recount_async,
     units_on_hand,
+    Aisle,
+    Batteries,
+    CountSheet,
+    MovementKind,
+    Screens,
+    family_of,
+    first_short,
+    walk,
 )
 
 
@@ -74,6 +82,38 @@ class ClassLevelHookTest(unittest.TestCase):
     def test_reversed_runs_the_ledger_hook(self) -> None:
         self.assertEqual(self.ledger.newest_first(), ["FAN-A1", "KBD-EU", "BAT-55", "SCR-13"])
         self.assertEqual([level.sku for level in self.ledger][0], "SCR-13")
+
+
+class ProtocolFallbackTest(unittest.TestCase):
+    def test_truth_test_falls_back_to_len(self) -> None:
+        self.assertEqual(Ledger(seeded_state().data.parts).summary(), "4 SKU(s) on hand")
+        self.assertEqual(Ledger([]).summary(), "nothing on hand")
+
+    def test_for_loop_indexes_a_getitem_only_class(self) -> None:
+        self.assertEqual(walk(Aisle(["SCR-13", "KBD-EU"])), ["SCR-13", "KBD-EU"])
+
+    def test_walrus_target_outlives_the_generator(self) -> None:
+        levels = [StockLevel("SCR-13", 4), StockLevel("BAT-55", 1), StockLevel("FAN-A1", 2)]
+        self.assertEqual(first_short(levels, 2), "BAT-55")
+        self.assertIsNone(first_short(levels, 1))
+
+    def test_class_keyword_reaches_init_subclass(self) -> None:
+        self.assertIs(family_of("scr-13"), Screens)
+        self.assertEqual(Batteries.prefix, "BAT")
+        self.assertIsNone(family_of("kbd-eu"))
+
+    def test_auto_asks_generate_next_value(self) -> None:
+        self.assertEqual([kind.value for kind in MovementKind], ["restock", "stock-take"])
+
+    def test_prepare_binds_column_for_the_class_body(self) -> None:
+        self.assertEqual((CountSheet.sku, CountSheet.counted), ("SKU", "COUNTED"))
+
+    def test_del_runs_the_descriptor_delete(self) -> None:
+        level = StockLevel("BAT-55", 1)
+        level.reserved = 3
+        self.assertEqual((level.reserved, level.release(), level.reserved), (3, 3, 0))
+        level.reserved = -2
+        self.assertEqual(level.reserved, 0)
 
 
 class GeneratedComparisonTest(unittest.TestCase):

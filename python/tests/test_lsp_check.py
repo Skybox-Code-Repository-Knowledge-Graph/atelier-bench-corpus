@@ -27,6 +27,25 @@ def uri(file: str) -> str:
     return (LANE / file).as_uri()
 
 
+VERDICTS = ("agrees", "disagrees", "server has no answer")
+
+
+def report_is_consistent(report: str) -> bool:
+    """The counts line equals the tally of the verdict lines, and every disagreement carries a tree reading."""
+    lines = report.splitlines()
+    verdicts = [line.split("): ", 1)[1].split(". ", 1)[0] for line in lines if line.startswith("- `")]
+    if any(verdict not in VERDICTS for verdict in verdicts):
+        return False
+    tally = {name: verdicts.count(name) for name in VERDICTS}
+    counts = f"{len(verdicts)} tasks: {tally['agrees']} agree, {tally['disagrees']} disagree, {tally['server has no answer']} with no answer from the server."
+    readings = all(
+        lines[index + 1].startswith("  - Tree: ")
+        for index, line in enumerate(lines)
+        if line.startswith("- `") and "): agrees." not in line
+    )
+    return counts in lines and readings
+
+
 class LspCheckReplayTest(unittest.TestCase):
     def test_the_four_surfaces_are_selected(self) -> None:
         surfaces = {task["surface"] for task in lsp_check.load_tasks()}
@@ -87,6 +106,18 @@ class LspCheckReplayTest(unittest.TestCase):
         ids = [task["id"] for task in lsp_check.load_tasks()]
         self.assertEqual([line.split("`")[1] for line in report.splitlines() if line.startswith("- `")], ids)
         self.assertNotIn(str(Path.home()), report)
+        self.assertTrue(report_is_consistent(report))
+        for line in report.splitlines():
+            if line.startswith("- `impl-"):
+                self.assertIn("server has no answer. error -32601", line)
+
+    def test_a_flipped_verdict_is_caught(self) -> None:
+        report = (LANE / "bench" / "lsp-check.md").read_text(encoding="utf-8")
+        flipped = report.replace("(hover): agrees.", "(hover): disagrees.", 1)
+        self.assertNotEqual(flipped, report)
+        self.assertFalse(report_is_consistent(flipped))
+        relabelled = report.replace("(document_symbol): disagrees.", "(document_symbol): agrees.", 1)
+        self.assertFalse(report_is_consistent(relabelled))
 
 
 if __name__ == "__main__":

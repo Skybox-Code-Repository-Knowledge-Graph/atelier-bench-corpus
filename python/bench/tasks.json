@@ -2,7 +2,7 @@
     "version": 1,
     "corpus": "atelier-bench-corpus",
     "lane": "python",
-    "notes": "Known-answer navigation tasks for the python lane. Needle-based, not line-based: bench/verify_tasks.py resolves every needle to a unique line at the current SHA, so the manifest survives edits without stale line numbers. Paths are relative to the lane root (python/), not to the repository root. 'expect' blocks carry the ground truth a harness scores against; no task carries min_references or min_implementations: exact_count gives the size of the answer, and known_sites, repeated_sites, optional_sites and implementations list it (an optional site is accepted but never counted). exact_count is exact and counts concrete, non-generic, unconditionally compiled types that satisfy the contract directly or through inheritance; abstract bases, blanket impls and cfg-gated impls are excluded. On an implementation or cardinality list, optional_sites names declarations that satisfy the contract but are not counted (abstract bases that extend it); a tool may return them or not. A class is abstract when an @abstractmethod it declares or inherits is left unimplemented, so it cannot be instantiated; on an ABC contract every class of the lane that subclasses it, directly or through other bases, is listed exactly once, a concrete one under implementations and an abstract one under optional_sites (ReportContract: 24 concrete reports, and CompositeContract, AbstractReport, AbstractPeriodicReport and AbstractCompositeReport, which leave rows unimplemented; NotifierContract: 8 concrete notifiers, and AbstractNotifier, which leaves send unimplemented). A virtual_subclass implementor satisfies the contract through abc registration rather than inheritance, and exact_count counts it alongside the nominal subclasses. README.md (Ground truth) also lists the lane-specific kind strings, and these notes define each of them; the intake tasks add four of them: metaclass (method defined on the metaclass, answered on the class object), virtual_subclass (registered at runtime, no inheritance edge), enum_missing (the Enum lookup hook for a value no member carries), dataclass_hook (__post_init__, run by the generated __init__). IDs shared with the other lanes ask the same question in each language. document_symbol tasks count every named symbol the anchored FILE declares at any nesting depth (classes, members, functions, module constants); each task's note enumerates that count N and states min_symbols = floor(0.75 * N), the 25% margin absorbing listings that fold container nodes. A document symbol is a name that a class or def statement binds at any depth, or that an assignment or annotation binds at module scope or directly in a class body (a dataclass or NamedTuple field, a class constant, a module constant, __all__); names an import binds, parameters, local variables and attributes assigned through self inside a method are not symbols, so RepairOrder's eight self attributes add nothing to its file's N. call_hierarchy tasks name callees under outgoing_includes and callers under incoming_includes; both are file+needle pairs the verifier resolves. Counting rules, each worded from how the current keys were counted. references: a site is one source LINE of the lane's .py files (atelier_core, atelier_bench, atelier_app, atelier_frameworks, tests, bench; never fixtures) that names the asked symbol as code: a load, store or call of the name, an attribute access .name, a name an import statement binds (in a parenthesised import, the line the name is written on), a name inside a string forward annotation such as \"Money\", or a name inside an f-string replacement field; a line counts once however often it names the symbol, and exact_count is the number of such lines. Never a site: the line the task is asked from (the declaration, or on refs-string-event-name the subscribing call; a tool may return it, and it is not counted), comments, docstrings, and the text of any other string literal. A string that names the symbol as a runtime lookup key, an __all__ entry or a vars() or getattr() key, is an optional site. On a name_only task a site is a line that holds the literal itself; a line whose code names a constant bound to the literal, without the literal, is an optional site, and a string naming that constant (an __all__ entry) is no site; on a task asked from __call__ a site is a line that calls an instance of the declaring class, which never spells the name; on a task asked from __init_subclass__ a site is the class statement of each class that has the declaring class among its bases, directly or through other bases (executing the statement runs the hook), which never spells the name. repeated_sites: a needle whose text sits on several lines of one file, so no needle keys one of them alone; each of those lines is a site, lines states how many, and exact_count counts known_sites plus every repeated line (the verifier checks each lines count). cardinality: nominal_count counts the concrete classes that subclass the contract, directly or through other bases, structural_count counts the values that satisfy the contract's Protocol by shape alone, one per constructor call that builds one (the class those values instantiate is not itself counted), and exact_count is their sum. multi-parent: the answer is the direct bases written in the anchored class statement, one level up; exact_count, where stated, is their number, and where the key splits it, extends_count counts the first base (the class it extends) and implements_count the bases after it (the mixins and ABCs it takes in), so the two sum to the number of direct bases. call_hierarchy: a caller is the function or method whose body holds the call, counted once however many calls it makes; min_incoming is a floor on callers, set to the number listed under incoming_includes, each of which must be returned, and the tree may hold more. On def-overload and def-string-key-dispatch, exact_count counts the declarations listed under known_sites: the two @overload stubs (the target names the implementation, which is outside the count; whether an answer must also return the stubs is undecided, an open owner question) and the two scope_ methods the built name can select. On a direction task of kind mro, exact_count counts the direct bases of the anchored class statement, listed in MRO order. must_not_include entries take three forms: a sibling lane directory ending in / (no answer may lie in that lane), a lane-relative file path (no answer may lie in that file), or a text fragment (no answer may report a line or a name that contains it); a known site is never an exclusion hit. Other kinds this lane uses: barrel (atelier_core/__init__.py re-exports the package surface and declares nothing, so from atelier_core import X lands on the submodule that defines X, not on __init__.py), class_creation_hook (an __init_subclass__ hook, which runs as each subclass statement executes and registers that subclass, so the registry it fills is built at class-creation time rather than written out by hand), class_getitem (a subscript of a class object, such as Shelf[\"scr\"]: Python runs the class's __class_getitem__, implicitly a classmethod, with the subscript), context_enter (a with statement runs the context manager's __enter__ on entry, async with awaits its __aenter__, and the as target is bound to what that method returns, not to the context manager), context_manager (a @contextmanager generator function: with x.f(...) resolves to that generator, whose yield marks where the with block runs), dataclass_generated (a call to the __init__ that @dataclass generates from the class-body annotations: no def __init__ exists to land on), descriptor (an attribute whose class-level value is a descriptor instance: a read or write on an instance runs that descriptor's __get__ or __set__), dunder_new (a call of a class whose construction is done in __new__, as for a subclass of an immutable builtin such as str, which declares no __init__: the call runs __new__), dynamic_attribute (a method supplied at runtime by a __getattr__ that forwards the name to another object: the receiver class declares no such name), field_validator (a pydantic @field_validator(\"name\") decorator, which binds the method under it to a field of the enclosing BaseModel by naming that field in a string: the answer is the field's annotated line in the class body), foreign_key (a SQLAlchemy ForeignKey(\"table.column\"), which names the column it points at as text, the table by its __tablename__ and the column by its attribute name: the answer is the mapped column declaration that string selects), forward_annotation (a type written as a string in an annotation, a PEP 484 forward reference such as -> \"Dataset\": the name inside the string resolves as the bare name would in that module), glob (a star import, which honours the target package's __all__ list: the names it binds are exactly the ones listed there, and exact_count is their number), metaclass_call (a call of a class whose metaclass defines __call__: the call runs the metaclass's __call__, which decides whether the class's __init__ runs at all), missing_hook (a subscript read of a dict subclass for a key the dict does not hold: dict calls the subclass's __missing__), module_getattr (a PEP 562 module-level __getattr__ that supplies an attribute the module never assigns), mro (the C3 method resolution order: super() and a base reached by two paths resolve through the linearisation, which keeps each base once and follows the order of the class statement), name_mangling (an attribute written __name inside a class body, which is stored as _ClassName__name, so the read and the write in that class are one attribute), name_only (subscription by string: dispatcher.on(\"repair.completed\", ...) names the event as plain text, which no import or attribute access can follow, so matching that text is the only route to the dispatch side), namespace_import (import atelier_bench.rules as rules binds a module object; the file reads one attribute from it, and the import edge goes to that attribute alone, not to everything the module defines), operator_hook (an operator, truth test or builtin that the interpreter turns into a call of a special method the line never names: `x in y` runs y.__contains__, `if x` runs x.__bool__, an f-string field {x:spec} runs x.__format__(spec), when int + x has no answer from int, as in sum(), which starts from 0, Python calls x.__radd__, and the builtin reversed(x) runs x.__reversed__), pattern_match (a class pattern in a match statement, such as case Actor(role=..., id=...), which is a reference to that class and its matched attributes), property (an attribute read or write on a @property: a read resolves to the getter and a write to the setter of the same name), relative_import (an explicit relative import such as from ..concerns import X, resolved against the importing module's package rather than sys.path), same_name (recalculate_inventory is defined by both the console command module and the job module; which one a call means follows from the module it was imported from, never from the bare name), set_name_hook (a descriptor instance bound in a class body: type creation calls the descriptor's __set_name__ with the owner class and the attribute name), shadow_alias (an annotation whose type name is an import-site rename: billing and reporting each declare a class Formatter, state.py binds them as MoneyFormatter and StatusFormatter, and each annotation must reach the module its from-import names, not the other Formatter), singledispatch (a call to a functools.singledispatch function, which resolves to the overload registered for the argument's type, not to the generic body), string_key (a method or class named only by a string built or looked up at runtime and passed to getattr or importlib: the answer is what the string selects, and no import or call names it), structural (a typing.Protocol satisfied by shape alone: implementors and values never name the Protocol, yet they count as its implementors), syntax_error (a fixture Python cannot compile, a def header missing its colon or a dedent that matches no outer level: an indexer must surface the SyntaxError instead of indexing part of the module), subclass_hook (an isinstance or issubclass test against an ABC that defines __subclasshook__: the hook decides, with no base class and no registration), total_ordering (a comparison operator that a @functools.total_ordering class does not declare: the decorator fills it in from the class's __lt__ and __eq__, so the generated method calls __lt__ and no def of the operator exists), type_only (an import under if TYPE_CHECKING:, which never executes: a type edge, not a runtime import edge). Kinds shared with other lanes, worded identically in every lane that uses them. child_of: the anchored declaration is the child end of a parent edge, and the answer is a direct parent it extends, implements or embeds, one level up, never a further ancestor and never one of its own children. imports: an import that binds only the names it lists; the answer is each named declaration in the file that declares it, never a sibling declared beside it and never every name the target module exports. lane_local: a symbol every lane carries under the same name or as its lane equivalent (Money, Customer, Dataset, the reference prefix, the invoice calculator's calculate, the billing Formatter); resolution must land on this lane's own declaration and never cross into a sibling lane. parent_of: a parent edge scored for direction, with the anchor at either end; the parent is the type that is extended, implemented or embedded, the child is the type that does so, and an answer that reports the child as the parent is wrong. unresolvable_static: an import whose target module is built from a runtime value, so no single module is the static answer; the honest result is every candidate module, and exact_count counts them. uses_self: a type that refers to itself, such as a tree node holding children of its own type; the edge is a uses edge back to the declaring type, never extends, implements or embedding. from.symbol is the identifier a task asks about, exactly as written on the from line and with no qualifier: the alias where an alias is used, the member on a member access, null when the question has no single identifier. from.occurrence (1-based) says which one when it appears more than once on that line, and is then required. document_symbol, parse-negative and diagnostics tasks ask about a file and carry neither key.",
+    "notes": "Known-answer navigation tasks for the python lane. Needle-based, not line-based: bench/verify_tasks.py resolves every needle to a unique line at the current SHA, so the manifest survives edits without stale line numbers. Paths are relative to the lane root (python/), not to the repository root. 'expect' blocks carry the ground truth a harness scores against; no task carries min_references or min_implementations: exact_count gives the size of the answer, and known_sites, repeated_sites, optional_sites and implementations list it (an optional site is accepted but never counted). exact_count is exact and counts concrete, non-generic, unconditionally compiled types that satisfy the contract directly or through inheritance; abstract bases, blanket impls and cfg-gated impls are excluded. On an implementation or cardinality list, optional_sites names declarations that satisfy the contract but are not counted (abstract bases that extend it); a tool may return them or not. A class is abstract when an @abstractmethod it declares or inherits is left unimplemented, so it cannot be instantiated; on an ABC contract every class of the lane that subclasses it, directly or through other bases, is listed exactly once, a concrete one under implementations and an abstract one under optional_sites (ReportContract: 24 concrete reports, and CompositeContract, AbstractReport, AbstractPeriodicReport and AbstractCompositeReport, which leave rows unimplemented; NotifierContract: 8 concrete notifiers, and AbstractNotifier, which leaves send unimplemented). A virtual_subclass implementor satisfies the contract through abc registration rather than inheritance, and exact_count counts it alongside the nominal subclasses. README.md (Ground truth) also lists the lane-specific kind strings, and these notes define each of them; the intake tasks add four of them: metaclass (method defined on the metaclass, answered on the class object), virtual_subclass (registered at runtime, no inheritance edge), enum_missing (the Enum lookup hook for a value no member carries), dataclass_hook (__post_init__, run by the generated __init__). IDs shared with the other lanes ask the same question in each language. document_symbol tasks count every named symbol the anchored FILE declares at any nesting depth (classes, members, functions, module constants); each task's note enumerates that count N and states min_symbols = floor(0.75 * N), the 25% margin absorbing listings that fold container nodes. A document symbol is a name that a class or def statement binds at any depth, or that an assignment or annotation binds at module scope or directly in a class body (a dataclass or NamedTuple field, a class constant, a module constant, __all__); names an import binds, parameters, local variables and attributes assigned through self inside a method are not symbols, so RepairOrder's eight self attributes add nothing to its file's N. call_hierarchy tasks name callees under outgoing_includes and callers under incoming_includes; both are file+needle pairs the verifier resolves. Counting rules, each worded from how the current keys were counted. references: a site is one source LINE of the lane's .py files (atelier_core, atelier_bench, atelier_app, atelier_frameworks, tests, bench; never fixtures) that names the asked symbol as code: a load, store or call of the name, an attribute access .name, a name an import statement binds (in a parenthesised import, the line the name is written on), a name inside a string forward annotation such as \"Money\", or a name inside an f-string replacement field; a line counts once however often it names the symbol, and exact_count is the number of such lines. Never a site: the line the task is asked from (the declaration, or on refs-string-event-name the subscribing call; a tool may return it, and it is not counted), comments, docstrings, and the text of any other string literal. A string that names the symbol as a runtime lookup key, an __all__ entry or a vars() or getattr() key, is an optional site. On a name_only task a site is a line that holds the literal itself; a line whose code names a constant bound to the literal, without the literal, is an optional site, and a string naming that constant (an __all__ entry) is no site; on a task asked from __call__ a site is a line that calls an instance of the declaring class, which never spells the name; on a task asked from __init_subclass__ a site is the class statement of each class that has the declaring class among its bases, directly or through other bases (executing the statement runs the hook), which never spells the name. repeated_sites: a needle whose text sits on several lines of one file, so no needle keys one of them alone; each of those lines is a site, lines states how many, and exact_count counts known_sites plus every repeated line (the verifier checks each lines count). cardinality: nominal_count counts the concrete classes that subclass the contract, directly or through other bases, structural_count counts the values that satisfy the contract's Protocol by shape alone, one per constructor call that builds one (the class those values instantiate is not itself counted), and exact_count is their sum. multi-parent: the answer is the direct bases written in the anchored class statement, one level up; exact_count, where stated, is their number, and where the key splits it, extends_count counts the first base (the class it extends) and implements_count the bases after it (the mixins and ABCs it takes in), so the two sum to the number of direct bases. call_hierarchy: a caller is the function or method whose body holds the call, counted once however many calls it makes; min_incoming is a floor on callers, set to the number listed under incoming_includes, each of which must be returned, and the tree may hold more. On def-overload and def-string-key-dispatch, exact_count counts the declarations listed under known_sites: the two @overload stubs (the target names the implementation, which is outside the count; whether an answer must also return the stubs is undecided, an open owner question) and the two scope_ methods the built name can select. On a direction task of kind mro, exact_count counts the direct bases of the anchored class statement, listed in MRO order. must_not_include entries take three forms: a sibling lane directory ending in / (no answer may lie in that lane), a lane-relative file path (no answer may lie in that file), or a text fragment (no answer may report a line or a name that contains it); a known site is never an exclusion hit. Other kinds this lane uses: barrel (atelier_core/__init__.py re-exports the package surface and declares nothing, so from atelier_core import X lands on the submodule that defines X, not on __init__.py), class_keyword (a keyword argument in a class statement's bases list other than metaclass=: type creation passes it to the nearest __init_subclass__, so it lands on that hook's parameter of the same name), class_creation_hook (an __init_subclass__ hook, which runs as each subclass statement executes and registers that subclass, so the registry it fills is built at class-creation time rather than written out by hand), class_getitem (a subscript of a class object, such as Shelf[\"scr\"]: Python runs the class's __class_getitem__, implicitly a classmethod, with the subscript), context_enter (a with statement runs the context manager's __enter__ on entry, async with awaits its __aenter__, and the as target is bound to what that method returns, not to the context manager), context_manager (a @contextmanager generator function: with x.f(...) resolves to that generator, whose yield marks where the with block runs), dataclass_generated (a call to the __init__ that @dataclass generates from the class-body annotations: no def __init__ exists to land on), descriptor (an attribute whose class-level value is a descriptor instance: a read or write on an instance runs that descriptor's __get__ or __set__), dunder_new (a call of a class whose construction is done in __new__, as for a subclass of an immutable builtin such as str, which declares no __init__: the call runs __new__), dynamic_attribute (a method supplied at runtime by a __getattr__ that forwards the name to another object: the receiver class declares no such name), enum_auto (an Enum member assigned auto(): the enum machinery asks the class's _generate_next_value_ for the value, by the member's name), field_validator (a pydantic @field_validator(\"name\") decorator, which binds the method under it to a field of the enclosing BaseModel by naming that field in a string: the answer is the field's annotated line in the class body), foreign_key (a SQLAlchemy ForeignKey(\"table.column\"), which names the column it points at as text, the table by its __tablename__ and the column by its attribute name: the answer is the mapped column declaration that string selects), forward_annotation (a type written as a string in an annotation, a PEP 484 forward reference such as -> \"Dataset\": the name inside the string resolves as the bare name would in that module), glob (a star import, which honours the target package's __all__ list: the names it binds are exactly the ones listed there, and exact_count is their number), metaclass_call (a call of a class whose metaclass defines __call__: the call runs the metaclass's __call__, which decides whether the class's __init__ runs at all), missing_hook (a subscript read of a dict subclass for a key the dict does not hold: dict calls the subclass's __missing__), module_getattr (a PEP 562 module-level __getattr__ that supplies an attribute the module never assigns), mro (the C3 method resolution order: super() and a base reached by two paths resolve through the linearisation, which keeps each base once and follows the order of the class statement), name_mangling (an attribute written __name inside a class body, which is stored as _ClassName__name, so the read and the write in that class are one attribute), name_only (subscription by string: dispatcher.on(\"repair.completed\", ...) names the event as plain text, which no import or attribute access can follow, so matching that text is the only route to the dispatch side), namespace_import (import atelier_bench.rules as rules binds a module object; the file reads one attribute from it, and the import edge goes to that attribute alone, not to everything the module defines), operator_hook (an operator, truth test or builtin that the interpreter turns into a call of a special method the line never names: `x in y` runs y.__contains__, `if x` runs x.__bool__, an f-string field {x:spec} runs x.__format__(spec), when int + x has no answer from int, as in sum(), which starts from 0, Python calls x.__radd__, and the builtin reversed(x) runs x.__reversed__), pattern_match (a class pattern in a match statement, such as case Actor(role=..., id=...), which is a reference to that class and its matched attributes), prepare_namespace (a name a class body reads that the module never binds: the metaclass's __prepare__ returns the namespace the body runs in, and that namespace binds it), property (an attribute read or write on a @property: a read resolves to the getter and a write to the setter of the same name), relative_import (an explicit relative import such as from ..concerns import X, resolved against the importing module's package rather than sys.path), same_name (recalculate_inventory is defined by both the console command module and the job module; which one a call means follows from the module it was imported from, never from the bare name), sequence_protocol (iteration over an object whose class defines __getitem__ and no __iter__: Python calls __getitem__ with 0, 1, 2 ... until IndexError), set_name_hook (a descriptor instance bound in a class body: type creation calls the descriptor's __set_name__ with the owner class and the attribute name), setattr_mixin (a method grafted onto a class at import time by a class decorator that calls setattr: neither the class body nor its bases declare it), shadow_alias (an annotation whose type name is an import-site rename: billing and reporting each declare a class Formatter, state.py binds them as MoneyFormatter and StatusFormatter, and each annotation must reach the module its from-import names, not the other Formatter), singledispatch (a call to a functools.singledispatch function, which resolves to the overload registered for the argument's type, not to the generic body), string_key (a method or class named only by a string built or looked up at runtime and passed to getattr or importlib: the answer is what the string selects, and no import or call names it), structural (a typing.Protocol satisfied by shape alone: implementors and values never name the Protocol, yet they count as its implementors), syntax_error (a fixture Python cannot compile, a def header missing its colon or a dedent that matches no outer level: an indexer must surface the SyntaxError instead of indexing part of the module), subclass_hook (an isinstance or issubclass test against an ABC that defines __subclasshook__: the hook decides, with no base class and no registration), total_ordering (a comparison operator that a @functools.total_ordering class does not declare: the decorator fills it in from the class's __lt__ and __eq__, so the generated method calls __lt__ and no def of the operator exists), truth_fallback (a truth test of an object whose class defines no __bool__: Python falls back to __len__, zero being false), type_only (an import under if TYPE_CHECKING:, which never executes: a type edge, not a runtime import edge), walrus_scope (an assignment expression := inside a comprehension or generator expression binds its target in the enclosing function, not in the comprehension's own scope). Kinds shared with other lanes, worded identically in every lane that uses them. child_of: the anchored declaration is the child end of a parent edge, and the answer is a direct parent it extends, implements or embeds, one level up, never a further ancestor and never one of its own children. imports: an import that binds only the names it lists; the answer is each named declaration in the file that declares it, never a sibling declared beside it and never every name the target module exports. lane_local: a symbol every lane carries under the same name or as its lane equivalent (Money, Customer, Dataset, the reference prefix, the invoice calculator's calculate, the billing Formatter); resolution must land on this lane's own declaration and never cross into a sibling lane. parent_of: a parent edge scored for direction, with the anchor at either end; the parent is the type that is extended, implemented or embedded, the child is the type that does so, and an answer that reports the child as the parent is wrong. unresolvable_static: an import whose target module is built from a runtime value, so no single module is the static answer; the honest result is every candidate module, and exact_count counts them. uses_self: a type that refers to itself, such as a tree node holding children of its own type; the edge is a uses edge back to the declaring type, never extends, implements or embedding. from.symbol is the identifier a task asks about, exactly as written on the from line and with no qualifier: the alias where an alias is used, the member on a member access, null when the question has no single identifier. On a route task asked from a line that addresses the route (ruling R17), from.symbol is the URL as written in that line's string literal. from.occurrence (1-based) says which one when it appears more than once on that line, and is then required. document_symbol, parse-negative and diagnostics tasks ask about a file and carry neither key.",
     "tasks": [
         {
             "id": "def-enum-method",
@@ -132,6 +132,35 @@
             }
         },
         {
+            "id": "def-setattr-mixin",
+            "surface": "definition",
+            "note": "RepairOrder has NO HasReference base and no reference() in repair_order.py: the @with_reference() class decorator grafts the method with setattr at import time (the Object.assign shape).",
+            "from": {
+                "file": "atelier_app/http/api.py",
+                "needle": "\"reference\": order.reference(),",
+                "symbol": "reference",
+                "occurrence": 2
+            },
+            "expect": {
+                "kind": "setattr_mixin",
+                "file": "atelier_core/concerns/has_reference.py",
+                "needle": "def reference(self) -> str:",
+                "known_sites": [
+                    {
+                        "file": "atelier_core/concerns/has_reference.py",
+                        "needle": "setattr(target, name, member)"
+                    },
+                    {
+                        "file": "atelier_core/models/repair_order.py",
+                        "needle": "@with_reference()"
+                    }
+                ],
+                "must_not_include": [
+                    "atelier_core/models/repair_order.py"
+                ]
+            }
+        },
+        {
             "id": "def-proxy-forwarded-method",
             "surface": "definition",
             "note": "technician.next_slot() has no declaration on Technician: ForwardsToSchedule.__getattr__ hands the name to the Schedule at runtime (same question as the ts/js Proxy).",
@@ -203,15 +232,18 @@
         {
             "id": "def-route-fastapi",
             "surface": "definition",
-            "note": "FastAPI route (one route task per python route parser, ruling R3; Flask, the lane's main framework, is def-route-to-handler). GET /api/parts/{sku} is registered by the decorator @router.get(\"/{sku}\") on an APIRouter whose prefix is /api/parts: the handler is the def under that decorator, which the decorator line never names, so from.symbol is null. Keyed like def-route-to-handler: from the registration line to the handler's def.",
+            "note": "FastAPI route (ruling R3; Flask, the lane's main framework, is def-route-to-handler). FastAPI registers a path operation with a decorator, so no line names its handler; under ruling R17 the task starts from the committed line that addresses the route, the request-level test's GET /api/parts/BAT-55, and from.symbol is that URL as written in the string, the way go's def-struct-tag carries its string key. The APIRouter prefix /api/parts plus the decorator path /{sku} match it, so the handler is show_part. adjust_stock is the look-alike a method-blind or prefix matcher returns: POST /{sku}/adjustments carries the same {sku} parameter under the same prefix. GET /low-stock is declared first under the same prefix, but its literal segment cannot match BAT-55, so it is not excluded.",
             "from": {
-                "file": "atelier_frameworks/fastapi_app.py",
-                "needle": "@router.get(\"/{sku}\")",
-                "symbol": null
+                "file": "tests/test_frameworks.py",
+                "needle": "response = self.client.get(\"/api/parts/BAT-55\")",
+                "symbol": "/api/parts/BAT-55"
             },
             "expect": {
                 "file": "atelier_frameworks/fastapi_app.py",
-                "needle": "def show_part(sku: str, session: SessionDep) -> PartOut:"
+                "needle": "def show_part(sku: str, session: SessionDep) -> PartOut:",
+                "must_not_include": [
+                    "def adjust_stock("
+                ]
             }
         },
         {
@@ -437,7 +469,7 @@
         {
             "id": "def-name-mangling",
             "surface": "definition",
-            "note": "Name mangling: `self.__sent` is stored as `_AbstractNotifier__sent`; the read and the write are the same attribute.",
+            "note": "Name mangling: `self.__sent` is stored as `_AbstractNotifier__sent`; the read and the write are the same attribute. Only Python rewrites a double-underscore attribute name per class; private members elsewhere (javascript #private, php private) keep their spelling.",
             "from": {
                 "file": "atelier_bench/support/abstract_notifier.py",
                 "needle": "return self.__sent",
@@ -2824,7 +2856,7 @@
         {
             "id": "def-dunder-contains",
             "surface": "definition",
-            "note": "`sku in ledger` runs Ledger.__contains__ (the right operand's), which no code on the line names.",
+            "note": "`sku in ledger` runs Ledger.__contains__ (the right operand's), which no code on the line names. No sibling lane's language lets a class answer the membership operator: javascript's `in` tests property keys, and only a Proxy trap can intercept it.",
             "from": {
                 "file": "atelier_core/support/stock_ledger.py",
                 "needle": "if sku in ledger:",
@@ -3207,7 +3239,7 @@
         {
             "id": "def-string-forward-annotation",
             "surface": "definition",
-            "note": "A PEP 484 forward reference: the return type is the string \"Dataset\", which the type system evaluates as the name Dataset in this module, so the name inside the string literal resolves to the class.",
+            "note": "A PEP 484 forward reference: the return type is the string \"Dataset\", which the type system evaluates as the name Dataset in this module, so the name inside the string literal resolves to the class. No sibling lane writes a type as a string that the type system evaluates: typescript, rust and go name types as identifiers, and php's docblock types are comments.",
             "from": {
                 "file": "atelier_bench/dataset.py",
                 "needle": "def seeded(cls) -> \"Dataset\":",
@@ -3217,6 +3249,123 @@
                 "kind": "forward_annotation",
                 "file": "atelier_bench/dataset.py",
                 "needle": "class Dataset:"
+            }
+        },
+        {
+            "id": "def-class-keyword",
+            "surface": "definition",
+            "note": "A keyword in a class statement's bases list that is not metaclass= is handed by type creation to the nearest __init_subclass__: prefix=\"SCR\" lands on PartFamily.__init_subclass__'s prefix parameter. It is neither a base nor an argument of any call, and no sibling lane's language has class-statement keywords.",
+            "from": {
+                "file": "atelier_core/support/stock_ledger.py",
+                "needle": "class Screens(PartFamily, prefix=\"SCR\"):",
+                "symbol": "prefix"
+            },
+            "expect": {
+                "kind": "class_keyword",
+                "file": "atelier_core/support/stock_ledger.py",
+                "needle": "def __init_subclass__(cls, prefix: str, **kwargs: object) -> None:"
+            }
+        },
+        {
+            "id": "def-prepare-namespace",
+            "surface": "definition",
+            "note": "The module binds no name column: the metaclass's __prepare__ returns the namespace CountSheet's body runs in, and that namespace binds column to _column. The binding line is accepted beside the answer (known_sites). No sibling lane's language lets a metaclass supply a class body's names.",
+            "from": {
+                "file": "atelier_core/support/stock_ledger.py",
+                "needle": "sku = column(\"sku\")",
+                "symbol": "column"
+            },
+            "expect": {
+                "kind": "prepare_namespace",
+                "file": "atelier_core/support/stock_ledger.py",
+                "needle": "def _column(title: str) -> str:",
+                "known_sites": [
+                    {
+                        "file": "atelier_core/support/stock_ledger.py",
+                        "needle": "return {\"column\": _column}"
+                    }
+                ]
+            }
+        },
+        {
+            "id": "def-truth-len-fallback",
+            "surface": "definition",
+            "note": "Ledger defines no __bool__, so the truth test `not self` falls back to Ledger.__len__ (zero is false); StockLevel.__bool__ in the same file is the look-alike. No sibling lane's language derives an object's truth from its length.",
+            "from": {
+                "file": "atelier_core/support/stock_ledger.py",
+                "needle": "if not self:",
+                "symbol": null
+            },
+            "expect": {
+                "kind": "truth_fallback",
+                "file": "atelier_core/support/stock_ledger.py",
+                "needle": "def __len__(self) -> int:",
+                "must_not_include": [
+                    "def __bool__(self) -> bool:"
+                ]
+            }
+        },
+        {
+            "id": "def-getitem-iteration",
+            "surface": "definition",
+            "note": "Aisle defines __getitem__ and no __iter__, so the comprehension's `for sku in aisle` runs the old sequence protocol: Aisle.__getitem__ with 0, 1, 2 ... until IndexError. No sibling lane's language iterates an object through its index operator.",
+            "from": {
+                "file": "atelier_core/support/stock_ledger.py",
+                "needle": "return [sku for sku in aisle]",
+                "symbol": null
+            },
+            "expect": {
+                "kind": "sequence_protocol",
+                "file": "atelier_core/support/stock_ledger.py",
+                "needle": "def __getitem__(self, index: int) -> str:"
+            }
+        },
+        {
+            "id": "def-walrus-scope",
+            "surface": "definition",
+            "note": "An assignment expression inside a generator expression binds its target in the enclosing function (PEP 572), so `short` read after any() is the := inside the generator, the only binding the function has. A sibling lane would need a declared outer variable, which is a different answer.",
+            "from": {
+                "file": "atelier_core/support/stock_ledger.py",
+                "needle": "return short.sku",
+                "symbol": "short"
+            },
+            "expect": {
+                "kind": "walrus_scope",
+                "file": "atelier_core/support/stock_ledger.py",
+                "needle": "if any((short := level).on_hand < minimum for level in levels):"
+            }
+        },
+        {
+            "id": "def-enum-auto-value",
+            "surface": "definition",
+            "note": "auto() leaves the value to the Enum class: the enum machinery calls MovementKind._generate_next_value_ with the member's name, so RESTOCK's value \"restock\" comes from that function. No sibling lane's enums ask a hook for a member's value.",
+            "from": {
+                "file": "atelier_core/support/stock_ledger.py",
+                "needle": "RESTOCK = auto()",
+                "symbol": null
+            },
+            "expect": {
+                "kind": "enum_auto",
+                "file": "atelier_core/support/stock_ledger.py",
+                "needle": "def _generate_next_value_(name: str, start: int, count: int, last_values: list[Any]) -> str:"
+            }
+        },
+        {
+            "id": "def-descriptor-delete",
+            "surface": "definition",
+            "note": "reserved is a class-level ReservedUnits descriptor, so `del self.reserved` runs its __delete__, not an instance-attribute deletion; the descriptor's __set__ is the look-alike. No sibling lane's language attaches a delete hook to one attribute through an object stored on the class.",
+            "from": {
+                "file": "atelier_core/support/stock_ledger.py",
+                "needle": "del self.reserved",
+                "symbol": "reserved"
+            },
+            "expect": {
+                "kind": "descriptor",
+                "file": "atelier_core/support/stock_ledger.py",
+                "needle": "def __delete__(self, instance: Any) -> None:",
+                "must_not_include": [
+                    "def __set__(self, instance: Any, value: int) -> None:"
+                ]
             }
         },
         {
@@ -3275,7 +3424,7 @@
         {
             "id": "resolution-pydantic-field-validator",
             "surface": "resolution",
-            "note": "Pydantic field validator: @field_validator(\"reason\") binds reason_is_given to a field of the enclosing BaseModel by naming the field in a string, and pydantic runs it on every construction; the answer is StockAdjustment's reason field, not the local `reason` assigned in the validator's body nor the reason column of the SQLAlchemy movement model (atelier_frameworks/orm.py).",
+            "note": "Pydantic field validator: @field_validator(\"reason\") binds reason_is_given to a field of the enclosing BaseModel by naming the field in a string, and pydantic runs it on every construction; the answer is StockAdjustment's reason field, not the local `reason` assigned in the validator's body nor the reason column of the SQLAlchemy movement model (atelier_frameworks/orm.py). What must be resolved is the string \"reason\" in the decorator: it names the field, and the field's line is the answer, wherever it sits in the class body.",
             "from": {
                 "file": "atelier_frameworks/schemas.py",
                 "needle": "@field_validator(\"reason\")",

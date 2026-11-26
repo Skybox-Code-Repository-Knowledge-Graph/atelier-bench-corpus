@@ -257,6 +257,12 @@
         "python"
       ]
     },
+    "def-class-keyword": {
+      "surface": "definition",
+      "lanes": [
+        "python"
+      ]
+    },
     "def-closure-field": {
       "surface": "definition",
       "lanes": [
@@ -384,6 +390,12 @@
         "python"
       ]
     },
+    "def-descriptor-delete": {
+      "surface": "definition",
+      "lanes": [
+        "python"
+      ]
+    },
     "def-dict-missing": {
       "surface": "definition",
       "lanes": [
@@ -469,6 +481,12 @@
       ]
     },
     "def-enter-as-target": {
+      "surface": "definition",
+      "lanes": [
+        "python"
+      ]
+    },
+    "def-enum-auto-value": {
       "surface": "definition",
       "lanes": [
         "python"
@@ -671,6 +689,12 @@
       "surface": "definition",
       "lanes": [
         "go"
+      ]
+    },
+    "def-getitem-iteration": {
+      "surface": "definition",
+      "lanes": [
+        "python"
       ]
     },
     "def-getter-private-field": {
@@ -1013,6 +1037,12 @@
         "python"
       ]
     },
+    "def-prepare-namespace": {
+      "surface": "definition",
+      "lanes": [
+        "python"
+      ]
+    },
     "def-promise-style": {
       "surface": "definition",
       "lanes": [
@@ -1108,6 +1138,12 @@
       ]
     },
     "def-set-name-hook": {
+      "surface": "definition",
+      "lanes": [
+        "python"
+      ]
+    },
+    "def-setattr-mixin": {
       "surface": "definition",
       "lanes": [
         "python"
@@ -1278,6 +1314,12 @@
         "go"
       ]
     },
+    "def-truth-len-fallback": {
+      "surface": "definition",
+      "lanes": [
+        "python"
+      ]
+    },
     "def-type-alias-intersection": {
       "surface": "definition",
       "lanes": [
@@ -1312,6 +1354,12 @@
       "surface": "definition",
       "lanes": [
         "go"
+      ]
+    },
+    "def-walrus-scope": {
+      "surface": "definition",
+      "lanes": [
+        "python"
       ]
     },
     "def-with-enter": {

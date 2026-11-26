@@ -19,7 +19,8 @@ from __future__ import annotations
 from abc import ABC
 from collections.abc import Iterable, Iterator
 from types import TracebackType
-from typing import Any
+from enum import Enum, auto
+from typing import Any, ClassVar
 
 from ..models.part import Part
 
@@ -82,13 +83,35 @@ def units_on_hand(items: Iterable[object]) -> int:
     return sum(item.on_hand for item in items if isinstance(item, Countable))
 
 
+class ReservedUnits:
+    """Descriptor for the units a level holds back: `del level.reserved` runs __delete__, which releases them."""
+
+    def __set_name__(self, owner: type, name: str) -> None:
+        self.slot = f"_{name}"
+
+    def __get__(self, instance: Any, owner: type | None = None) -> int:
+        return 0 if instance is None else int(getattr(instance, self.slot, 0))
+
+    def __set__(self, instance: Any, value: int) -> None:
+        setattr(instance, self.slot, max(0, value))
+
+    def __delete__(self, instance: Any) -> None:
+        setattr(instance, self.slot, 0)
+
+
 class StockLevel:
     sku: str
     on_hand: int
+    reserved = ReservedUnits()
 
     def __init__(self, sku: str, on_hand: int) -> None:
         self.sku = sku
         self.on_hand = on_hand
+
+    def release(self) -> int:
+        held = self.reserved
+        del self.reserved
+        return held
 
     def __bool__(self) -> bool:
         return self.on_hand > 0
@@ -131,6 +154,14 @@ class Ledger:
 
     def newest_first(self) -> list[str]:
         return [level.sku for level in reversed(self)]
+
+    def __len__(self) -> int:
+        return sum(1 for level in self.levels.values() if level)
+
+    def summary(self) -> str:
+        if not self:
+            return "nothing on hand"
+        return f"{len(self)} SKU(s) on hand"
 
     def units(self) -> int:
         return units_on_hand(self.levels.values())
@@ -178,3 +209,76 @@ async def recount_async(parts: Iterable[Part], movements: Iterable[tuple[str, in
         for raw, quantity in movements:
             session.record(Sku(raw), quantity)
         return dict(session.moved)
+
+
+def first_short(levels: Iterable[StockLevel], minimum: int) -> str | None:
+    """The SKU of the first level below minimum: any() stops there, and the walrus keeps it."""
+    if any((short := level).on_hand < minimum for level in levels):
+        return short.sku
+    return None
+
+
+class Aisle:
+    """The SKUs along one aisle. It defines __getitem__ and no __iter__, so a for loop indexes it from 0."""
+
+    def __init__(self, skus: list[str]) -> None:
+        self._skus = skus
+
+    def __getitem__(self, index: int) -> str:
+        return self._skus[index]
+
+
+def walk(aisle: Aisle) -> list[str]:
+    return [sku for sku in aisle]  # type: ignore[attr-defined]  # mypy knows no __getitem__ iteration
+
+
+class PartFamily:
+    """Each subclass names its SKU prefix as a class keyword, which type creation hands to __init_subclass__."""
+
+    FAMILIES: ClassVar[dict[str, type[PartFamily]]] = {}
+    prefix: ClassVar[str] = ""
+
+    def __init_subclass__(cls, prefix: str, **kwargs: object) -> None:
+        super().__init_subclass__(**kwargs)
+        cls.prefix = prefix
+        PartFamily.FAMILIES[prefix] = cls
+
+
+class Screens(PartFamily, prefix="SCR"):
+    pass
+
+
+class Batteries(PartFamily, prefix="BAT"):
+    pass
+
+
+def family_of(sku: str) -> type[PartFamily] | None:
+    return PartFamily.FAMILIES.get(Sku(sku)[:3])
+
+
+class MovementKind(Enum):
+    """Each value comes from _generate_next_value_: auto() asks it, by the member's name."""
+
+    @staticmethod
+    def _generate_next_value_(name: str, start: int, count: int, last_values: list[Any]) -> str:
+        return name.lower().replace("_", "-")
+
+    RESTOCK = auto()
+    STOCK_TAKE = auto()
+
+
+def _column(title: str) -> str:
+    return title.upper()
+
+
+class Columns(type):
+    """Metaclass of count sheets: __prepare__ hands each class body a namespace that already binds `column`."""
+
+    @classmethod
+    def __prepare__(mcs, name: str, bases: tuple[type, ...], /, **kwargs: Any) -> dict[str, object]:
+        return {"column": _column}
+
+
+class CountSheet(metaclass=Columns):
+    sku = column("sku")  # type: ignore[name-defined]  # the module binds no such name; Columns.__prepare__ does
+    counted = column("counted")  # type: ignore[name-defined]
