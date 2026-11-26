@@ -10,7 +10,8 @@
  *                                              # then each fixtures/broken-syntax/* must refuse to parse
  *   php bench/verify_tasks.php --root <dir>    # verify another lane-shaped directory
  *
- * Zero composer deps. Exit 0 only when every check passes. Mirrors
+ * The needle check has zero composer deps; --lint loads vendor/ only to compile
+ * the broken Blade fixture. Exit 0 only when every check passes. Mirrors
  * rust/bench/verify-tasks/src/main.rs, typescript/bench/verify-tasks/verify.mjs
  * and javascript/bench/verify-tasks/verify.mjs line for line so every lane is
  * scored the same way.
@@ -323,8 +324,12 @@ function bladeRefusal(string $root, string $path): ?string
     }
     require_once $autoload;
 
+    if (! class_exists(\Illuminate\View\Compilers\BladeCompiler::class)) {
+        throw new RuntimeException("the Blade compiler is not in {$autoload}; cannot compile {$path}");
+    }
+    // Only the compile itself may count as a refusal: a broken vendor/ must fail the lint, not pass it.
+    $compiler = new \Illuminate\View\Compilers\BladeCompiler(new \Illuminate\Filesystem\Filesystem(), sys_get_temp_dir());
     try {
-        $compiler = new \Illuminate\View\Compilers\BladeCompiler(new \Illuminate\Filesystem\Filesystem(), sys_get_temp_dir());
         $compiled = $compiler->compileString((string) file_get_contents($path));
     } catch (\Throwable $e) {
         return 'blade compile: ' . $e->getMessage();
