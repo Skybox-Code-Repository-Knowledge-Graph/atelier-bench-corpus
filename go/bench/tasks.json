@@ -1446,7 +1446,7 @@
         {
             "id": "def-short-var-redeclaration",
             "surface": "definition",
-            "note": "err on this := line is NOT declared here: a short variable declaration may redeclare a variable already declared in the same block as long as at least one name on the left is new (subunits), and the redeclared err is only assigned. Its declaration is the earlier := line of the same function. Go-specific: the redeclaration rule of :=; a sibling lane's second assignment to the same name is its own binding or a second declaration, so the answer line would be the line asked from.",
+            "note": "err on this := line is NOT declared here: a short variable declaration may redeclare a variable already declared in the same block as long as at least one name on the left is new (subunits), and the redeclared err is only assigned. Its declaration is the earlier := line of the same function. Go-specific: the redeclaration rule of :=, which declares only the new names on its left and assigns the others.",
             "from": {"file": "core/money/money.go", "needle": "subunits, err := strconv.ParseInt((fraction + \"00\")[:2], 10, 64)", "symbol": "err"},
             "expect": {"file": "core/money/money.go", "needle": "units, err := strconv.ParseInt(whole, 10, 64)"}
         },

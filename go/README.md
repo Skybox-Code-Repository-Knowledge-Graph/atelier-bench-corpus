@@ -150,8 +150,24 @@ Lane-only ids, three numbers (rulings R13, R14, R19 and R20 of issue #223):
 | not (b): route variant (R14, definition row only) | `def-route-default-mux`, `def-route-gorilla-mux`, `def-route-chi`, `def-route-gin`, `def-route-echo`, `def-route-fiber` | 6 |
 | not (b): common candidate (a sibling lane could ask it unchanged; for the follow-up lane) | `def-error-sentinel`, `def-method-value`, `def-method-expression`, `def-generic-two-params`, `def-generic-struct-method`, `def-generic-free-function-extra-param`, `def-generic-registry-instantiation`, `def-type-switch`, `def-anonymous-struct`, `dir-interface-embeds-interface`, `def-shadowing-promoted-method`, `resolution-same-name-package-support`, `def-channel-job`, `def-goroutine-select`, `def-defer-recover`, `def-init-registration`, `def-generic-constraint-union`, `def-embedded-asset`, `resolution-receiver-pointer-vs-value`, `def-func-type-implements-interface`, `def-generated-file`, `hover-generated-marker`, `hover-receive-only-channel`, `hover-struct-tag` | 24 |
 
-(b) is 33, above the floor of 30, but 24 common candidates wait for the follow-up lane, so the
-section D lane-only row and box D.2 stay OPEN for this lane.
+(b) is 33, of which 3 are named close calls in their notes (`def-package-var-block`,
+`imp-blank-import-side-effect`, `resolution-package-path-vs-name`): 30 without them, at the floor
+of 30, and 24 common candidates wait for the follow-up lane, so the section D lane-only row and
+box D.2 stay OPEN for this lane.
+
+R14 split of the 33 ids of (b) plus the route variants: language-specific unaided (the Go
+construct is on the from or the answer line) 20: `def-build-tag-gated`, `def-named-result-deferred`,
+`def-struct-tag`, `resolution-embedded-field-name`, `resolution-arity-parameter-groups`,
+`resolution-init-ordering`, `parse-negative-bad-receiver`, `imp-internal-package`,
+`hierarchy-init-outgoing`, `def-select-receive-ok`, `def-type-switch-guard-binding`,
+`refs-type-switch-guard`, `def-short-var-redeclaration`, `refs-short-var-redeclaration`,
+`def-anonymous-interface-case`, `def-struct-tag-embedded-flatten`, `def-generate-directive-package`,
+`def-embed-directive-file`, `def-package-var-block`, `imp-blank-import-side-effect`; language-specific
+by a note sentence 13: `def-embedded-promotion-four-levels`, `refs-promoted-method-call`,
+`card-embedded-promotion`, `hierarchy-promoted-callee`, `resolution-shadowed-stdlib-package`,
+`def-vendored-package-name`, `def-promotion-depth-over-order`, `refs-promotion-depth-loser`,
+`def-embedded-interface-method`, `impl-through-embedded-interface`, `impl-sealed-unexported-method`,
+`def-goos-file-suffix`, `resolution-package-path-vs-name`; route variant 6.
 
 Lane-specific `kind` strings used in `expect` blocks: `structural`, `shadow_alias`, `same_name`,
 `path_name_divergence`, `receiver`, `arity`, `init_order`, `embedded_field`, `lane_local`, `syntax_error`,
