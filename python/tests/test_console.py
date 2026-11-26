@@ -1,4 +1,8 @@
+import io
 import unittest
+from contextlib import redirect_stdout
+
+from atelier_app.__main__ import main
 
 from atelier_app.commands import parse_command, usage
 from atelier_app.commands.export_report import export_report
@@ -26,6 +30,23 @@ class ConsoleTest(unittest.TestCase):
         with self.assertRaises(ValueError):
             export_report(state, "gross-profit", "xlsx")
         self.assertEqual(recalculate_inventory(state), "recalculated 1 part(s)")
+
+    def test_shared_command_names_run_the_commands(self) -> None:
+        # export-report and recalculate-inventory are the shared set's command names; report and
+        # recalculate are this lane's own spellings, kept as aliases that parse to the same command.
+        self.assertEqual(parse_command(["export-report", "cash-flow"]).slug, "cash-flow")
+        self.assertEqual(parse_command(["export-report"]).slug, "gross-profit")
+        self.assertEqual(parse_command(["recalculate-inventory"]).kind, "recalculate")
+        for spelling in ("export-report", "report"):
+            out = io.StringIO()
+            with redirect_stdout(out):
+                self.assertEqual(main([spelling, "gross-profit"]), 0)
+            self.assertEqual(out.getvalue().splitlines()[2], "gross profit,120.25", spelling)
+        for spelling in ("recalculate-inventory", "recalculate"):
+            out = io.StringIO()
+            with redirect_stdout(out):
+                self.assertEqual(main([spelling]), 0)
+            self.assertEqual(out.getvalue(), "recalculated 1 part(s)\n", spelling)
 
 
 if __name__ == "__main__":

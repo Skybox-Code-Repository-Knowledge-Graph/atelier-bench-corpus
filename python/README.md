@@ -74,9 +74,18 @@ Local use (from `python/`):
 ```bash
 python3 -m unittest discover -s tests -t . -v   # 46 tests
 python3 -m atelier_app seed                      # summary + 16 metric lines + rules line
-python3 -m atelier_app report gross-profit       # csv export
+python3 -m atelier_app export-report gross-profit   # csv export
+python3 -m atelier_app recalculate-inventory         # "recalculated 1 part(s)"
 python3 -m atelier_app serve 8080
 ```
+
+### Lane-only extras
+
+Not part of the shared set (`bench/S-PLUS-CHECKLIST.md` B.5), listed so a parity check can tell them apart:
+
+| Extra | Where |
+| --- | --- |
+| Command spellings `report [slug]` and `recalculate` | `atelier_app/commands/__init__.py`: aliases that parse to the same commands as the shared names `export-report` and `recalculate-inventory` (`tests/test_console.py` runs both spellings of each through `main`) |
 
 ## Ground truth
 
