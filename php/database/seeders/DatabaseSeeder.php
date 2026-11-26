@@ -18,6 +18,8 @@ use Illuminate\Database\Seeder;
  * Deterministic seed: fixed rows, no faker randomness, so benchmark queries
  * against seeded data have stable answers.
  *
+ * The frozen seed. Changing these rows changes bench ground truth.
+ *
  * Collision-surface anchor: this is the php lane's "Dataset" equivalent (the
  * lane has no separate Dataset class).
  */

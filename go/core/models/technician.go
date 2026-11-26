@@ -13,7 +13,8 @@ type Staff struct {
 }
 
 // Technician embeds Staff (two-level promotion of Reference) and a POINTER to
-// a Schedule (one-level promotion of NextSlot, BookSlot and BookedCount).
+// a Schedule (one-level promotion of NextSlot, BookSlot and BookedCount), so
+// those calls on a technician forward to its Schedule.
 // Neither promoted method is declared anywhere in this file.
 type Technician struct {
 	Staff
