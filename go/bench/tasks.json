@@ -860,7 +860,7 @@
         {
             "id": "resolution-package-path-vs-name",
             "surface": "resolution",
-            "note": "The import path's last segment is yamlish.v2 but the local identifier is the declared package name, yamlish. Go-specific: the local identifier comes from the package clause (yamlish), not from the import path's last segment (yamlish.v2).",
+            "note": "The import path's last segment is yamlish.v2 but the local identifier is the declared package name, yamlish. Close call under R18, not counted toward the lane-only floor: it sits beside def-vendored-package-name, the same yamlish qualifier in the same file reaching the same package, and differs only in what is asked of it, a resolution key naming the qualified path atelier.example/yamlish.v2#Version of a const where that task asks for the definition line of a function.",
             "from": {"file": "app/commands/export_report.go", "needle": "\t\t\"version\":    yamlish.Version,", "symbol": "Version"},
             "expect": {
                 "kind": "path_name_divergence",

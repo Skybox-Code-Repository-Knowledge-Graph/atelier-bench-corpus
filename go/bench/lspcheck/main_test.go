@@ -100,6 +100,10 @@ func TestImplementationVerdictSeparatesMissingAndExtra(t *testing.T) {
 	if outcome != "disagrees" || !strings.Contains(detail, "missing [b.go:4]") || !strings.Contains(detail, "not in the key [z.go:9]") {
 		t.Errorf("%s: %s", outcome, detail)
 	}
+	// An extra location alone, with nothing missing, still disagrees.
+	if outcome, detail := implementationVerdict([]string{"a.go:3", "b.go:4", "z.go:9"}, []string{"a.go:3", "b.go:4"}, nil); outcome != "disagrees" || !strings.Contains(detail, "not in the key [z.go:9]") {
+		t.Errorf("extra only = %s: %s", outcome, detail)
+	}
 }
 
 func TestHierarchyVerdictChecksCalleesSitesAndExclusions(t *testing.T) {

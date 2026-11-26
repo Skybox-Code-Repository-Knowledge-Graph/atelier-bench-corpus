@@ -16,7 +16,7 @@ import path disagrees with its declared name, and a package that shadows a stand
 | Go | `go 1.23.0` with `toolchain go1.23.4` in `go.mod` (CI pins the same; `iter.Seq` and method-prefixed `ServeMux` patterns are used) |
 | Layout | one module, `atelier.example/lane`, packages under `core/`, `atelier/`, `app/`, `cmd/`, `internal/`, `tools/`, and the lane-only route modules under `frameworks/`; run every command from the lane root (`go/`) |
 | Dependencies | the in-tree module `atelier.example/yamlish.v2`, resolved by a `replace` to `./third_party/yamlish.v2`, and the five router frameworks the lane-only route modules under `frameworks/` are written against, each pinned in `go.mod` and locked with its transitive modules in `go.sum`: `github.com/gorilla/mux v1.8.1`, `github.com/go-chi/chi/v5 v5.3.2`, `github.com/gin-gonic/gin v1.10.1`, `github.com/labstack/echo/v4 v4.13.4`, `github.com/gofiber/fiber/v2 v2.52.16` (each at a release whose module graph keeps `go 1.23.0` / `toolchain go1.23.4`: chi v5.4 and echo v4.14 already declare go 1.24). Install step: `go mod download` (fetches exactly the `go.sum` versions from the module proxy; `go build` does the same on first use) |
-| Test runner | `go test ./...` (stdlib `testing`): 81 tests, 47 in `tests/`, in-package tests for the `main` packages (`bench/verify` 11, `bench/lspcheck` 7, `cmd/atelier` 4, `tools/statusgen` 1) and 2 per route module under `frameworks/` (10) |
+| Test runner | `go test ./...` (stdlib `testing`): 81 tests, 47 in `tests/`, in-package tests for the `main` packages (`bench/verify` 11, `bench/lspcheck` 8, `cmd/atelier` 4, `tools/statusgen` 1) and 2 per route module under `frameworks/` (10) |
 | Dataset | `dataset.Seeded()` — fixed rows, **no randomness**; revenue `58325c`, part cost `46300c`, gross profit `12025c` |
 
 ## Packages
@@ -175,7 +175,7 @@ string-keyed link from a JSON wire name (`body["reference"]` in a test) to the s
 | Alias divergence | `def-shadow-alias-billing`, `def-shadow-alias-reporting`, `def-import-alias`, `resolution-shadow-type-billing`, `resolution-shadow-type-reporting`, `resolution-package-path-vs-name`, `def-vendored-package-name`, `resolution-shadowed-stdlib-package`, `resolution-embedded-field-name` |
 | Re-export chain | absent from the language: a Go package exports only what it declares, an import never re-exports, and the nearest form, a type alias `type X = pkg.Y`, declares a new name in the aliasing package that a definition answers on its own line; so no task is added |
 | Generated code | `def-generated-file`, `hover-generated-marker` |
-| Conditional compilation | `def-build-tag-gated` (the `//go:build darwin` / `!darwin` pair), `parse-negative-unclosed-class` and `parse-negative-bad-receiver` (behind the `brokenfixtures` tag) |
+| Conditional compilation | `def-build-tag-gated` (the `//go:build darwin` / `!darwin` pair) |
 
 ## Language server (E.5)
 
