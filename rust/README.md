@@ -50,7 +50,7 @@ Build from the **committed** `Cargo.lock` only (`cargo build --locked`). Do not 
 | Parallel iteration (rayon) | `services/revenue_service.rs::metric_sweep` — also what forces `MetricContract: Send + Sync` |
 | Wide contract implementation | 24 reports, 16 metrics, 8 exporters, 8 notifiers, 8 repositories, 12 services |
 | Deterministic seed | `atelier-bench/src/dataset.rs::seeded` — revenue `58_325c`, part cost `46_300c`, gross profit `12_025c` |
-| Tests (incl. request-level) | 84 tests: domain lifecycle, shadow pair, Deref/macro forwarding, not-found conversion, breadth registry, every exporter/notifier/repository/service (`tests/every_component.rs`), the core models no other test reaches (`tests/every_model.rs`), canonical-parity constructs, open-order iterator, topic subscription, axum routes, console commands and the binary itself, JSON parser; plus the feature-gated rule under `--features extra-rules` |
+| Tests (incl. request-level) | 98 tests: domain lifecycle, shadow pair, Deref/macro forwarding, not-found conversion, breadth registry, every exporter and notifier plus the repositories, services, timestamp concern and device observer no other test reaches, each against hand-computed seed values (`tests/every_component.rs`), the core models no other test reaches (`tests/every_model.rs`), canonical-parity constructs, open-order iterator, topic subscription, axum routes, console commands and the binary itself, the verifier's JSON parser and key checks; plus the feature-gated rule under `--features extra-rules`. Every `src/` file is loaded by a test: measured by stripping comments and strings, ignoring names declared in two files, and finding each file's public names (or its module path) in test-reached code |
 | Build-script generated item | `crates/atelier-core/build.rs` writes `generated_units()` into `OUT_DIR`; `support/generated_units.rs` splices it in with `include!` — no textual definition under `src/` |
 | `#[path]` module | `support/mod.rs`: `#[path = "pathed/tally_sheet.rs"] pub mod ledger;` — module name and file name differ |
 | Lifetimes, HRTB, GAT | `support/borrowed.rs` (`Borrowed<'a>`, `for<'x> Fn(&'x str)`), `support/lender.rs` (`type Loan<'a> where Self: 'a`) |
@@ -81,8 +81,8 @@ Build from the **committed** `Cargo.lock` only (`cargo build --locked`). Do not 
 Local use:
 
 ```bash
-cargo test --workspace          # 84 tests
-cargo test -p atelier-bench --features extra-rules   # 30 tests, incl. the feature-gated ExperimentalRule
+cargo test --workspace          # 98 tests
+cargo test -p atelier-bench --features extra-rules   # 40 tests, incl. the feature-gated ExperimentalRule
 RUSTDOCFLAGS="-D rustdoc::broken_intra_doc_links" \
   cargo doc --workspace --no-deps --document-private-items --all-features   # every intra-doc link resolves
 cargo clippy --workspace --all-targets -- -D warnings
@@ -99,7 +99,7 @@ HTTP surface: `GET /report/{reference}` (e.g. `AT-2026-000001`), `GET /api/order
 | Artifact | Role |
 | --- | --- |
 | `bench/tasks.json` | 104 needle-based accuracy tasks (`from` → `expect` file/needle pairs): 44 original + 30 failure-mode surfaces (issue #8) + 5 build-script/#[path]/lifetime/HRTB/GAT edges + 12 shared canonical ids + 5 document-symbol/call-hierarchy surfaces + 8 go-wave canonical ids |
-| `bench/verify-tasks` | Self-check that every task needle still resolves to exactly one line (`optional_sites` included), and every `repeated_sites` needle to exactly its `lines` count |
+| `bench/verify-tasks` | Self-check that every task needle still resolves to exactly one line (`optional_sites` included), every `repeated_sites` needle to exactly its `lines` count (a whole number, 2 or more), every references `exact_count` equals its `known_sites` entries plus the sum of `lines`, and every `must_not_include` entry written as text occurs on a line of the lane's sources |
 
 ```bash
 cargo run -p bench-verify           # resolve every file+needle pair
