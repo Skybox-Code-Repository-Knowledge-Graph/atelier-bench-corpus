@@ -1,6 +1,14 @@
-# Type-check gate only (verify_tasks.py --lint compares mypy output against bench/mypy-allowlist.txt).
+# Type-check gate (verify_tasks.py --lint compares mypy output against bench/mypy-allowlist.txt),
+# the FastAPI test client, and the pinned language server bench/lsp_check.py drives.
 -r requirements.txt
 mypy==1.17.1
 mypy_extensions==1.1.0
-typing_extensions==4.16.0
 pathspec==1.1.1
+# fastapi.testclient.TestClient runs requests in-process through httpx2 (no network listener).
+httpx2==2.16.2
+httpcore2==2.16.2
+truststore==0.10.5
+h11==0.16.0
+# pyright (PyPI wrapper): on first run it fetches the npm package pyright@1.1.414 (see README).
+pyright==1.1.414
+nodeenv==1.12.0

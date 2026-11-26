@@ -14,7 +14,7 @@ hints as the only static-typing surface.
 | --- | --- |
 | Python | `>=3.12` (CI runs 3.12; PEP 695 generics and `match` are used) |
 | Layout | three importable packages at the lane root (`atelier_core`, `atelier_bench`, `atelier_app`); no build step, no install: run from the lane root |
-| Dependencies | `Flask==3.1.1` (+ its pinned transitive deps) in `requirements.txt`; `mypy==1.17.1` in `requirements-dev.txt` for the type gate only |
+| Dependencies | `requirements.txt` (runtime): `Flask==3.1.1`, and for the lane-only `atelier_frameworks/` `fastapi==0.165.0`, `Django==6.1.3`, `SQLAlchemy==2.1.9`, `pydantic==2.14.4`, every transitive dependency exact-pinned (31 distributions in both files, resolved for CPython 3.12 on Linux and macOS; no platform-marked dependency applies). `requirements-dev.txt`: `mypy==1.17.1` (type gate), `httpx2==2.16.2` (FastAPI's in-process `TestClient`), `pyright==1.1.414` (the pinned language server, `bench/lsp_check.py`) |
 | Test runner | `unittest` (stdlib), `python -m unittest discover -s tests -t .` |
 | Dataset | `Dataset.seeded()` — fixed rows, **no randomness**; revenue `58325c`, part cost `46300c`, gross profit `12025c` |
 
@@ -25,6 +25,7 @@ hints as the only static-typing surface.
 | `atelier_core/` | Domain: models, Money, enums, Protocols, container, events, policy, both `Formatter` halves, intake channels | 40 |
 | `atelier_bench/` | Breadth subsystem: 10 contracts, 8 concerns, 8 abstract bases, 24 reports, 16 metrics, 8 exporters, 8 notifiers, 8 repositories, 12 services, 48 rules, dataset, registry | 140 |
 | `atelier_app/` | Application surface: Flask routes, console commands, jobs (callback / Future / async) | 12 |
+| `atelier_frameworks/` | Lane-only framework modules: FastAPI routes (`fastapi_app.py`), a Django site (`django_site/`), a SQLAlchemy model (`orm.py`), Pydantic models (`schemas.py`) | 8 |
 | `tests/` | 46 unittest tests incl. request-level (Flask test client), the every-file sweep and the module-specifier check | 15 |
 | `bench/` | `tasks.json` + `verify_tasks.py` (stdlib only) + `mypy-allowlist.txt` | 3 |
 | `fixtures/broken-syntax/` | Intentionally invalid Python, **DO NOT FIX** | 2 |
