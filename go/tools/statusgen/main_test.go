@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"flag"
 	"os"
 	"path/filepath"
 	"testing"
@@ -17,6 +18,8 @@ func TestMainRegeneratesTheCommittedFile(t *testing.T) {
 		t.Fatal(err)
 	}
 	out := filepath.Join(t.TempDir(), "status_labels_gen.go")
+	// main parses the process flags; a fresh set lets the test run repeatedly.
+	flag.CommandLine = flag.NewFlagSet("statusgen", flag.ExitOnError)
 	os.Args = []string{"statusgen", "-out", out}
 	main()
 	got, err := os.ReadFile(out)

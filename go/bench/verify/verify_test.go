@@ -55,10 +55,14 @@ func TestEveryLaneTaskResolves(t *testing.T) {
 }
 
 // The verifier's stdout on bench/conformance is a byte-for-byte contract shared
-// by all six lane verifiers; the go CI job checks it here.
+// by all six lane verifiers; the go CI job checks it here. A copy of go/ on its
+// own has no bench/conformance and skips, but never on CI.
 func TestConformanceOutputIsByteIdentical(t *testing.T) {
 	want, err := os.ReadFile(filepath.Join(conformanceRoot, "expected.txt"))
 	if err != nil {
+		if os.Getenv("GITHUB_ACTIONS") == "" && os.IsNotExist(err) {
+			t.Skipf("no bench/conformance next to this lane: %v", err)
+		}
 		t.Fatal(err)
 	}
 	out, code := captureStdout(t, func() int { return run([]string{"--root", conformanceRoot}) })
@@ -71,7 +75,15 @@ func TestConformanceOutputIsByteIdentical(t *testing.T) {
 }
 
 func TestMissingManifestFails(t *testing.T) {
+	saved := os.Stderr
+	devnull, err := os.Open(os.DevNull)
+	if err != nil {
+		t.Fatal(err)
+	}
+	os.Stderr = devnull
 	_, code := captureStdout(t, func() int { return run([]string{"--root", t.TempDir()}) })
+	os.Stderr = saved
+	devnull.Close()
 	if code != 1 {
 		t.Errorf("exit without tasks.json = %d, want 1", code)
 	}
@@ -112,6 +124,12 @@ func TestSpecifierGuardBites(t *testing.T) {
 			"// see atelier.example/lane/nosuch for nothing\n\n" +
 			"var text = \"//go:embed not-a-directive.txt\"\n\n" +
 			"//go:embed missing.txt\nvar embedded string\n",
+		"bench/tasks.json": `{"tasks": [
+			{"id": "a", "expect": {"resolution": "strings#Builder"}},
+			{"id": "b", "expect": {"resolution": "example.test/bite/nopkg#Thing"}}]}`,
+	}
+	if err := os.MkdirAll(filepath.Join(root, "bench"), 0o755); err != nil {
+		t.Fatal(err)
 	}
 	for name, content := range files {
 		if err := os.WriteFile(filepath.Join(root, name), []byte(content), 0o644); err != nil {
@@ -122,11 +140,11 @@ func TestSpecifierGuardBites(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if summary := specifierSummary(found); summary != "2 import, 1 go:generate, 1 go:embed, 1 comment, 0 go.mod" {
+	if summary := specifierSummary(found); summary != "2 import, 1 go:generate, 1 go:embed, 1 comment, 0 go.mod, 2 tasks.json" {
 		t.Errorf("collected %s", summary)
 	}
 	failures := checkSpecifiers(root, found)
-	for _, want := range []string{"example.test/bite/nosuch", "example.test/bite/nogen", "atelier.example/lane/nosuch", "missing.txt"} {
+	for _, want := range []string{"example.test/bite/nosuch", "example.test/bite/nogen", "atelier.example/lane/nosuch", "missing.txt", "example.test/bite/nopkg"} {
 		hit := false
 		for _, failure := range failures {
 			hit = hit || strings.Contains(failure, want)
@@ -135,8 +153,8 @@ func TestSpecifierGuardBites(t *testing.T) {
 			t.Errorf("no failure names %s: %v", want, failures)
 		}
 	}
-	if len(failures) != 4 {
-		t.Errorf("%d failures, want 4: %v", len(failures), failures)
+	if len(failures) != 5 {
+		t.Errorf("%d failures, want 5: %v", len(failures), failures)
 	}
 }
 

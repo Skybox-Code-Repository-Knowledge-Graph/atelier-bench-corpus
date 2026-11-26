@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"go/parser"
 	"go/scanner"
@@ -17,7 +18,7 @@ import (
 // specifier is one module specifier written somewhere in the lane, with the
 // place it was written.
 type specifier struct {
-	kind  string // import, go:generate, go:embed, comment, go.mod
+	kind  string // import, go:generate, go:embed, comment, go.mod, tasks.json
 	value string // import path, package path, embed pattern or module path
 	dir   string // go:embed and go:generate file arguments resolve against it
 	where string // file:line, relative to the lane root
@@ -35,8 +36,9 @@ var docLink = regexp.MustCompile(`\[([a-z][a-z0-9_.-]*(?:/[a-z0-9_.-]+)+?)(?:\.[
 // lane root, whatever its build constraint (the broken fixtures, the darwin
 // half of the build-tag pair and the separate third_party module included):
 // import specs, the package of each `//go:generate go run` directive, each
-// `//go:embed` pattern, lane module paths and doc links in comments, and the
-// require and replace lines of every go.mod.
+// `//go:embed` pattern, lane module paths and doc links in comments, the
+// require and replace lines of every go.mod, and the package path of every
+// `resolution` key in bench/tasks.json (`atelier.example/lane/core/billing#Formatter`).
 func collectSpecifiers(root string) ([]specifier, error) {
 	found := []specifier{}
 	fset := token.NewFileSet()
@@ -80,6 +82,12 @@ func collectSpecifiers(root string) ([]specifier, error) {
 				return err
 			}
 			found = append(found, mods...)
+		case relative == "bench/tasks.json":
+			keys, err := resolutionSpecifiers(path, relative)
+			if err != nil {
+				return err
+			}
+			found = append(found, keys...)
 		}
 		return nil
 	})
@@ -196,7 +204,7 @@ func checkSpecifiers(root string, found []specifier) []string {
 	packages := map[string]bool{}
 	for _, spec := range found {
 		switch spec.kind {
-		case "import", "comment":
+		case "import", "comment", "tasks.json":
 			packages[spec.value] = true
 		case "go:generate":
 			if !strings.HasSuffix(spec.value, ".go") {
@@ -207,7 +215,7 @@ func checkSpecifiers(root string, found []specifier) []string {
 	resolved := listPackages(root, packages)
 	for _, spec := range found {
 		switch spec.kind {
-		case "import", "go:generate", "comment":
+		case "import", "go:generate", "comment", "tasks.json":
 			if spec.kind == "go:generate" && strings.HasSuffix(spec.value, ".go") {
 				if _, err := os.Stat(filepath.Join(spec.dir, spec.value)); err != nil {
 					failures = append(failures, fmt.Sprintf("%s %s %q: no such file", spec.where, spec.kind, spec.value))
@@ -311,8 +319,45 @@ func specifierSummary(found []specifier) string {
 		counts[spec.kind]++
 	}
 	parts := []string{}
-	for _, kind := range []string{"import", "go:generate", "go:embed", "comment", "go.mod"} {
+	for _, kind := range []string{"import", "go:generate", "go:embed", "comment", "go.mod", "tasks.json"} {
 		parts = append(parts, fmt.Sprintf("%d %s", counts[kind], kind))
 	}
 	return strings.Join(parts, ", ")
+}
+
+// resolutionSpecifiers reads the package path of each `resolution` key, the
+// part before `#`, with the manifest line it is written on.
+func resolutionSpecifiers(path string, relative string) ([]specifier, error) {
+	raw, err := os.ReadFile(path)
+	if err != nil {
+		return nil, err
+	}
+	var parsed struct {
+		Tasks []struct {
+			Expect struct {
+				Resolution string `json:"resolution"`
+			} `json:"expect"`
+		} `json:"tasks"`
+	}
+	if err := json.Unmarshal(raw, &parsed); err != nil {
+		return nil, fmt.Errorf("%s: %v", relative, err)
+	}
+	lines := strings.Split(string(raw), "\n")
+	found := []specifier{}
+	for _, entry := range parsed.Tasks {
+		key := entry.Expect.Resolution
+		if key == "" {
+			continue
+		}
+		where := relative
+		for index, line := range lines {
+			if strings.Contains(line, `"resolution": `+strconv.Quote(key)) {
+				where = fmt.Sprintf("%s:%d", relative, index+1)
+				break
+			}
+		}
+		packagePath, _, _ := strings.Cut(key, "#")
+		found = append(found, specifier{kind: "tasks.json", value: packagePath, where: where})
+	}
+	return found, nil
 }

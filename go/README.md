@@ -88,7 +88,8 @@ never contacts a module proxy. `go generate ./core/support` must reproduce
 `--lint` also resolves every module specifier written anywhere in the lane, whatever the build
 constraint: import specs (broken fixtures and the darwin half of the build-tag pair included), the
 package of each `//go:generate go run` directive, each `//go:embed` pattern, lane module paths and
-doc links in comments, and `go.mod`'s require and replace lines.
+doc links in comments, `go.mod`'s require and replace lines, and the package path of each
+`resolution` key in `bench/tasks.json`.
 
 ## Ground truth
 
