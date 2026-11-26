@@ -13,9 +13,10 @@ use Illuminate\Database\Eloquent\Collection;
  */
 final class PartCollection extends Collection
 {
+    /** Raw stored cents: reading unit_price_cents through its cast yields a decimal string, not cents. */
     public function totalValueCents(): int
     {
-        return $this->sum(fn (Part $part): int => $part->unit_price_cents);
+        return $this->sum(fn (Part $part): int => (int) $part->getAttributes()['unit_price_cents']);
     }
 }
 

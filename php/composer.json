@@ -47,7 +47,14 @@
         "files": [
             "app/Support/helpers.php",
             "app/Support/Canonical/Exports/barrel.php",
-            "app/Support/Canonical/Wave2/constants.php"
+            "app/Support/Canonical/Wave2/constants.php",
+            "app/Support/Units.php"
+        ],
+        "classmap": [
+            "app/Support/Edge/ClockAware.php",
+            "app/Support/Edge/PartCollection.php",
+            "app/Support/Edge/SeverityLevel.php",
+            "app/Support/Edge/Trackable.php"
         ],
         "psr-4": {
             "App\\": "app/",
