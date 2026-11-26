@@ -9,7 +9,7 @@ import (
 	"atelier.example/lane/app"
 )
 
-// The gorilla/mux router is an http.Handler, so the test drives it with a
+// The gorilla/mux router serves HTTP itself (ServeHTTP), so the test drives it with a
 // recorder: no listener, no network.
 func serve(method string, target string) *httptest.ResponseRecorder {
 	recorder := httptest.NewRecorder()

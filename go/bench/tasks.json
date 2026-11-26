@@ -95,6 +95,34 @@
             "expect": {"file": "frameworks/muxroutes/routes.go", "needle": "func ShowOrder(state *app.State) http.HandlerFunc {"}
         },
         {
+            "id": "def-route-chi",
+            "surface": "definition",
+            "note": "chi route parser: the route GET /api/orders/{id} is the prefix of the nested Route block, /api/orders, joined to the {id} pattern of the method-named Get inside it; the parameter is read back through chi.URLParam. Keyed like def-route-to-handler: the handler factory the registration line names. A route variant (counted on the definition row, not toward the lane-only floor).",
+            "from": {"file": "frameworks/chiroutes/routes.go", "needle": "orders.Get(\"/{id}\", ShowOrder(state))", "symbol": "ShowOrder"},
+            "expect": {"file": "frameworks/chiroutes/routes.go", "needle": "func ShowOrder(state *app.State) http.HandlerFunc {"}
+        },
+        {
+            "id": "def-route-gin",
+            "surface": "definition",
+            "note": "gin route parser: the route GET /api/orders/:id is the /api prefix of router.Group joined to the :id pattern of the group's GET; the handler is a gin.HandlerFunc over *gin.Context. Keyed like def-route-to-handler: the handler factory the registration line names. A route variant (counted on the definition row, not toward the lane-only floor).",
+            "from": {"file": "frameworks/ginroutes/routes.go", "needle": "api.GET(\"/orders/:id\", ShowOrder(state))", "symbol": "ShowOrder"},
+            "expect": {"file": "frameworks/ginroutes/routes.go", "needle": "func ShowOrder(state *app.State) gin.HandlerFunc {"}
+        },
+        {
+            "id": "def-route-echo",
+            "surface": "definition",
+            "note": "echo route parser: the route GET /api/orders/:id is the /api prefix of router.Group joined to the :id pattern of the group's GET; the handler is an echo.HandlerFunc that takes an echo.Context and returns an error. Keyed like def-route-to-handler: the handler factory the registration line names. A route variant (counted on the definition row, not toward the lane-only floor).",
+            "from": {"file": "frameworks/echoroutes/routes.go", "needle": "api.GET(\"/orders/:id\", ShowOrder(state))", "symbol": "ShowOrder"},
+            "expect": {"file": "frameworks/echoroutes/routes.go", "needle": "func ShowOrder(state *app.State) echo.HandlerFunc {"}
+        },
+        {
+            "id": "def-route-fiber",
+            "surface": "definition",
+            "note": "fiber route parser: fiber runs on fasthttp, not net/http; the route GET /api/orders/:id is the /api prefix of router.Group joined to the :id pattern of the group's method-named Get, and the handler takes a *fiber.Ctx. Keyed like def-route-to-handler: the handler factory the registration line names. A route variant (counted on the definition row, not toward the lane-only floor).",
+            "from": {"file": "frameworks/fiberroutes/routes.go", "needle": "api.Get(\"/orders/:id\", ShowOrder(state))", "symbol": "ShowOrder"},
+            "expect": {"file": "frameworks/fiberroutes/routes.go", "needle": "func ShowOrder(state *app.State) func(*fiber.Ctx) error {"}
+        },
+        {
             "id": "def-shadow-alias-billing",
             "surface": "definition",
             "note": "Two packages export a type named Formatter; the alias at the import site is the only clue.",

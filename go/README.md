@@ -15,8 +15,8 @@ import path disagrees with its declared name, and a package that shadows a stand
 | --- | --- |
 | Go | `go 1.23.0` with `toolchain go1.23.4` in `go.mod` (CI pins the same; `iter.Seq` and method-prefixed `ServeMux` patterns are used) |
 | Layout | one module, `atelier.example/lane`, packages under `core/`, `atelier/`, `app/`, `cmd/`, `internal/`, `tools/`, and the lane-only route modules under `frameworks/`; run every command from the lane root (`go/`) |
-| Dependencies | the in-tree module `atelier.example/yamlish.v2`, resolved by a `replace` to `./third_party/yamlish.v2`, and the router frameworks the lane-only route modules under `frameworks/` are written against, each pinned in `go.mod` and locked in `go.sum`: `github.com/gorilla/mux v1.8.1`. Install step: `go mod download` (fetches exactly the `go.sum` versions from the module proxy; `go build` does the same on first use) |
-| Test runner | `go test ./...` (stdlib `testing`): 64 tests, 47 in `tests/`, in-package tests for the three `main` packages (`bench/verify` 10, `cmd/atelier` 4, `tools/statusgen` 1) and 2 per route module under `frameworks/` |
+| Dependencies | the in-tree module `atelier.example/yamlish.v2`, resolved by a `replace` to `./third_party/yamlish.v2`, and the five router frameworks the lane-only route modules under `frameworks/` are written against, each pinned in `go.mod` and locked with its transitive modules in `go.sum`: `github.com/gorilla/mux v1.8.1`, `github.com/go-chi/chi/v5 v5.3.2`, `github.com/gin-gonic/gin v1.10.1`, `github.com/labstack/echo/v4 v4.13.4`, `github.com/gofiber/fiber/v2 v2.52.16` (each at a release whose module graph keeps `go 1.23.0` / `toolchain go1.23.4`: chi v5.4 and echo v4.14 already declare go 1.24). Install step: `go mod download` (fetches exactly the `go.sum` versions from the module proxy; `go build` does the same on first use) |
+| Test runner | `go test ./...` (stdlib `testing`): 73 tests, 47 in `tests/`, in-package tests for the three `main` packages (`bench/verify` 11, `cmd/atelier` 4, `tools/statusgen` 1) and 2 per route module under `frameworks/` (10) |
 | Dataset | `dataset.Seeded()` — fixed rows, **no randomness**; revenue `58325c`, part cost `46300c`, gross profit `12025c` |
 
 ## Packages
@@ -33,7 +33,7 @@ import path disagrees with its declared name, and a package that shadows a stand
 | `bench/` | `tasks.json` + `verify/` (stdlib only) and its test | 4 |
 | `third_party/yamlish.v2/` | In-tree module whose import path last segment (`yamlish.v2`) differs from its package name (`yamlish`) | 1 |
 | `fixtures/broken-syntax/` | Intentionally invalid Go, **DO NOT FIX** (build-tag gated) | 3 |
-| `frameworks/` | Lane-only route modules, one per Go route parser beyond `net/http`, each in its framework's own convention and driven by its own request-level test: `muxroutes/` (gorilla/mux); `orderview/` is the payload they share | 3 |
+| `frameworks/` | Lane-only route modules, one per Go route parser beyond `net/http`, each in its framework's own convention and driven by its own request-level test with no listener: `muxroutes/` (gorilla/mux), `chiroutes/` (chi), `ginroutes/` (gin), `echoroutes/` (echo), `fiberroutes/` (fiber, through `App.Test`); `orderview/` is the payload they share | 11 |
 
 ## Coverage map
 
@@ -79,7 +79,7 @@ cd go
 go mod download                # the pinned framework modules of go.sum (go build fetches them too)
 go build ./...
 go test ./...
-go run ./bench/verify          # 106 tasks, exit 0
+go run ./bench/verify          # 110 tasks, exit 0
 go run ./bench/verify --lint   # build + broken-fixture guard (each file must fail to parse) + go vet + module specifiers + gofmt
 go run ./cmd/atelier seed      # seeded: 3 customer(s), 4 order(s), 4 part(s), revenue 58325c, then one line per metric, the rule tally and one line per service row
 go run ./cmd/atelier export-report cash-flow [json|csv|md|...]   # the shared command; json unless a format is named
@@ -100,7 +100,7 @@ doc links in comments, `go.mod`'s require and replace lines, and the package pat
 
 ## Ground truth
 
-`bench/tasks.json` carries 106 needle-based tasks. `bench/verify` resolves every `file` + `needle`
+`bench/tasks.json` carries 110 needle-based tasks. `bench/verify` resolves every `file` + `needle`
 pair to exactly one line, checks that each `repeated_sites` needle matches exactly its `lines`
 lines, and prints one `<id>: OK (from <file>:<line> -> <n> expect needles resolved)` line per task;
 its stdout contract is byte-identical to the other five lanes' verifiers, which

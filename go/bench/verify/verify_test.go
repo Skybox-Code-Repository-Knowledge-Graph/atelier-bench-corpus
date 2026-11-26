@@ -182,6 +182,33 @@ func TestGoModBlocksAreRead(t *testing.T) {
 	}
 }
 
+// A require line naming a module the offline graph cannot load fails the
+// guard, while the in-tree replace target still resolves.
+func TestGoModRequireMustResolve(t *testing.T) {
+	root := t.TempDir()
+	files := map[string]string{
+		"go.mod":       "module example.test/req\n\ngo 1.23\n\nrequire (\n\texample.test/nosuch v1.0.0\n\texample.test/local v0.0.0\n)\n\nreplace example.test/local => ./local\n",
+		"main.go":      "package req\n",
+		"local/go.mod": "module example.test/local\n\ngo 1.23\n",
+	}
+	if err := os.MkdirAll(filepath.Join(root, "local"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	for name, content := range files {
+		if err := os.WriteFile(filepath.Join(root, name), []byte(content), 0o644); err != nil {
+			t.Fatal(err)
+		}
+	}
+	found, err := goModSpecifiers(filepath.Join(root, "go.mod"), "go.mod")
+	if err != nil {
+		t.Fatal(err)
+	}
+	failures := checkSpecifiers(root, found)
+	if len(failures) == 0 || !strings.Contains(failures[0], `require "example.test/nosuch": module does not resolve`) {
+		t.Errorf("failures = %v, want example.test/nosuch to fail", failures)
+	}
+}
+
 func TestWithoutMemberKeepsLowercaseSegments(t *testing.T) {
 	cases := map[string]string{
 		"atelier.example/lane/core/money.Money": "atelier.example/lane/core/money",

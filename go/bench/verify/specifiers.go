@@ -255,7 +255,7 @@ func checkSpecifiers(root string, found []specifier) []string {
 				if module, err := moduleOf(filepath.Join(target, "go.mod")); err != nil || module != parts[1] {
 					failures = append(failures, fmt.Sprintf("%s %s: target is not module %s", spec.where, spec.value, parts[1]))
 				}
-			} else if !moduleResolves(root, spec.value) {
+			} else if !moduleResolves(root, spec.value) && !requiredInGraph(root, spec.value) {
 				failures = append(failures, fmt.Sprintf("%s require %q: module does not resolve", spec.where, spec.value))
 			}
 		}
@@ -309,6 +309,36 @@ func moduleResolves(root string, module string) bool {
 	command.Dir = root
 	command.Env = append(os.Environ(), "GOFLAGS=", "GOPROXY=off", "GOWORK=off")
 	return command.Run() == nil
+}
+
+// graphEdges caches, per lane root, the modules the main module requires in
+// its offline module graph.
+var graphEdges = map[string]map[string]bool{}
+
+// requiredInGraph reports whether `go mod graph`, run with the proxy off,
+// has an edge from the main module to the module path. The graph reads only
+// go.mod files, so a module the build never compiles on this platform (an
+// alternative JSON backend behind a build tag, whose version info `go list
+// -m` would need) still resolves when its go.mod is in the module cache.
+func requiredInGraph(root string, module string) bool {
+	edges, cached := graphEdges[root]
+	if !cached {
+		edges = map[string]bool{}
+		command := exec.Command("go", "mod", "graph")
+		command.Dir = root
+		command.Env = append(os.Environ(), "GOFLAGS=", "GOPROXY=off", "GOWORK=off")
+		if output, err := command.Output(); err == nil {
+			for _, row := range strings.Split(string(output), "\n") {
+				from, to, found := strings.Cut(row, " ")
+				if found && !strings.Contains(from, "@") {
+					path, _, _ := strings.Cut(to, "@")
+					edges[path] = true
+				}
+			}
+		}
+		graphEdges[root] = edges
+	}
+	return edges[module]
 }
 
 // moduleOf reads the module line of a go.mod.
