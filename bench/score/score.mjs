@@ -19,7 +19,8 @@ import { VERDICTS, scoreLane, validateAnswers } from "./lib/score.mjs";
 
 const REPO_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..", "..");
 
-process.exit(main(process.argv.slice(2)));
+// exitCode, not process.exit: a large stdout through a pipe is written in full first (issue #221).
+process.exitCode = main(process.argv.slice(2));
 
 function main(args) {
     const options = parseArgs(args);
