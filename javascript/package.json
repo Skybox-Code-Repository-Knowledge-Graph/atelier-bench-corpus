@@ -15,7 +15,7 @@
         "test": "node --test",
         "verify": "node bench/verify-tasks/verify.mjs",
         "verify:lint": "node bench/verify-tasks/verify.mjs --lint",
-        "typecheck": "npx --yes -p typescript@5 tsc -p jsconfig.json"
+        "typecheck": "tsc -p jsconfig.json"
     },
     "devDependencies": {
         "@types/express": "5.0.6",
