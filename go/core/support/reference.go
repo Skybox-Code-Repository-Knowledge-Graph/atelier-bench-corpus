@@ -17,7 +17,8 @@ const (
 
 var referencePattern = regexp.MustCompile(`^([A-Z]{2})-(\d{4})-(\d{6})$`)
 
-// FormatReference renders "AT-2026-000001".
+// FormatReference renders "AT-2026-000001": prefix, year, then the number at
+// a zero-padded width of six digits.
 func FormatReference(prefix string, number int) string {
 	return fmt.Sprintf("%s%s%d%s%06d", prefix, PrefixSeparator, DefaultYear, PrefixSeparator, number)
 }

@@ -7,19 +7,24 @@
 //
 // Node built-ins only, run from the repository root. CI runs the default (read-only) mode.
 //
+// 0. Static guards, before any verifier runs: bench/conformance/src/crlf.txt still ends every line
+//    in CRLF (the c-crlf case is no CRLF test otherwise), no lane's tasks.json repeats a task id,
+//    every hover `contains` string is byte-present in its lane's source, and a hover id shared by
+//    several lanes uses one string in all of them (issue #223).
 // 1. For each lane in matrix.json's `lanes`, runs its verifier from the lane directory and
 //    requires exit 0.
 // 2. Cross-checks the ids each verifier reported against that lane's bench/tasks.json, then
 //    builds {lane -> {id -> surface}} straight from tasks.json.
 // 3. Asserts every task id is listed in matrix.canonical, every canonical entry's `lanes` array
 //    matches reality, any id shared by two or more lanes carries the same `surface` in each, and
-//    shared cardinality / multi-parent ids state the same `exact_count` in every lane that states one.
+//    an id shared by two or more lanes on the cardinality / multi-parent surfaces states an
+//    `exact_count` in every lane that carries it, and the same one.
 // 4. Runs every lane verifier against bench/conformance/ (via --root) and diffs stdout against
 //    bench/conformance/expected.txt byte for byte.
 // 5. Prints a coverage grid and `matrix: OK (<n> canonical ids, <m> lanes)`, or the first
 //    violation, and exits accordingly.
 
-import { readFileSync, writeFileSync, existsSync } from "node:fs";
+import { readFileSync, writeFileSync, existsSync, readdirSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { spawnSync } from "node:child_process";
@@ -29,6 +34,7 @@ const REPO_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const MATRIX_PATH = join(REPO_ROOT, "bench", "matrix.json");
 const CONFORMANCE_DIR = join(REPO_ROOT, "bench", "conformance");
 const EXPECTED_PATH = join(CONFORMANCE_DIR, "expected.txt");
+const CRLF_FIXTURE_PATH = join(CONFORMANCE_DIR, "src", "crlf.txt");
 
 // Known lane verify commands. A lane is included only when its directory carries
 // bench/tasks.json on disk -- a lane that does not exist yet is simply omitted (issue #5).
@@ -47,6 +53,11 @@ process.exit(write ? runWrite() : runCheck());
 
 function runWrite() {
     const lanes = presentLanes();
+
+    const problem = staticProblem(lanes);
+    if (problem !== undefined) {
+        return fail(problem);
+    }
 
     for (const lane of lanes) {
         const result = runVerifier(lane);
@@ -82,6 +93,11 @@ function runCheck() {
         const known = LANE_DEFS.find((lane) => lane.name === name);
         return known ?? { name, verify: committed.lanes[name].verify };
     });
+
+    const problem = staticProblem(lanes);
+    if (problem !== undefined) {
+        return fail(problem);
+    }
 
     for (const lane of lanes) {
         const manifestPath = join(REPO_ROOT, lane.name, "bench", "tasks.json");
@@ -141,6 +157,152 @@ function runCheck() {
     printGrid(built.matrix);
     report(built.matrix);
     return 0;
+}
+
+/** The first static guard that fails, or undefined. Reads files only; spawns nothing. */
+function staticProblem(lanes) {
+    return crlfFixtureProblem() ?? duplicateIdProblem(lanes) ?? hoverContainsProblem(lanes);
+}
+
+/**
+ * Hover `contains` strings are a cross-lane string contract (issue #223, C.6 and F.3):
+ *   (a) every hover task's `contains` is byte-present in its lane: in from.file, or else in another
+ *       file git tracks under <lane>/ outside <lane>/bench/, Markdown excluded. The fallback exists
+ *       because a hover asked at a call site shows the doc comment of a declaration in another file,
+ *       and the key does not name that file;
+ *   (b) a hover id carried by two or more lanes states a `contains` string in every lane that
+ *       carries it, and the same one (an absent string never passes as agreement).
+ * NOT proven: that the string sits in the doc comment of the hovered symbol, or anywhere a hover
+ * would show it. (a) proves only that the lane's source quotes the string somewhere; reading the
+ * declaration is still the reviewer's job.
+ */
+function hoverContainsProblem(lanes) {
+    const stringsById = new Map();
+    for (const lane of lanes) {
+        const manifestPath = join(REPO_ROOT, lane.name, "bench", "tasks.json");
+        if (!existsSync(manifestPath)) {
+            continue;
+        }
+        let sources;
+        for (const task of JSON.parse(readFileSync(manifestPath, "utf8")).tasks) {
+            if (task.surface !== "hover") {
+                continue;
+            }
+            const contains = typeof task.expect?.contains === "string" ? task.expect.contains : undefined;
+            if (!stringsById.has(task.id)) {
+                stringsById.set(task.id, []);
+            }
+            stringsById.get(task.id).push([lane.name, contains]);
+            if (contains === undefined) {
+                continue;
+            }
+
+            const fromFile = typeof task.from?.file === "string" ? join(REPO_ROOT, lane.name, task.from.file) : undefined;
+            if (fromFile !== undefined && existsSync(fromFile) && readFileSync(fromFile, "utf8").includes(contains)) {
+                continue;
+            }
+            sources ??= laneSources(lane.name);
+            if (sources.error !== undefined) {
+                return sources.error;
+            }
+            if (!sources.paths.some((path) => readFileSync(path, "utf8").includes(contains))) {
+                return `${lane.name}:${task.id}: hover contains ${JSON.stringify(contains)} is not byte-present in ${task.from?.file} or in any other tracked ${lane.name}/ source outside ${lane.name}/bench/`;
+            }
+        }
+    }
+    for (const [id, stated] of [...stringsById].sort(([a], [b]) => a.localeCompare(b))) {
+        if (stated.length < 2) {
+            continue;
+        }
+        const missing = stated.filter(([, contains]) => contains === undefined).map(([name]) => name);
+        if (missing.length > 0) {
+            return `${id}: shared hover id states no contains string in ${missing.join(", ")} (every lane carrying it must state the same one)`;
+        }
+        if (new Set(stated.map(([, contains]) => contains)).size > 1) {
+            const detail = stated.map(([name, contains]) => `${name}=${JSON.stringify(contains)}`).join(", ");
+            return `${id}: shared hover id uses more than one contains string (${detail})`;
+        }
+    }
+    return undefined;
+}
+
+/** Walk <dir> on disk, skipping dependency/build directories. Paths are repo-relative with "/". */
+function walkLane(dir, prefix) {
+    const out = [];
+    for (const entry of readdirSync(dir, { withFileTypes: true })) {
+        if (["vendor", "node_modules", "target", "__pycache__", ".git"].includes(entry.name)) {
+            continue;
+        }
+        if (entry.isDirectory()) {
+            out.push(...walkLane(join(dir, entry.name), `${prefix}${entry.name}/`));
+        } else if (entry.isFile()) {
+            out.push(`${prefix}${entry.name}`);
+        }
+    }
+    return out;
+}
+
+/**
+ * Absolute paths of the lane's source files, minus <lane>/bench/ and Markdown. Uses `git ls-files`
+ * inside a work tree; outside one (git archive, tarball) it walks <lane>/ on disk instead.
+ */
+function laneSources(lane) {
+    const result = spawnSync("git", ["ls-files", "-z", "--", `${lane}/`], { cwd: REPO_ROOT, encoding: "utf8" });
+    let listed;
+    if (!result.error && result.status === 0) {
+        listed = result.stdout.split("\0");
+    } else if (existsSync(join(REPO_ROOT, lane))) {
+        listed = walkLane(join(REPO_ROOT, lane), `${lane}/`);
+    } else {
+        return { error: `${lane}/ not found: hover contains strings cannot be checked` };
+    }
+    const paths = listed
+        .filter((path) => path !== "" && !path.startsWith(`${lane}/bench/`) && !path.endsWith(".md"))
+        .map((path) => join(REPO_ROOT, path))
+        .filter((path) => existsSync(path));
+    return { paths };
+}
+
+/**
+ * A task id repeated inside one lane's tasks.json. Every later step keys tasks by id (Maps and Sets),
+ * so a repeat would collapse silently and both copies would pass; it must fail by name instead.
+ * A lane without tasks.json is skipped here and reported by the verifier loop.
+ */
+function duplicateIdProblem(lanes) {
+    for (const lane of lanes) {
+        const manifestPath = join(REPO_ROOT, lane.name, "bench", "tasks.json");
+        if (!existsSync(manifestPath)) {
+            continue;
+        }
+        const seen = new Set();
+        for (const task of JSON.parse(readFileSync(manifestPath, "utf8")).tasks) {
+            if (seen.has(task.id)) {
+                return `${lane.name}/bench/tasks.json repeats task id ${task.id}`;
+            }
+            seen.add(task.id);
+        }
+    }
+    return undefined;
+}
+
+/**
+ * bench/conformance/src/crlf.txt exists for the c-crlf case ("CRLF line endings resolve like LF"), so
+ * its bytes are the point: every line must end in CRLF. `.gitattributes` marks it `-text` so git
+ * never normalizes it; this catches a recommit that loses the CR bytes anyway (it was committed
+ * LF-only from 9d9e6d4 until issue #223).
+ */
+function crlfFixtureProblem() {
+    if (!existsSync(CRLF_FIXTURE_PATH)) {
+        return `missing ${relative(CRLF_FIXTURE_PATH)}`;
+    }
+    const text = readFileSync(CRLF_FIXTURE_PATH, "latin1");
+    const crlf = text.split("\r\n").length - 1;
+    const bareLf = text.replaceAll("\r\n", "").split("\n").length - 1;
+    const bareCr = text.replaceAll("\r\n", "").split("\r").length - 1;
+    if (crlf === 0 || bareLf > 0 || bareCr > 0 || !text.endsWith("\r\n")) {
+        return `${relative(CRLF_FIXTURE_PATH)} must end every line in CRLF (found ${crlf} CRLF, ${bareLf} bare LF, ${bareCr} bare CR); keep it -text in .gitattributes and recommit the CR bytes`;
+    }
+    return undefined;
 }
 
 /** Lanes whose directory carries bench/tasks.json, in LANE_DEFS order. */
@@ -207,17 +369,21 @@ function readLaneExactCounts(lane) {
 
 /**
  * Shared ids on the cardinality and multi-parent surfaces count a DOMAIN invariant
- * (48 rules, 24 reports, 3 parents), so every lane that states an exact_count for such
- * an id must state the same number. Other surfaces (glob imports, overload sets) count
- * lane-specific facts and are not compared. Returns a conflict message or undefined.
+ * (48 rules, 24 reports, 3 parents), so every lane that carries such an id must state an
+ * exact_count, and the same number (issue #223: an absent count used to pass as agreement).
+ * Other surfaces (glob imports, overload sets) count lane-specific facts and are not compared.
+ * An id carried by one lane only is not shared and is not checked. Returns a conflict message
+ * or undefined.
  */
 function exactCountConflict(id, surface, inLanes, laneCounts) {
-    if (surface !== "cardinality" && surface !== "multi-parent") {
+    if ((surface !== "cardinality" && surface !== "multi-parent") || inLanes.length < 2) {
         return undefined;
     }
-    const stated = inLanes
-        .filter((name) => laneCounts.get(name).has(id))
-        .map((name) => [name, laneCounts.get(name).get(id)]);
+    const missing = inLanes.filter((name) => !laneCounts.get(name).has(id));
+    if (missing.length > 0) {
+        return `${id}: shared ${surface} id states no exact_count in ${missing.join(", ")} (every lane carrying it must state the same one)`;
+    }
+    const stated = inLanes.map((name) => [name, laneCounts.get(name).get(id)]);
     const distinct = new Set(stated.map(([, count]) => count));
     if (distinct.size <= 1) {
         return undefined;

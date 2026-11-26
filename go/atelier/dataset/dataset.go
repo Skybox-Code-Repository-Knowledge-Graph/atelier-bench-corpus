@@ -22,7 +22,7 @@ type Dataset struct {
 	Invoices    []*models.Invoice
 }
 
-// Seeded builds the frozen dataset. Every number below is ground truth.
+// Seeded builds the frozen seed. Changing these rows changes bench ground truth.
 func Seeded() *Dataset {
 	customers := []*models.Customer{
 		models.SeedCustomer(1, "Ada Byron", "ada@example.test", "+32 470 00 00 01"),

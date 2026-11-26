@@ -2374,7 +2374,8 @@
                     "php/",
                     "rust/",
                     "typescript/",
-                    "javascript/"
+                    "javascript/",
+                    "go/"
                 ]
             }
         },
@@ -2396,7 +2397,8 @@
                     "php/",
                     "rust/",
                     "typescript/",
-                    "javascript/"
+                    "javascript/",
+                    "go/"
                 ]
             }
         },
@@ -2415,10 +2417,10 @@
                     "needle": "class Dataset:"
                 },
                 "must_not_include": [
-                    "php/",
                     "rust/",
                     "typescript/",
-                    "javascript/"
+                    "javascript/",
+                    "go/"
                 ]
             }
         },
@@ -2527,6 +2529,7 @@
             "expect": {
                 "extends_count": 1,
                 "implements_count": 2,
+                "exact_count": 3,
                 "implementations": [
                     {
                         "file": "atelier_bench/support/abstract_periodic_report.py",
