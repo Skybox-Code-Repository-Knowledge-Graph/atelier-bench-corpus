@@ -60,7 +60,10 @@ from a lane without check-matrix failing, and diffs every lane verifier's output
 (php, rust, node) are proven to agree on every branch of the verifier contract, not just on
 "exit 0". `bench/matrix.json` is generated, never hand-edited: run
 `node bench/check-matrix.mjs --write` to regenerate it after adding or renaming a task id, then
-review the diff like code. CI runs the default (read-only) mode. Before any verifier runs it also
+review the diff like code. `node bench/check-matrix.mjs --write --matrix-only` writes the same file
+from the lanes' `tasks.json` after the static checks alone, without running any lane verifier or
+the conformance diff, so nothing compiles (the rust verifier is `cargo run`); it does not replace
+the default check, which is the full run. CI runs the default (read-only) mode. Before any verifier runs it also
 checks, from files alone, that `bench/conformance/src/crlf.txt` still ends every line in CRLF, that
 no lane repeats a task id, and that every hover `contains` string is present in its lane's source
 and the same in every lane sharing the hover id; and a cardinality or multi-parent id shared by

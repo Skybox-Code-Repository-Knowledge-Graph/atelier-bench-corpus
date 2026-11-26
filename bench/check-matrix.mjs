@@ -4,8 +4,16 @@
 //   node bench/check-matrix.mjs            # verify bench/matrix.json matches reality; exit 0/1
 //   node bench/check-matrix.mjs --write    # regenerate bench/matrix.json from the lanes (the
 //                                           # only way to add a canonical id)
+//   node bench/check-matrix.mjs --write --matrix-only
+//                                           # write the same bench/matrix.json after the static
+//                                           # guards (step 0) alone: no lane verifier and no
+//                                           # conformance run (steps 1 and 4), so nothing compiles
 //
 // Node built-ins only, run from the repository root. CI runs the default (read-only) mode.
+// `--write` and `--write --matrix-only` are one function (runWrite): the matrix is built by the same
+// buildMatrix() and written by the same serialize(), so for one tree both write the same bytes.
+// `--matrix-only` exists for whoever may not compile (the rust verifier is `cargo run`); the
+// default check stays the full run. `--matrix-only` without `--write` is an error.
 //
 // 0. Static guards, before any verifier runs: bench/conformance/src/crlf.txt still ends every line
 //    in CRLF (the c-crlf case is no CRLF test otherwise), no lane's tasks.json repeats a task id,
@@ -47,11 +55,20 @@ const LANE_DEFS = [
     { name: "go", verify: ["go", "run", "./bench/verify"] },
 ];
 
-const write = process.argv.slice(2).includes("--write");
+const args = process.argv.slice(2);
+const write = args.includes("--write");
+const matrixOnly = args.includes("--matrix-only");
 
-process.exit(write ? runWrite() : runCheck());
+process.exit(matrixOnly && !write
+    ? fail("--matrix-only needs --write (the default check always runs every lane verifier)")
+    : write ? runWrite({ matrixOnly }) : runCheck());
 
-function runWrite() {
+/**
+ * `--write`, and `--write --matrix-only`. matrixOnly skips the lane verifiers (step 1) and the
+ * conformance run (step 4) and nothing else: the static guards, buildMatrix(), serialize(), the
+ * grid and the OK line are the plain `--write` path's own.
+ */
+function runWrite({ matrixOnly }) {
     const lanes = presentLanes();
 
     const problem = staticProblem(lanes);
@@ -59,10 +76,12 @@ function runWrite() {
         return fail(problem);
     }
 
-    for (const lane of lanes) {
-        const result = runVerifier(lane);
-        if (!verifierPassed(result)) {
-            return fail(`${lane.name} verifier exited ${exitDescription(result)}`);
+    if (!matrixOnly) {
+        for (const lane of lanes) {
+            const result = runVerifier(lane);
+            if (!verifierPassed(result)) {
+                return fail(`${lane.name} verifier exited ${exitDescription(result)}`);
+            }
         }
     }
 
@@ -73,13 +92,18 @@ function runWrite() {
 
     writeFileSync(MATRIX_PATH, serialize(built.matrix));
 
-    const conformanceCode = runConformance(lanes);
-    if (conformanceCode !== 0) {
-        return conformanceCode;
+    if (!matrixOnly) {
+        const conformanceCode = runConformance(lanes);
+        if (conformanceCode !== 0) {
+            return conformanceCode;
+        }
     }
 
     printGrid(built.matrix);
     report(built.matrix);
+    if (matrixOnly) {
+        console.error("matrix: --matrix-only: no lane verifier and no conformance run; the default check is the full run");
+    }
     return 0;
 }
 
