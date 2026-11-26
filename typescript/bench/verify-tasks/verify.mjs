@@ -187,18 +187,24 @@ function summarize(needle) {
 
 /** --lint: the lane must typecheck, and every broken fixture must still fail to compile. */
 function runLint(root) {
+    // The NestJS fixture needs legacy decorators, so the root config excludes it and its own
+    // config compiles it; both projects must stay clean (box A.3).
+    const projects = ["tsconfig.json", "packages/routes/src/nest/tsconfig.json"];
     const npx = process.platform === "win32" ? "npx.cmd" : "npx";
-    const check = spawnSync(npx, ["tsc", "--noEmit", "-p", "tsconfig.json"], { cwd: root, encoding: "utf8" });
+    for (const project of projects) {
+        const check = spawnSync(npx, ["tsc", "--noEmit", "-p", project], { cwd: root, encoding: "utf8" });
 
-    if (check.error) {
-        process.stdout.write(`lint: FAIL (tsc not runnable: ${check.error.message})\n`);
-        return 1;
+        if (check.error) {
+            process.stdout.write(`lint: FAIL (tsc -p ${project} not runnable: ${check.error.message})\n`);
+            return 1;
+        }
+        if (check.status !== 0) {
+            process.stdout.write(`lint: FAIL (tsc -p ${project} exited ${check.status})\n${check.stdout}${check.stderr}`);
+            return 1;
+        }
     }
-    if (check.status !== 0) {
-        process.stdout.write(`lint: FAIL (tsc exited ${check.status})\n${check.stdout}${check.stderr}`);
-        return 1;
-    }
-    process.stdout.write("lint: OK (tsc)\n");
+    process.stdout.write(`lint: OK (tsc: ${projects.join(", ")})\n`);
+
 
     const fixtures = join(root, "fixtures", "broken-syntax");
     if (!existsSync(fixtures) || !statSync(fixtures).isDirectory()) {
