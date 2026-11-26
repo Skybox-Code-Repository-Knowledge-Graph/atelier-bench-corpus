@@ -17,7 +17,8 @@ import { VERDICTS, summarize } from "./lib/score.mjs";
 const CLASS_ORDER = { exact: 0, recall: 1, behaviour: 2 };
 const CLASS_LABEL = { exact: "exact", recall: "recall-only", behaviour: "behaviour" };
 
-process.exit(main(process.argv.slice(2)));
+// exitCode, not process.exit: a large stdout through a pipe is written in full first (issue #221).
+process.exitCode = main(process.argv.slice(2));
 
 function main(args) {
     const options = parseArgs(args);
@@ -116,6 +117,11 @@ function reportProblem(report) {
         }
         if (result.class !== undefined && result.class !== null && !(typeof result.class === "string" && Object.hasOwn(CLASS_ORDER, result.class))) {
             return `${result.id} has an unknown class`;
+        }
+        // summarize() keys a plain object by surface, so `__proto__` or `constructor` would write
+        // onto Object.prototype (issue #221).
+        if (typeof result.surface !== "string" || result.surface === "" || result.surface in Object.prototype) {
+            return `${result.id} has no valid surface`;
         }
         if (seen.has(result.id)) {
             return `task id ${result.id} appears twice`;
